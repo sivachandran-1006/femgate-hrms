@@ -37,6 +37,7 @@ export default function HRMSApp() {
       status: "Pending",
     },
   ]);
+  const [payrollStatus, setPayrollStatus] = useState({});
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
 
@@ -236,7 +237,15 @@ export default function HRMSApp() {
 
   };
 
-   const exportToExcel = () => {
+  // PAY EMPLOYEE
+  const payEmployee = (employeeId) => {
+    setPayrollStatus((prev) => ({
+      ...prev,
+      [employeeId]: "Paid",
+    }));
+  };
+
+  const exportToExcel = () => {
 
   const worksheet =
     XLSX.utils.json_to_sheet(employees);
@@ -777,66 +786,38 @@ export default function HRMSApp() {
 )}
 {/* ATTENDANCE PAGE */}
 {activePage === "attendance" && (
-
   <div className="bg-white rounded-3xl shadow-xl p-8">
-
     <div className="flex justify-between items-center mb-8">
-
-      <h2 className="text-4xl font-bold">
-        Attendance Management
-      </h2>
-
-      <div className="bg-blue-100 text-blue-700 px-5 py-3 rounded-2xl font-semibold">
-        Total Employees: {employees.length}
+      <div>
+        <h2 className="text-4xl font-bold">Attendance</h2>
+        <p className="text-gray-500 mt-2">
+          Mark employee attendance and switch status between Present and Leave.
+        </p>
       </div>
-
     </div>
 
     <table className="w-full">
-
       <thead>
-
         <tr className="border-b">
-
-          <th className="text-left py-4">
-            Employee
-          </th>
-
-          <th className="text-left py-4">
-            Department
-          </th>
-
-          <th className="text-left py-4">
-            Status
-          </th>
-
-          <th className="text-left py-4">
-            Action
-          </th>
-
+          <th className="text-left py-4">Employee</th>
+          <th className="text-left py-4">Department</th>
+          <th className="text-left py-4">Status</th>
+          <th className="text-left py-4">Action</th>
         </tr>
-
       </thead>
-
       <tbody>
-
         {employees.map((employee) => (
-
           <tr
             key={employee._id}
             className="border-b hover:bg-gray-50"
           >
-
-            <td className="py-5 font-semibold">
+            <td className="py-5 font-semibold text-blue-600">
               {employee.name}
             </td>
-
             <td className="py-5">
               {employee.department}
             </td>
-
             <td className="py-5">
-
               <span
                 className={`px-4 py-2 rounded-full text-sm font-semibold ${
                   employee.status === "Present"
@@ -846,37 +827,87 @@ export default function HRMSApp() {
               >
                 {employee.status}
               </span>
-
             </td>
-
             <td className="py-5">
-
               <button
-                onClick={() =>
-                  toggleStatus(employee)
-                }
-                className={`px-5 py-2 rounded-xl text-white font-semibold ${
-                  employee.status === "Present"
-                    ? "bg-yellow-500 hover:bg-yellow-600"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
+                onClick={() => toggleStatus(employee)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl"
               >
-
                 {employee.status === "Present"
                   ? "Mark Leave"
                   : "Mark Present"}
-
               </button>
-
             </td>
-
           </tr>
-
         ))}
-
       </tbody>
-
     </table>
+  </div>
+)}
+{/* ADD EMPLOYEE MODAL */}
+{showModal && (
+
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-3xl p-8 w-full max-w-md">
+
+      <div className="flex justify-between items-center mb-6">
+
+        <h2 className="text-3xl font-bold">
+          Add Employee
+        </h2>
+
+        <button
+          onClick={() =>
+            setShowModal(false)
+          }
+          className="text-3xl text-gray-500"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div className="space-y-5">
+
+        <input
+          type="text"
+          placeholder="Employee Name"
+          value={employeeName}
+          onChange={(e) =>
+            setEmployeeName(e.target.value)
+          }
+          className="w-full border rounded-2xl px-5 py-4"
+        />
+
+        <input
+          type="text"
+          placeholder="Department"
+          value={department}
+          onChange={(e) =>
+            setDepartment(e.target.value)
+          }
+          className="w-full border rounded-2xl px-5 py-4"
+        />
+
+        <button
+          onClick={
+            editingEmployee
+              ? updateEmployee
+              : addEmployee
+          }
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl"
+        >
+
+          {editingEmployee
+            ? "Update Employee"
+            : "Save Employee"}
+
+        </button>
+
+      </div>
+
+    </div>
 
   </div>
 
@@ -1074,6 +1105,10 @@ export default function HRMSApp() {
               Payroll Status
             </th>
 
+          <th className="text-left py-4">
+              Action
+            </th>
+
           </tr>
 
         </thead>
@@ -1115,18 +1150,27 @@ export default function HRMSApp() {
 
               <td className="py-5">
 
-                <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
-                  Pending
-                </span>
+                <span
+  className={`px-4 py-2 rounded-full text-sm ${
+    payrollStatus[employee._id] === "Paid"
+      ? "bg-green-100 text-green-700"
+      : "bg-blue-100 text-blue-700"
+  }`}
+>
+  {payrollStatus[employee._id] || "Pending"}
+</span>
 
               </td>
               <td className="py-5 flex gap-3">
 
-  <button
-    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
-  >
-    Pay
-  </button>
+<button
+  onClick={() =>
+    payEmployee(employee._id)
+  }
+  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
+>
+  Pay
+</button>
 
   <button
     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm"
