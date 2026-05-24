@@ -541,103 +541,113 @@ const handleCheckOut = () => {
         : "bg-slate-100"
     }`}>
 
-      {/* SIDEBAR */}
-      <div className="w-64 bg-white shadow-xl p-6">
+     {/* SIDEBAR */}
+<div className="w-72 bg-white shadow-xl p-6 flex flex-col">
 
-        <img
-          src={logo}
-          alt="logo"
-          className="w-40 mx-auto mb-10"
-        />
+  {/* LOGO */}
+  <div className="flex flex-col items-center mb-10">
 
-        <ul className="space-y-4">
+    <img
+      src={logo}
+      alt="logo"
+      className="w-24 h-24 object-contain"
+    />
 
-          <li
-            onClick={() =>
-              setActivePage("dashboard")
-            }
-            className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "dashboard"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-          >
-            Dashboard
-          </li>
+  </div>
 
-          {userRole === "Admin" && (
-            <li
-              onClick={() =>
-                setActivePage("employees")
-              }
-              className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "dashboard"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-            >
-              Employees
-              {userRole === "Admin" && (
-  <li
-    onClick={() =>
-      setActivePage("departments")
-    }
-    className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "employees"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-  >
-    Departments
-  </li>
-)}
-            </li>
-          )}
+  {/* MENU */}
+  <ul className="space-y-4 w-full">
 
-          <li
-            onClick={() =>
-              setActivePage("attendance")
-            }
-            className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "departments"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-          >
-            Attendance
-          </li>
+    <li
+      onClick={() =>
+        setActivePage("dashboard")
+      }
+      className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+        activePage === "dashboard"
+          ? "bg-blue-600 text-white"
+          : "hover:bg-gray-200"
+      }`}
+    >
+      Dashboard
+    </li>
 
-          <li
-            onClick={() =>
-              setActivePage("leave")
-            }
-           className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "attendance"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-          >
-            Leave
-          </li>
+    {userRole === "Admin" && (
+      <li
+        onClick={() =>
+          setActivePage("employees")
+        }
+        className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+          activePage === "employees"
+            ? "bg-blue-600 text-white"
+            : "hover:bg-gray-200"
+        }`}
+      >
+        Employees
+      </li>
+    )}
 
-          {userRole === "Admin" && (
-            <li
-              onClick={() =>
-                setActivePage("payroll")
-              }
-              className={`px-6 py-3 rounded-xl cursor-pointer transition ${
-  activePage === "leave"
-    ? "bg-blue-600 text-white"
-    : "hover:bg-gray-200"
-}`}
-            >
-              Payroll
-            </li>
-          )}
+    {userRole === "Admin" && (
+      <li
+        onClick={() =>
+          setActivePage("departments")
+        }
+        className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+          activePage === "departments"
+            ? "bg-blue-600 text-white"
+            : "hover:bg-gray-200"
+        }`}
+      >
+        Departments
+      </li>
+    )}
 
-        </ul>
+    <li
+      onClick={() =>
+        setActivePage("attendance")
+      }
+      className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+        activePage === "attendance"
+          ? "bg-blue-600 text-white"
+          : "hover:bg-gray-200"
+      }`}
+    >
+      Attendance
+    </li>
 
-      </div>
+    <li
+      onClick={() =>
+        setActivePage("leave")
+      }
+      className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+        activePage === "leave"
+          ? "bg-blue-600 text-white"
+          : "hover:bg-gray-200"
+      }`}
+    >
+      Leave
+    </li>
+
+    {userRole === "Admin" && (
+      <li
+        onClick={() =>
+          setActivePage("payroll")
+        }
+        className={`px-6 py-3 rounded-xl cursor-pointer transition ${
+          activePage === "payroll"
+            ? "bg-blue-600 text-white"
+            : "hover:bg-gray-200"
+        }`}
+      >
+        Payroll
+      </li>
+    )}
+
+  </ul>
+
+</div>
+
+
+
 
       {/* MAIN */}
       <div className="flex-1 p-8">
@@ -796,12 +806,7 @@ const handleCheckOut = () => {
       </p>
 
     </div>
-
-  </div>
-
-)}
-
-{/* ANALYTICS */}
+    {/* ANALYTICS */}
 <div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
 
   <h2 className="text-3xl font-bold mb-8">
@@ -835,6 +840,12 @@ const handleCheckOut = () => {
   </div>
 
 </div>
+
+  </div>
+
+)}
+
+
        {/* EMPLOYEES PAGE */}
 {activePage === "employees" &&
   userRole === "Admin" && (
@@ -955,6 +966,119 @@ const handleCheckOut = () => {
     </table>
 
   </div>
+)}
+{/* DEPARTMENTS PAGE */}
+{activePage === "departments" &&
+  userRole === "Admin" && (
+
+  <div className="bg-white rounded-3xl shadow-xl p-8">
+
+    <div className="flex justify-between items-center mb-8">
+
+      <div>
+
+        <h2 className="text-4xl font-bold">
+          Departments
+        </h2>
+
+        <p className="text-gray-500 mt-2">
+          Manage company departments
+        </p>
+
+      </div>
+
+    </div>
+
+    <table className="w-full">
+
+      <thead>
+
+        <tr className="border-b">
+
+          <th className="text-left py-4">
+            Department Name
+          </th>
+
+          <th className="text-left py-4">
+            Total Employees
+          </th>
+
+          <th className="text-left py-4">
+            Status
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        <tr className="border-b">
+
+          <td className="py-5 font-semibold">
+            IT
+          </td>
+
+          <td className="py-5">
+            3
+          </td>
+
+          <td className="py-5">
+
+            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+              Active
+            </span>
+
+          </td>
+
+        </tr>
+
+        <tr className="border-b">
+
+          <td className="py-5 font-semibold">
+            Engineering
+          </td>
+
+          <td className="py-5">
+            1
+          </td>
+
+          <td className="py-5">
+
+            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+              Active
+            </span>
+
+          </td>
+
+        </tr>
+
+        <tr className="border-b">
+
+          <td className="py-5 font-semibold">
+            Management
+          </td>
+
+          <td className="py-5">
+            1
+          </td>
+
+          <td className="py-5">
+
+            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+              Active
+            </span>
+
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
 )}
 {/* ATTENDANCE PAGE */}
 {activePage === "attendance" && (
