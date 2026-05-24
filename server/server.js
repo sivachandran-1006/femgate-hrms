@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const User = require("./models/User");
 
 const app = express();
 
@@ -8,30 +9,72 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect("mongodb://127.0.0.1:27017/hrms")
-  .then(() => {
-    console.log("MongoDB Connected");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
-// Schema
-const employeeSchema = new mongoose.Schema({
-  name: String,
-  department: String,
-  email: String,
-  phone: String,
-  role: String,
-  joiningDate: String,
-  status: String,
+mongoose.connect(
+  "mongodb://127.0.0.1:27017/hrms"
+)
+.then(() => {
+  console.log("MongoDB Connected");
+})
+.catch((err) => {
+  console.log(err);
 });
 
-// Model
+// Employee Schema
+const employeeSchema =
+  new mongoose.Schema({
+
+    name: String,
+    department: String,
+    email: String,
+    phone: String,
+    role: String,
+    joiningDate: String,
+    salary: String,
+    status: String,
+
+  });
+
+// Employee Model
 const Employee = mongoose.model(
   "Employee",
   employeeSchema
 );
+
+// LOGIN API
+app.post("/login", async (req, res) => {
+
+  try {
+
+    const { email, password } =
+      req.body;
+
+    const user =
+      await User.findOne({
+        email,
+        password,
+      });
+
+    if (!user) {
+
+      return res.status(401).json({
+        message:
+          "Invalid credentials",
+      });
+
+    }
+
+    res.json({
+      role: user.role,
+      name: user.name,
+    });
+
+  } catch (error) {
+
+    res.status(500).json(error);
+
+  }
+
+});
 
 // GET Employees
 app.get("/employees", async (req, res) => {

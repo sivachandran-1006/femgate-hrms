@@ -268,6 +268,16 @@ try {
 
     setDepartment(employee.department);
 
+    setEmployeeEmail(employee.email);
+
+setEmployeePhone(employee.phone);
+
+setEmployeeRole(employee.role);
+
+setJoiningDate(employee.joiningDate);
+
+setSalary(employee.salary);
+
     setShowModal(true);
 
   };
@@ -280,9 +290,15 @@ try {
       await axios.put(
         `http://localhost:5000/employees/${editingEmployee._id}`,
         {
-          name: employeeName,
-          department: department,
-        }
+  name: employeeName,
+  department: department,
+  email: employeeEmail,
+  phone: employeePhone,
+  role: employeeRole,
+  joiningDate: joiningDate,
+  salary: salary,
+  status: editingEmployee.status,
+}
       );
 
       fetchEmployees();
@@ -438,7 +454,13 @@ try {
                 className="w-52 mb-4"
               />
 
-              <p className="text-gray-500 text-lg">
+              <p
+  className={`some classes ${
+  darkMode
+    ? "dark class"
+    : "light class"
+}`}
+>
                 Employee Management System
               </p>
 
@@ -467,39 +489,34 @@ try {
               />
 
               <button
-                onClick={() => {
+               onClick={async () => {
 
-                  if (
-                    email === "admin@mgatetech.com" &&
-                    password === "admin123"
-                  ) {
+  try {
 
-                    setUserRole("Admin");
+    const response =
+      await axios.post(
+        "http://localhost:5000/login",
+        {
+          email,
+          password,
+        }
+      );
 
-                    setIsLoggedIn(true);
+    setUserRole(
+      response.data.role
+    );
 
-                  }
+    setIsLoggedIn(true);
 
-                  else if (
-                    email === "employee@mgatetech.com" &&
-                    password === "employee123"
-                  ) {
+  } catch (error) {
 
-                    setUserRole("Employee");
+    alert(
+      "Invalid Email or Password"
+    );
 
-                    setIsLoggedIn(true);
+  }
 
-                  }
-
-                  else {
-
-                    alert(
-                      "Invalid Email or Password"
-                    );
-
-                  }
-
-                }}
+}}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl"
               >
                 Sign In
@@ -509,7 +526,13 @@ try {
 
             <div className="mt-8">
 
-              <p className="mb-4 text-gray-500">
+              <p
+  className={`some classes ${
+  darkMode
+    ? "dark class"
+    : "light class"
+}`}
+>
                 Demo Login
               </p>
 
@@ -1008,7 +1031,13 @@ try {
 {activePage === "departments" &&
   userRole === "Admin" && (
 
-  <div className="bg-white rounded-3xl shadow-xl p-8">
+  <div
+    className={`rounded-3xl shadow-xl p-8 ${
+      darkMode
+        ? "bg-slate-800 text-white"
+        : "bg-white text-black"
+    }`}
+  >
 
     <div className="flex justify-between items-center mb-8">
 
@@ -1018,7 +1047,13 @@ try {
           Departments
         </h2>
 
-        <p className="text-gray-500 mt-2">
+        <p
+          className={`mt-2 ${
+            darkMode
+              ? "text-gray-300"
+              : "text-gray-500"
+          }`}
+        >
           Manage company departments
         </p>
 
@@ -1117,6 +1152,8 @@ try {
   </div>
 
 )}
+
+
 {/* ATTENDANCE PAGE */}
 {activePage === "attendance" && (
 
@@ -1124,8 +1161,12 @@ try {
 
     {/* HEADER */}
 
-    <div className="bg-white rounded-3xl shadow-xl p-8">
-
+    <div className={`rounded-3xl shadow-xl p-8 ${
+  darkMode
+    ? "bg-slate-800 text-white"
+    : "bg-white text-black"
+}`}
+>
       <div className="flex justify-between items-center">
 
         <div>
@@ -1147,7 +1188,12 @@ try {
     
     {/* ATTENDANCE TABLE */}
 
-    <div className="bg-white rounded-3xl shadow-xl p-8">
+    <div className={`rounded-3xl shadow-xl p-8 ${
+  darkMode
+    ? "bg-slate-800 text-white"
+    : "bg-white text-black"
+}`}
+>
 
       <table className="w-full">
 
@@ -1288,6 +1334,54 @@ try {
           }
           className="w-full border rounded-2xl px-5 py-4"
         />
+        <input
+  type="email"
+  placeholder="Email"
+  value={employeeEmail}
+  onChange={(e) =>
+    setEmployeeEmail(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
+
+<input
+  type="text"
+  placeholder="Phone"
+  value={employeePhone}
+  onChange={(e) =>
+    setEmployeePhone(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
+
+<input
+  type="text"
+  placeholder="Role"
+  value={employeeRole}
+  onChange={(e) =>
+    setEmployeeRole(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
+
+<input
+  type="date"
+  value={joiningDate}
+  onChange={(e) =>
+    setJoiningDate(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
+
+<input
+  type="number"
+  placeholder="Salary"
+  value={salary}
+  onChange={(e) =>
+    setSalary(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
 
         <button
           onClick={
@@ -1401,13 +1495,18 @@ try {
 
 )}
 
-{/* LEAVE PAGE */}
+  {/* LEAVE PAGE */}
 {activePage === "leave" && (
 
-  <div className="space-y-8">
+  <div
+    className={`rounded-3xl shadow-xl p-8 ${
+      darkMode
+        ? "bg-slate-800 text-white"
+        : "bg-white text-black"
+    }`}
+  >
 
-    {/* HEADER */}
-    <div className="bg-white rounded-3xl shadow-xl p-8 flex justify-between items-center">
+    <div className="flex justify-between items-center mb-8">
 
       <div>
 
@@ -1415,7 +1514,13 @@ try {
           Leave Management
         </h2>
 
-        <p className="text-gray-500 mt-2">
+        <p
+          className={`mt-2 ${
+            darkMode
+              ? "text-gray-300"
+              : "text-gray-500"
+          }`}
+        >
           Approve or reject employee leave requests
         </p>
 
@@ -1423,155 +1528,164 @@ try {
 
     </div>
 
-    {/* LEAVE TABLE */}
-    <div className="bg-white rounded-3xl shadow-xl p-8">
+    
+     {/* LEAVE TABLE */}
+<div
+  className={`rounded-3xl shadow-xl p-8 ${
+    darkMode
+      ? "bg-slate-800 text-white"
+      : "bg-white text-black"
+  }`}
+>
 
-      <table className="w-full">
+  <table className="w-full">
 
-        <thead>
+          <thead>
 
-          <tr className="border-b">
+            <tr className="border-b">
 
-            <th className="text-left py-4">
-              Employee
-            </th>
+              <th className="text-left py-4">
+                Employee
+              </th>
 
-            <th className="text-left py-4">
-              Leave Type
-            </th>
+              <th className="text-left py-4">
+                Leave Type
+              </th>
 
-            <th className="text-left py-4">
-              From
-            </th>
+              <th className="text-left py-4">
+                From
+              </th>
 
-            <th className="text-left py-4">
-              To
-            </th>
+              <th className="text-left py-4">
+                To
+              </th>
 
-            <th className="text-left py-4">
-              Reason
-            </th>
+              <th className="text-left py-4">
+                Reason
+              </th>
 
-            <th className="text-left py-4">
-              Status
-            </th>
+              <th className="text-left py-4">
+                Status
+              </th>
 
-            <th className="text-left py-4">
-              Action
-            </th>
+              <th className="text-left py-4">
+                Action
+              </th>
 
-          </tr>
+            </tr>
 
-        </thead>
+          </thead>
 
-        <tbody>
+          <tbody>
 
 
-  {leaveRequests.map((leave) => (
+    {leaveRequests.map((leave) => (
 
-    <tr
-      key={leave.id}
-      className="border-b hover:bg-gray-50"
-    >
+      <tr
+        key={leave.id}
+        className="border-b hover:bg-gray-50"
+      >
 
-      <td className="py-5 font-semibold">
-        {leave.employee}
-      </td>
+        <td className="py-5 font-semibold">
+          {leave.employee}
+        </td>
 
-      <td className="py-5">
-        {leave.leaveType}
-      </td>
+        <td className="py-5">
+          {leave.leaveType}
+        </td>
 
-      <td className="py-5">
-        {leave.from}
-      </td>
+        <td className="py-5">
+          {leave.from}
+        </td>
 
-      <td className="py-5">
-        {leave.to}
-      </td>
+        <td className="py-5">
+          {leave.to}
+        </td>
 
-      <td className="py-5">
-        {leave.reason}
-      </td>
+        <td className="py-5">
+          {leave.reason}
+        </td>
 
-      <td className="py-5">
+        <td className="py-5">
 
-        <span
-          className={`px-4 py-2 rounded-full text-sm ${
-            leave.status === "Approved"
-              ? "bg-green-100 text-green-700"
-              : leave.status === "Rejected"
-              ? "bg-red-100 text-red-700"
-              : "bg-yellow-100 text-yellow-700"
-          }`}
-        >
-          {leave.status}
-        </span>
-
-      </td>
-
-      <td className="py-5 flex gap-3">
-
-        {leave.status === "Pending" ? (
-          <>
-
-            <button
-              onClick={() =>
-                approveLeave(leave.id)
-              }
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
-            >
-              Approve
-            </button>
-
-            <button
-              onClick={() =>
-                rejectLeave(leave.id)
-              }
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
-            >
-              Reject
-            </button>
-
-          </>
-        ) : (
-
-          <button
-            className={`px-4 py-2 rounded-xl text-white text-sm ${
+          <span
+            className={`px-4 py-2 rounded-full text-sm ${
               leave.status === "Approved"
-                ? "bg-green-500"
-                : "bg-red-500"
+                ? "bg-green-100 text-green-700"
+                : leave.status === "Rejected"
+                ? "bg-red-100 text-red-700"
+                : "bg-yellow-100 text-yellow-700"
             }`}
           >
             {leave.status}
-          </button>
+          </span>
 
-        )}
+        </td>
 
-      </td>
+        <td className="py-5 flex gap-3">
 
-    </tr>
+          {leave.status === "Pending" ? (
+            <>
 
-  ))}
+              <button
+                onClick={() =>
+                  approveLeave(leave.id)
+                }
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
+              >
+                Approve
+              </button>
 
-</tbody>
+              <button
+                onClick={() =>
+                  rejectLeave(leave.id)
+                }
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
+              >
+                Reject
+              </button>
 
+            </>
+          ) : (
 
+            <button
+              className={`px-4 py-2 rounded-xl text-white text-sm ${
+                leave.status === "Approved"
+                  ? "bg-green-500"
+                  : "bg-red-500"
+              }`}
+            >
+              {leave.status}
+            </button>
+
+          )}
+
+        </td>
+
+      </tr>
+
+    ))}
+
+       </tbody>
       </table>
 
-    </div>
+   </div>
 
-  </div>
+</div>
 
 )}
 {/* PAYROLL PAGE */}
-{activePage === "payroll" &&
- userRole === "Admin" && (
+{activePage === "payroll" && (
 
-  <div className="space-y-8">
+  <div
+    className={`rounded-3xl shadow-xl p-8 ${
+      darkMode
+        ? "bg-slate-800 text-white"
+        : "bg-white text-black"
+    }`}
+  >
 
-    {/* HEADER */}
-    <div className="bg-white rounded-3xl shadow-xl p-8 flex justify-between items-center">
+    <div className="flex justify-between items-center mb-8">
 
       <div>
 
@@ -1579,22 +1693,36 @@ try {
           Payroll Management
         </h2>
 
-        <p className="text-gray-500 mt-2">
+        <p
+          className={`mt-2 ${
+            darkMode
+              ? "text-gray-300"
+              : "text-gray-500"
+          }`}
+        >
           Manage employee salaries and payroll
         </p>
 
       </div>
 
-      <button
-        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl"
-      >
-        Generate Payroll
-      </button>
-
     </div>
 
+    <table className="w-full">
+
+  <thead>
+  </thead>
+
+  <tbody>
+  </tbody>
+
+</table>
     {/* PAYROLL TABLE */}
-    <div className="bg-white rounded-3xl shadow-xl p-8">
+    <div className={`rounded-3xl shadow-xl p-8 ${
+  darkMode
+    ? "bg-slate-800 text-white"
+    : "bg-white text-black"
+}`}
+>
 
       <table className="w-full">
 
@@ -1684,9 +1812,18 @@ try {
   onClick={() =>
     payEmployee(employee._id)
   }
-  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
+  disabled={
+    payrollStatus[employee._id] === "Paid"
+  }
+  className={`px-4 py-2 rounded-xl text-sm text-white ${
+    payrollStatus[employee._id] === "Paid"
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700"
+  }`}
 >
-  Pay
+  {payrollStatus[employee._id] === "Paid"
+    ? "Paid"
+    : "Pay"}
 </button>
 
   <button
@@ -1713,7 +1850,10 @@ try {
 
 )}
 
-      </div>
     </div>
-  );
+
+  </div>
+
+);
+
 }
