@@ -58,6 +58,8 @@ const [departmentName, setDepartmentName] = useState("");
   useState([]);
   const [sortOrder, setSortOrder] =
   useState("asc");
+  const [statusFilter, setStatusFilter] =
+  useState("All");
   
   
  const approveLeave = async (id) => {
@@ -977,6 +979,27 @@ setSalary(employee.salary);
       ? "Z-A"
       : "A-Z"}
   </button>
+  <select
+  value={statusFilter}
+  onChange={(e) =>
+    setStatusFilter(e.target.value)
+  }
+  className="border rounded-2xl px-4 py-3"
+>
+
+  <option value="All">
+    All
+  </option>
+
+  <option value="Present">
+    Present
+  </option>
+
+  <option value="Leave">
+    Leave
+  </option>
+
+</select>
 
 </div>
 
@@ -1031,14 +1054,29 @@ setSalary(employee.salary);
 ) : 
 
   employees
-    .filter((employee) =>
+  .filter((employee) => {
+
+    const matchesSearch =
       employee.name
         .toLowerCase()
         .includes(
           searchTerm.toLowerCase()
-        )
-    )
-    .sort((a, b) =>
+        );
+
+    const matchesStatus =
+      statusFilter === "All"
+        ? true
+        : employee.status === statusFilter;
+
+    return (
+      matchesSearch &&
+      matchesStatus
+    );
+
+  })
+    
+
+  .sort((a, b) =>
       sortOrder === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
@@ -1279,7 +1317,58 @@ setSalary(employee.salary);
 
     </div>
 
-    
+    {/* ATTENDANCE STATS */}
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+  <div className="bg-blue-100 rounded-3xl p-6">
+
+    <h3 className="text-gray-600">
+      Total Employees
+    </h3>
+
+    <p className="text-4xl font-bold text-blue-700 mt-3">
+      {employees.length}
+    </p>
+
+  </div>
+
+  <div className="bg-green-100 rounded-3xl p-6">
+
+    <h3 className="text-gray-600">
+      Present Employees
+    </h3>
+
+    <p className="text-4xl font-bold text-green-700 mt-3">
+      {
+        employees.filter(
+          (emp) =>
+            emp.status === "Present"
+        ).length
+      }
+    </p>
+
+  </div>
+
+  <div className="bg-yellow-100 rounded-3xl p-6">
+
+    <h3 className="text-gray-600">
+      On Leave
+    </h3>
+
+    <p className="text-4xl font-bold text-yellow-700 mt-3">
+      {
+        employees.filter(
+          (emp) =>
+            emp.status === "Leave"
+        ).length
+      }
+    </p>
+
+  </div>
+
+</div>
+
     {/* ATTENDANCE TABLE */}
 
     <div className={`rounded-3xl shadow-xl p-8 ${
