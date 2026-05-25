@@ -42,41 +42,40 @@ const Employee = mongoose.model(
 );
 
 // LOGIN API
-app.post("/login", async (req, res) => {
+app.post("/login", (req, res) => {
 
-  try {
+  const { email, password } = req.body;
 
-    const { email, password } =
-      req.body;
+  if (
+    email === "admin@mgatetech.com" &&
+    password === "admin123"
+  ) {
 
-    const user =
-      await User.findOne({
-        email,
-        password,
-      });
-
-    if (!user) {
-
-      return res.status(401).json({
-        message:
-          "Invalid credentials",
-      });
-
-    }
-
-    res.json({
-      role: user.role,
-      name: user.name,
+    return res.json({
+      success: true,
+      role: "Admin",
     });
-
-  } catch (error) {
-
-    res.status(500).json(error);
 
   }
 
-});
+  if (
+    email === "employee@mgatetech.com" &&
+    password === "employee123"
+  ) {
 
+    return res.json({
+      success: true,
+      role: "Employee",
+    });
+
+  }
+
+  res.status(401).json({
+    success: false,
+    message: "Invalid Email or Password",
+  });
+
+});
 // GET Employees
 app.get("/employees", async (req, res) => {
 

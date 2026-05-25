@@ -12,10 +12,13 @@ import {
 } from "recharts";
 
 export default function HRMSApp() {
+  
 
   // LOGIN
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] =
+   useState("Admin");
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,6 +37,7 @@ export default function HRMSApp() {
 
 const [departmentName, setDepartmentName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  
 
   const [showModal, setShowModal] = useState(false);
   const [newEmployee, setNewEmployee] =
@@ -55,11 +59,31 @@ const [departmentName, setDepartmentName] = useState("");
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [leaveRequests, setLeaveRequests] =
-  useState([]);
+   useState([]);
+  const [leaveType, setLeaveType] =
+  useState("");
+
+const [leaveFrom, setLeaveFrom] =
+  useState("");
+
+const [leaveTo, setLeaveTo] =
+  useState("");
+
+const [leaveReason, setLeaveReason] =
+  useState("");
   const [sortOrder, setSortOrder] =
   useState("asc");
   const [statusFilter, setStatusFilter] =
   useState("All");
+  const [leaveForm, setLeaveForm] =
+  useState({
+    employee: "",
+    leaveType: "",
+    from: "",
+    to: "",
+    reason: "",
+  });
+  
   
   
  const approveLeave = async (id) => {
@@ -131,9 +155,11 @@ const rejectLeave = async (id) => {
 ];
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showProfile, setShowProfile] =
+  useState(false);
 
   const [leaveEmployee, setLeaveEmployee] = useState("");
-  const [leaveType, setLeaveType] = useState("");
+  
   const [leaveDays, setLeaveDays] = useState("");
 
  // FETCH LEAVES
@@ -155,6 +181,7 @@ const fetchLeaves = async () => {
   }
 
 };
+
 
 // FETCH EMPLOYEES
 const fetchEmployees = async () => {
@@ -273,6 +300,39 @@ const deleteDepartment = (index) => {
   updatedDepartments.splice(index, 1);
 
   setDepartments(updatedDepartments);
+
+};
+const applyLeave = async () => {
+
+  try {
+
+    await axios.post(
+      "http://localhost:5000/leaves",
+      {
+        ...leaveForm,
+        status: "Pending",
+      }
+    );
+
+    fetchLeaves();
+
+    setLeaveForm({
+      employee: "",
+      leaveType: "",
+      from: "",
+      to: "",
+      reason: "",
+    });
+
+    alert(
+      "Leave Applied Successfully"
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
 
 };
 
@@ -510,6 +570,35 @@ setSalary(employee.salary);
             </div>
 
             <div className="space-y-5">
+              <div className="flex gap-4 mt-5">
+
+  <button
+    onClick={() =>
+      setUserRole("Admin")
+    }
+    className={`px-5 py-2 rounded-xl ${
+      userRole === "Admin"
+        ? "bg-blue-600 text-white"
+        : "bg-gray-200"
+    }`}
+  >
+    Admin
+  </button>
+
+  <button
+    onClick={() =>
+      setUserRole("Employee")
+    }
+    className={`px-5 py-2 rounded-xl ${
+      userRole === "Employee"
+        ? "bg-green-600 text-white"
+        : "bg-gray-200"
+    }`}
+  >
+    Employee
+  </button>
+
+</div>
 
               <input
                 type="email"
@@ -900,6 +989,61 @@ setSalary(employee.salary);
       </p>
 
     </div>
+    {/* QUICK ACTIONS */}
+
+<div className="grid grid-cols-2 md:grid-cols-5 gap-5 mt-8">
+
+  <div
+    onClick={() =>
+      setActivePage("leave")
+    }
+    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
+  >
+    <h3 className="font-bold">
+      Apply Leave
+    </h3>
+  </div>
+
+  <div
+    onClick={() =>
+      setActivePage("attendance")
+    }
+    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
+  >
+    <h3 className="font-bold">
+      My Attendance
+    </h3>
+  </div>
+
+  <div
+    onClick={() =>
+      setActivePage("payroll")
+    }
+    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
+  >
+    <h3 className="font-bold">
+      Payslips
+    </h3>
+  </div>
+
+  <div className="bg-white rounded-2xl p-5 shadow-lg">
+    <h3 className="font-bold">
+      Holidays
+    </h3>
+  </div>
+
+  <div
+  onClick={() =>
+    setShowProfile(true)
+  }
+  className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
+>
+  <h3 className="font-bold">
+    My Profile
+  </h3>
+</div>
+
+</div>
     {/* ANALYTICS */}
 <div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
 
@@ -1711,10 +1855,30 @@ setSalary(employee.salary);
   <h1 className="text-5xl font-bold mb-2">
     Leave Management
   </h1>
+  {userRole === "Employee" && (
+
+  <button
+    onClick={() =>
+      setShowLeaveModal(true)
+    }
+    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl mt-5"
+  >
+    Apply Leave
+  </button>
+
+)}
 
   <p className="text-gray-500 mb-10">
-    Approve or reject employee leave requests
+    {userRole === "Admin"
+  ? "Approve or reject employee leave requests"
+  : "Apply and track your leave requests"}
   </p>
+ 
+
+{/* APPLY LEAVE FORM */}
+
+
+<table className="w-full"></table>
 
   <table className="w-full">
 
@@ -1736,45 +1900,102 @@ setSalary(employee.salary);
 
     <tbody>
 
-      {leaveRequests.map((leave) => (
+     {leaveRequests.map((leave, index) => (
 
-        <tr
-          key={leave.id}
-          className="border-b"
-        >
+  <tr
+    key={index}
+    className="border-b"
+  >
 
-          <td className="py-5">
-            {leave.employee}
-          </td>
+    <td className="py-5">
+      {leave.employee}
+    </td>
 
-          <td className="py-5">
-            {leave.leaveType}
-          </td>
+    <td className="py-5">
+      {leave.leaveType}
+    </td>
 
-          <td className="py-5">
-            {leave.from}
-          </td>
+    <td className="py-5">
+      {leave.from}
+    </td>
 
-          <td className="py-5">
-            {leave.to}
-          </td>
+    <td className="py-5">
+      {leave.to}
+    </td>
 
-          <td className="py-5">
-            {leave.reason}
-          </td>
+    <td className="py-5">
+      {leave.reason}
+    </td>
 
-          <td className="py-5">
-            {leave.status}
-          </td>
+    <td className="py-5">
 
-          <td className="py-5">
-            Action
-          </td>
+      <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm">
 
-        </tr>
+        {leave.status}
 
-      ))}
+      </span>
 
+    </td>
+
+    <td className="py-5">
+
+      {userRole === "Admin" ? (
+
+        <div className="flex gap-3">
+
+          <button
+  onClick={() => {
+
+    const updatedLeaves =
+      [...leaveRequests];
+
+    updatedLeaves[index].status =
+      "Approved";
+
+    setLeaveRequests(
+      updatedLeaves
+    );
+
+  }}
+  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
+>
+  Approve
+</button>
+
+          <button
+  onClick={() => {
+
+    const updatedLeaves =
+      [...leaveRequests];
+
+    updatedLeaves[index].status =
+      "Rejected";
+
+    setLeaveRequests(
+      updatedLeaves
+    );
+
+  }}
+  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm"
+>
+  Reject
+</button>
+
+        </div>
+
+      ) : (
+
+        <span className="text-gray-500">
+          Waiting
+        </span>
+
+      )}
+
+    </td>
+
+  </tr>
+
+))}
     </tbody>
 
   </table>
@@ -1936,11 +2157,206 @@ setSalary(employee.salary);
   </div>
 
 )}
+{/* MY PROFILE MODAL */}
+{showProfile && (
+
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-3xl p-8 w-[400px] shadow-2xl">
+
+      <div className="flex justify-between items-center mb-6">
+
+        <h2 className="text-2xl font-bold text-black">
+          Employee Profile
+        </h2>
+
+        <button
+          onClick={() =>
+            setShowProfile(false)
+          }
+          className="text-red-500 text-xl"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      <div className="space-y-4 text-black">
+
+        <div>
+
+          <p className="text-gray-500">
+            Name
+          </p>
+
+          <h3 className="font-bold">
+            Suganthan S
+          </h3>
+
+        </div>
+
+        <div>
+
+          <p className="text-gray-500">
+            Department
+          </p>
+
+          <h3 className="font-bold">
+            IT
+          </h3>
+
+        </div>
+
+        <div>
+
+          <p className="text-gray-500">
+            Role
+          </p>
+
+          <h3 className="font-bold">
+            Employee
+          </h3>
+
+        </div>
+
+        <div>
+
+          <p className="text-gray-500">
+            Email
+          </p>
+
+          <h3 className="font-bold">
+            employee@mgatetech.com
+          </h3>
+
+        </div>
+
+      </div>
 
     </div>
 
   </div>
 
-);
+)}
 
+
+{/* LEAVE MODAL */}
+
+{showLeaveModal && (
+
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-3xl p-8 w-[500px] shadow-2xl">
+
+      <div className="flex justify-between items-center mb-6">
+
+        <h2 className="text-2xl font-bold">
+          Apply Leave
+        </h2>
+
+        <button
+          onClick={() =>
+            setShowLeaveModal(false)
+          }
+          className="text-red-500 text-xl"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      <div className="space-y-5">
+
+        <input
+  type="text"
+  placeholder="Leave Type"
+  value={leaveType}
+  onChange={(e) =>
+    setLeaveType(e.target.value)
+  }
+  className="w-full border rounded-2xl px-4 py-3"
+/>
+
+        <input
+  type="date"
+  value={leaveFrom}
+  onChange={(e) =>
+    setLeaveFrom(e.target.value)
+  }
+  className="w-full border rounded-2xl px-4 py-3"
+/>
+
+        <input
+  type="date"
+  value={leaveTo}
+  onChange={(e) =>
+    setLeaveTo(e.target.value)
+  }
+  className="w-full border rounded-2xl px-4 py-3"
+/>
+
+       <textarea
+  placeholder="Reason"
+  value={leaveReason}
+  onChange={(e) =>
+    setLeaveReason(e.target.value)
+  }
+  className="w-full border rounded-2xl px-4 py-3 h-32"
+/>
+
+        
+  <button
+  onClick={async () => {
+
+    try {
+
+      await axios.post(
+        "http://localhost:5000/leaves",
+        {
+          employee: "Suganthan S",
+          leaveType,
+          from: leaveFrom,
+          to: leaveTo,
+          reason: leaveReason,
+          status: "Pending",
+        }
+      );
+
+      fetchLeaves();
+
+      setShowLeaveModal(false);
+
+      setLeaveType("");
+      setLeaveFrom("");
+      setLeaveTo("");
+      setLeaveReason("");
+
+      alert("Leave Applied Successfully");
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  }}
+  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl"
+>
+  Submit Leave Request
+</button>
+    
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
+    </div>
+    </div>
+  );
 }
+
+
+
