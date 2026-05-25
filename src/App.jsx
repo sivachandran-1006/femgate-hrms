@@ -36,6 +36,13 @@ const [departmentName, setDepartmentName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const [showModal, setShowModal] = useState(false);
+  const [newEmployee, setNewEmployee] =
+  useState({
+    name: "",
+    department: "",
+    salary: "",
+    status: "Present",
+  });
 
   const [employeeName, setEmployeeName] = useState("");
   const [department, setDepartment] = useState("");
@@ -49,6 +56,8 @@ const [departmentName, setDepartmentName] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [leaveRequests, setLeaveRequests] =
   useState([]);
+  const [sortOrder, setSortOrder] =
+  useState("asc");
   
   
  const approveLeave = async (id) => {
@@ -209,6 +218,15 @@ const addEmployee = async () => {
     setEmployeeRole("");
     setJoiningDate("");
     setSalary("");
+    setEmployeeRole("");
+
+setJoiningDate("");
+
+setEmployeeEmail("");
+
+setEmployeePhone("");
+setShowModal(false);
+setEditingEmployee(null);
 
     fetchEmployees();
 
@@ -933,15 +951,34 @@ setSalary(employee.salary);
       </h2>
   
 
-    <input
-        type="text"
-        placeholder="Search employee..."
-        value={searchTerm}
-        onChange={(e) =>
-          setSearchTerm(e.target.value)
-        }
-        className="border rounded-2xl px-4 py-3 w-72"
-      />
+   <div className="flex gap-3">
+
+  <input
+    type="text"
+    placeholder="Search employee..."
+    value={searchTerm}
+    onChange={(e) =>
+      setSearchTerm(e.target.value)
+    }
+    className="border rounded-2xl px-4 py-3 w-72"
+  />
+
+  <button
+    onClick={() =>
+      setSortOrder(
+        sortOrder === "asc"
+          ? "desc"
+          : "asc"
+      )
+    }
+    className="bg-blue-600 text-white px-4 py-3 rounded-2xl"
+  >
+    Sort {sortOrder === "asc"
+      ? "Z-A"
+      : "A-Z"}
+  </button>
+
+</div>
 
     </div>
 
@@ -972,16 +1009,41 @@ setSalary(employee.salary);
 </thead>
 
       <tbody>
+       {employees.filter((employee) =>
+  employee.name
+    .toLowerCase()
+    .includes(
+      searchTerm.toLowerCase()
+    )
+).length === 0 ? (
 
-        {employees
-          .filter((employee) =>
-            employee.name
-              .toLowerCase()
-              .includes(
-                searchTerm.toLowerCase()
-              )
-          )
-          .map((employee) => (
+  <tr>
+
+    <td
+      colSpan="4"
+      className="text-center py-10 text-gray-500"
+    >
+      No employees found
+    </td>
+
+  </tr>
+
+) : 
+
+  employees
+    .filter((employee) =>
+      employee.name
+        .toLowerCase()
+        .includes(
+          searchTerm.toLowerCase()
+        )
+    )
+    .sort((a, b) =>
+      sortOrder === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    )
+    .map((employee) => (
 
           <tr
             key={employee._id}
@@ -1067,9 +1129,17 @@ setSalary(employee.salary);
 
       <div>
 
-        <h2 className="text-4xl font-bold">
-          Departments
-        </h2>
+        <div>
+
+  <h2 className="text-4xl font-bold">
+    Employees
+  </h2>
+
+  <p className="text-gray-500 mt-2">
+    Total Employees: {employees.length}
+  </p>
+
+</div>
 
         <p
           className={`mt-2 ${
@@ -1325,9 +1395,19 @@ setSalary(employee.salary);
 {/* ADD EMPLOYEE MODAL */}
 {showModal && (
 
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div
+  onClick={() =>
+    setShowModal(false)
+  }
+  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
 
-    <div className="bg-white rounded-3xl p-8 w-full max-w-md">
+    <div
+  onClick={(e) =>
+    e.stopPropagation()
+  }
+  className="bg-white rounded-3xl p-8 w-full max-w-md"
+>
 
       <div className="flex justify-between items-center mb-6">
 
