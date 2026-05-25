@@ -50,6 +50,7 @@ const [departmentName, setDepartmentName] = useState("");
   const [leaveRequests, setLeaveRequests] =
   useState([]);
   
+  
  const approveLeave = async (id) => {
 
   try {
@@ -162,6 +163,14 @@ const fetchEmployees = async () => {
   }
 
 };
+useEffect(() => {
+
+  fetchEmployees();
+
+  fetchLeaves();
+
+}, []);
+
 
   // ADD EMPLOYEE
 const addEmployee = async () => {
@@ -922,8 +931,9 @@ setSalary(employee.salary);
       <h2 className="text-4xl font-bold">
         Employees
       </h2>
+  
 
-      <input
+    <input
         type="text"
         placeholder="Search employee..."
         value={searchTerm}
@@ -1237,7 +1247,16 @@ setSalary(employee.salary);
 
         <tbody>
 
-          {employees.map((employee) => (
+         {
+  employees
+    .filter((employee) =>
+      employee.name
+        .toLowerCase()
+        .includes(
+          searchTerm.toLowerCase()
+        )
+    )
+    .map((employee) => (
 
             <tr
               key={employee._id}
@@ -1513,38 +1532,6 @@ setSalary(employee.salary);
 {activePage === "leave" && (
 
   <div
-    className={`rounded-3xl shadow-xl p-8 ${
-      darkMode
-        ? "bg-slate-800 text-white"
-        : "bg-white text-black"
-    }`}
-  >
-
-    <div className="flex justify-between items-center mb-8">
-
-      <div>
-
-        <h2 className="text-4xl font-bold">
-          Leave Management
-        </h2>
-
-        <p
-          className={`mt-2 ${
-            darkMode
-              ? "text-gray-300"
-              : "text-gray-500"
-          }`}
-        >
-          Approve or reject employee leave requests
-        </p>
-
-      </div>
-
-    </div>
-
-    
-     {/* LEAVE TABLE */}
-<div
   className={`rounded-3xl shadow-xl p-8 ${
     darkMode
       ? "bg-slate-800 text-white"
@@ -1552,141 +1539,78 @@ setSalary(employee.salary);
   }`}
 >
 
+  <h1 className="text-5xl font-bold mb-2">
+    Leave Management
+  </h1>
+
+  <p className="text-gray-500 mb-10">
+    Approve or reject employee leave requests
+  </p>
+
   <table className="w-full">
 
-          <thead>
+    <thead>
 
-            <tr className="border-b">
+      <tr className="border-b">
 
-              <th className="text-left py-4">
-                Employee
-              </th>
-
-              <th className="text-left py-4">
-                Leave Type
-              </th>
-
-              <th className="text-left py-4">
-                From
-              </th>
-
-              <th className="text-left py-4">
-                To
-              </th>
-
-              <th className="text-left py-4">
-                Reason
-              </th>
-
-              <th className="text-left py-4">
-                Status
-              </th>
-
-              <th className="text-left py-4">
-                Action
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-
-    {leaveRequests.map((leave) => (
-
-      <tr
-        key={leave.id}
-        className="border-b hover:bg-gray-50"
-      >
-
-        <td className="py-5 font-semibold">
-          {leave.employee}
-        </td>
-
-        <td className="py-5">
-          {leave.leaveType}
-        </td>
-
-        <td className="py-5">
-          {leave.from}
-        </td>
-
-        <td className="py-5">
-          {leave.to}
-        </td>
-
-        <td className="py-5">
-          {leave.reason}
-        </td>
-
-        <td className="py-5">
-
-          <span
-            className={`px-4 py-2 rounded-full text-sm ${
-              leave.status === "Approved"
-                ? "bg-green-100 text-green-700"
-                : leave.status === "Rejected"
-                ? "bg-red-100 text-red-700"
-                : "bg-yellow-100 text-yellow-700"
-            }`}
-          >
-            {leave.status}
-          </span>
-
-        </td>
-
-        <td className="py-5 flex gap-3">
-
-          {leave.status === "Pending" ? (
-            <>
-
-              <button
-                onClick={() =>
-                  approveLeave(leave.id)
-                }
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
-              >
-                Approve
-              </button>
-
-              <button
-                onClick={() =>
-                  rejectLeave(leave.id)
-                }
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm"
-              >
-                Reject
-              </button>
-
-            </>
-          ) : (
-
-            <button
-              className={`px-4 py-2 rounded-xl text-white text-sm ${
-                leave.status === "Approved"
-                  ? "bg-green-500"
-                  : "bg-red-500"
-              }`}
-            >
-              {leave.status}
-            </button>
-
-          )}
-
-        </td>
+        <th className="text-left py-4">Employee</th>
+        <th className="text-left py-4">Leave Type</th>
+        <th className="text-left py-4">From</th>
+        <th className="text-left py-4">To</th>
+        <th className="text-left py-4">Reason</th>
+        <th className="text-left py-4">Status</th>
+        <th className="text-left py-4">Action</th>
 
       </tr>
 
-    ))}
+    </thead>
 
-       </tbody>
-      </table>
+    <tbody>
 
-   </div>
+      {leaveRequests.map((leave) => (
+
+        <tr
+          key={leave.id}
+          className="border-b"
+        >
+
+          <td className="py-5">
+            {leave.employee}
+          </td>
+
+          <td className="py-5">
+            {leave.leaveType}
+          </td>
+
+          <td className="py-5">
+            {leave.from}
+          </td>
+
+          <td className="py-5">
+            {leave.to}
+          </td>
+
+          <td className="py-5">
+            {leave.reason}
+          </td>
+
+          <td className="py-5">
+            {leave.status}
+          </td>
+
+          <td className="py-5">
+            Action
+          </td>
+
+        </tr>
+
+      ))}
+
+    </tbody>
+
+  </table>
 
 </div>
-
 )}
 {/* PAYROLL PAGE */}
 {activePage === "payroll" && (
@@ -1723,142 +1647,122 @@ setSalary(employee.salary);
 
     <table className="w-full">
 
-  <thead>
-  </thead>
+      <thead>
 
-  <tbody>
-  </tbody>
-
-</table>
-    {/* PAYROLL TABLE */}
-    <div className={`rounded-3xl shadow-xl p-8 ${
-  darkMode
-    ? "bg-slate-800 text-white"
-    : "bg-white text-black"
-}`}
->
-
-      <table className="w-full">
-
-        <thead>
-
-          <tr className="border-b">
-
-            <th className="text-left py-4">
-              Employee
-            </th>
-
-            <th className="text-left py-4">
-              Department
-            </th>
-
-            <th className="text-left py-4">
-              Status
-            </th>
-
-            <th className="text-left py-4">
-              Salary
-            </th>
-
-            <th className="text-left py-4">
-              Payroll Status
-            </th>
+        <tr className="border-b">
 
           <th className="text-left py-4">
-              Action
-            </th>
+            Employee
+          </th>
+
+          <th className="text-left py-4">
+            Department
+          </th>
+
+          <th className="text-left py-4">
+            Status
+          </th>
+
+          <th className="text-left py-4">
+            Salary
+          </th>
+
+          <th className="text-left py-4">
+            Payroll Status
+          </th>
+
+          <th className="text-left py-4">
+            Action
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {employees.map((employee) => (
+
+          <tr
+            key={employee._id}
+            className="border-b hover:bg-gray-50"
+          >
+
+            <td className="py-5 font-semibold">
+              {employee.name}
+            </td>
+
+            <td className="py-5">
+              {employee.department}
+            </td>
+
+            <td className="py-5">
+
+              <span
+                className={`px-4 py-2 rounded-full text-sm ${
+                  employee.status === "Present"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                }`}
+              >
+                {employee.status}
+              </span>
+
+            </td>
+
+            <td className="py-5 font-bold text-green-600">
+              ₹{employee.salary || 25000}
+            </td>
+
+            <td className="py-5">
+
+              <span
+                className={`px-4 py-2 rounded-full text-sm ${
+                  payrollStatus[employee._id] === "Paid"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+              >
+                {payrollStatus[employee._id] || "Pending"}
+              </span>
+
+            </td>
+
+            <td className="py-5 flex gap-3">
+
+              <button
+                onClick={() =>
+                  payEmployee(employee._id)
+                }
+                disabled={
+                  payrollStatus[employee._id] === "Paid"
+                }
+                className={`px-4 py-2 rounded-xl text-sm text-white ${
+                  payrollStatus[employee._id] === "Paid"
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {payrollStatus[employee._id] === "Paid"
+                  ? "Paid"
+                  : "Pay"}
+              </button>
+
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm"
+              >
+                Payslip
+              </button>
+
+            </td>
 
           </tr>
 
-        </thead>
+        ))}
 
-        <tbody>
+      </tbody>
 
-          {employees.map((employee) => (
-
-            <tr
-              key={employee._id}
-              className="border-b hover:bg-gray-50"
-            >
-
-              <td className="py-5 font-semibold">
-                {employee.name}
-              </td>
-
-              <td className="py-5">
-                {employee.department}
-              </td>
-
-              <td className="py-5">
-
-                <span
-                  className={`px-4 py-2 rounded-full text-sm ${
-                    employee.status === "Present"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {employee.status}
-                </span>
-
-              </td>
-
-              <td className="py-5 font-bold text-green-600">
-                ₹{employee.salary || 25000}
-              </td>
-
-              <td className="py-5">
-
-                <span
-  className={`px-4 py-2 rounded-full text-sm ${
-    payrollStatus[employee._id] === "Paid"
-      ? "bg-green-100 text-green-700"
-      : "bg-blue-100 text-blue-700"
-  }`}
->
-  {payrollStatus[employee._id] || "Pending"}
-</span>
-
-              </td>
-              <td className="py-5 flex gap-3">
-
-<button
-  onClick={() =>
-    payEmployee(employee._id)
-  }
-  disabled={
-    payrollStatus[employee._id] === "Paid"
-  }
-  className={`px-4 py-2 rounded-xl text-sm text-white ${
-    payrollStatus[employee._id] === "Paid"
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-green-600 hover:bg-green-700"
-  }`}
->
-  {payrollStatus[employee._id] === "Paid"
-    ? "Paid"
-    : "Pay"}
-</button>
-
-  <button
-    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm"
-  >
-    Payslip
-  </button>
-  
-
-</td>
-
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
-
-      </div>
+    </table>
 
   </div>
 
@@ -1869,4 +1773,5 @@ setSalary(employee.salary);
   </div>
 
 );
+
 }
