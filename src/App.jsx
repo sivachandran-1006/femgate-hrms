@@ -203,6 +203,27 @@ useEffect(() => {
   fetchAttendance();
 
 }, []);
+useEffect(() => {
+
+  const token =
+    localStorage.getItem(
+      "token"
+    );
+
+  const role =
+    localStorage.getItem(
+      "role"
+    );
+
+  if (token) {
+
+    setIsLoggedIn(true);
+
+    setUserRole(role);
+
+  }
+
+}, []);
 
 
   // ADD EMPLOYEE
@@ -713,6 +734,15 @@ setSalary(employee.salary);
     setUserRole(
       response.data.role
     );
+    localStorage.setItem(
+  "token",
+  response.data.token
+);
+
+localStorage.setItem(
+  "role",
+  response.data.role
+);
 
     setIsLoggedIn(true);
 
@@ -965,9 +995,21 @@ setSalary(employee.salary);
   </button>
 
   <button
-    onClick={() =>
-      setIsLoggedIn(false)
-    }
+    onClick={() => {
+
+  localStorage.removeItem(
+    "token"
+  );
+
+  localStorage.removeItem(
+    "role"
+  );
+
+  setIsLoggedIn(false);
+
+}}
+     
+    
     className="bg-red-500 text-white px-5 py-3 rounded-2xl"
   >
     Logout
