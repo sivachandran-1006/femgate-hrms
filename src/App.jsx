@@ -17,7 +17,8 @@ export default function HRMSApp() {
   
 
   // LOGIN
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn]
+  = useState(false);
   const [userRole, setUserRole] =
    useState("Admin");
   
@@ -220,23 +221,32 @@ const addEmployee = async () => {
 
   try {
 
-    await axios.post(
-      "http://localhost:5000/employees",
-      {
-        name: employeeName,
-        department: department,
-        email: employeeEmail,
-        phone: employeePhone,
-        role: employeeRole,
-        joiningDate: joiningDate,
-        salary: salary,
-        status: "Present",
-      }
-    );
+   await axios.post(
+  "http://localhost:5000/employees",
+  {
+    name: employeeName,
 
+    department: department,
+
+    email: employeeEmail,
+
+    password: password,
+
+    phone: employeePhone,
+
+    role: employeeRole,
+
+    joiningDate: joiningDate,
+
+    salary: salary,
+
+    status: "Present",
+  }
+);
     setEmployeeName("");
     setDepartment("");
     setEmployeeEmail("");
+    setPassword("");
     setEmployeePhone("");
     setEmployeeRole("");
     setJoiningDate("");
@@ -2052,6 +2062,15 @@ setSalary(employee.salary);
   value={employeeEmail}
   onChange={(e) =>
     setEmployeeEmail(e.target.value)
+  }
+  className="w-full border p-3 rounded-xl"
+/>
+<input
+  type="password"
+  placeholder="Password"
+  value={password}
+  onChange={(e) =>
+    setPassword(e.target.value)
   }
   className="w-full border p-3 rounded-xl"
 />

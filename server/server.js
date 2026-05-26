@@ -2,6 +2,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const User = require("./models/User");
+const jwt = require("jsonwebtoken");
+
+const bcrypt = require("bcryptjs");
 
 
 
@@ -44,6 +47,7 @@ const employeeSchema =
     name: String,
     department: String,
     email: String,
+    password: String,
     phone: String,
     role: String,
     joiningDate: String,
@@ -109,40 +113,81 @@ const Employee = mongoose.model(
 );
 
 // LOGIN API
-app.post("/login", (req, res) => {
+app.post(
+  "/login",
+  async (req, res) => {
 
-  const { email, password } = req.body;
+    try {
 
-  if (
-    email === "admin@mgatetech.com" &&
-    password === "admin123"
-  ) {
+      const employee =
+        await Employee.findOne({
+          email:
+            req.body.email,
+        });
 
-    return res.json({
-      success: true,
-      role: "Admin",
-    });
+      if (!employee) {
+
+        return res.status(401).json({
+          message:
+            "Invalid Email",
+        });
+
+      }
+
+      const isMatch =
+        await bcrypt.compare(
+          req.body.password,
+          employee.password
+        );
+
+      if (!isMatch) {
+
+        return res.status(401).json({
+          message:
+            "Invalid Password",
+        });
+
+      }
+
+      const token =
+        jwt.sign(
+
+          {
+            id: employee._id,
+
+            role: employee.role,
+          },
+
+          JWT_SECRET,
+
+          {
+            expiresIn: "1d",
+          }
+
+        );
+
+      res.json({
+
+        token,
+
+        role:
+          employee.role,
+
+        employee,
+
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error:
+          error.message,
+      });
+
+    }
 
   }
-
-  if (
-    email === "employee@mgatetech.com" &&
-    password === "employee123"
-  ) {
-
-    return res.json({
-      success: true,
-      role: "Employee",
-    });
-
-  }
-
-  res.status(401).json({
-    success: false,
-    message: "Invalid Email or Password",
-  });
-
-});
+);
 // GET Employees
 app.get("/employees", async (req, res) => {
 
@@ -155,14 +200,27 @@ app.get("/employees", async (req, res) => {
 
 // ADD Employee
 app.post("/employees", async (req, res) => {
+  const hashedPassword =
+  await bcrypt.hash(
+    req.body.password,
+    10
+  );
 
-  const employee =
-    new Employee(req.body);
 
-  await employee.save();
 
-  res.json(employee);
+const employee =
+  new Employee({
 
+    ...req.body,
+
+    password:
+      hashedPassword,
+
+  });
+
+await employee.save();
+
+res.json(employee);
 });
 
 // UPDATE Employee
@@ -327,6 +385,8 @@ app.put(
 
   }
 );
+const JWT_SECRET =
+  "mgate_hrms_secret_key";
 app.listen(5000, () => {
   app.get("/leaves", async (req, res) => {
 
