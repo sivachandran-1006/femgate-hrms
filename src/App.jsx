@@ -312,12 +312,6 @@ setEmployeeRole("");
 setJoiningDate("");
 setSalary("");
 setReportingManager("");
-
-setJoiningDate("");
-
-setEmployeeEmail("");
-
-setEmployeePhone("");
 setShowModal(false);
 setEditingEmployee(null);
 
@@ -739,18 +733,34 @@ const teamMembers =
             <div className="space-y-5">
               <div className="flex gap-4 mt-5">
 
-  <button
-    onClick={() =>
-      setUserRole("Admin")
-    }
-    className={`px-5 py-2 rounded-xl ${
-      userRole === "Admin"
-        ? "bg-blue-600 text-white"
-        : "bg-gray-200"
-    }`}
-  >
-    Admin
-  </button>
+  <div className="flex gap-3 mt-5 flex-wrap">
+
+  {[
+    "Super Admin",
+    "Admin",
+    "HR",
+    "Manager",
+    "Finance",
+    "Employee",
+  ].map((role) => (
+
+    <button
+      key={role}
+      onClick={() =>
+        setUserRole(role)
+      }
+      className={`px-5 py-2 rounded-xl ${
+        userRole === role
+          ? "bg-blue-600 text-white"
+          : "bg-gray-200"
+      }`}
+    >
+      {role}
+    </button>
+
+  ))}
+
+</div>
 
   <button
     onClick={() =>
@@ -910,7 +920,7 @@ localStorage.setItem(
     }`}>
 
      {/* SIDEBAR */}
-<div className="w-72 bg-white shadow-xl p-6 flex flex-col">
+<div className="w-64 bg-white shadow-xl p-6 flex flex-col">
 
   {/* LOGO */}
   <div className="flex flex-col items-center mb-10">
@@ -924,7 +934,7 @@ localStorage.setItem(
   </div>
 
   {/* MENU */}
-  <ul className="space-y-4 w-full">
+  <ul className="space-y-2 w-full mt-6">
 
     <li
       onClick={() =>
@@ -941,9 +951,10 @@ localStorage.setItem(
 
 {[
   "Super Admin",
-  "HR",
+  "Admin",
+  "Finance",
 ].includes(userRole) && (
-
+  
   <li
     onClick={() =>
       setActivePage("employees")
@@ -957,11 +968,25 @@ localStorage.setItem(
     Employees
   </li>
 
-)}
+)} 
+<li
+  onClick={() =>
+    setActivePage("profile")
+  }
+  className={`px-5 py-3 rounded-xl text-lg cursor-pointer transition ${
+    activePage === "profile"
+      ? "bg-blue-600 text-white"
+      : "hover:bg-blue-100 hover:text-blue-700"
+  }`}
+>
+  My Profile
+</li>
 
-   {[
+
+  {[
   "Super Admin",
-  "HR",
+  "Admin",
+  "Finance",
 ].includes(userRole) && (
 
   <li
@@ -1005,6 +1030,7 @@ localStorage.setItem(
     </li>
 {[
   "Super Admin",
+  "Admin",
   "Finance",
 ].includes(userRole) && (
 
@@ -1050,7 +1076,10 @@ localStorage.setItem(
 
          <div className="flex gap-3">
 
-  {userRole === "Admin" && (
+  {hasAccess([
+  "Super Admin",
+  "Admin",
+]) && (
 
     <>
     
@@ -1112,7 +1141,7 @@ localStorage.setItem(
 {notification && (
 
   <div
-    className={`px-6 py-4 rounded-2xl mb-6 shadow-lg text-white animate-pulse ${
+    className={`px-5 py-3 rounded-xl text-lgmb-6 shadow-lg text-white animate-pulse ${
       notificationType === "success"
         ? "bg-green-600"
         : notificationType === "error"
@@ -1132,74 +1161,105 @@ localStorage.setItem(
   <div>
 
     {/* TOP CARDS */}
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
 
-      <div className="bg-white rounded-3xl shadow-xl p-6">
+  {/* TOTAL */}
+  <div className="bg-white rounded-3xl shadow-xl p-6">
 
-        <h2 className="text-gray-500 text-lg">
-          Total Employees
-        </h2>
+    <h2 className="text-gray-500 text-lg">
+      Total Employees
+    </h2>
 
-        <p className="text-5xl font-bold mt-4 text-blue-600">
-          {employees.length}
-        </p>
+    <p className="text-5xl font-bold mt-4 text-blue-600">
+      {employees.length}
+    </p>
 
-      </div>
+  </div>
 
-      <div className="bg-white rounded-3xl shadow-xl p-6">
+  {/* PRESENT */}
+  <div className="bg-white rounded-3xl shadow-xl p-6">
 
-        <h2 className="text-gray-500 text-lg">
-          Present Employees
-        </h2>
+    <h2 className="text-gray-500 text-lg">
+      Present Employees
+    </h2>
 
-        <p className="text-5xl font-bold mt-4 text-green-600">
-          {
-            employees.filter(
-              (emp) =>
-                emp.status === "Present"
-            ).length
-          }
-        </p>
+    <p className="text-5xl font-bold mt-4 text-green-600">
 
-      </div>
+      {
+        employees.filter(
+          (emp) =>
+            emp.status === "Present"
+        ).length
+      }
 
-      <div className="bg-white rounded-3xl shadow-xl p-6">
+    </p>
 
-        <h2 className="text-gray-500 text-lg">
-          Employees On Leave
-        </h2>
+  </div>
 
-        <p className="text-5xl font-bold mt-4 text-yellow-500">
-          {
-            employees.filter(
-              (emp) =>
-                emp.status === "Leave"
-            ).length
-          }
-        </p>
+  {/* LEAVE */}
+  <div className="bg-white rounded-3xl shadow-xl p-6">
 
-      </div>
+    <h2 className="text-gray-500 text-lg">
+      Employees On Leave
+    </h2>
 
-      <div className="bg-white rounded-3xl shadow-xl p-6">
+    <p className="text-5xl font-bold mt-4 text-yellow-500">
 
-        <h2 className="text-gray-500 text-lg">
-          Pending Leaves
-        </h2>
+      {
+        employees.filter(
+          (emp) =>
+            emp.status === "Leave"
+        ).length
+      }
 
-        <p className="text-5xl font-bold mt-4 text-red-500">
-          {
-            leaveRequests.filter(
-              (leave) =>
-                leave.status === "Pending"
-            ).length
-          }
-        </p>
+    </p>
 
-      </div>
+  </div>
+
+  {/* PENDING */}
+  <div className="bg-white rounded-3xl shadow-xl p-6">
+
+    <h2 className="text-gray-500 text-lg">
+      Pending Leaves
+    </h2>
+
+    <p className="text-5xl font-bold mt-4 text-red-500">
+
+      {
+        leaveRequests.filter(
+          (leave) =>
+            leave.status === "Pending"
+        ).length
+      }
+
+    </p>
+
+  </div>
+
+  {/* TEAM MEMBERS */}
+  {hasAccess([
+    "Manager",
+    "Admin",
+    "Super Admin",
+  ]) && (
+
+    <div className="bg-white rounded-3xl shadow-xl p-6">
+
+      <h2 className="text-gray-500 text-lg">
+        Team Members
+      </h2>
+
+      <p className="text-5xl font-bold mt-4 text-blue-600">
+
+        {teamMembers.length}
+
+      </p>
 
     </div>
-    
 
+  )}
+
+</div>
     {/* WELCOME */}
     <div className="bg-white rounded-3xl shadow-xl p-10">
 
@@ -1317,8 +1377,9 @@ localStorage.setItem(
 
        {/* EMPLOYEES PAGE */}
 {activePage === "employees" &&
-  hasAccess([
+hasAccess([
   "Super Admin",
+  "Admin",
   "HR",
 ]) && (
 
@@ -1406,8 +1467,12 @@ localStorage.setItem(
   </th>
 
   <th className="text-left py-4">
-  Salary
-</th>
+    Salary
+  </th>
+
+  <th className="text-left py-4">
+    Action
+  </th>
 
 </tr>
 
@@ -1435,39 +1500,13 @@ localStorage.setItem(
 
 ) : 
 
-  employees
-  .filter((employee) => {
-
-    const matchesSearch =
-      employee.name
-        .toLowerCase()
-        .includes(
-          searchTerm.toLowerCase()
-        );
-
-    const matchesStatus =
-      statusFilter === "All"
-        ? true
-        : employee.status === statusFilter;
-
-
-    return (
-      matchesSearch &&
-      matchesStatus
-    );
-
-  })
-  
-  
-    
-
+  filteredEmployees
   .sort((a, b) =>
-      sortOrder === "asc"
-        ? a.name.localeCompare(b.name)
-        : b.name.localeCompare(a.name)
-    )
-    .map((employee) => (
-
+    sortOrder === "asc"
+      ? a.name.localeCompare(b.name)
+      : b.name.localeCompare(a.name)
+  )
+  .map((employee) => (
           <tr
             key={employee._id}
             className="border-b hover:bg-gray-50"
@@ -1546,10 +1585,11 @@ localStorage.setItem(
 )}
 {/* DEPARTMENTS PAGE */}
 {activePage === "departments" &&
-  hasAccess([
+hasAccess([
   "Super Admin",
+  "Admin",
   "HR",
-])&& (
+]) && (
 
   <div
     className={`rounded-3xl shadow-xl p-8 ${
@@ -1572,6 +1612,7 @@ localStorage.setItem(
   <p className="text-gray-500 mt-2">
     Total Employees: {employees.length}
   </p>
+  
 
 </div>
 <div className="flex gap-4 mb-8">
@@ -1737,10 +1778,10 @@ localStorage.setItem(
   <div className="bg-blue-100 rounded-3xl p-6">
 
     <h3 className="text-gray-600">
-      Total Employees
-    </h3>
+  Total Employees
+</h3>
 
-    <p className="text-4xl font-bold text-blue-700 mt-3">
+<p className="text-4xl font-bold text-blue-700 mt-3">
       {employees.length}
     </p>
 
@@ -1751,6 +1792,7 @@ localStorage.setItem(
     <h3 className="text-gray-600">
       Present Employees
     </h3>
+    
 
     <p className="text-4xl font-bold text-green-700 mt-3">
       {
@@ -2000,9 +2042,15 @@ localStorage.setItem(
   try {
 
     const latestAttendance =
-      attendanceRecords[
-        attendanceRecords.length - 1
-      ];
+  attendanceRecords.find(
+    (record) =>
+
+      record.employee ===
+        employee.name &&
+
+      record.date ===
+        new Date().toLocaleDateString()
+  );
 
     await axios.put(
 
@@ -2431,6 +2479,73 @@ localStorage.setItem(
   </div>
 
 )}
+{/* PROFILE PAGE */} 
+{activePage === "profile" && (
+
+  <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
+
+    <h2 className="text-4xl font-bold mb-8">
+      My Profile
+    </h2>
+
+    <div className="space-y-6">
+
+      <div>
+        <p className="text-gray-500">
+          Name
+        </p>
+
+        <h3 className="text-2xl font-bold">
+          {loggedInEmployee?.name}
+        </h3>
+      </div>
+
+      <div>
+        <p className="text-gray-500">
+          Email
+        </p>
+
+        <h3 className="text-xl">
+          {loggedInEmployee?.email}
+        </h3>
+      </div>
+
+      <div>
+        <p className="text-gray-500">
+          Department
+        </p>
+
+        <h3 className="text-xl">
+          {loggedInEmployee?.department}
+        </h3>
+      </div>
+
+      <div>
+        <p className="text-gray-500">
+          Role
+        </p>
+
+        <h3 className="text-xl">
+          {loggedInEmployee?.role}
+        </h3>
+      </div>
+
+      <div>
+        <p className="text-gray-500">
+          Reporting Manager
+        </p>
+
+        <h3 className="text-xl">
+          {loggedInEmployee?.reportingManager || "N/A"}
+        </h3>
+      </div>
+
+    </div>
+
+  </div>
+
+)}
+ 
 
   {/* LEAVE PAGE */}
 {activePage === "leave" && (
@@ -2735,6 +2850,9 @@ localStorage.setItem(
           <th className="text-left py-4">
             Department
           </th>
+          <th className="text-left py-4">
+  Reporting Manager
+</th>
 
           <th className="text-left py-4">
             Status
@@ -2772,6 +2890,7 @@ localStorage.setItem(
             <td className="py-5">
               {employee.department}
             </td>
+
             <td className="py-5">
   {employee.reportingManager}
 </td>
@@ -3056,7 +3175,8 @@ localStorage.setItem(
   await axios.post(
     "http://localhost:5000/apply-leave",
     {
-      employee: "Suganthan S",
+      employee:
+  loggedInEmployee?.name,
 
       leaveType:
         leaveType,
