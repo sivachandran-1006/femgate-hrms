@@ -76,6 +76,31 @@ const Leave =
     "Leave",
     leaveSchema
   );
+  const attendanceSchema =
+  new mongoose.Schema({
+
+    employee: String,
+
+    department: String,
+
+    checkIn: String,
+
+    checkOut: String,
+
+    date: String,
+
+    status: {
+      type: String,
+      default: "Present",
+    },
+
+  });
+
+const Attendance =
+  mongoose.model(
+    "Attendance",
+    attendanceSchema
+  );
 
 // Employee Model
 const Employee = mongoose.model(
@@ -191,6 +216,117 @@ app.post("/apply-leave", async (req, res) => {
   }
 
 });
+app.put(
+  "/leave-status/:id",
+  async (req, res) => {
+
+    try {
+
+      await Leave.findByIdAndUpdate(
+        req.params.id,
+        {
+          status:
+            req.body.status,
+        }
+      );
+
+      res.json({
+        message:
+          "Leave Updated",
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error:
+          error.message,
+      });
+
+    }
+
+  }
+);
+app.post(
+  "/attendance",
+  async (req, res) => {
+
+    try {
+
+      const attendance =
+        new Attendance(
+          req.body
+        );
+
+      await attendance.save();
+
+      res.json({
+        message:
+          "Attendance Saved",
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error:
+          error.message,
+      });
+
+    }
+
+  }
+);
+app.get(
+  "/attendance",
+  async (req, res) => {
+
+    try {
+
+      const attendance =
+        await Attendance.find();
+
+      res.json(attendance);
+
+    } catch (error) {
+
+      res.status(500).json({
+        error:
+          error.message,
+      });
+
+    }
+
+  }
+);
+app.put(
+  "/attendance-checkout/:id",
+  async (req, res) => {
+
+    try {
+
+      await Attendance.findByIdAndUpdate(
+        req.params.id,
+        {
+          checkOut:
+            req.body.checkOut,
+        }
+      );
+
+      res.json({
+        message:
+          "Checked Out",
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        error:
+          error.message,
+      });
+
+    }
+
+  }
+);
 app.listen(5000, () => {
   app.get("/leaves", async (req, res) => {
 

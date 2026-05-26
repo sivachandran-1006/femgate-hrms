@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import jsPDF from "jspdf";
 
+
 export default function HRMSApp() {
   
 
@@ -41,13 +42,7 @@ const [departmentName, setDepartmentName] = useState("");
   
 
   const [showModal, setShowModal] = useState(false);
-  const [newEmployee, setNewEmployee] =
-  useState({
-    name: "",
-    department: "",
-    salary: "",
-    status: "Present",
-  });
+ 
 
   const [employeeName, setEmployeeName] = useState("");
   const [department, setDepartment] = useState("");
@@ -107,41 +102,22 @@ const [departmentName, setDepartmentName] = useState("");
 ]);
 const [profileImage, setProfileImage] =
   useState(null);
-  
-  
- const approveLeave = async (id) => {
+
+const [attendanceRecords, setAttendanceRecords] =
+  useState([]);
+
+const fetchAttendance = async () => {
 
   try {
 
-    await axios.put(
-      `http://localhost:5000/leaves/${id}`,
-      {
-        status: "Approved",
-      }
+    const response =
+      await axios.get(
+        "http://localhost:5000/attendance"
+      );
+
+    setAttendanceRecords(
+      response.data
     );
-
-    fetchLeaves();
-
-  } catch (error) {
-
-    console.log(error);
-
-  }
-
-};
-
-const rejectLeave = async (id) => {
-
-  try {
-
-    await axios.put(
-      `http://localhost:5000/leaves/${id}`,
-      {
-        status: "Rejected",
-      }
-    );
-
-    fetchLeaves();
 
   } catch (error) {
 
@@ -153,14 +129,6 @@ const rejectLeave = async (id) => {
   
 
   // LEAVE
-  const [leaves, setLeaves] = useState([
-    {
-      employee: "Priya",
-      type: "Sick Leave",
-      days: 2,
-      status: "Pending",
-    },
-  ]);
   const [payrollStatus, setPayrollStatus] = useState({});
   const chartData = [
   {
@@ -181,7 +149,7 @@ const rejectLeave = async (id) => {
   const [showProfile, setShowProfile] =
   useState(false);
 
-  const [leaveEmployee, setLeaveEmployee] = useState("");
+  
   
   const [leaveDays, setLeaveDays] = useState("");
 
@@ -224,11 +192,14 @@ const fetchEmployees = async () => {
   }
 
 };
+
 useEffect(() => {
 
   fetchEmployees();
 
   fetchLeaves();
+
+  fetchAttendance();
 
 }, []);
 
@@ -470,51 +441,8 @@ setSalary(employee.salary);
     }
   };
 
-  // ADD LEAVE
-  const addLeaveRequest = () => {
-
-    if (
-      leaveEmployee.trim() === "" ||
-      leaveType.trim() === "" ||
-      leaveDays.trim() === ""
-    ) {
-
-      alert("Please fill all fields");
-
-      return;
-
-    }
-
-    const newLeave = {
-      employee: leaveEmployee,
-      type: leaveType,
-      days: leaveDays,
-      status: "Pending",
-    };
-
-    setLeaves([...leaves, newLeave]);
-
-    setLeaveEmployee("");
-    setLeaveType("");
-    setLeaveDays("");
-
-    setShowLeaveModal(false);
-
-  };
-
-  // UPDATE LEAVE STATUS
-  const updateLeaveStatus = (
-    index,
-    newStatus
-  ) => {
-
-    const updatedLeaves = [...leaves];
-
-    updatedLeaves[index].status = newStatus;
-
-    setLeaves(updatedLeaves);
-
-  };
+  
+  
   const downloadPayslip = (
   employee
 ) => {
@@ -1109,7 +1037,7 @@ setSalary(employee.salary);
 
         <p className="text-5xl font-bold mt-4 text-red-500">
           {
-            leaves.filter(
+            leaveRequests.filter(
               (leave) =>
                 leave.status === "Pending"
             ).length
@@ -1466,12 +1394,34 @@ setSalary(employee.salary);
         <div>
 
   <h2 className="text-4xl font-bold">
-    Employees
+    Departments
   </h2>
 
   <p className="text-gray-500 mt-2">
     Total Employees: {employees.length}
   </p>
+
+</div>
+<div className="flex gap-4 mb-8">
+
+  <input
+    type="text"
+    placeholder="Department Name"
+    value={departmentName}
+    onChange={(e) =>
+      setDepartmentName(
+        e.target.value
+      )
+    }
+    className="border rounded-2xl px-4 py-3 w-72"
+  />
+
+  <button
+    onClick={addDepartment}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl"
+  >
+    Add Department
+  </button>
 
 </div>
 
@@ -1506,6 +1456,9 @@ setSalary(employee.salary);
           <th className="text-left py-4">
             Status
           </th>
+          <th className="text-left py-4">
+  Action
+</th>
 
         </tr>
 
@@ -1513,66 +1466,58 @@ setSalary(employee.salary);
 
       <tbody>
 
-        <tr className="border-b">
+  {departments.map(
+    (dept, index) => (
 
-          <td className="py-5 font-semibold">
-            IT
-          </td>
+      <tr
+        key={index}
+        className="border-b"
+      >
 
-          <td className="py-5">
-            3
-          </td>
+        <td className="py-5 font-semibold">
+          {dept}
+        </td>
 
-          <td className="py-5">
+        <td className="py-5">
 
-            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-              Active
-            </span>
+          {
+            employees.filter(
+              (emp) =>
+                emp.department === dept
+            ).length
+          }
 
-          </td>
+        </td>
 
-        </tr>
+        <td className="py-5">
 
-        <tr className="border-b">
+          <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
 
-          <td className="py-5 font-semibold">
-            Engineering
-          </td>
+            Active
 
-          <td className="py-5">
-            1
-          </td>
+          </span>
 
-          <td className="py-5">
+        </td>
 
-            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-              Active
-            </span>
+        <td className="py-5">
 
-          </td>
+          <button
+            onClick={() =>
+              deleteDepartment(index)
+            }
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
+          >
+            Delete
+          </button>
 
-        </tr>
+        </td>
 
-        <tr className="border-b">
+      </tr>
 
-          <td className="py-5 font-semibold">
-            Management
-          </td>
+    )
+  )}
 
-          <td className="py-5">
-            1
-          </td>
-
-          <td className="py-5">
-
-            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-              Active
-            </span>
-
-          </td>
-
-        </tr>
-
+</tbody>
       </tbody>
 
     </table>
@@ -1754,29 +1699,168 @@ setSalary(employee.salary);
                <div className="flex gap-3">
 
   <button
-    onClick={() => {
 
-      const now =
-        new Date().toLocaleTimeString();
+  disabled={
+    attendanceRecords.some(
+      (record) =>
 
-      setCheckInTime(now);
-      markAttendance(employee._id);
+        record.employee ===
+          employee.name &&
 
-    }}
-    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
-  >
-    Check In
-  </button>
+        record.date ===
+          new Date().toLocaleDateString()
+    )
+  }
 
+  onClick={async () => {
+
+    const now =
+      new Date().toLocaleTimeString();
+
+    const today =
+      new Date().toLocaleDateString();
+
+    setCheckInTime(now);
+
+    const alreadyCheckedIn =
+      attendanceRecords.find(
+        (record) =>
+
+          record.employee ===
+            employee.name &&
+
+          record.date === today
+      );
+
+    if (alreadyCheckedIn) {
+
+      setNotification(
+        "Already Checked In Today"
+      );
+
+      setTimeout(() => {
+
+        setNotification("");
+
+      }, 3000);
+
+      return;
+
+    }
+
+    try {
+
+      await axios.post(
+        "http://localhost:5000/attendance",
+        {
+          employee:
+            employee.name,
+
+          department:
+            employee.department,
+
+          checkIn: now,
+
+          checkOut: "-",
+
+          date: today,
+
+          status: "Present",
+        }
+      );
+
+      fetchAttendance();
+
+      setNotification(
+        "Checked In Successfully"
+      );
+
+      setTimeout(() => {
+
+        setNotification("");
+
+      }, 3000);
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  }}
+
+  className={`px-4 py-2 rounded-xl text-white ${
+    attendanceRecords.some(
+      (record) =>
+
+        record.employee ===
+          employee.name &&
+
+        record.date ===
+          new Date().toLocaleDateString()
+    )
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-green-600 hover:bg-green-700"
+  }`}
+>
+
+  {attendanceRecords.some(
+    (record) =>
+
+      record.employee ===
+        employee.name &&
+
+      record.date ===
+        new Date().toLocaleDateString()
+  )
+    ? "Checked In"
+    : "Check In"}
+
+</button>
   <button
-    onClick={() => {
+    onClick={async () => {
 
-      const now =
-        new Date().toLocaleTimeString();
+  const now =
+    new Date().toLocaleTimeString();
 
-      setCheckOutTime(now);
+  setCheckOutTime(now);
 
-    }}
+  try {
+
+    const latestAttendance =
+      attendanceRecords[
+        attendanceRecords.length - 1
+      ];
+
+    await axios.put(
+
+      `http://localhost:5000/attendance-checkout/${latestAttendance._id}`,
+
+      {
+        checkOut: now,
+      }
+
+    );
+
+    fetchAttendance();
+
+    setNotification(
+      "Checked Out Successfully"
+    );
+
+    setTimeout(() => {
+
+      setNotification("");
+
+    }, 3000);
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+}}
     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl"
   >
     Check Out
@@ -1808,6 +1892,99 @@ setSalary(employee.salary);
         </tbody>
 
       </table>
+      {/* ATTENDANCE HISTORY */}
+
+<div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
+
+  <h2 className="text-3xl font-bold mb-6">
+    Attendance History
+  </h2>
+
+  <table className="w-full">
+
+    <thead>
+
+      <tr className="border-b">
+
+        <th className="text-left py-4">
+          Employee
+        </th>
+
+        <th className="text-left py-4">
+          Department
+        </th>
+
+        <th className="text-left py-4">
+          Date
+        </th>
+
+        <th className="text-left py-4">
+          Check In
+        </th>
+
+        <th className="text-left py-4">
+          Check Out
+        </th>
+
+        <th className="text-left py-4">
+          Status
+        </th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      {attendanceRecords.map(
+        (record, index) => (
+
+          <tr
+            key={index}
+            className="border-b"
+          >
+
+            <td className="py-5">
+              {record.employee}
+            </td>
+
+            <td className="py-5">
+              {record.department}
+            </td>
+
+            <td className="py-5">
+              {record.date}
+            </td>
+
+            <td className="py-5">
+              {record.checkIn}
+            </td>
+
+            <td className="py-5">
+              {record.checkOut}
+            </td>
+
+            <td className="py-5">
+
+              <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+
+                {record.status}
+
+              </span>
+
+            </td>
+
+          </tr>
+
+        )
+      )}
+
+    </tbody>
+
+  </table>
+
+</div>
+      
 
     </div>
 
@@ -2067,7 +2244,6 @@ setSalary(employee.salary);
 {/* APPLY LEAVE FORM */}
 
 
-<table className="w-full"></table>
 
   <table className="w-full">
 
@@ -2133,59 +2309,62 @@ setSalary(employee.salary);
         <div className="flex gap-3">
 
           <button
-  onClick={() => {
 
-    const updatedLeaves =
-      [...leaveRequests];
+  onClick={async () => {
 
-    updatedLeaves[index].status =
-      "Approved";
-      setNotification(
-  "Leave Approved Successfully"
-);
+    await axios.put(
 
-setTimeout(() => {
+      `http://localhost:5000/leave-status/${leave._id}`,
 
-  setNotification("");
+      {
+        status: "Approved",
+      }
 
-}, 3000);
-
-    setLeaveRequests(
-      updatedLeaves
     );
 
+    setNotification(
+      "Leave Approved Successfully"
+    );
+
+    setTimeout(() => {
+
+      setNotification("");
+
+    }, 3000);
+
+    fetchLeaves();
+
   }}
+
   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
 >
+
   Approve
+
 </button>
+         <button
 
-          <button
-  onClick={() => {
+  onClick={async () => {
 
-    const updatedLeaves =
-      [...leaveRequests];
+    await axios.put(
 
-    updatedLeaves[index].status =
-      "Rejected";
-      setNotification(
-  "Leave Rejected"
-);
+      `http://localhost:5000/leave-status/${leave._id}`,
 
-setTimeout(() => {
+      {
+        status: "Rejected",
+      }
 
-  setNotification("");
-
-}, 3000);
-
-    setLeaveRequests(
-      updatedLeaves
     );
 
+    fetchLeaves();
+
   }}
-  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm"
+
+  className="bg-red-600 text-white px-4 py-2 rounded-xl"
 >
+
   Reject
+
 </button>
 
         </div>
@@ -2662,9 +2841,17 @@ setTimeout(() => {
 
 )}
     </div>
-    </div>
+</div>
+
   );
 }
+
+   
+
+
+
+
+
 
 
 
