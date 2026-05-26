@@ -62,16 +62,16 @@ const [departmentName, setDepartmentName] = useState("");
   const [leaveRequests, setLeaveRequests] =
    useState([]);
   const [leaveType, setLeaveType] =
-  useState("");
+   useState("");
 
-const [leaveFrom, setLeaveFrom] =
-  useState("");
+  const [leaveFrom, setLeaveFrom] =
+   useState("");
 
-const [leaveTo, setLeaveTo] =
-  useState("");
+  const [leaveTo, setLeaveTo] =
+   useState("");
 
-const [leaveReason, setLeaveReason] =
-  useState("");
+  const [leaveReason, setLeaveReason] =
+   useState("");
   const [sortOrder, setSortOrder] =
   useState("asc");
   const [statusFilter, setStatusFilter] =
@@ -2567,7 +2567,7 @@ setTimeout(() => {
 
       <div className="space-y-5">
 
-        <input
+  <input
   type="text"
   placeholder="Leave Type"
   value={leaveType}
@@ -2610,43 +2610,43 @@ setTimeout(() => {
 
     try {
 
-      await axios.post(
-        "http://localhost:5000/leaves",
-        {
-          employee: "Suganthan S",
-          leaveType,
-          from: leaveFrom,
-          to: leaveTo,
-          reason: leaveReason,
-          status: "Pending",
-        }
-      );
+  await axios.post(
+    "http://localhost:5000/apply-leave",
+    {
+      employee: "Suganthan S",
 
-      fetchLeaves();
+      leaveType:
+        leaveType,
 
-      setShowLeaveModal(false);
+      fromDate:
+        leaveFrom,
 
-      setLeaveType("");
-      setLeaveFrom("");
-      setLeaveTo("");
-      setLeaveReason("");
+      toDate:
+        leaveTo,
 
-      setNotification(
-  "Leave Applied Successfully"
-);
-
-setTimeout(() => {
-
-  setNotification("");
-
-}, 3000);
-
-    } catch (error) {
-
-      console.log(error);
-
+      reason:
+        leaveReason,
     }
+  );
 
+  alert(
+    "Leave Applied Successfully"
+  );
+
+  fetchLeaves();
+
+  setShowLeaveModal(false);
+
+  setLeaveType("");
+  setLeaveFrom("");
+  setLeaveTo("");
+  setLeaveReason("");
+
+} catch (error) {
+
+  console.log(error);
+
+}
   }}
   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl"
 >

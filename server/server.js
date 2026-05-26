@@ -2,9 +2,26 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const User = require("./models/User");
-const Leave = require("./models/Leave");
+
+
 
 const app = express();
+mongoose
+  .connect(
+    "mongodb://127.0.0.1:27017/hrms"
+  )
+  .then(() => {
+
+    console.log(
+      "MongoDB Connected"
+    );
+
+  })
+  .catch((err) => {
+
+    console.log(err);
+
+  });
 
 app.use(cors());
 app.use(express.json());
@@ -34,6 +51,31 @@ const employeeSchema =
     status: String,
 
   });
+  const leaveSchema =
+  new mongoose.Schema({
+
+    employee: String,
+
+    leaveType: String,
+
+    fromDate: String,
+
+    toDate: String,
+
+    reason: String,
+
+    status: {
+      type: String,
+      default: "Pending",
+    },
+
+  });
+
+const Leave =
+  mongoose.model(
+    "Leave",
+    leaveSchema
+  );
 
 // Employee Model
 const Employee = mongoose.model(
@@ -126,6 +168,29 @@ app.delete("/employees/:id", async (req, res) => {
 });
 
 // SERVER
+app.post("/apply-leave", async (req, res) => {
+
+  try {
+
+    const leave =
+      new Leave(req.body);
+
+    await leave.save();
+
+    res.json({
+      message:
+        "Leave Applied Successfully",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: error.message,
+    });
+
+  }
+
+});
 app.listen(5000, () => {
   app.get("/leaves", async (req, res) => {
 
