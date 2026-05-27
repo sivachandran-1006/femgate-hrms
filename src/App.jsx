@@ -1,4 +1,17 @@
 import { useState, useEffect } from "react";
+import Employees from "./pages/Employees";
+import EmployeeModal from "./components/EmployeeModal";
+import {
+
+  fetchEmployeesAPI,
+
+  addEmployeeAPI,
+
+  updateEmployeeAPI,
+
+  deleteEmployeeAPI,
+
+} from "./services/employeeService";
 import logo from "./assets/logo.png";
 import axios from "axios";
 import * as XLSX from "xlsx";
@@ -11,6 +24,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import jsPDF from "jspdf";
+
 
 
 export default function HRMSApp() {
@@ -213,22 +227,10 @@ const fetchEmployees = async () => {
 
   try {
 
-    const response =
-      await axios.get(
+   const data =
+  await fetchEmployeesAPI();
 
-        "http://localhost:5000/employees",
-
-        {
-          headers: {
-            authorization: token,
-          },
-        }
-
-      );
-
-    setEmployees(
-      response.data
-    );
+setEmployees(data);
 
   } catch (error) {
 
@@ -326,40 +328,30 @@ const addEmployee = async () => {
 
   try {
 
-   await axios.post(
+   await addEmployeeAPI({
 
-  "http://localhost:5000/employees",
+  name: employeeName,
 
-  {
-    name: employeeName,
+  department: department,
 
-    department: department,
+  email: employeeEmail,
 
-    email: employeeEmail,
+  password: employeePassword,
 
-    password: employeePassword,
+  phone: employeePhone,
 
-    phone: employeePhone,
+  role: employeeRole,
 
-    role: employeeRole,
+  joiningDate: joiningDate,
 
-    joiningDate: joiningDate,
+  salary: salary,
 
-    salary: salary,
+  reportingManager:
+    reportingManager,
 
-    reportingManager:
-      reportingManager,
+  status: "Present",
 
-    status: "Present",
-  },
-
-  {
-    headers: {
-      authorization: token,
-    },
-  }
-
-);
+});
     setEmployeeName("");
 setDepartment("");
 setEmployeeEmail("");
@@ -512,29 +504,30 @@ setSalary(employee.salary);
 
   try {
 
-    await axios.put(
+    await updateEmployeeAPI(
 
-      `http://localhost:5000/employees/${editingEmployee._id}`,
+  editingEmployee._id,
 
-      {
-        name: employeeName,
-        department: department,
-        email: employeeEmail,
-        phone: employeePhone,
-        role: employeeRole,
-        joiningDate: joiningDate,
-        salary: salary,
-        status: editingEmployee.status,
-      },
+  {
+    name: employeeName,
 
-      {
-        headers: {
-          authorization: token,
-        },
-      }
+    department: department,
 
-    );
+    email: employeeEmail,
 
+    phone: employeePhone,
+
+    role: employeeRole,
+
+    joiningDate: joiningDate,
+
+    salary: salary,
+
+    status:
+      editingEmployee.status,
+  }
+
+);
     fetchEmployees();
 
     setShowModal(false);
@@ -1453,214 +1446,28 @@ localStorage.setItem(
 )}
 
 
-       {/* EMPLOYEES PAGE */}
-{activePage === "employees" &&
+   {activePage === "employees" &&
 hasAccess([
   "Super Admin",
   "Admin",
   "HR",
 ]) && (
-
-  <div className="bg-white rounded-3xl shadow-xl p-8 mt-8">
-
-    <div className="flex justify-between items-center mb-8">
-
-      <h2 className="text-4xl font-bold">
-        Employees
-      </h2>
-  
-
-   <div className="flex gap-3">
-
-  <input
-    type="text"
-    placeholder="Search employee..."
-    value={searchTerm}
-    onChange={(e) =>
-      setSearchTerm(e.target.value)
-    }
-    className="border rounded-2xl px-4 py-3 w-72"
-  />
-
-  <button
-    onClick={() =>
-      setSortOrder(
-        sortOrder === "asc"
-          ? "desc"
-          : "asc"
-      )
-    }
-    className="bg-blue-600 text-white px-4 py-3 rounded-2xl"
-  >
-    Sort {sortOrder === "asc"
-      ? "Z-A"
-      : "A-Z"}
-  </button>
-  <select
-  value={statusFilter}
-  onChange={(e) =>
-    setStatusFilter(e.target.value)
+  <Employees
+  employees={employees}
+  searchTerm={searchTerm}
+  setSearchTerm={setSearchTerm}
+  sortOrder={sortOrder}
+  setSortOrder={setSortOrder}
+  statusFilter={statusFilter}
+  setStatusFilter={setStatusFilter}
+  filteredEmployees={filteredEmployees}
+  setSelectedEmployee={
+    setSelectedEmployee
   }
-  className="border rounded-2xl px-4 py-3"
->
-
-  <option value="All">
-    All
-  </option>
-
-  <option value="Present">
-    Present
-  </option>
-
-  <option value="Leave">
-    Leave
-  </option>
-
-</select>
-
-</div>
-
-    </div>
-
-    <table className="w-full">
-
-     <thead>
-
-  <tr className="border-b">
-
-  <th className="text-left py-4">
-    Name
-  </th>
-
-  <th className="text-left py-4">
-    Department
-  </th>
-
-  <th className="text-left py-4">
-    Reporting Manager
-  </th>
-
-  <th className="text-left py-4">
-    Status
-  </th>
-
-  <th className="text-left py-4">
-    Salary
-  </th>
-
-  <th className="text-left py-4">
-    Action
-  </th>
-
-</tr>
-
-</thead>
-
-      <tbody>
-       {employees.filter((employee) =>
-  employee.name
-    .toLowerCase()
-    .includes(
-      searchTerm.toLowerCase()
-    )
-).length === 0 ? (
-
-  <tr>
-
-    <td
-      colSpan="4"
-      className="text-center py-10 text-gray-500"
-    >
-      No employees found
-    </td>
-
-  </tr>
-
-) : 
-
-  filteredEmployees
-  .sort((a, b) =>
-    sortOrder === "asc"
-      ? a.name.localeCompare(b.name)
-      : b.name.localeCompare(a.name)
-  )
-  .map((employee) => (
-          <tr
-            key={employee._id}
-            className="border-b hover:bg-gray-50"
-          >
-
-           <td className="py-5">
-
-  <button
-    onClick={() =>
-      setSelectedEmployee(employee)
-    }
-    className="font-semibold text-blue-600 hover:underline"
-  >
-    {employee.name}
-  </button>
-
-</td>
-
-            <td className="py-5">
-  {employee.department}
-</td>
-
-<td className="py-5">
-  {employee.reportingManager || "N/A"}
-</td>
-
-<td className="py-5">
-
-  <span
-    className={`px-4 py-2 rounded-full text-sm font-semibold ${
-      employee.status === "Present"
-        ? "bg-green-100 text-green-700"
-        : "bg-yellow-100 text-yellow-700"
-    }`}
-  >
-    {employee.status}
-  </span>
-
-</td>
-
-<td className="py-5 font-bold text-green-600">
-  ₹{employee.salary || 25000}
-</td>
-
-<td className="py-5 flex gap-3">
-
-              <button
-                onClick={() =>
-                  editEmployee(employee)
-                }
-                className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteEmployee(employee._id)
-                }
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl"
-              >
-                Delete
-              </button>
-
-            </td>
-
-          </tr>
-
-        ))}
-
-      </tbody>
-
-    </table>
-
-  </div>
-)}
+  editEmployee={editEmployee}
+  deleteEmployee={deleteEmployee}
+/>
+)}    
 {/* DEPARTMENTS PAGE */}
 {activePage === "departments" &&
 hasAccess([
@@ -2289,185 +2096,68 @@ hasAccess([
   </div>
 
 )}
-{/* ADD EMPLOYEE MODAL */}
+
 {showModal && (
 
-  <div
-  onClick={() =>
-    setShowModal(false)
-  }
-  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
->
+  <EmployeeModal
 
-    <div
-  onClick={(e) =>
-    e.stopPropagation()
-  }
-  className="bg-white rounded-3xl p-8 w-full max-w-md"
->
+    showModal={showModal}
+    setShowModal={setShowModal}
 
-      <div className="flex justify-between items-center mb-6">
+    employeeName={employeeName}
+    setEmployeeName={setEmployeeName}
 
-        <h2 className="text-3xl font-bold">
-          Add Employee
-        </h2>
+    department={department}
+    setDepartment={setDepartment}
 
-        <button
-          onClick={() =>
-            setShowModal(false)
-          }
-          className="text-3xl text-gray-500"
-        >
-          ×
-        </button>
+    employeeEmail={employeeEmail}
+    setEmployeeEmail={setEmployeeEmail}
 
-      </div>
+    employeePassword={
+      employeePassword
+    }
+    setEmployeePassword={
+      setEmployeePassword
+    }
 
-      <div className="space-y-5">
+    employeePhone={employeePhone}
+    setEmployeePhone={
+      setEmployeePhone
+    }
 
-        <input
-          type="text"
-          placeholder="Employee Name"
-          value={employeeName}
-          onChange={(e) =>
-            setEmployeeName(e.target.value)
-          }
-          className="w-full border rounded-2xl px-5 py-4"
-        />
+    employeeRole={employeeRole}
+    setEmployeeRole={
+      setEmployeeRole
+    }
 
-        <input
-          type="text"
-          placeholder="Department"
-          value={department}
-          onChange={(e) =>
-            setDepartment(e.target.value)
-          }
-          className="w-full border rounded-2xl px-5 py-4"
-        />
-        <input
-  type="email"
-  placeholder="Email"
-  value={employeeEmail}
-  onChange={(e) =>
-    setEmployeeEmail(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl"
-/>
-<input
-  type="password"
-  placeholder="Password"
-  value={employeePassword}
-  onChange={(e) =>
-    setEmployeePassword(
-      e.target.value
-    )
-  }
-  className="w-full border p-3 rounded-xl"
-/>
+    joiningDate={joiningDate}
+    setJoiningDate={
+      setJoiningDate
+    }
 
-<input
-  type="text"
-  placeholder="Phone"
-  value={employeePhone}
-  onChange={(e) =>
-    setEmployeePhone(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl"
-/>
+    salary={salary}
+    setSalary={setSalary}
 
-<select
-  value={employeeRole}
-  onChange={(e) =>
-    setEmployeeRole(
-      e.target.value
-    )
-  }
-  className="w-full border p-3 rounded-xl"
->
+    reportingManager={
+      reportingManager
+    }
+    setReportingManager={
+      setReportingManager
+    }
 
-  <option value="">
-    Select Role
-  </option>
+    employees={employees}
 
-  <option value="Super Admin">
-    Super Admin
-  </option>
+    editingEmployee={
+      editingEmployee
+    }
 
-  <option value="HR">
-    HR
-  </option>
+    addEmployee={addEmployee}
 
-  <option value="Manager">
-    Manager
-  </option>
+    updateEmployee={
+      updateEmployee
+    }
 
-  <option value="Team Lead">
-    Team Lead
-  </option>
-
-  <option value="Finance">
-    Finance
-  </option>
-
-  <option value="IT Admin">
-    IT Admin
-  </option>
-
-  <option value="Employee">
-    Employee
-  </option>
-
-</select>
-<input
-  type="text"
-  placeholder="Reporting Manager"
-  value={reportingManager}
-  onChange={(e) =>
-    setReportingManager(
-      e.target.value
-    )
-  }
-  className="w-full border p-3 rounded-xl"
-/>
-<input
-  type="date"
-  value={joiningDate}
-  onChange={(e) =>
-    setJoiningDate(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl"
-/>
-
-<input
-  type="number"
-  placeholder="Salary"
-  value={salary}
-  onChange={(e) =>
-    setSalary(e.target.value)
-  }
-  className="w-full border p-3 rounded-xl"
-/>
-
-        <button
-          onClick={
-            editingEmployee
-              ? updateEmployee
-              : addEmployee
-          }
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl"
-        >
-
-          {editingEmployee
-            ? "Update Employee"
-            : "Save Employee"}
-
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
+  />
 
 )}
 {/* EMPLOYEE PROFILE MODAL */}
