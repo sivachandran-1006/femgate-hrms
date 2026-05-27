@@ -35,6 +35,9 @@ import {
 } from "recharts";
 import jsPDF from "jspdf";
 import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import Dashboard from "./pages/Dashboard";
+
 
 
 
@@ -1020,84 +1023,43 @@ localStorage.setItem(
       
 <div className="flex-1 p-8">
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-12">
-          <div>
+       <Header
 
-            <h1 className="text-5xl font-bold text-blue-700">
-              MGate HRMS
-            </h1>
+  userRole={userRole}
 
-            <p>
-              {userRole} Portal
-            </p>
+  hasAccess={hasAccess}
 
-          </div>
+  exportToExcel={
+    exportToExcel
+  }
 
-         <div className="flex gap-3">
+  setEditingEmployee={
+    setEditingEmployee
+  }
 
-  {hasAccess([
-  "Super Admin",
-  "Admin",
-]) && (
+  setEmployeeName={
+    setEmployeeName
+  }
 
-    <>
-    
-      <button
-        onClick={exportToExcel}
-        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-2xl"
-      >
-        Export Excel
-      </button>
+  setDepartment={
+    setDepartment
+  }
 
-      <button
-        onClick={() => {
-          setEditingEmployee(null);
-          setEmployeeName("");
-          setDepartment("");
-          setShowModal(true);
-        }}
-        className="bg-blue-600 text-white px-5 py-3 rounded-2xl"
-      >
-        Add Employee
-      </button>
+  setShowModal={
+    setShowModal
+  }
 
-    </>
+  setDarkMode={
+    setDarkMode
+  }
 
-  )}
+  darkMode={darkMode}
 
-  <button
-    onClick={() =>
-      setDarkMode(!darkMode)
-    }
-    className="bg-slate-800 text-white px-5 py-3 rounded-2xl"
-  >
-    Dark
-  </button>
+  setIsLoggedIn={
+    setIsLoggedIn
+  }
 
-  <button
-    onClick={() => {
-
-  localStorage.removeItem(
-    "token"
-  );
-
-  localStorage.removeItem(
-    "role"
-  );
-
-  setIsLoggedIn(false);
-
-}}
-     
-    
-    className="bg-red-500 text-white px-5 py-3 rounded-2xl"
-  >
-    Logout
-  </button>
-
-</div>
-</div>
+/>
 {notification && (
 
   <div
@@ -1118,222 +1080,17 @@ localStorage.setItem(
        {/* DASHBOARD */}
 {activePage === "dashboard" && (
 
-  <div>
+  <Dashboard
 
-    {/* TOP CARDS */}
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    employees={employees}
 
-  {/* TOTAL */}
-  <div className="bg-white rounded-3xl shadow-xl p-6">
+    leaves={leaveRequests}
 
-    <h2 className="text-gray-500 text-lg">
-      Total Employees
-    </h2>
-
-    <p className="text-5xl font-bold mt-4 text-blue-600">
-      {employees.length}
-    </p>
-
-  </div>
-
-  {/* PRESENT */}
-  <div className="bg-white rounded-3xl shadow-xl p-6">
-
-    <h2 className="text-gray-500 text-lg">
-      Present Employees
-    </h2>
-
-    <p className="text-5xl font-bold mt-4 text-green-600">
-
-      {
-        employees.filter(
-          (emp) =>
-            emp.status === "Present"
-        ).length
-      }
-
-    </p>
-
-  </div>
-
-  {/* LEAVE */}
-  <div className="bg-white rounded-3xl shadow-xl p-6">
-
-    <h2 className="text-gray-500 text-lg">
-      Employees On Leave
-    </h2>
-
-    <p className="text-5xl font-bold mt-4 text-yellow-500">
-
-      {
-        employees.filter(
-          (emp) =>
-            emp.status === "Leave"
-        ).length
-      }
-
-    </p>
-
-  </div>
-
-  {/* PENDING */}
-  <div className="bg-white rounded-3xl shadow-xl p-6">
-
-    <h2 className="text-gray-500 text-lg">
-      Pending Leaves
-    </h2>
-
-    <p className="text-5xl font-bold mt-4 text-red-500">
-
-      {
-        leaveRequests.filter(
-          (leave) =>
-            leave.status === "Pending"
-        ).length
-      }
-
-    </p>
-
-  </div>
-
-  {/* TEAM MEMBERS */}
-  {hasAccess([
-    "Manager",
-    "Admin",
-    "Super Admin",
-  ]) && (
-
-    <div className="bg-white rounded-3xl shadow-xl p-6">
-
-      <h2 className="text-gray-500 text-lg">
-        Team Members
-      </h2>
-
-      <p className="text-5xl font-bold mt-4 text-blue-600">
-
-        {teamMembers.length}
-
-      </p>
-
-    </div>
-
-  )}
-
-</div>
-    {/* WELCOME */}
-    <div className="bg-white rounded-3xl shadow-xl p-10">
-
-      <h2 className="text-4xl font-bold mb-4">
-        Welcome to MGate HRMS
-      </h2>
-
-      <p className="text-gray-500 text-lg">
-        Manage employees, attendance,
-        leave requests, payroll and
-        company operations from one
-        centralized dashboard.
-      </p>
-
-    </div>
-    {/* QUICK ACTIONS */}
-
-<div className="grid grid-cols-2 md:grid-cols-5 gap-5 mt-8">
-
-  <div
-    onClick={() =>
-      setActivePage("leave")
-    }
-    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
-  >
-    <h3 className="font-bold">
-      Apply Leave
-    </h3>
-  </div>
-
-  <div
-    onClick={() =>
-      setActivePage("attendance")
-    }
-    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
-  >
-    <h3 className="font-bold">
-      My Attendance
-    </h3>
-  </div>
-
-  <div
-    onClick={() =>
-      setActivePage("payroll")
-    }
-    className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
-  >
-    <h3 className="font-bold">
-      Payslips
-    </h3>
-  </div>
-
-  <div
-  onClick={() =>
-    setActivePage("holidays")
-  }
-  className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
->
-    <h3 className="font-bold">
-      Holidays
-    </h3>
-  </div>
-
-  <div
-  onClick={() =>
-    setShowProfile(true)
-  }
-  className="bg-white rounded-2xl p-5 shadow-lg cursor-pointer hover:scale-105 transition"
->
-  <h3 className="font-bold">
-    My Profile
-  </h3>
-</div>
-
-</div>
-    {/* ANALYTICS */}
-<div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
-
-  <h2 className="text-3xl font-bold mb-8">
-    Employee Analytics
-  </h2>
-
-  <div className="h-80">
-
-    <ResponsiveContainer width="100%" height="100%">
-
-      <PieChart>
-
-        <Pie
-          data={chartData}
-          dataKey="value"
-          outerRadius={120}
-          label
-        >
-
-          <Cell fill="#22c55e" />
-          <Cell fill="#facc15" />
-
-        </Pie>
-
-        <Tooltip />
-
-      </PieChart>
-
-    </ResponsiveContainer>
-
-  </div>
-
-</div>
-
-  </div>
+  />
 
 )}
 
+    
 
    {activePage === "employees" &&
 hasAccess([
@@ -1515,476 +1272,6 @@ hasAccess([
 
 
 {/* ATTENDANCE PAGE */}
-{activePage === "attendance" && (
-
-  <div className="space-y-8">
-
-    {/* HEADER */}
-
-    <div className={`rounded-3xl shadow-xl p-8 ${
-  darkMode
-    ? "bg-slate-800 text-white"
-    : "bg-white text-black"
-}`}
->
-      <div className="flex justify-between items-center">
-
-        <div>
-
-          <h2 className="text-4xl font-bold">
-            Attendance
-          </h2>
-
-          <p className="text-gray-500 mt-2">
-            Mark employee attendance and manage check-in/check-out.
-          </p>
-
-        </div>
-
-      </div>
-
-    </div>
-
-    {/* ATTENDANCE STATS */}
-
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-  <div className="bg-blue-100 rounded-3xl p-6">
-
-    <h3 className="text-gray-600">
-  Total Employees
-</h3>
-
-<p className="text-4xl font-bold text-blue-700 mt-3">
-      {employees.length}
-    </p>
-
-  </div>
-
-  <div className="bg-green-100 rounded-3xl p-6">
-
-    <h3 className="text-gray-600">
-      Present Employees
-    </h3>
-    
-
-    <p className="text-4xl font-bold text-green-700 mt-3">
-      {
-        employees.filter(
-          (emp) =>
-            emp.status === "Present"
-        ).length
-      }
-    </p>
-
-  </div>
-
-  <div className="bg-yellow-100 rounded-3xl p-6">
-
-    <h3 className="text-gray-600">
-      On Leave
-    </h3>
-
-    <p className="text-4xl font-bold text-yellow-700 mt-3">
-      {
-        employees.filter(
-          (emp) =>
-            emp.status === "Leave"
-        ).length
-      }
-    </p>
-
-  </div>
-
-</div>
-
-    {/* ATTENDANCE TABLE */}
-
-    <div className={`rounded-3xl shadow-xl p-8 ${
-  darkMode
-    ? "bg-slate-800 text-white"
-    : "bg-white text-black"
-}`}
->
-
-      <table className="w-full">
-
-        <thead>
-
-          <tr className="border-b">
-
-            <th className="text-left py-4">
-              Employee
-            </th>
-
-            <th className="text-left py-4">
-              Department
-            </th>
-
-            <th className="text-left py-4">
-              Status
-            </th>
-
-            <th className="text-left py-4">
-              Action
-            </th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-         {
-  employees
-    .filter((employee) =>
-      employee.name
-        .toLowerCase()
-        .includes(
-          searchTerm.toLowerCase()
-        )
-    )
-    .map((employee) => (
-
-            <tr
-              key={employee._id}
-              className="border-b hover:bg-gray-50"
-            >
-
-              <td className="py-5">
-
-                <button
-                  onClick={() =>
-                    setSelectedEmployee(employee)
-                  }
-                  className="font-semibold text-blue-600 hover:underline"
-                >
-                  {employee.name}
-                </button>
-
-              </td>
-
-              <td className="py-5">
-                {employee.department}
-              </td>
-
-              <td className="py-5">
-
-                <span
-                  className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                    employee.status === "Present"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {employee.status}
-                </span>
-
-              </td>
-
-              <td className="py-5">
-
-               <div className="flex gap-3">
-
-  <button
-
-  disabled={
-    attendanceRecords.some(
-      (record) =>
-
-        record.employee ===
-          employee.name &&
-
-        record.date ===
-          new Date().toLocaleDateString()
-    )
-  }
-
-  onClick={async () => {
-
-    const now =
-      new Date().toLocaleTimeString();
-
-    const today =
-      new Date().toLocaleDateString();
-
-    setCheckInTime(now);
-
-    const alreadyCheckedIn =
-      attendanceRecords.find(
-        (record) =>
-
-          record.employee ===
-            employee.name &&
-
-          record.date === today
-      );
-
-    if (alreadyCheckedIn) {
-
-      setNotification(
-        "Already Checked In Today"
-      );
-
-      setTimeout(() => {
-
-        setNotification("");
-
-      }, 3000);
-
-      return;
-
-    }
-
-    try {
-
-      await axios.post(
-        "http://localhost:5000/attendance",
-        {
-          employee:
-            employee.name,
-
-          department:
-            employee.department,
-
-          checkIn: now,
-
-          checkOut: "-",
-
-          date: today,
-
-          status: "Present",
-        }
-      );
-
-      fetchAttendance();
-
-      setNotification(
-        "Checked In Successfully"
-      );
-
-      setTimeout(() => {
-
-        setNotification("");
-
-      }, 3000);
-
-    } catch (error) {
-
-      console.log(error);
-
-    }
-
-  }}
-
-  className={`px-4 py-2 rounded-xl text-white ${
-    attendanceRecords.some(
-      (record) =>
-
-        record.employee ===
-          employee.name &&
-
-        record.date ===
-          new Date().toLocaleDateString()
-    )
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-green-600 hover:bg-green-700"
-  }`}
->
-
-  {attendanceRecords.some(
-    (record) =>
-
-      record.employee ===
-        employee.name &&
-
-      record.date ===
-        new Date().toLocaleDateString()
-  )
-    ? "Checked In"
-    : "Check In"}
-
-</button>
-  <button
-    onClick={async () => {
-
-  const now =
-    new Date().toLocaleTimeString();
-
-  setCheckOutTime(now);
-
-  try {
-
-    const latestAttendance =
-  attendanceRecords.find(
-    (record) =>
-
-      record.employee ===
-        employee.name &&
-
-      record.date ===
-        new Date().toLocaleDateString()
-  );
-
-    await axios.put(
-
-      `http://localhost:5000/attendance-checkout/${latestAttendance._id}`,
-
-      {
-        checkOut: now,
-      }
-
-    );
-
-    fetchAttendance();
-
-    setNotification(
-      "Checked Out Successfully"
-    );
-
-    setTimeout(() => {
-
-      setNotification("");
-
-    }, 3000);
-
-  } catch (error) {
-
-    console.log(error);
-
-  }
-
-}}
-    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl"
-  >
-    Check Out
-  </button>
-
-</div>
-<div className="text-sm mt-2 text-gray-500">
-
-  {checkInTime && (
-    <p>
-      In: {checkInTime}
-    </p>
-  )}
-
-  {checkOutTime && (
-    <p>
-      Out: {checkOutTime}
-    </p>
-  )}
-
-</div>
-
-              </td>
-
-            </tr>
-
-          ))}
-
-        </tbody>
-
-      </table>
-      {/* ATTENDANCE HISTORY */}
-
-<div className="bg-white rounded-3xl shadow-xl p-8 mt-10">
-
-  <h2 className="text-3xl font-bold mb-6">
-    Attendance History
-  </h2>
-
-  <table className="w-full">
-
-    <thead>
-
-      <tr className="border-b">
-
-        <th className="text-left py-4">
-          Employee
-        </th>
-
-        <th className="text-left py-4">
-          Department
-        </th>
-
-        <th className="text-left py-4">
-          Date
-        </th>
-
-        <th className="text-left py-4">
-          Check In
-        </th>
-
-        <th className="text-left py-4">
-          Check Out
-        </th>
-
-        <th className="text-left py-4">
-          Status
-        </th>
-
-      </tr>
-
-    </thead>
-
-    <tbody>
-
-      {attendanceRecords.map(
-        (record, index) => (
-
-          <tr
-            key={index}
-            className="border-b"
-          >
-
-            <td className="py-5">
-              {record.employee}
-            </td>
-
-            <td className="py-5">
-              {record.department}
-            </td>
-
-            <td className="py-5">
-              {record.date}
-            </td>
-
-            <td className="py-5">
-              {record.checkIn}
-            </td>
-
-            <td className="py-5">
-              {record.checkOut}
-            </td>
-
-            <td className="py-5">
-
-              <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-
-                {record.status}
-
-              </span>
-
-            </td>
-
-          </tr>
-
-        )
-      )}
-
-    </tbody>
-
-  </table>
-
-</div>
-      
-
-    </div>
-
-  </div>
-
-)}
 
 {showModal && (
 
@@ -2884,10 +2171,13 @@ hasAccess([
 
 )}
     </div>
-</div>
 
-  );
+
+    </div>
+
+);
 }
+
 
    
 
