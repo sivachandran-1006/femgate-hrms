@@ -8,8 +8,12 @@ import {
   Navigate,
 
 } from "react-router-dom";
-import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
+import Leave from "./pages/Leave";
+import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import Departments from "./pages/Departments";
 import EmployeeModal from "./components/EmployeeModal";
 import {
 
@@ -36,7 +40,7 @@ import {
 import jsPDF from "jspdf";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import Dashboard from "./pages/Dashboard";
+
 
 
 
@@ -169,12 +173,7 @@ const fetchAttendance = async () => {
 
     "http://localhost:5000/attendance",
 
-    {
-      headers: {
-        authorization: token,
-      },
-    }
-
+  
   );
 
     setAttendanceRecords(
@@ -461,34 +460,32 @@ const applyLeave = async () => {
   // DELETE EMPLOYEE
   const deleteEmployee = async (id) => {
 
-    const confirmDelete =
-  window.confirm(
-    "Are you sure you want to delete this employee?"
-  );
+  const confirmDelete =
+    window.confirm(
+      "Are you sure you want to delete this employee?"
+    );
 
-if (!confirmDelete) return;
+  if (!confirmDelete) return;
 
-try {
+  try {
 
-     await axios.delete(
+    await axios.delete(
+      `http://localhost:5000/employees/${id}`
+    );
 
-  `http://localhost:5000/employees/${id}`,
+    fetchEmployees();
 
-  {
-    headers: {
-      authorization: token,
-    },
+    alert(
+      "Employee Deleted Successfully"
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
   }
 
-);
-      fetchEmployees();
-
-    } catch (error) {
-
-      console.log(error);
-
-    }
-  };
+};
 
   // EDIT EMPLOYEE
   const editEmployee = (employee) => {
@@ -1081,18 +1078,13 @@ localStorage.setItem(
 {activePage === "dashboard" && (
 
   <Dashboard
-
     employees={employees}
-
     leaves={leaveRequests}
-
   />
 
 )}
 
-    
-
-   {activePage === "employees" &&
+{activePage === "employees" &&
 hasAccess([
   "Super Admin",
   "Admin",
@@ -1491,205 +1483,26 @@ hasAccess([
   </div>
 
 )}
+
  
 
   {/* LEAVE PAGE */}
 {activePage === "leave" && (
 
-  <div
-  className={`rounded-3xl shadow-xl p-8 ${
-    darkMode
-      ? "bg-slate-800 text-white"
-      : "bg-white text-black"
-  }`}
->
+  <Leave
 
-  <h1 className="text-5xl font-bold mb-2">
-    Leave Management
-  </h1>
-  {userRole === "Employee" && (
-
-  <button
-    onClick={() =>
-      setShowLeaveModal(true)
+    leaveRequests={
+      leaveRequests
     }
-    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl mt-5"
-  >
-    Apply Leave
-  </button>
 
-)}
+    userRole={userRole}
 
-  <p className="text-gray-500 mb-10">
-    {userRole === "Admin"
-  ? "Approve or reject employee leave requests"
-  : "Apply and track your leave requests"}
-  </p>
- 
+    setShowLeaveModal={
+      setShowLeaveModal
+    }
 
-{/* APPLY LEAVE FORM */}
+  />
 
-
-
-  <table className="w-full">
-
-    <thead>
-
-  <tr className="border-b">
-
-    <th className="text-left py-4">Employee</th>
-
-    <th className="text-left py-4">Leave Type</th>
-
-    <th className="text-left py-4">From</th>
-
-    <th className="text-left py-4">To</th>
-
-    <th className="text-left py-4">Reason</th>
-    
-    <th className="text-left py-4">
-  Approval Stage
-</th>
-
-    <th className="text-left py-4">Status</th>
-
-      </tr>
-
-    </thead>
-
-    <tbody>
-
-     {leaveRequests.map((leave, index) => (
-
-  <tr
-    key={index}
-    className="border-b"
-  >
-
-    <td className="py-5">
-      {leave.employee}
-    </td>
-
-    <td className="py-5">
-      {leave.leaveType}
-    </td>
-
-    <td className="py-5">
-      {leave.from}
-    </td>
-
-    <td className="py-5">
-      {leave.to}
-    </td>
-
-    <td className="py-5">
-      {leave.reason}
-    </td>
-    <td className="py-5">
-
-  <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
-
-    {leave.approvalStage}
-
-  </span>
-
-</td>
-
-    <td className="py-5">
-
-      <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm">
-
-        {leave.status}
-
-      </span>
-
-    </td>
-
-    <td className="py-5">
-
-      {userRole === "Admin" ? (
-
-        <div className="flex gap-3">
-
-          <button
-
-  onClick={async () => {
-
-    await axios.put(
-
-      `http://localhost:5000/leave-status/${leave._id}`,
-
-      {
-        status: "Approved",
-      }
-
-    );
-
-    setNotification(
-      "Leave Approved Successfully"
-    );
-
-    setTimeout(() => {
-
-      setNotification("");
-
-    }, 3000);
-
-    fetchLeaves();
-
-  }}
-
-  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm"
->
-
-  Approve
-
-</button>
-         <button
-
-  onClick={async () => {
-
-    await axios.put(
-
-      `http://localhost:5000/leave-status/${leave._id}`,
-
-      {
-        status: "Rejected",
-      }
-
-    );
-
-    fetchLeaves();
-
-  }}
-
-  className="bg-red-600 text-white px-4 py-2 rounded-xl"
->
-
-  Reject
-
-</button>
-
-        </div>
-
-      ) : (
-
-        <span className="text-gray-500">
-          Waiting
-        </span>
-
-      )}
-
-    </td>
-
-  </tr>
-
-))}
-    </tbody>
-
-  </table>
-
-</div>
 )}
 {/* HOLIDAYS PAGE */}
 {activePage === "holidays" && (

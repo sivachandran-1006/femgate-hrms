@@ -66,6 +66,18 @@ const Sidebar = ({
         >
           My Profile
         </li>
+        <li
+  onClick={() =>
+    setActivePage("leave")
+  }
+  className={`cursor-pointer px-6 py-4 rounded-2xl transition-all ${
+    activePage === "leave"
+      ? "bg-blue-600 text-white"
+      : "text-black hover:bg-gray-200"
+  }`}
+>
+  Leave
+</li>
 
       </ul>
 

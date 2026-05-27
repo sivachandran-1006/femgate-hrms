@@ -45,19 +45,19 @@ const EmployeeModal = ({
       onClick={() =>
         setShowModal(false)
       }
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 overflow-y-auto"
     >
 
       <div
         onClick={(e) =>
           e.stopPropagation()
         }
-        className="bg-white rounded-3xl p-8 w-full max-w-md"
+        className="bg-white rounded-3xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
       >
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
 
-          <h2 className="text-3xl font-bold">
+          <h2 className="text-2xl font-bold">
 
             {editingEmployee
               ? "Edit Employee"
@@ -75,7 +75,7 @@ const EmployeeModal = ({
           </button>
 
         </div>
-        <div className="space-y-5">
+        <div className="space-y-4">
 
   <input
     type="text"
@@ -86,7 +86,7 @@ const EmployeeModal = ({
         e.target.value
       )
     }
-    className="w-full border rounded-2xl px-5 py-4"
+    className="w-full border border-gray-300 rounded-2xl px-4 py-3"
   />
 
   <input

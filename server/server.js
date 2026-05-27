@@ -250,17 +250,71 @@ app.put("/employees/:id", async (req, res) => {
 });
 
 // DELETE Employee
-app.delete(
-  "/employees/:id",
-  authMiddleware, async (req, res) => {
+app.delete("/employees/:id", async (req, res) => {
 
-  await Employee.findByIdAndDelete(
+  console.log(
+    "DELETE ID:",
     req.params.id
   );
 
-  res.json({
-    message: "Deleted",
-  });
+  try {
+
+    const deletedEmployee =
+      await Employee.findByIdAndDelete(
+        req.params.id
+      );
+
+    console.log(
+      deletedEmployee
+    );
+
+    res.json({
+      success: true,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      success: false,
+    });
+
+  }
+
+});
+// GET LEAVES
+app.get("/leaves", async (req, res) => {
+
+  const leaves = await Leave.find();
+
+  res.json(leaves);
+
+});
+
+// ADD LEAVE
+app.post("/leaves", async (req, res) => {
+
+  const leave =
+    new Leave(req.body);
+
+  await leave.save();
+
+  res.json(leave);
+
+});
+
+// UPDATE LEAVE
+app.put("/leaves/:id", async (req, res) => {
+
+  const updatedLeave =
+    await Leave.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+  res.json(updatedLeave);
 
 });
 
@@ -402,36 +456,6 @@ app.put(
 const JWT_SECRET =
   "mgate_hrms_secret_key";
 app.listen(5000, () => {
-  app.get("/leaves", async (req, res) => {
-
-  const leaves =
-    await Leave.find();
-
-  res.json(leaves);
-
-});
-app.post("/leaves", async (req, res) => {
-
-  const leave =
-    new Leave(req.body);
-
-  await leave.save();
-
-  res.json(leave);
-
-});
-app.put("/leaves/:id", async (req, res) => {
-
-  const updatedLeave =
-    await Leave.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-
-  res.json(updatedLeave);
-
-});
 
   console.log(
     "Server running on port 5000"
