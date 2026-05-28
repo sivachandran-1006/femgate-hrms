@@ -16,7 +16,7 @@ const Sidebar = ({
   setActivePage,
   darkMode,
   setDarkMode,
-  setIsLoggedIn,
+  onLogout,
 }) => {
 
   const menuItems = [
@@ -31,9 +31,21 @@ const Sidebar = ({
 
   return (
     <div
-      style={{ width: 240, minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}
-      className="bg-white border-r border-gray-100 flex flex-col justify-between py-6 px-3"
-    >
+  style={{
+    width: 220,
+    height: "100vh",
+    position: "fixed",
+    top: 0,
+    left: 0,
+    background: "#ffffff",
+    borderRight: "1px solid #e2e8f0",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    padding: "18px 14px",
+    zIndex: 1000,
+  }}
+>
 
       {/* ── TOP ── */}
       <div>
@@ -100,37 +112,32 @@ const Sidebar = ({
 
         {/* LOGOUT */}
         <button
-          onClick={() => {
+  onClick={onLogout}
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "10px 18px",
+    width: "100%",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "#ef4444",
+    fontSize: 15,
+    fontWeight: 500,
+    borderRadius: 12,
+  }}
+  onMouseEnter={(e) =>
+    (e.currentTarget.style.background = "#fef2f2")
+  }
+  onMouseLeave={(e) =>
+    (e.currentTarget.style.background = "none")
+  }
+>
+  <LogOut size={20} strokeWidth={1.8} />
 
-  localStorage.removeItem("token");
-
-  localStorage.removeItem("role");
-
-  localStorage.removeItem("employee");
-
-  setIsLoggedIn(false);
-
-}}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "10px 18px",
-            width: "100%",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "#ef4444",
-            fontSize: 15,
-            fontWeight: 500,
-            borderRadius: 12,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-        >
-          <LogOut size={20} strokeWidth={1.8} />
-          <span>Logout</span>
-        </button>
+  <span>Logout</span>
+</button>
 
         {/* DARK MODE */}
         <div
