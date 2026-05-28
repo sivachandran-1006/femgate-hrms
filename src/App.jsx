@@ -40,6 +40,7 @@ import {
 import jsPDF from "jspdf";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import Attendance from "./components/Attendance";
 
 
 
@@ -1495,6 +1496,11 @@ hasAccess([
     setShowLeaveModal={setShowLeaveModal}
     fetchLeaves={fetchLeaves}
   />
+
+)}
+{activePage === "attendance" && (
+
+  <Attendance />
 
 )}
 

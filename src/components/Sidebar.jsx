@@ -68,6 +68,18 @@ const Sidebar = ({
         </li>
         <li
   onClick={() =>
+    setActivePage("attendance")
+  }
+  className={`cursor-pointer px-6 py-4 rounded-2xl transition-all ${
+    activePage === "attendance"
+      ? "bg-blue-600 text-white"
+      : "text-black hover:bg-gray-200"
+  }`}
+>
+  ⏱ Attendance
+</li>
+        <li
+  onClick={() =>
     setActivePage("leave")
   }
   className={`cursor-pointer px-6 py-4 rounded-2xl transition-all ${
@@ -78,6 +90,7 @@ const Sidebar = ({
 >
   Leave
 </li>
+
 
       </ul>
 
