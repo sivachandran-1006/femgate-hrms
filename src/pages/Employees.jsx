@@ -19,6 +19,7 @@ const Employees = ({
 
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const sorted = [...filteredEmployees].sort((a, b) =>
     sortOrder === "asc"
@@ -31,6 +32,24 @@ const Employees = ({
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+  const inputStyle = {
+  width: "100%",
+  height: 52,
+  border: "1px solid #dbe4ee",
+  borderRadius: 12,
+  padding: "0 16px",
+  fontSize: 14,
+  background: "#fff",
+  boxSizing: "border-box",
+  outline: "none",
+};
+const labelStyle = {
+  display: "block",
+  marginBottom: 8,
+  fontSize: 14,
+  fontWeight: 600,
+  color: "#334155",
+};
 
   return (
    <div
@@ -68,7 +87,7 @@ const Employees = ({
           </button>
 
           <button
-            onClick={onAddEmployee}
+            onClick={() => setShowAddModal(true)}
             style={{
               display: "flex", alignItems: "center", gap: 8,
               background: "#2563eb", color: "#fff",
@@ -84,13 +103,89 @@ const Employees = ({
       </div>
 
       {/* SEARCH + SORT + FILTER ROW */}
+{/* EMPLOYEE STATS */}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 20,
+    marginBottom: 28,
+  }}
+>
+      <div
+    style={{
+      background: "#fff",
+      padding: 20,
+      borderRadius: 16,
+      border: "1px solid #e2e8f0",
+    }}
+  >
+    <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
+      Total Employees
+    </p>
+    <h2 style={{ margin: "8px 0 0", fontSize: 28 }}>
+      {employees.length}
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      padding: 20,
+      borderRadius: 16,
+      border: "1px solid #e2e8f0",
+    }}
+  >
+    <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
+      Present Today
+    </p>
+    <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#22c55e" }}>
+      {employees.filter(e => e.status === "Present").length}
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      padding: 20,
+      borderRadius: 16,
+      border: "1px solid #e2e8f0",
+    }}
+  >
+    <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
+      On Leave
+    </p>
+    <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#f59e0b" }}>
+      {employees.filter(e => e.status === "Leave").length}
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      padding: 20,
+      borderRadius: 16,
+      border: "1px solid #e2e8f0",
+    }}
+  >
+    <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>
+      New Joiners
+    </p>
+    <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#2563eb" }}>
+      1
+    </h2>
+  </div>
+</div>
+
+
+{/* SEARCH + SORT + FILTER */}
 <div
   style={{
     display: "flex",
+    justifyContent: "flex-end",
     alignItems: "center",
-    gap: 14,
+    gap: 12,
     marginBottom: 28,
-    flexWrap: "wrap",
   }}
 >
 
@@ -113,7 +208,7 @@ const Employees = ({
   fontSize: 14,
   fontWeight: 500,
   color: "#0f172a",
-  width: 360,
+  width: 260,
   height: 52,
   outline: "none",
   background: "#ffffff",
@@ -132,7 +227,7 @@ const Employees = ({
     border: "1px solid #dbe4ee",
     borderRadius: 12,
     padding: "0 18px",
-    minWidth: 140,
+    minWidth: 120,
     height: 52,
     justifyContent: "space-between",
     fontSize: 14,
@@ -188,7 +283,15 @@ const Employees = ({
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #f1f5f9" }}>
-              {["Name", "Department", "Reporting Manager", "Status", "Salary", "Action"].map((h) => (
+              {[
+  "Employee ID",
+  "Employee Name",
+  "Department",
+  "Designation",
+  "Status",
+  "Join Date",
+  "Action",
+].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -210,93 +313,159 @@ const Employees = ({
                 </td>
               </tr>
             ) : (
-              paginated.map((employee) => (
-                <tr
-                  key={employee._id}
-                  style={{ borderBottom: "1px solid #f8fafc" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  {/* NAME */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <button
-                      onClick={() => setSelectedEmployee(employee)}
-                      style={{
-                        background: "none", border: "none",
-                        color: "#2563eb", fontWeight: 600,
-                        fontSize: 14, cursor: "pointer", padding: 0,
-                      }}
-                    >
-                      {employee.name}
-                    </button>
-                  </td>
+  paginated.map((employee) => (
+    <tr
+  key={employee._id}
+  style={{
+    borderBottom: "1px solid #f1f5f9",
+  }}
+>
+  {/* EMPLOYEE ID */}
+  <td style={{ padding: "18px 12px" }}>
+    <span
+      style={{
+        fontSize: 13,
+        fontWeight: 700,
+        color: "#2563eb",
+      }}
+    >
+      EMP{String(
+        employees.findIndex((e) => e._id === employee._id) + 1
+      ).padStart(3, "0")}
+    </span>
+  </td>
 
-                  {/* DEPARTMENT */}
-                  <td style={{ padding: "18px 12px", fontSize: 14, color: "#334155" }}>
-                    {employee.department}
-                  </td>
+  {/* EMPLOYEE NAME */}
+  <td style={{ padding: "18px 12px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: "50%",
+          background: "#dbeafe",
+          color: "#2563eb",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+        }}
+      >
+        {employee.name?.charAt(0)}
+      </div>
 
-                  {/* REPORTING MANAGER */}
-                  <td style={{ padding: "18px 12px", fontSize: 14, color: "#334155" }}>
-                    {employee.reportingManager || "N/A"}
-                  </td>
+      <div>
+        <div
+          style={{
+            fontWeight: 600,
+            color: "#0f172a",
+          }}
+        >
+          {employee.name}
+        </div>
 
-                  {/* STATUS */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "5px 14px",
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        background: employee.status === "Present" ? "#dcfce7" : "#fef9c3",
-                        color: employee.status === "Present" ? "#16a34a" : "#ca8a04",
-                      }}
-                    >
-                      {employee.status}
-                    </span>
-                  </td>
+        <div
+          style={{
+            fontSize: 12,
+            color: "#94a3b8",
+          }}
+        >
+          {employee.email}
+        </div>
+      </div>
+    </div>
+  </td>
 
-                  {/* SALARY */}
-                  <td style={{ padding: "18px 12px", fontSize: 14, fontWeight: 700, color: "#16a34a" }}>
-                    ₹{Number(employee.salary || 25000).toLocaleString("en-IN")}
-                  </td>
+  {/* DEPARTMENT */}
+  <td
+    style={{
+      padding: "18px 12px",
+      color: "#334155",
+      fontWeight: 500,
+    }}
+  >
+    {employee.department}
+  </td>
 
-                  {/* ACTIONS */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <button
-                        onClick={() => editEmployee(employee)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 6,
-                          background: "#f59e0b", color: "#fff",
-                          border: "none", borderRadius: 8,
-                          padding: "8px 16px", fontSize: 13, fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Pencil size={13} />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteEmployee(employee._id)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 6,
-                          background: "#ef4444", color: "#fff",
-                          border: "none", borderRadius: 8,
-                          padding: "8px 16px", fontSize: 13, fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Trash2 size={13} />
-                        Delete
-                      </button>
-                    </div>
-                  </td>
+  {/* DESIGNATION */}
+  <td
+    style={{
+      padding: "18px 12px",
+      color: "#334155",
+      fontWeight: 500,
+    }}
+  >
+    {employee.designation || "System Engineer"}
+  </td>
 
-                </tr>
-              ))
+  {/* STATUS */}
+  <td style={{ padding: "18px 12px" }}>
+    <span
+      style={{
+        padding: "6px 14px",
+        borderRadius: 999,
+        fontSize: 12,
+        fontWeight: 700,
+        background:
+          employee.status === "Present"
+            ? "#dcfce7"
+            : "#fef3c7",
+        color:
+          employee.status === "Present"
+            ? "#16a34a"
+            : "#d97706",
+      }}
+    >
+      {employee.status}
+    </span>
+  </td>
+
+  {/* JOIN DATE */}
+  <td
+    style={{
+      padding: "18px 12px",
+      color: "#64748b",
+      fontSize: 14,
+    }}
+  >
+    {employee.joinDate || "29/05/2026"}
+  </td>
+
+  {/* ACTIONS */}
+  <td style={{ padding: "18px 12px" }}>
+    <div style={{ display: "flex", gap: 10 }}>
+      <button
+        onClick={() => editEmployee(employee)}
+        style={{
+          border: "none",
+          background: "#f8fafc",
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          cursor: "pointer",
+        }}
+      >
+        <Pencil size={15} />
+      </button>
+
+      <button
+        onClick={() => deleteEmployee(employee._id)}
+        style={{
+          border: "none",
+          background: "#fef2f2",
+          width: 38,
+          height: 38,
+          borderRadius: 10,
+          cursor: "pointer",
+          color: "#ef4444",
+        }}
+      >
+        <Trash2 size={15} />
+      </button>
+    </div>
+  </td>
+</tr>
+  ))
             )}
           </tbody>
         </table>
@@ -365,7 +534,205 @@ const Employees = ({
         </div>
 
       </div>
+    
+    {showAddModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(15,23,42,0.45)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+      padding: 20,
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        width: "1200px",
+        maxWidth: "95vw",
+        borderRadius: 18,
+        overflow: "hidden",
+        boxShadow: "0 25px 80px rgba(15,23,42,0.18)",
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          padding: "24px 36px",
+          borderBottom: "1px solid #e2e8f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#0f172a",
+          }}
+        >
+          Add new employee
+        </h2>
+
+        <button
+          onClick={() => setShowAddModal(false)}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            border: "1px solid #dbe4ee",
+            background: "#fff",
+            cursor: "pointer",
+            fontSize: 22,
+          }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div style={{ padding: "36px" }}>
+
+        {/* PERSONAL DETAILS */}
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            marginBottom: 24,
+          }}
+        >
+          Personal Details
+        </h3>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+            marginBottom: 40,
+          }}
+        >
+          <div>
+            <label style={labelStyle}>First Name *</label>
+            <input placeholder="Enter first name" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Last Name *</label>
+            <input placeholder="Enter last name" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Email *</label>
+            <input placeholder="work@company.com" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Phone</label>
+            <input placeholder="+91 XXXXX XXXXX" style={inputStyle} />
+          </div>
+        </div>
+
+        {/* WORK DETAILS */}
+        <h3
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: "#64748b",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            marginBottom: 24,
+          }}
+        >
+          Work Details
+        </h3>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+          }}
+        >
+          <div>
+            <label style={labelStyle}>Department *</label>
+
+            <select style={inputStyle}>
+              <option>Select dept</option>
+              <option>HR</option>
+              <option>IT</option>
+              <option>Finance</option>
+              <option>Operations</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Designation *</label>
+            <input placeholder="Enter role" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Join Date *</label>
+            <input type="date" style={inputStyle} />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Salary (₹)</label>
+            <input placeholder="0.00" style={inputStyle} />
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 40,
+          }}
+        >
+          <button
+            onClick={() => setShowAddModal(false)}
+            style={{
+              padding: "14px 28px",
+              borderRadius: 12,
+              border: "1px solid #dbe4ee",
+              background: "#fff",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            style={{
+              padding: "14px 32px",
+              borderRadius: 12,
+              border: "none",
+              background: "#2563eb",
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Save Employee
+          </button>
+        </div>
+
+      </div>
     </div>
+  </div>
+)}
+</div>
+
     
   );
 };
