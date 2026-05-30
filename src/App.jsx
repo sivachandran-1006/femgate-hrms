@@ -6,7 +6,7 @@ import { saveAs } from "file-saver";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
-import Attendance from "./components/Attendance";
+import Attendance from "./pages/Attendance";
 import Payroll from "./pages/Payroll";
 import Leave from "./pages/Leave";
 import EmployeeModal from "./components/EmployeeModal";
@@ -71,11 +71,16 @@ export default function HRMSApp() {
   const hasAccess = (roles) => roles.includes(userRole);
 
   const filteredEmployees = employees.filter((emp) => {
-    const matchSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "All" || emp.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+  const matchSearch = (emp?.name || "")
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
 
+  const matchStatus =
+    statusFilter === "All" ||
+    emp?.status === statusFilter;
+
+  return matchSearch && matchStatus;
+});
   const resetForm = () => {
     setEmployeeName(""); setDepartment(""); setEmployeeEmail("");
     setEmployeePassword(""); setEmployeePhone(""); setEmployeeRole("");

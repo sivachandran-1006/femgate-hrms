@@ -235,9 +235,7 @@ app.post(
   }
 );
 // GET Employees
-app.get(
-  "/employees",
-  authMiddleware, async (req, res) => {
+app.post("/employees", async (req, res) => {
 
   const employees =
     await Employee.find();
@@ -247,32 +245,29 @@ app.get(
 });
 
 // ADD Employee
-app.post(
-  "/employees",
-  authMiddleware, async (req, res) => {
+app.get("/employees", async (req, res) => {
+
   const hashedPassword =
-  await bcrypt.hash(
-    req.body.password,
-    10
-  );
+    await bcrypt.hash(
+      req.body.password,
+      10
+    );
 
+  const employee =
+    new Employee({
 
+      ...req.body,
 
-const employee =
-  new Employee({
+      password:
+        hashedPassword,
 
-    ...req.body,
+    });
 
-    password:
-      hashedPassword,
+  await employee.save();
 
-  });
+  res.json(employee);
 
-await employee.save();
-
-res.json(employee);
 });
-
 // UPDATE Employee
 app.put("/employees/:id", async (req, res) => {
 
