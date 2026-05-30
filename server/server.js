@@ -244,29 +244,43 @@ app.post("/employees", async (req, res) => {
 
 });
 
-// ADD Employee
+// GET Employees
 app.get("/employees", async (req, res) => {
+  try {
+    const employees = await Employee.find();
+    res.json(employees);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
 
-  const hashedPassword =
-    await bcrypt.hash(
-      req.body.password,
+// ADD Employee
+app.post("/employees", async (req, res) => {
+  try {
+
+    const hashedPassword = await bcrypt.hash(
+      req.body.password || "123456",
       10
     );
 
-  const employee =
-    new Employee({
-
+    const employee = new Employee({
       ...req.body,
-
-      password:
-        hashedPassword,
-
+      password: hashedPassword,
     });
 
-  await employee.save();
+    await employee.save();
 
-  res.json(employee);
+    res.json(employee);
 
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 });
 // UPDATE Employee
 app.put("/employees/:id", async (req, res) => {

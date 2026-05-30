@@ -51,16 +51,16 @@ export default function HRMSApp() {
 
   // ── MOCK DATA ─────────────────────────────────────────────────────────────
   const MOCK_EMPLOYEES = [
-    { _id: "emp001", name: "Mani",         department: "IT",         email: "mani@mgatetech.com",         phone: "9876543210", role: "Software Engineer",   salary: "72000",  joiningDate: "2023-06-15", status: "Present", reportingManager: "Siva" },
-    { _id: "emp002", name: "Siva", department: "Management", email: "siva@mgatetech.com",         phone: "9876543211", role: "Engineering Manager",  salary: "95000",  joiningDate: "2021-01-05", status: "Present", reportingManager: "" },
-    { _id: "emp003", name: "Santhosh",     department: "IT",         email: "santhosh@mgatetech.com",     phone: "9876543212", role: "Backend Developer",    salary: "69000",  joiningDate: "2023-08-30", status: "Present", reportingManager: "Siva" },
-    { _id: "emp004", name: "Safeer",       department: "Finance",    email: "safeer@mgatetech.com",       phone: "9876543213", role: "Finance Analyst",      salary: "58000",  joiningDate: "2023-09-20", status: "Leave",   reportingManager: "Suganthan" },
-    { _id: "emp005", name: "Hari",         department: "IT",         email: "hari@mgatetech.com",         phone: "9876543214", role: "Frontend Developer",   salary: "62000",  joiningDate: "2023-04-18", status: "Present", reportingManager: "Siva" },
-    { _id: "emp006", name: "Suriya",       department: "IT",         email: "suriya@mgatetech.com",       phone: "9876543215", role: "DevOps Engineer",      salary: "78000",  joiningDate: "2022-11-01", status: "Present", reportingManager: "Siva" },
-    { _id: "emp007", name: "Big Kundi",    department: "HR",         email: "bigkundi@mgatetech.com",     phone: "9876543216", role: "HR Manager",           salary: "65000",  joiningDate: "2022-03-10", status: "Present", reportingManager: "Suganthan" },
-    { _id: "emp008", name: "Small Kundi",  department: "HR",         email: "smallkundi@mgatetech.com",   phone: "9876543217", role: "Recruiter",            salary: "48000",  joiningDate: "2024-02-14", status: "Present", reportingManager: "Big Kundi" },
-    { _id: "emp009", name: "Suganthan",    department: "Management", email: "suganthan@mgatetech.com",    phone: "9876543218", role: "Director",             salary: "120000", joiningDate: "2020-06-01", status: "Present", reportingManager: "" },
-    { _id: "emp010", name: "Sabari",       department: "IT",         email: "sabari@mgatetech.com",        phone: "9876543219", role: "QA Engineer",          salary: "55000",  joiningDate: "2024-03-11", status: "Present", reportingManager: "Siva" },
+    { _id: "emp001", name: "Mani",        department: "IT",         designation: "Software Engineer",   email: "mani@mgatetech.com",       phone: "9876543210", role: "Software Engineer",   salary: "72000",  joiningDate: "2023-06-15", joinDate: "15/06/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp002", name: "Siva",        department: "Management", designation: "Engineering Manager", email: "siva@mgatetech.com",       phone: "9876543211", role: "Engineering Manager",  salary: "95000",  joiningDate: "2021-01-05", joinDate: "05/01/2021", status: "Present", reportingManager: "" },
+    { _id: "emp003", name: "Santhosh",    department: "IT",         designation: "Backend Developer",   email: "santhosh@mgatetech.com",   phone: "9876543212", role: "Backend Developer",    salary: "69000",  joiningDate: "2023-08-30", joinDate: "30/08/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp004", name: "Safeer",      department: "Finance",    designation: "Finance Analyst",     email: "safeer@mgatetech.com",     phone: "9876543213", role: "Finance Analyst",      salary: "58000",  joiningDate: "2023-09-20", joinDate: "20/09/2023", status: "Leave",   reportingManager: "Suganthan" },
+    { _id: "emp005", name: "Hari",        department: "IT",         designation: "Frontend Developer",  email: "hari@mgatetech.com",       phone: "9876543214", role: "Frontend Developer",   salary: "62000",  joiningDate: "2023-04-18", joinDate: "18/04/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp006", name: "Suriya",      department: "IT",         designation: "DevOps Engineer",     email: "suriya@mgatetech.com",     phone: "9876543215", role: "DevOps Engineer",      salary: "78000",  joiningDate: "2022-11-01", joinDate: "01/11/2022", status: "Present", reportingManager: "Siva" },
+    { _id: "emp007", name: "Big Kundi",   department: "HR",         designation: "HR Manager",          email: "bigkundi@mgatetech.com",   phone: "9876543216", role: "HR Manager",           salary: "65000",  joiningDate: "2022-03-10", joinDate: "10/03/2022", status: "Present", reportingManager: "Suganthan" },
+    { _id: "emp008", name: "Small Kundi", department: "HR",         designation: "Recruiter",           email: "smallkundi@mgatetech.com", phone: "9876543217", role: "Recruiter",            salary: "48000",  joiningDate: "2024-02-14", joinDate: "14/02/2024", status: "Present", reportingManager: "Big Kundi" },
+    { _id: "emp009", name: "Suganthan",   department: "Management", designation: "Director",            email: "suganthan@mgatetech.com",  phone: "9876543218", role: "Director",             salary: "120000", joiningDate: "2020-06-01", joinDate: "01/06/2020", status: "Present", reportingManager: "" },
+    { _id: "emp010", name: "Sabari",      department: "IT",         designation: "QA Engineer",         email: "sabari@mgatetech.com",     phone: "9876543219", role: "QA Engineer",          salary: "55000",  joiningDate: "2024-03-11", joinDate: "11/03/2024", status: "Present", reportingManager: "Siva" },
   ];
 
   const MOCK_LEAVES = [
@@ -76,18 +76,18 @@ export default function HRMSApp() {
   ];
 
   // ── DATA ──────────────────────────────────────────────────────────────────
-  const [employees, setEmployees]               = useState(MOCK_EMPLOYEES);
-  const [leaveRequests, setLeaveRequests]       = useState(MOCK_LEAVES);
+  const [employees, setEmployees]                 = useState(MOCK_EMPLOYEES);
+  const [leaveRequests, setLeaveRequests]         = useState(MOCK_LEAVES);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [searchTerm, setSearchTerm]             = useState("");
-  const [sortOrder, setSortOrder]               = useState("asc");
-  const [statusFilter, setStatusFilter]         = useState("All");
-  const [departments, setDepartments]           = useState(["IT", "HR", "Management"]);
-  const [departmentName, setDepartmentName]     = useState("");
-  const [leaveType, setLeaveType]               = useState("");
-  const [leaveFrom, setLeaveFrom]               = useState("");
-  const [leaveTo, setLeaveTo]                   = useState("");
-  const [leaveReason, setLeaveReason]           = useState("");
+  const [searchTerm, setSearchTerm]               = useState("");
+  const [sortOrder, setSortOrder]                 = useState("asc");
+  const [statusFilter, setStatusFilter]           = useState("All");
+  const [departments, setDepartments]             = useState(["IT", "HR", "Management"]);
+  const [departmentName, setDepartmentName]       = useState("");
+  const [leaveType, setLeaveType]                 = useState("");
+  const [leaveFrom, setLeaveFrom]                 = useState("");
+  const [leaveTo, setLeaveTo]                     = useState("");
+  const [leaveReason, setLeaveReason]             = useState("");
 
   const [holidays] = useState([
     { name: "New Year",     date: "2026-01-01" },
@@ -99,7 +99,7 @@ export default function HRMSApp() {
   const hasAccess = (roles) => roles.includes(userRole);
 
   const filteredEmployees = employees.filter((emp) => {
-    const matchSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (emp.name || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === "All" || emp.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -126,7 +126,6 @@ export default function HRMSApp() {
         localStorage.clear(); setIsLoggedIn(false);
         alert("Session Expired. Login Again.");
       }
-      // keep mock data on network error
     }
   };
 
@@ -145,7 +144,7 @@ export default function HRMSApp() {
   };
 
   useEffect(() => {
-    fetchEmployees(); fetchLeaves(); fetchAttendance();
+    // fetchEmployees(); fetchLeaves(); fetchAttendance();
   }, []);
 
   useEffect(() => {
@@ -153,51 +152,84 @@ export default function HRMSApp() {
     const role     = localStorage.getItem("role");
     const employee = JSON.parse(localStorage.getItem("employee") || "null");
     if (token) {
-      setIsLoggedIn(true); setUserRole(role); setLoggedInEmployee(employee);
+      setIsLoggedIn(true);
+      setUserRole(role || "Admin");
+      setLoggedInEmployee(employee);
     }
   }, []);
 
-  const addEmployee = async () => {
+  // ── EMPLOYEE CRUD ─────────────────────────────────────────────────────────
+  const addEmployee = () => {
     if (!employeeName.trim() || !department.trim()) {
-      alert("Please fill all required fields"); return;
+      alert("Please fill all required fields");
+      return;
     }
-    try {
-      await addEmployeeAPI({
-        name: employeeName, department, email: employeeEmail,
-        password: employeePassword, phone: employeePhone,
-        role: employeeRole, joiningDate, salary, reportingManager, status: "Present",
-      });
-      fetchEmployees(); resetForm(); setShowModal(false); setEditingEmployee(null);
-      showNotif("Employee added successfully");
-    } catch (e) { console.log(e); }
+    const today = new Date();
+    const formattedJoinDate = joiningDate
+      ? joiningDate.split("-").reverse().join("/")
+      : `${String(today.getDate()).padStart(2,"0")}/${String(today.getMonth()+1).padStart(2,"0")}/${today.getFullYear()}`;
+
+    const newEmployee = {
+      _id: Date.now().toString(),
+      name: employeeName,
+      department,
+      designation: employeeRole,
+      email: employeeEmail,
+      phone: employeePhone,
+      role: employeeRole,
+      joiningDate,
+      joinDate: formattedJoinDate,
+      salary,
+      reportingManager,
+      status: "Present",
+    };
+    setEmployees([...employees, newEmployee]);
+    resetForm();
+    setShowModal(false);
+    setEditingEmployee(null);
+    showNotif("Employee added successfully");
   };
 
-  const updateEmployee = async () => {
-    try {
-      await updateEmployeeAPI(editingEmployee._id, {
-        name: employeeName, department, email: employeeEmail,
-        phone: employeePhone, role: employeeRole,
-        joiningDate, salary, status: editingEmployee.status,
-      });
-      fetchEmployees(); resetForm(); setShowModal(false); setEditingEmployee(null);
-      showNotif("Employee updated successfully");
-    } catch (e) { console.log(e); }
+  const updateEmployee = () => {
+    const updatedEmployees = employees.map((emp) =>
+      emp._id === editingEmployee._id
+        ? {
+            ...emp,
+            name: employeeName,
+            department,
+            designation: employeeRole,
+            email: employeeEmail,
+            phone: employeePhone,
+            role: employeeRole,
+            joiningDate,
+            joinDate: joiningDate ? joiningDate.split("-").reverse().join("/") : emp.joinDate,
+            salary,
+          }
+        : emp
+    );
+    setEmployees(updatedEmployees);
+    resetForm();
+    setShowModal(false);
+    setEditingEmployee(null);
+    showNotif("Employee updated successfully");
   };
 
-  const deleteEmployee = async (id) => {
+  const deleteEmployee = (id) => {
     if (!window.confirm("Delete this employee?")) return;
-    try {
-      await axios.delete(`http://localhost:5000/employees/${id}`);
-      fetchEmployees(); showNotif("Employee deleted", "error");
-    } catch (e) { console.log(e); }
+    setEmployees(employees.filter((emp) => emp._id !== id));
+    showNotif("Employee deleted", "error");
   };
 
   const editEmployee = (emp) => {
     setEditingEmployee(emp);
-    setEmployeeName(emp.name); setDepartment(emp.department);
-    setEmployeeEmail(emp.email || ""); setEmployeePhone(emp.phone || "");
-    setEmployeeRole(emp.role || ""); setJoiningDate(emp.joiningDate || "");
-    setSalary(emp.salary || ""); setReportingManager(emp.reportingManager || "");
+    setEmployeeName(emp.name);
+    setDepartment(emp.department);
+    setEmployeeEmail(emp.email || "");
+    setEmployeePhone(emp.phone || "");
+    setEmployeeRole(emp.role || "");
+    setJoiningDate(emp.joiningDate || "");
+    setSalary(emp.salary || "");
+    setReportingManager(emp.reportingManager || "");
     setShowModal(true);
   };
 
@@ -341,22 +373,28 @@ export default function HRMSApp() {
           )}
 
           {/* EMPLOYEES */}
-          {activePage === "employees" && hasAccess(["Super Admin","Admin","HR"]) && (
-            <Employees
-              employees={employees}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              sortOrder={sortOrder}
-              setSortOrder={setSortOrder}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              filteredEmployees={filteredEmployees}
-              setSelectedEmployee={setSelectedEmployee}
-              editEmployee={editEmployee}
-              deleteEmployee={deleteEmployee}
-              onAddEmployee={() => { resetForm(); setEditingEmployee(null); setShowModal(true); }}
-              onExportExcel={exportToExcel}
-            />
+          {activePage === "employees" && (
+            hasAccess(["Super Admin", "Admin", "HR", "Manager", "Finance", "Employee"]) ?(
+              <Employees
+                employees={employees}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                filteredEmployees={filteredEmployees}
+                setSelectedEmployee={setSelectedEmployee}
+                editEmployee={editEmployee}
+                deleteEmployee={deleteEmployee}
+                onAddEmployee={() => { resetForm(); setEditingEmployee(null); setShowModal(true); }}
+                onExportExcel={exportToExcel}
+              />
+            ) : (
+              <div style={{ textAlign: "center", padding: 80, color: "#94a3b8", fontSize: 16 }}>
+                You don't have permission to view this page.
+              </div>
+            )
           )}
 
           {/* ATTENDANCE */}
@@ -455,7 +493,13 @@ export default function HRMSApp() {
             <div>
               <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 20 }}>My Profile</h1>
               <div style={{ background: "#fff", borderRadius: 14, padding: "20px 24px", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", maxWidth: 480 }}>
-                {[["Name", loggedInEmployee?.name],["Email", loggedInEmployee?.email],["Department", loggedInEmployee?.department],["Role", loggedInEmployee?.role],["Reporting Manager", loggedInEmployee?.reportingManager || "N/A"]].map(([label, val]) => (
+                {[
+                  ["Name", loggedInEmployee?.name],
+                  ["Email", loggedInEmployee?.email],
+                  ["Department", loggedInEmployee?.department],
+                  ["Role", loggedInEmployee?.role],
+                  ["Reporting Manager", loggedInEmployee?.reportingManager || "N/A"],
+                ].map(([label, val]) => (
                   <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: 12, marginBottom: 12 }}>
                     <span style={{ fontSize: 13, color: "#94a3b8" }}>{label}</span>
                     <span style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{val || "—"}</span>
@@ -508,11 +552,11 @@ export default function HRMSApp() {
                 ["Employee ID", `EMP00${selectedEmployee._id?.slice(-3)}`],
                 ["Name", selectedEmployee.name],
                 ["Department", selectedEmployee.department],
+                ["Designation", selectedEmployee.designation || selectedEmployee.role],
                 ["Email", selectedEmployee.email],
                 ["Phone", selectedEmployee.phone],
-                ["Role", selectedEmployee.role],
                 ["Salary", selectedEmployee.salary ? `₹${Number(selectedEmployee.salary).toLocaleString("en-IN")}` : "—"],
-                ["Joining Date", selectedEmployee.joiningDate],
+                ["Joining Date", selectedEmployee.joinDate || selectedEmployee.joiningDate],
                 ["Status", selectedEmployee.status],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: 10 }}>
@@ -542,17 +586,20 @@ export default function HRMSApp() {
                 style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", fontSize: 14, outline: "none" }} />
               <textarea placeholder="Reason" value={leaveReason} onChange={e => setLeaveReason(e.target.value)}
                 style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", fontSize: 14, outline: "none", height: 90, resize: "none" }} />
-              <button onClick={async () => {
-                try {
-                  await axios.post("http://localhost:5000/apply-leave", {
-                    employee: loggedInEmployee?.name, leaveType,
-                    fromDate: leaveFrom, toDate: leaveTo, reason: leaveReason,
-                  });
-                  fetchLeaves();
-                  setShowLeaveModal(false);
-                  setLeaveType(""); setLeaveFrom(""); setLeaveTo(""); setLeaveReason("");
-                  showNotif("Leave applied successfully");
-                } catch (e) { console.log(e); }
+              <button onClick={() => {
+                const newLeave = {
+                  _id: Date.now().toString(),
+                  employee: loggedInEmployee?.name || "Employee",
+                  leaveType,
+                  fromDate: leaveFrom,
+                  toDate: leaveTo,
+                  reason: leaveReason,
+                  status: "Pending",
+                };
+                setLeaveRequests([...leaveRequests, newLeave]);
+                setShowLeaveModal(false);
+                setLeaveType(""); setLeaveFrom(""); setLeaveTo(""); setLeaveReason("");
+                showNotif("Leave applied successfully");
               }} style={{
                 background: "#2563eb", color: "#fff", border: "none",
                 borderRadius: 10, padding: "13px", fontSize: 15, fontWeight: 600, cursor: "pointer",
