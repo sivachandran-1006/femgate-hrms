@@ -6,6 +6,7 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
   // ✅ FIXED: useState must be inside the component, not outside
   const [selectedStatus, setSelectedStatus] = useState("All Status");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLeave, setSelectedLeave] = useState(null);
 
   useEffect(() => { fetchLeaves(); }, []);
 
@@ -62,6 +63,7 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
   });
 
   return (
+  <>
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* HEADER */}
@@ -107,6 +109,82 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
         ))}
       </div>
 
+{/* LEAVE BALANCE CARDS */}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4,1fr)",
+    gap: 16,
+    marginBottom: 20,
+  }}
+>
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: 14,
+      padding: 18,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    }}
+  >
+    <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+      Annual Leave
+    </p>
+    <h2 style={{ margin: "8px 0 0", color: "#2563eb" }}>
+      12 Days
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: 14,
+      padding: 18,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    }}
+  >
+    <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+      Sick Leave
+    </p>
+    <h2 style={{ margin: "8px 0 0", color: "#16a34a" }}>
+      6 Days
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: 14,
+      padding: 18,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    }}
+  >
+    <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+      Casual Leave
+    </p>
+    <h2 style={{ margin: "8px 0 0", color: "#f97316" }}>
+      8 Days
+    </h2>
+  </div>
+
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: 14,
+      padding: 18,
+      boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+    }}
+  >
+    <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+      Loss Of Pay
+    </p>
+    <h2 style={{ margin: "8px 0 0", color: "#ef4444" }}>
+      0 Days
+    </h2>
+  </div>
+</div>
+
+{/* SEARCH + FILTER ROW */}
+
       {/* SEARCH + FILTER ROW */}
       {/* ✅ FIXED: Was two broken/duplicate <select> tags merged into one valid block */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, gap: 12 }}>
@@ -150,7 +228,7 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
-              {["Employee", "Leave Type", "From", "To", "Days", "Status", "Action"].map((h) => (
+              {["Employee", "Leave Type", "From", "To", "Days", "Reason", "Status", "Action"].map((h) => (
                 <th key={h} style={{
                   textAlign: "left", paddingBottom: 10,
                   fontSize: 13, fontWeight: 600, color: "#475569",
@@ -209,6 +287,17 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
                     <td style={{ padding: "13px 0", fontSize: 14, color: "#334155" }}>{leave.fromDate || "—"}</td>
                     <td style={{ padding: "13px 0", fontSize: 14, color: "#334155" }}>{leave.toDate || "—"}</td>
                     <td style={{ padding: "13px 0", fontSize: 14, color: "#334155" }}>{leave.days || "—"}</td>
+                    {/* REASON */}
+<td
+  style={{
+    padding: "13px 0",
+    fontSize: 14,
+    color: "#334155",
+    maxWidth: 200,
+  }}
+>
+  {leave.reason || "-"}
+</td>
 
                     {/* STATUS BADGE */}
                     <td style={{ padding: "13px 0" }}>
@@ -228,40 +317,62 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
 
                     {/* ACTIONS */}
                     <td style={{ padding: "13px 0" }}>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <button
-                          disabled={!ok}
-                          onClick={async () => {
-                            await axios.put(`http://localhost:5000/leave-status/${leave._id}`, { status: "Approved" });
-                            fetchLeaves();
-                          }}
-                          style={{
-                            background: ok ? "#16a34a" : "#94a3b8",
-                            color: "#fff", border: "none", borderRadius: 6,
-                            padding: "6px 12px", fontSize: 12, fontWeight: 600,
-                            cursor: ok ? "pointer" : "not-allowed",
-                          }}
-                        >
-                          ✓ Approve
-                        </button>
-                        <button
-                          disabled={!ok}
-                          onClick={async () => {
-                            await axios.put(`http://localhost:5000/leave-status/${leave._id}`, { status: "Rejected" });
-                            fetchLeaves();
-                          }}
-                          style={{
-                            background: ok ? "#ef4444" : "#94a3b8",
-                            color: "#fff", border: "none", borderRadius: 6,
-                            padding: "6px 12px", fontSize: 12, fontWeight: 600,
-                            cursor: ok ? "pointer" : "not-allowed",
-                          }}
-                        >
-                          ✕ Reject
-                        </button>
-                      </div>
-                    </td>
+  <div style={{ display: "flex", gap: 6 }}>
 
+    <button
+      onClick={() => setSelectedLeave(leave)}
+      style={{
+        background: "#2563eb",
+        color: "#fff",
+        border: "none",
+        borderRadius: 6,
+        padding: "6px 12px",
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: "pointer",
+      }}
+    >
+      View
+    </button>
+
+    <button
+  onClick={() => {
+    alert("Leave Approved");
+  }}
+  style={{
+    background: "#16a34a",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "6px 12px",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
+  ✓ Approve
+</button>
+
+<button
+  onClick={() => {
+    alert("Leave Rejected");
+  }}
+  style={{
+    background: "#ef4444",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "6px 12px",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+  }}
+>
+  ✕ Reject
+</button>
+
+  </div>
+</td>
                   </tr>
                 );
               })
@@ -293,8 +404,132 @@ const Leave = ({ leaveRequests, userRole, setShowLeaveModal, fetchLeaves }) => {
         </div>
 
       </div>
+      {/* LEAVE CALENDAR */}
+<div
+  style={{
+    background: "#fff",
+    borderRadius: 14,
+    padding: "20px 24px",
+    marginTop: 20,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+  }}
+>
+  <h2
+    style={{
+      fontSize: 18,
+      fontWeight: 700,
+      color: "#0f172a",
+      marginBottom: 16,
+    }}
+  >
+    Leave Calendar
+  </h2>
+
+  <table
+    style={{
+      width: "100%",
+      borderCollapse: "collapse",
+    }}
+  >
+    <thead>
+      <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
+        <th style={{ textAlign: "left", padding: "10px 0" }}>Date</th>
+        <th style={{ textAlign: "left", padding: "10px 0" }}>Employee</th>
+        <th style={{ textAlign: "left", padding: "10px 0" }}>Leave Type</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {leaveRequests.map((leave) => (
+        <tr
+          key={leave._id}
+          style={{
+            borderBottom: "1px solid #f1f5f9",
+          }}
+        >
+          <td style={{ padding: "10px 0" }}>
+            {leave.fromDate}
+          </td>
+
+          <td style={{ padding: "10px 0" }}>
+            {leave.employee}
+          </td>
+
+          <td style={{ padding: "10px 0" }}>
+            {leave.leaveType}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
     </div>
-  );
+    {selectedLeave && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999,
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        borderRadius: 16,
+        padding: 30,
+        width: 500,
+        maxWidth: "90%",
+      }}
+    >
+      <h2
+        style={{
+          marginTop: 0,
+          color: "#0f172a",
+        }}
+      >
+        Leave Details
+      </h2>
+
+      <p><strong>Employee:</strong> {selectedLeave.employee}</p>
+
+      <p><strong>Leave Type:</strong> {selectedLeave.leaveType}</p>
+
+      <p><strong>From:</strong> {selectedLeave.fromDate}</p>
+
+      <p><strong>To:</strong> {selectedLeave.toDate}</p>
+
+      <p><strong>Days:</strong> {selectedLeave.days}</p>
+
+      <p><strong>Reason:</strong> {selectedLeave.reason}</p>
+
+      <p><strong>Status:</strong> {selectedLeave.status}</p>
+
+      <button
+        onClick={() => setSelectedLeave(null)}
+        style={{
+          background: "#2563eb",
+          color: "#fff",
+          border: "none",
+          borderRadius: 8,
+          padding: "10px 20px",
+          cursor: "pointer",
+          marginTop: 10,
+        }}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+  
+)}
+</>
+
+);
 };
 
 export default Leave;
