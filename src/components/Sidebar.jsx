@@ -23,7 +23,7 @@ const menuItems = [
   { id: "employees", label: "Employees", Icon: Users },
   { id: "departments", label: "Departments", Icon: Building2 },
   { id: "attendance", label: "Attendance", Icon: Clock },
-  { id: "leave", label: "Leaves", Icon: CalendarX2 },
+  { id: "leave", label: "Leave", Icon: CalendarX2 },
   { id: "payroll", label: "Payroll", Icon: IndianRupee },
   { id: "recruitment", label: "Recruitment", Icon: Briefcase },
   { id: "onboarding", label: "Onboarding", Icon: UserPlus },
@@ -35,20 +35,16 @@ const menuItems = [
   { id: "settings", label: "Settings", Icon: Settings },
 ];
 
-const Sidebar = ({
-  activePage,
-  setActivePage,
-  darkMode,
-  setDarkMode,
-  onLogout,
-}) => {
-  const bg = darkMode ? "#1e293b" : "#ffffff";
-  const borderColor = darkMode ? "#334155" : "#e2e8f0";
-  const inactiveText = darkMode ? "#94a3b8" : "#1e293b";
-  const hoverBg = darkMode ? "#334155" : "#f1f5f9";
-  const logoText = darkMode ? "#f1f5f9" : "#0f172a";
-  const darkModeLabel = darkMode ? "#94a3b8" : "#1e293b";
-  const dividerColor = darkMode ? "#334155" : "#e2e8f0";
+const Sidebar = ({ activePage, setActivePage, darkMode, setDarkMode, onLogout }) => {
+  const theme = {
+    cardBg: darkMode ? "#1e293b" : "#ffffff",
+    text: darkMode ? "#f1f5f9" : "#0f172a",
+    subtext: darkMode ? "#94a3b8" : "#64748b",
+    border: darkMode ? "#334155" : "#e2e8f0",
+    tableRowHover: darkMode ? "#1e293b" : "#f8fafc",
+  };
+
+  const inactiveColor = darkMode ? theme.subtext : "#475569";
 
   return (
     <div
@@ -58,130 +54,180 @@ const Sidebar = ({
         position: "fixed",
         top: 0,
         left: 0,
-        background: bg,
-        borderRight: `1px solid ${borderColor}`,
+        background: theme.cardBg,
+        borderRight: `1px solid ${theme.border}`,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
-        padding: "18px 14px",
+        padding: "18px 12px",
         zIndex: 1000,
+        fontFamily: "'Inter', sans-serif",
         transition: "background 0.2s ease, border-color 0.2s ease",
+        boxSizing: "border-box",
       }}
     >
-      {/* ── TOP ── */}
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* Hide webkit scrollbar */}
+      <style>{`.sidebar-nav-list::-webkit-scrollbar { display: none; }`}</style>
 
-        {/* LOGO */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 10px", marginBottom: 28 }}>
-          <img
-            src={logo}
-            alt="MGate"
-            style={{ width: 38, height: 38, borderRadius: 10, objectFit: "contain", background: "#fff", padding: 3, flexShrink: 0 }}
-          />
-          <div style={{ lineHeight: 1.15 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.3px", color: logoText, transition: "color 0.2s ease" }}>MGate</div>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#2563eb", letterSpacing: "0.06em", textTransform: "uppercase" }}>HRMS</div>
+      {/* LOGO SECTION */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "0 4px",
+          marginBottom: 24,
+          flexShrink: 0,
+        }}
+      >
+        <img
+          src={logo}
+          alt="MGate"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            objectFit: "contain",
+            background: "#ffffff",
+            padding: 3,
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ lineHeight: 1.2 }}>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 700,
+              color: theme.text,
+              fontFamily: "'Inter', sans-serif",
+              transition: "color 0.2s ease",
+            }}
+          >
+            MGate
+          </div>
+          <div
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: "#2563eb",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            HRMS
           </div>
         </div>
-
-        {/* NAV — scrollable */}
-        <ul
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            overflowY: "auto",
-            flex: 1,
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-          className="sidebar-nav-list"
-        >
-          {menuItems.map(({ id, label, Icon }) => {
-            const isActive = activePage === id;
-            return (
-              <li
-                key={id}
-                onClick={() => setActivePage && setActivePage(id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "13px 18px",
-                  borderRadius: 16,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "#ffffff" : inactiveText,
-                  background: isActive ? "#2563eb" : "transparent",
-                  boxShadow: isActive ? "0 4px 14px rgba(37,99,235,0.35)" : "none",
-                  transition: "all 0.15s ease",
-                  userSelect: "none",
-                  marginBottom: 2,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = hoverBg;
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) e.currentTarget.style.background = "transparent";
-                }}
-              >
-                <Icon size={20} strokeWidth={isActive ? 2.2 : 1.8} />
-                <span>{label}</span>
-              </li>
-            );
-          })}
-        </ul>
-
       </div>
 
-      {/* ── BOTTOM ── */}
-      <div>
+      {/* NAV LIST — scrollable, flex-grow fills remaining space */}
+      <ul
+        className="sidebar-nav-list"
+        style={{
+          listStyle: "none",
+          margin: 0,
+          padding: 0,
+          overflowY: "auto",
+          flex: 1,
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          minHeight: 0,
+        }}
+      >
+        {menuItems.map(({ id, label, Icon }) => {
+          const isActive = activePage === id;
+          return (
+            <li
+              key={id}
+              onClick={() => setActivePage && setActivePage(id)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 16px",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 400,
+                fontFamily: "'Inter', sans-serif",
+                color: isActive ? "#ffffff" : inactiveColor,
+                background: isActive ? "#2563eb" : "transparent",
+                boxShadow: isActive ? "0 3px 10px rgba(37,99,235,0.3)" : "none",
+                transition: "background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease",
+                userSelect: "none",
+                marginBottom: 2,
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) e.currentTarget.style.background = theme.tableRowHover;
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <Icon size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
+              <span>{label}</span>
+            </li>
+          );
+        })}
+      </ul>
 
-        {/* DIVIDER */}
-        <div style={{ height: 1, background: dividerColor, margin: "0 12px 16px", transition: "background 0.2s ease" }} />
+      {/* BOTTOM SECTION */}
+      <div style={{ flexShrink: 0 }}>
+        {/* Divider */}
+        <div
+          style={{
+            height: 1,
+            background: theme.border,
+            margin: "12px 4px 12px",
+            transition: "background 0.2s ease",
+          }}
+        />
 
-        {/* LOGOUT */}
+        {/* Logout button */}
         <button
           onClick={onLogout}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 12,
-            padding: "10px 18px",
+            gap: 10,
+            padding: "9px 16px",
             width: "100%",
             background: "none",
             border: "none",
             cursor: "pointer",
             color: "#ef4444",
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: 500,
-            borderRadius: 12,
+            fontFamily: "'Inter', sans-serif",
+            borderRadius: 10,
+            textAlign: "left",
+            transition: "background 0.15s ease",
+            boxSizing: "border-box",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
         >
-          <LogOut size={20} strokeWidth={1.8} />
+          <LogOut size={18} strokeWidth={1.8} style={{ flexShrink: 0 }} />
           <span>Logout</span>
         </button>
 
-        {/* DARK MODE TOGGLE */}
+        {/* Dark mode row */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "10px 18px",
-            marginTop: 4,
+            padding: "9px 16px",
+            marginTop: 2,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Moon size={20} strokeWidth={1.8} color="#64748b" />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Moon size={18} strokeWidth={1.8} color="#64748b" style={{ flexShrink: 0 }} />
             <span
               style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: darkModeLabel,
+                fontSize: 13,
+                fontWeight: 400,
+                fontFamily: "'Inter', sans-serif",
+                color: theme.subtext,
                 transition: "color 0.2s ease",
               }}
             >
@@ -189,27 +235,28 @@ const Sidebar = ({
             </span>
           </div>
 
-          {/* PILL TOGGLE */}
+          {/* Toggle pill */}
           <button
             onClick={() => setDarkMode && setDarkMode(!darkMode)}
             style={{
-              width: 44,
-              height: 26,
+              width: 40,
+              height: 22,
               borderRadius: 999,
               background: darkMode ? "#2563eb" : "#cbd5e1",
               border: "none",
               cursor: "pointer",
-              padding: 3,
+              padding: 2,
               display: "flex",
               alignItems: "center",
               justifyContent: darkMode ? "flex-end" : "flex-start",
               transition: "background 0.2s ease",
+              flexShrink: 0,
             }}
           >
             <div
               style={{
-                width: 20,
-                height: 20,
+                width: 18,
+                height: 18,
                 borderRadius: "50%",
                 background: "#ffffff",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
@@ -218,11 +265,7 @@ const Sidebar = ({
             />
           </button>
         </div>
-
       </div>
-
-      {/* Hide scrollbar for webkit */}
-      <style>{`.sidebar-nav-list::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 };

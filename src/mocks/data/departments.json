@@ -1,0 +1,9 @@
+{
+  "departments": [
+    { "_id": "d001", "name": "Management", "head": "Siva", "employees": 2, "budget": 1500000, "status": "Active" },
+    { "_id": "d002", "name": "IT", "head": "Suriya", "employees": 15, "budget": 5000000, "status": "Active" },
+    { "_id": "d003", "name": "HR", "head": "Big Kundi", "employees": 4, "budget": 800000, "status": "Active" },
+    { "_id": "d004", "name": "Finance", "head": "Safeer", "employees": 3, "budget": 1200000, "status": "Active" },
+    { "_id": "d005", "name": "Sales", "head": "—", "employees": 0, "budget": 2000000, "status": "Inactive" }
+  ]
+}

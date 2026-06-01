@@ -1,103 +1,22 @@
-import axios from "axios";
+import AxiosClient from "../api/AxiosClient";
+import { isMockEnabled, getMockData } from "../config/MockConfig";
 
-const API =
-  "http://localhost:5000";
+const employeeService = new AxiosClient("/employees");
 
-const getToken = () => {
-
-  return localStorage.getItem(
-    "token"
-  );
-
+export const getAllEmployees = async () => {
+  if (isMockEnabled()) {
+    const mockData = await getMockData("/employees");
+    return mockData ?? [];
+  }
+  const response = await employeeService.get();
+  return response ?? [];
 };
 
-export const fetchEmployeesAPI =
-  async () => {
-
-    const response =
-      await axios.get(
-
-        `${API}/employees`,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
-};
-
-export const addEmployeeAPI =
-  async (employeeData) => {
-
-    const response =
-      await axios.post(
-
-        `${API}/employees`,
-
-        employeeData,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
-};
-
-export const updateEmployeeAPI =
-  async (
-    id,
-    employeeData
-  ) => {
-
-    const response =
-      await axios.put(
-
-        `${API}/employees/${id}`,
-
-        employeeData,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
-};
-
-export const deleteEmployeeAPI =
-  async (id) => {
-
-    const response =
-      await axios.delete(
-
-        `${API}/employees/${id}`,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
+export const getEmployee = async (id) => {
+  if (isMockEnabled()) {
+    const mockData = await getMockData(`/employees/${id}`);
+    return mockData ?? {};
+  }
+  const response = await employeeService.get(`/${id}`);
+  return response ?? {};
 };

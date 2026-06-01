@@ -1,0 +1,25 @@
+{
+  "attendance": [
+    { "_id": "a01", "employee": "Mani",       "department": "IT",         "date": "2026-06-01", "checkIn": "09:05 AM", "checkOut": "06:10 PM", "status": "Present" },
+    { "_id": "a02", "employee": "P Santhosh", "department": "IT",         "date": "2026-06-01", "checkIn": "09:15 AM", "checkOut": "06:00 PM", "status": "Present" },
+    { "_id": "a03", "employee": "C Santhosh", "department": "IT",         "date": "2026-06-01", "checkIn": "09:30 AM", "checkOut": "",         "status": "Present" },
+    { "_id": "a04", "employee": "Suriya",     "department": "IT",         "date": "2026-06-01", "checkIn": "10:20 AM", "checkOut": "07:15 PM", "status": "Late"    },
+    { "_id": "a05", "employee": "Siva",       "department": "Management", "date": "2026-06-01", "checkIn": "08:50 AM", "checkOut": "05:55 PM", "status": "Present" },
+    { "_id": "a06", "employee": "Aravinth",   "department": "IT",         "date": "2026-06-01", "checkIn": "09:10 AM", "checkOut": "",         "status": "Present" },
+    { "_id": "a07", "employee": "Safeer",     "department": "Finance",    "date": "2026-06-01", "checkIn": "",         "checkOut": "",         "status": "Leave"   },
+    { "_id": "a08", "employee": "Sabari",     "department": "IT",         "date": "2026-06-01", "checkIn": "09:08 AM", "checkOut": "06:05 PM", "status": "Present" },
+    { "_id": "a09", "employee": "Vignesh",    "department": "IT",         "date": "2026-06-01", "checkIn": "",         "checkOut": "",         "status": "Absent"  },
+    { "_id": "a10", "employee": "Mani",       "department": "IT",         "date": "2026-05-29", "checkIn": "09:02 AM", "checkOut": "06:00 PM", "status": "Present" },
+    { "_id": "a11", "employee": "P Santhosh", "department": "IT",         "date": "2026-05-29", "checkIn": "09:50 AM", "checkOut": "06:45 PM", "status": "Late"    },
+    { "_id": "a12", "employee": "C Santhosh", "department": "IT",         "date": "2026-05-29", "checkIn": "09:05 AM", "checkOut": "06:10 PM", "status": "Present" },
+    { "_id": "a13", "employee": "Aravinth",   "department": "IT",         "date": "2026-05-29", "checkIn": "09:00 AM", "checkOut": "05:50 PM", "status": "Present" },
+    { "_id": "a14", "employee": "Vignesh",    "department": "IT",         "date": "2026-05-29", "checkIn": "",         "checkOut": "",         "status": "Absent"  },
+    { "_id": "a15", "employee": "Siva",       "department": "Management", "date": "2026-05-29", "checkIn": "08:55 AM", "checkOut": "06:05 PM", "status": "Present" },
+    { "_id": "a16", "employee": "Mani",       "department": "IT",         "date": "2026-05-28", "checkIn": "09:10 AM", "checkOut": "06:05 PM", "status": "Present" },
+    { "_id": "a17", "employee": "Suriya",     "department": "IT",         "date": "2026-05-28", "checkIn": "09:00 AM", "checkOut": "06:00 PM", "status": "Present" },
+    { "_id": "a18", "employee": "Siva",       "department": "Management", "date": "2026-05-28", "checkIn": "08:55 AM", "checkOut": "05:55 PM", "status": "Present" },
+    { "_id": "a19", "employee": "Safeer",     "department": "Finance",    "date": "2026-05-28", "checkIn": "09:15 AM", "checkOut": "06:20 PM", "status": "Present" },
+    { "_id": "a20", "employee": "Sabari",     "department": "IT",         "date": "2026-05-28", "checkIn": "09:00 AM", "checkOut": "06:00 PM", "status": "Present" },
+    { "_id": "a21", "employee": "Vignesh",    "department": "IT",         "date": "2026-05-28", "checkIn": "10:30 AM", "checkOut": "07:00 PM", "status": "Late"    }
+  ]
+}

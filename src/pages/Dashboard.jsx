@@ -3,7 +3,8 @@ import {
 } from "recharts";
 import { Search, Bell } from "lucide-react";
 
-const Dashboard = ({ employees = [], leaves = [] }) => {
+const Dashboard = ({ employees = [], leaves = [], darkMode = false }) => {
+  /* ── derived data ── */
   const present = employees.filter((e) => e.status === "Present").length;
   const onLeave = employees.filter((e) => e.status === "Leave").length;
   const pending = leaves.filter((l) => l.status === "Pending").length;
@@ -18,176 +19,309 @@ const Dashboard = ({ employees = [], leaves = [] }) => {
 
   const deptMap = {};
   employees.forEach((e) => { deptMap[e.department] = (deptMap[e.department] || 0) + 1; });
-  const depts = Object.entries(deptMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const depts   = Object.entries(deptMap).sort((a, b) => b[1] - a[1]).slice(0, 4);
   const maxDept = depts[0]?.[1] || 1;
 
-  const pendingLeaves = leaves.filter((l) => l.status === "Pending").slice(0, 3);
-  const recentEmployees = [...employees].slice(0, 4);
-  const totalPayroll = employees.reduce((s, e) => s + (Number(e.salary) || 0), 0);
+  const pendingLeaves    = leaves.filter((l) => l.status === "Pending").slice(0, 3);
+  const recentEmployees  = [...employees].slice(0, 4);
+  const totalPayroll     = employees.reduce((s, e) => s + (Number(e.salary) || 0), 0);
 
   const chartData = [
     { name: "Present",  value: present || 0 },
-    { name: "On Leave", value: onLeave || 0 },
+    { name: "On Leave", value: onLeave  || 0 },
   ];
+
+  /* ── design tokens ── */
+  const t = darkMode
+    ? {
+        pageBg:         "#0f172a",
+        cardBg:         "#1e293b",
+        text:           "#f1f5f9",
+        subtext:        "#94a3b8",
+        muted:          "#64748b",
+        border:         "#334155",
+        inputBg:        "#0f172a",
+        inputBorder:    "#334155",
+        tableRowHover:  "#1e293b",
+        tableHeaderBg:  "#172033",
+      }
+    : {
+        pageBg:         "#f1f5f9",
+        cardBg:         "#ffffff",
+        text:           "#0f172a",
+        subtext:        "#64748b",
+        muted:          "#94a3b8",
+        border:         "#e2e8f0",
+        inputBg:        "#ffffff",
+        inputBorder:    "#e2e8f0",
+        tableRowHover:  "#f8fafc",
+        tableHeaderBg:  "#f8fafc",
+      };
+
+  /* ── helpers ── */
+  const card = {
+    background:   t.cardBg,
+    borderRadius: 14,
+    border:       "1px solid " + t.border,
+    boxShadow:    "0 1px 3px rgba(0,0,0,0.06)",
+  };
 
   const initials = (name = "") =>
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
-  const avatarColors = [
+  const avatarPalette = [
     { bg: "#dbeafe", color: "#2563eb" },
     { bg: "#dcfce7", color: "#16a34a" },
     { bg: "#fef9c3", color: "#ca8a04" },
     { bg: "#fee2e2", color: "#dc2626" },
     { bg: "#f3e8ff", color: "#9333ea" },
   ];
-  const getColor = (i) => avatarColors[i % avatarColors.length];
+  const avatarColor = (i) => avatarPalette[i % avatarPalette.length];
 
-  const statusStyle = (s) =>
-    s === "Present"
-      ? { bg: "#dcfce7", color: "#16a34a" }
-      : s === "On leave" || s === "Leave"
-      ? { bg: "#fef9c3", color: "#ca8a04" }
-      : { bg: "#fee2e2", color: "#dc2626" };
-
-  const card = {
-    background: "#fff",
-    borderRadius: 14,
-    border: "1px solid #e8eaed",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+  const badgeStyle = (status) => {
+    if (darkMode) {
+      if (status === "Present" || status === "Active" || status === "Paid" || status === "Approved" || status === "Completed")
+        return { background: "#14532d33", color: "#4ade80" };
+      if (status === "Pending" || status === "In Progress" || status === "Late" || status === "On leave")
+        return { background: "#71350044", color: "#fbbf24" };
+      if (status === "Leave" || status === "Info")
+        return { background: "#1e3a5f", color: "#60a5fa" };
+      return { background: "#450a0a55", color: "#f87171" };
+    }
+    if (status === "Present" || status === "Active" || status === "Paid" || status === "Approved" || status === "Completed")
+      return { background: "#dcfce7", color: "#15803d" };
+    if (status === "Pending" || status === "In Progress" || status === "Late" || status === "On leave")
+      return { background: "#fef9c3", color: "#a16207" };
+    if (status === "Leave" || status === "Info")
+      return { background: "#dbeafe", color: "#1d4ed8" };
+    return { background: "#fee2e2", color: "#b91c1c" };
   };
 
+  const iconBtn = {
+    width: 34, height: 34, borderRadius: 9,
+    background: t.cardBg, border: "1px solid " + t.border,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer", flexShrink: 0,
+  };
+
+  /* ── render ── */
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: t.pageBg, minHeight: "100vh", padding: "24px" }}>
 
       {/* ── TOP BAR ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+        marginBottom: 24,
+      }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: 0 }}>Dashboard</h1>
-          <p style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>Admin Portal · {today}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: t.text, margin: 0, lineHeight: 1.2 }}>
+            Dashboard
+          </h1>
+          <p style={{ fontSize: 12, fontWeight: 400, color: t.subtext, marginTop: 4, marginBottom: 0 }}>
+            {today}
+          </p>
         </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "#fff", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <Search size={14} color="#64748b" />
+          <button style={iconBtn} aria-label="Search">
+            <Search size={15} color={t.subtext} strokeWidth={1.8} />
+          </button>
+
+          <button style={{ ...iconBtn, position: "relative" }} aria-label="Notifications">
+            <Bell size={15} color={t.subtext} strokeWidth={1.8} />
+            <span style={{
+              position: "absolute", top: 7, right: 7,
+              width: 6, height: 6, borderRadius: "50%",
+              background: "#ef4444", border: "1.5px solid " + t.cardBg,
+            }} />
+          </button>
+
+          <div style={{
+            height: 34, borderRadius: 9,
+            background: t.cardBg, border: "1px solid " + t.border,
+            display: "flex", alignItems: "center", padding: "0 12px",
+            fontSize: 12, fontWeight: 700, color: t.text, cursor: "pointer",
+            userSelect: "none",
+          }}>
+            AD
           </div>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "#fff", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative" }}>
-            <Bell size={14} color="#64748b" />
-            <div style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#ef4444", border: "1.5px solid #f1f5f9" }} />
-          </div>
-          <div style={{ height: 34, borderRadius: 9, background: "#fff", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", padding: "0 12px", fontSize: 12, fontWeight: 700, color: "#0f172a", cursor: "pointer" }}>AD</div>
         </div>
       </div>
 
-      {/* ── ZONE 1: KPI CARDS ── */}
-      <p style={{ fontSize: 9, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-        Zone 1 — KPI Summary (Top Row, Always Visible)
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
+      {/* ── KPI CARDS ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
         {[
-          { tag: "Employees", tagColor: "#2563eb", tagBg: "#eff6ff", emoji: "👥", value: total,   valueColor: "#0f172a", sub: "Total headcount" },
-          { tag: "Present",   tagColor: "#16a34a", tagBg: "#f0fdf4", emoji: "✅", value: present, valueColor: "#16a34a", sub: `Today · ${attendancePct}%` },
-          { tag: "On leave",  tagColor: "#ca8a04", tagBg: "#fefce8", emoji: "📋", value: onLeave, valueColor: "#ca8a04", sub: "Active leaves" },
-          { tag: "Pending",   tagColor: "#ef4444", tagBg: "#fef2f2", emoji: "🕐", value: pending, valueColor: "#ef4444", sub: "Leave requests" },
+          {
+            emoji: "👥", tag: "Employees", tagColor: "#2563eb", tagBg: darkMode ? "#1e3a5f" : "#eff6ff",
+            value: total,   valueColor: t.text,    sub: "Total headcount",
+          },
+          {
+            emoji: "✅", tag: "Present",   tagColor: darkMode ? "#4ade80" : "#16a34a", tagBg: darkMode ? "#14532d33" : "#f0fdf4",
+            value: present, valueColor: darkMode ? "#4ade80" : "#16a34a", sub: `Today · ${attendancePct}%`,
+          },
+          {
+            emoji: "📋", tag: "On Leave",  tagColor: darkMode ? "#fbbf24" : "#d97706", tagBg: darkMode ? "#71350044" : "#fefce8",
+            value: onLeave, valueColor: darkMode ? "#fbbf24" : "#d97706", sub: "Active leaves",
+          },
+          {
+            emoji: "🕐", tag: "Pending",   tagColor: darkMode ? "#f87171" : "#ef4444", tagBg: darkMode ? "#450a0a55" : "#fef2f2",
+            value: pending, valueColor: darkMode ? "#f87171" : "#ef4444", sub: "Leave requests",
+          },
         ].map((c, i) => (
-          <div key={i} style={{ ...card, padding: "14px 16px" }}>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: c.tagBg, color: c.tagColor, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 999 }}>
-                <span style={{ fontSize: 12 }}>{c.emoji}</span>{c.tag}
+          <div key={i} style={{ ...card, padding: "20px 24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                background: c.tagBg, color: c.tagColor,
+                fontSize: 11, fontWeight: 600,
+                padding: "4px 10px", borderRadius: 999,
+                flexShrink: 0,
+              }}>
+                <span style={{ fontSize: 13, lineHeight: 1 }}>{c.emoji}</span>
+                {c.tag}
               </span>
             </div>
-            <p style={{ fontSize: 32, fontWeight: 700, color: c.valueColor, margin: "0 0 3px", lineHeight: 1 }}>{c.value}</p>
-            <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>{c.sub}</p>
+            <p style={{ fontSize: 28, fontWeight: 700, color: c.valueColor, margin: "10px 0 4px", lineHeight: 1 }}>
+              {c.value}
+            </p>
+            <p style={{ fontSize: 12, fontWeight: 500, color: t.subtext, margin: 0 }}>{c.sub}</p>
           </div>
         ))}
       </div>
 
-      {/* ── ZONE 2: DAILY OVERVIEW ── */}
-      <p style={{ fontSize: 9, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-        Zone 2 — Daily Overview (Middle Row)
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr 1fr", gap: 10, marginBottom: 16 }}>
+      {/* ── MIDDLE ROW: leave requests | attendance chart | dept headcount ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr 1fr", gap: 12, marginBottom: 16 }}>
 
         {/* Pending leave requests */}
-        <div style={{ ...card, padding: "16px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>Pending leave requests</h3>
-            <span style={{ fontSize: 11, color: "#2563eb", cursor: "pointer" }}>view all</span>
+        <div style={{ ...card, padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text, margin: 0 }}>
+              Pending Leaves
+            </h3>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#2563eb", cursor: "pointer" }}>
+              View all
+            </span>
           </div>
+
           {pendingLeaves.length === 0 ? (
-            <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>No pending requests</p>
+            <p style={{ fontSize: 13, color: t.muted, margin: 0 }}>No pending requests</p>
           ) : pendingLeaves.map((lv, i) => {
-            const c = getColor(i);
+            const ac = avatarColor(i);
             return (
-              <div key={lv._id || i} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: i < pendingLeaves.length - 1 ? 12 : 0 }}>
-                <div style={{ width: 30, height: 30, borderRadius: "50%", background: c.bg, color: c.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{initials(lv.employee)}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", margin: "0 0 1px" }}>{lv.employee}</p>
-                  <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>{lv.leaveType} · {lv.days || "—"} days</p>
+              <div key={lv._id || i} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                marginBottom: i < pendingLeaves.length - 1 ? 14 : 0,
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  background: ac.bg, color: ac.color,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 10, fontWeight: 700, flexShrink: 0,
+                }}>
+                  {initials(lv.employee)}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "#fef9c3", color: "#ca8a04", flexShrink: 0 }}>Pending</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: t.text, margin: "0 0 2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {lv.employee}
+                  </p>
+                  <p style={{ fontSize: 13, fontWeight: 400, color: t.subtext, margin: 0 }}>
+                    {lv.leaveType} · {lv.days || "—"} days
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: 600,
+                  padding: "3px 10px", borderRadius: 999,
+                  ...badgeStyle("Pending"),
+                  flexShrink: 0,
+                }}>
+                  Pending
+                </span>
               </div>
             );
           })}
         </div>
 
-        {/* Attendance breakdown */}
-        <div style={{ ...card, padding: "16px 16px" }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: "0 0 10px" }}>Attendance breakdown</h3>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-            <div style={{ width: 120, height: 120 }}>
+        {/* Attendance breakdown (donut) */}
+        <div style={{ ...card, padding: "20px 24px" }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text, margin: "0 0 14px" }}>
+            Attendance Breakdown
+          </h3>
+
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+            <div style={{ width: 130, height: 130 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={chartData.some(d => d.value > 0) ? chartData : [{ name: "No data", value: 1 }]}
+                    data={chartData.some((d) => d.value > 0) ? chartData : [{ name: "No data", value: 1 }]}
                     dataKey="value" nameKey="name"
                     cx="50%" cy="50%"
-                    outerRadius={55} innerRadius={32}
-                    paddingAngle={chartData.some(d => d.value > 0) ? 3 : 0}
+                    outerRadius={58} innerRadius={35}
+                    paddingAngle={chartData.some((d) => d.value > 0) ? 3 : 0}
                     startAngle={90} endAngle={-270}
                   >
-                    {chartData.some(d => d.value > 0)
-                      ? <><Cell fill="#22c55e" /><Cell fill="#facc15" /></>
-                      : <Cell fill="#e2e8f0" />}
+                    {chartData.some((d) => d.value > 0)
+                      ? <><Cell fill="#16a34a" /><Cell fill="#d97706" /></>
+                      : <Cell fill={t.border} />}
                   </Pie>
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 8, border: "1px solid " + t.border,
+                      background: t.cardBg, color: t.text, fontSize: 11,
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </div>
+
           {[
-            { label: "Present",  pct: attendancePct, color: "#22c55e" },
-            { label: "On leave", pct: onLeavePct,    color: "#facc15" },
+            { label: "Present",  pct: attendancePct, color: "#16a34a" },
+            { label: "On Leave", pct: onLeavePct,    color: "#d97706" },
           ].map((item) => (
-            <div key={item.label} style={{ marginBottom: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+            <div key={item.label} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: item.color }} />
-                  <span style={{ fontSize: 11, color: "#64748b" }}>{item.label}</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: t.subtext }}>{item.label}</span>
                 </div>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#0f172a" }}>{item.pct}%</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: t.text }}>{item.pct}%</span>
               </div>
-              <div style={{ height: 4, background: "#f1f5f9", borderRadius: 99 }}>
-                <div style={{ height: "100%", borderRadius: 99, background: item.color, width: `${item.pct}%`, transition: "width 0.4s ease" }} />
+              <div style={{ height: 5, background: t.border, borderRadius: 99 }}>
+                <div style={{
+                  height: "100%", borderRadius: 99,
+                  background: item.color,
+                  width: `${item.pct}%`,
+                  transition: "width 0.4s ease",
+                }} />
               </div>
             </div>
           ))}
         </div>
 
         {/* Department headcount */}
-        <div style={{ ...card, padding: "16px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>Department headcount</h3>
-            <span style={{ fontSize: 10, color: "#94a3b8" }}>this month</span>
+        <div style={{ ...card, padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text, margin: 0 }}>
+              Department Headcount
+            </h3>
+            <span style={{ fontSize: 12, fontWeight: 500, color: t.muted }}>this month</span>
           </div>
+
           {depts.length === 0
-            ? <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>No data</p>
+            ? <p style={{ fontSize: 13, color: t.muted, margin: 0 }}>No data</p>
             : depts.map(([dept, count], i) => (
-              <div key={dept} style={{ marginBottom: i < depts.length - 1 ? 12 : 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: "#334155" }}>{dept}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{count}</span>
+              <div key={dept} style={{ marginBottom: i < depts.length - 1 ? 14 : 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: t.text }}>{dept}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{count}</span>
                 </div>
-                <div style={{ height: 4, background: "#f1f5f9", borderRadius: 99 }}>
-                  <div style={{ height: "100%", borderRadius: 99, background: "#2563eb", width: `${Math.round((count / maxDept) * 100)}%`, transition: "width 0.4s ease" }} />
+                <div style={{ height: 5, background: t.border, borderRadius: 99 }}>
+                  <div style={{
+                    height: "100%", borderRadius: 99,
+                    background: "#2563eb",
+                    width: `${Math.round((count / maxDept) * 100)}%`,
+                    transition: "width 0.4s ease",
+                  }} />
                 </div>
               </div>
             ))
@@ -195,43 +329,77 @@ const Dashboard = ({ employees = [], leaves = [] }) => {
         </div>
       </div>
 
-      {/* ── ZONE 3: ACTIVITY & PAYROLL ── */}
-      <p style={{ fontSize: 9, fontWeight: 600, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-        Zone 3 — Activity & Payroll (Bottom Row)
-      </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 10 }}>
+      {/* ── BOTTOM ROW: employee activity table | payroll snapshot ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 12 }}>
 
-        {/* Recent activity */}
-        <div style={{ ...card, padding: "16px 18px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>Recent employee activity</h3>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>today</span>
+        {/* Recent employee activity */}
+        <div style={{ ...card, padding: "20px 24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text, margin: 0 }}>
+              Recent Employee Activity
+            </h3>
+            <span style={{ fontSize: 12, fontWeight: 500, color: t.muted }}>today</span>
           </div>
+
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
-                {["Employee","Department","Check-in","Status"].map(h => (
-                  <th key={h} style={{ textAlign: "left", paddingBottom: 7, fontSize: 11, fontWeight: 500, color: "#94a3b8" }}>{h}</th>
+              <tr style={{ background: t.tableHeaderBg }}>
+                {["Employee", "Department", "Check-in", "Status"].map((h) => (
+                  <th key={h} style={{
+                    textAlign: "left",
+                    padding: "10px 14px 12px",
+                    fontSize: 12, fontWeight: 600,
+                    color: t.subtext,
+                    letterSpacing: "0.02em",
+                    background: t.tableHeaderBg,
+                  }}>
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {recentEmployees.map((emp, i) => {
-                const c = getColor(i);
-                const st = emp.status === "Present" ? "Present" : emp.status === "Leave" ? "On leave" : "Absent";
-                const ss = statusStyle(st);
+              {recentEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ padding: "13px 14px", fontSize: 13, color: t.muted }}>
+                    No recent activity
+                  </td>
+                </tr>
+              ) : recentEmployees.map((emp, i) => {
+                const ac = avatarColor(i);
+                const statusLabel =
+                  emp.status === "Present" ? "Present"
+                  : emp.status === "Leave"   ? "On leave"
+                  : "Absent";
+                const bs = badgeStyle(statusLabel);
+
                 return (
-                  <tr key={emp._id || i} style={{ borderBottom: "1px solid #f8fafc" }}>
-                    <td style={{ padding: "9px 0" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: c.bg, color: c.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{initials(emp.name)}</div>
-                        <span style={{ fontSize: 12, fontWeight: 500, color: "#0f172a" }}>{emp.name}</span>
+                  <tr key={emp._id || i} style={{ borderBottom: "1px solid " + t.border }}>
+                    <td style={{ padding: "13px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: "50%",
+                          background: ac.bg, color: ac.color,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 9, fontWeight: 700, flexShrink: 0,
+                        }}>
+                          {initials(emp.name)}
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: t.text }}>{emp.name}</span>
                       </div>
                     </td>
-                    <td style={{ padding: "9px 0", fontSize: 12, color: "#64748b" }}>{emp.department}</td>
-                    <td style={{ padding: "9px 0", fontSize: 12, color: "#64748b" }}>—</td>
-                    <td style={{ padding: "9px 0" }}>
-                      <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: ss.bg, color: ss.color }}>{st}</span>
+                    <td style={{ padding: "13px 14px", fontSize: 13, fontWeight: 400, color: t.subtext }}>
+                      {emp.department}
+                    </td>
+                    <td style={{ padding: "13px 14px", fontSize: 13, fontWeight: 400, color: t.subtext }}>—</td>
+                    <td style={{ padding: "13px 14px" }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 600,
+                        padding: "3px 10px", borderRadius: 999,
+                        ...bs,
+                      }}>
+                        {statusLabel}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -241,33 +409,52 @@ const Dashboard = ({ employees = [], leaves = [] }) => {
         </div>
 
         {/* Payroll snapshot */}
-        <div style={{ ...card, padding: "16px 18px" }}>
+        <div style={{ ...card, padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>Payroll snapshot</h3>
-            <span style={{ fontSize: 10, color: "#94a3b8" }}>
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: t.text, margin: 0 }}>
+              Payroll Snapshot
+            </h3>
+            <span style={{ fontSize: 12, fontWeight: 500, color: t.muted }}>
               {new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
             </span>
           </div>
-          <p style={{ fontSize: 11, color: "#94a3b8", margin: "2px 0 8px" }}>Total payroll</p>
-          <p style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", margin: "0 0 14px" }}>
+
+          <p style={{ fontSize: 12, fontWeight: 500, color: t.subtext, margin: "6px 0 4px" }}>
+            Total payroll
+          </p>
+          <p style={{ fontSize: 28, fontWeight: 700, color: t.text, margin: "0 0 16px", lineHeight: 1.1 }}>
             ₹{totalPayroll.toLocaleString("en-IN")}
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
             {[
               { label: "Processed", value: present, color: "#16a34a" },
-              { label: "Pending",   value: pending,  color: "#f97316" },
+              { label: "Pending",   value: pending,  color: "#d97706" },
             ].map((s) => (
-              <div key={s.label} style={{ background: "#f8fafc", borderRadius: 9, padding: "9px 12px", border: "1px solid #f1f5f9" }}>
-                <p style={{ fontSize: 10, color: "#64748b", margin: "0 0 3px" }}>{s.label}</p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
+              <div key={s.label} style={{
+                background: t.tableHeaderBg,
+                borderRadius: 10, padding: "11px 14px",
+                border: "1px solid " + t.border,
+              }}>
+                <p style={{ fontSize: 12, fontWeight: 500, color: t.subtext, margin: "0 0 4px" }}>{s.label}</p>
+                <p style={{ fontSize: 22, fontWeight: 700, color: s.color, margin: 0 }}>{s.value}</p>
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#0f172a", margin: "0 0 5px" }}>Processing status</p>
-          <div style={{ height: 5, background: "#f1f5f9", borderRadius: 99, marginBottom: 5 }}>
-            <div style={{ height: "100%", borderRadius: 99, background: "#22c55e", width: total > 0 ? `${attendancePct}%` : "0%", transition: "width 0.4s ease" }} />
+
+          <p style={{ fontSize: 13, fontWeight: 600, color: t.text, margin: "0 0 6px" }}>
+            Processing status
+          </p>
+          <div style={{ height: 6, background: t.border, borderRadius: 99, marginBottom: 6 }}>
+            <div style={{
+              height: "100%", borderRadius: 99, background: "#16a34a",
+              width: total > 0 ? `${attendancePct}%` : "0%",
+              transition: "width 0.4s ease",
+            }} />
           </div>
-          <p style={{ fontSize: 10, color: "#94a3b8", margin: 0 }}>{present} of {total} processed · {attendancePct}%</p>
+          <p style={{ fontSize: 12, fontWeight: 400, color: t.subtext, margin: 0 }}>
+            {present} of {total} processed · {attendancePct}%
+          </p>
         </div>
 
       </div>

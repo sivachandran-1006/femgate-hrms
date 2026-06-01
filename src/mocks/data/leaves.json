@@ -1,0 +1,14 @@
+{
+  "leaves": [
+    { "_id": "lv001", "employee": "Safeer", "leaveType": "Sick Leave", "fromDate": "2026-05-20", "toDate": "2026-05-22", "days": 3, "reason": "Fever", "status": "Approved" },
+    { "_id": "lv002", "employee": "Suriya", "leaveType": "Casual Leave", "fromDate": "2026-05-28", "toDate": "2026-05-28", "days": 1, "reason": "Personal work", "status": "Pending" },
+    { "_id": "lv003", "employee": "Aravinth", "leaveType": "Casual Leave", "fromDate": "2026-06-02", "toDate": "2026-06-03", "days": 2, "reason": "Family function", "status": "Pending" },
+    { "_id": "lv004", "employee": "C Santhosh", "leaveType": "Sick Leave", "fromDate": "2026-05-30", "toDate": "2026-05-30", "days": 1, "reason": "Doctor visit", "status": "Pending" },
+    { "_id": "lv005", "employee": "Mani", "leaveType": "Annual Leave", "fromDate": "2026-04-10", "toDate": "2026-04-14", "days": 5, "reason": "Vacation", "status": "Approved" },
+    { "_id": "lv006", "employee": "P Santhosh", "leaveType": "Casual Leave", "fromDate": "2026-03-15", "toDate": "2026-03-15", "days": 1, "reason": "Personal", "status": "Rejected" },
+    { "_id": "lv007", "employee": "Vignesh", "leaveType": "Annual Leave", "fromDate": "2026-05-05", "toDate": "2026-05-07", "days": 3, "reason": "Travel", "status": "Approved" },
+    { "_id": "lv008", "employee": "Siva", "leaveType": "Sick Leave", "fromDate": "2026-02-18", "toDate": "2026-02-19", "days": 2, "reason": "Cold & flu", "status": "Approved" },
+    { "_id": "lv009", "employee": "Sabari", "leaveType": "Casual Leave", "fromDate": "2026-06-05", "toDate": "2026-06-05", "days": 1, "reason": "Personal work", "status": "Pending" }
+  ],
+  "leave": { "_id": "lv001", "employee": "Safeer", "leaveType": "Sick Leave", "fromDate": "2026-05-20", "toDate": "2026-05-22", "days": 3, "reason": "Fever", "status": "Approved" }
+}

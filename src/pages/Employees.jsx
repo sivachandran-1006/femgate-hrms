@@ -1,5 +1,65 @@
 import { useState } from "react";
-import { Search, FileSpreadsheet, Plus, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsUpDown } from "lucide-react";
+import {
+  Search,
+  FileSpreadsheet,
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Users,
+  UserCheck,
+  UserMinus,
+  UserPlus,
+} from "lucide-react";
+
+const AVATAR_COLORS = [
+  { bg: "#dbeafe", color: "#1d4ed8" },
+  { bg: "#dcfce7", color: "#15803d" },
+  { bg: "#fef9c3", color: "#a16207" },
+  { bg: "#fce7f3", color: "#be185d" },
+  { bg: "#ede9fe", color: "#6d28d9" },
+  { bg: "#cffafe", color: "#0e7490" },
+  { bg: "#ffedd5", color: "#c2410c" },
+  { bg: "#f1f5f9", color: "#475569" },
+];
+
+function getAvatarColor(name = "") {
+  const idx = name.charCodeAt(0) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[idx] || AVATAR_COLORS[0];
+}
+
+function getInitials(name = "") {
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (parts.length === 0) return "U";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function getStatusBadgeStyle(status, darkMode) {
+  if (status === "Present" || status === "Active") {
+    return darkMode
+      ? { background: "#14532d33", color: "#4ade80" }
+      : { background: "#dcfce7", color: "#15803d" };
+  }
+  if (status === "Leave") {
+    return darkMode
+      ? { background: "#1e3a5f", color: "#60a5fa" }
+      : { background: "#dbeafe", color: "#1d4ed8" };
+  }
+  if (status === "Absent" || status === "Rejected") {
+    return darkMode
+      ? { background: "#450a0a55", color: "#f87171" }
+      : { background: "#fee2e2", color: "#b91c1c" };
+  }
+  // Pending / default
+  return darkMode
+    ? { background: "#71350044", color: "#fbbf24" }
+    : { background: "#fef9c3", color: "#a16207" };
+}
+
+const ROWS_PER_PAGE = 10;
 
 const Employees = ({
   employees = [],
@@ -15,21 +75,127 @@ const Employees = ({
   deleteEmployee,
   onAddEmployee,
   onExportExcel,
+  darkMode = false,
 }) => {
-
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
 
+  // --- theme tokens ---
+  const theme = darkMode
+    ? {
+        pageBg: "#0f172a",
+        cardBg: "#1e293b",
+        text: "#f1f5f9",
+        subtext: "#94a3b8",
+        muted: "#64748b",
+        border: "#334155",
+        inputBg: "#0f172a",
+        inputBorder: "#334155",
+        tableRowHover: "#1e293b",
+        tableHeaderBg: "#172033",
+      }
+    : {
+        pageBg: "#f1f5f9",
+        cardBg: "#ffffff",
+        text: "#0f172a",
+        subtext: "#64748b",
+        muted: "#94a3b8",
+        border: "#e2e8f0",
+        inputBg: "#ffffff",
+        inputBorder: "#e2e8f0",
+        tableRowHover: "#f8fafc",
+        tableHeaderBg: "#f8fafc",
+      };
+
+  // --- KPI counts ---
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+
+  const totalCount = employees.length;
+  const presentCount = employees.filter((e) => e.status === "Present").length;
+  const leaveCount = employees.filter((e) => e.status === "Leave").length;
+  const newJoinersCount = employees.filter((e) => {
+    if (!e.joinDate) return false;
+    const parts = e.joinDate.split(/[-/]/);
+    // Support both DD/MM/YYYY and YYYY-MM-DD
+    let d;
+    if (parts[0].length === 4) {
+      d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    } else {
+      d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+    }
+    return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+  }).length;
+
+  const kpis = [
+    {
+      label: "Total Employees",
+      value: totalCount,
+      icon: <Users size={20} strokeWidth={1.8} color="#2563eb" />,
+      iconBg: "#dbeafe",
+      valueColor: "#2563eb",
+    },
+    {
+      label: "Present Today",
+      value: presentCount,
+      icon: <UserCheck size={20} strokeWidth={1.8} color="#16a34a" />,
+      iconBg: "#dcfce7",
+      valueColor: "#16a34a",
+    },
+    {
+      label: "On Leave",
+      value: leaveCount,
+      icon: <UserMinus size={20} strokeWidth={1.8} color="#d97706" />,
+      iconBg: "#fef9c3",
+      valueColor: "#d97706",
+    },
+    {
+      label: "New Joiners",
+      value: newJoinersCount,
+      icon: <UserPlus size={20} strokeWidth={1.8} color="#7c3aed" />,
+      iconBg: "#ede9fe",
+      valueColor: "#7c3aed",
+    },
+  ];
+
+  // --- sorted + paginated ---
   const sorted = [...filteredEmployees].sort((a, b) =>
     sortOrder === "asc"
       ? (a?.name || "").localeCompare(b?.name || "")
       : (b?.name || "").localeCompare(a?.name || "")
   );
-  const totalPages = Math.ceil(sorted.length / rowsPerPage);
+  const totalPages = Math.ceil(sorted.length / ROWS_PER_PAGE);
   const paginated = sorted.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+    (currentPage - 1) * ROWS_PER_PAGE,
+    currentPage * ROWS_PER_PAGE
   );
+
+  function handleSearch(e) {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  }
+
+  function handleStatusFilter(e) {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  }
+
+  const showFrom = sorted.length === 0 ? 0 : (currentPage - 1) * ROWS_PER_PAGE + 1;
+  const showTo = Math.min(currentPage * ROWS_PER_PAGE, sorted.length);
+
+  // Page buttons: show at most 5 around current
+  function getPageNumbers() {
+    if (totalPages <= 7) return Array.from({ length: totalPages || 1 }, (_, i) => i + 1);
+    const pages = [];
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+    if (start > 1) pages.push(1);
+    if (start > 2) pages.push("...");
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push("...");
+    if (end < totalPages) pages.push(totalPages);
+    return pages;
+  }
 
   return (
     <div
@@ -38,223 +204,267 @@ const Employees = ({
         width: "100%",
         maxWidth: 1320,
         margin: "0 auto",
+        color: theme.text,
       }}
     >
-
-      {/* PAGE HEADER */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+      {/* ── PAGE HEADER ── */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 24,
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", marginBottom: 4 }}>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: theme.text,
+              margin: 0,
+              lineHeight: 1.3,
+            }}
+          >
             Employees
           </h1>
-          <p style={{ fontSize: 14, color: "#94a3b8" }}>Manage and view employee details</p>
+          <p style={{ fontSize: 13, color: theme.subtext, margin: "4px 0 0" }}>
+            Manage your team
+          </p>
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             onClick={onExportExcel}
             style={{
-              display: "flex", alignItems: "center", gap: 8,
-              background: "#16a34a", color: "#fff",
-              border: "none", borderRadius: 10,
-              padding: "11px 20px", fontSize: 14, fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#16a34a",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "9px 18px",
+              fontSize: 13,
+              fontWeight: 600,
               cursor: "pointer",
             }}
           >
-            <FileSpreadsheet size={16} />
+            <FileSpreadsheet size={15} strokeWidth={2} />
             Export Excel
           </button>
 
           <button
             onClick={onAddEmployee}
             style={{
-              display: "flex", alignItems: "center", gap: 8,
-              background: "#2563eb", color: "#fff",
-              border: "none", borderRadius: 10,
-              padding: "11px 20px", fontSize: 14, fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "#2563eb",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "9px 18px",
+              fontSize: 13,
+              fontWeight: 600,
               cursor: "pointer",
             }}
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2} />
             Add Employee
           </button>
         </div>
       </div>
 
-      {/* EMPLOYEE STATS */}
+      {/* ── KPI CARDS ── */}
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 20,
-          marginBottom: 28,
+          gap: 16,
+          marginBottom: 24,
         }}
       >
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 16,
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Total Employees</p>
-          <h2 style={{ margin: "8px 0 0", fontSize: 28 }}>{employees.length}</h2>
-        </div>
-
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 16,
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Present Today</p>
-          <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#22c55e" }}>
-            {employees.filter(e => e.status === "Present").length}
-          </h2>
-        </div>
-
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 16,
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>On Leave</p>
-          <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#f59e0b" }}>
-            {employees.filter(e => e.status === "Leave").length}
-          </h2>
-        </div>
-
-        <div
-          style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 16,
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>New Joiners</p>
-          <h2 style={{ margin: "8px 0 0", fontSize: 28, color: "#2563eb" }}>1</h2>
-        </div>
+        {kpis.map((kpi) => (
+          <div
+            key={kpi.label}
+            style={{
+              background: theme.cardBg,
+              borderRadius: 14,
+              border: "1px solid " + theme.border,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+              padding: "18px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: kpi.iconBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {kpi.icon}
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: kpi.valueColor,
+                  lineHeight: 1,
+                }}
+              >
+                {kpi.value}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: theme.subtext,
+                  marginTop: 4,
+                }}
+              >
+                {kpi.label}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* SEARCH + SORT + FILTER */}
+      {/* ── TOOLBAR ── */}
       <div
         style={{
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
-          gap: 12,
-          marginBottom: 28,
+          gap: 10,
+          marginBottom: 16,
         }}
       >
-        {/* SEARCH */}
+        {/* Search */}
         <div style={{ position: "relative" }}>
           <Search
-            size={16}
-            color="#94a3b8"
-            style={{ position: "absolute", top: "50%", left: 16, transform: "translateY(-50%)" }}
+            size={15}
+            color={theme.muted}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: 12,
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+            }}
           />
           <input
             type="text"
             placeholder="Search employee..."
             value={searchTerm}
-            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            onChange={handleSearch}
             style={{
-              border: "1px solid #dbe4ee",
-              borderRadius: 12,
-              padding: "0 18px 0 46px",
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#0f172a",
+              border: "1px solid " + theme.inputBorder,
+              borderRadius: 10,
+              padding: "0 14px 0 36px",
+              fontSize: 13,
+              fontWeight: 400,
+              color: theme.text,
               width: 260,
-              height: 52,
+              height: 38,
               outline: "none",
-              background: "#ffffff",
+              background: theme.inputBg,
               boxSizing: "border-box",
             }}
           />
         </div>
 
-        {/* SORT BUTTON */}
+        {/* Sort */}
         <button
           onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
-            border: "1px solid #dbe4ee",
-            borderRadius: 12,
-            padding: "0 18px",
-            minWidth: 120,
-            height: 52,
-            justifyContent: "space-between",
-            fontSize: 14,
+            gap: 8,
+            border: "1px solid " + theme.border,
+            borderRadius: 10,
+            padding: "0 14px",
+            height: 38,
+            fontSize: 13,
             fontWeight: 600,
-            background: "#fff",
-            color: "#0f172a",
+            background: theme.cardBg,
+            color: theme.text,
             cursor: "pointer",
+            whiteSpace: "nowrap",
           }}
         >
-          Sort {sortOrder === "asc" ? "Z-A" : "A-Z"}
-          <ChevronsUpDown size={14} color="#64748b" />
+          Sort {sortOrder === "asc" ? "Z–A" : "A–Z"}
+          <ChevronsUpDown size={14} color={theme.subtext} strokeWidth={1.8} />
         </button>
 
-        {/* STATUS FILTER */}
+        {/* Status filter */}
         <select
           value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setCurrentPage(1);
-          }}
+          onChange={handleStatusFilter}
           style={{
-            border: "1px solid #dbe4ee",
-            borderRadius: 12,
-            padding: "0 18px",
-            width: 140,
-            height: 52,
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#0f172a",
-            background: "#fff",
+            border: "1px solid " + theme.inputBorder,
+            borderRadius: 10,
+            padding: "0 14px",
+            height: 38,
+            fontSize: 13,
+            fontWeight: 400,
+            color: theme.text,
+            background: theme.inputBg,
             cursor: "pointer",
             outline: "none",
             appearance: "none",
+            minWidth: 130,
           }}
         >
-          <option value="All">All</option>
+          <option value="All">All Status</option>
           <option value="Present">Present</option>
           <option value="Leave">Leave</option>
+          <option value="Absent">Absent</option>
         </select>
       </div>
 
-      {/* TABLE CARD */}
+      {/* ── TABLE CARD ── */}
       <div
         style={{
-          background: "#ffffff",
-          borderRadius: 20,
-          border: "1px solid #f1f5f9",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          background: theme.cardBg,
+          borderRadius: 14,
+          border: "1px solid " + theme.border,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
           overflow: "hidden",
-          padding: "0 32px 28px",
-          width: "100%",
         }}
       >
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ borderBottom: "2px solid #f1f5f9" }}>
-              {["Employee ID", "Employee Name", "Department", "Designation", "Status", "Join Date", "Action"].map((h) => (
+            <tr>
+              {[
+                "Employee ID",
+                "Employee Name",
+                "Department",
+                "Designation",
+                "Status",
+                "Join Date",
+                "Actions",
+              ].map((h) => (
                 <th
                   key={h}
                   style={{
-                    textAlign: "left", padding: "20px 12px 16px",
-                    fontSize: 14, fontWeight: 700, color: "#0f172a",
+                    textAlign: "left",
+                    padding: "10px 14px 12px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: theme.subtext,
+                    letterSpacing: "0.02em",
+                    background: theme.tableHeaderBg,
+                    borderBottom: "1px solid " + theme.border,
                   }}
                 >
                   {h}
@@ -266,170 +476,293 @@ const Employees = ({
           <tbody>
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", padding: 40, color: "#94a3b8", fontSize: 14 }}>
+                <td
+                  colSpan={7}
+                  style={{
+                    textAlign: "center",
+                    padding: "40px 14px",
+                    color: theme.muted,
+                    fontSize: 13,
+                  }}
+                >
                   No employees found.
                 </td>
               </tr>
             ) : (
-              paginated.map((employee) => (
-                <tr key={employee._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+              paginated.map((employee) => {
+                const globalIdx = employees.findIndex((e) => e._id === employee._id);
+                const empId =
+                  "EMP" + String(globalIdx >= 0 ? globalIdx + 1 : 0).padStart(3, "0");
+                const avatarStyle = getAvatarColor(employee.name);
+                const initials = getInitials(employee.name);
+                const badgeStyle = getStatusBadgeStyle(employee.status, darkMode);
 
-                  {/* EMPLOYEE ID */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#2563eb" }}>
-                      EMP{String(employees.findIndex((e) => e._id === employee._id) + 1).padStart(3, "0")}
-                    </span>
-                  </td>
+                return (
+                  <tr
+                    key={employee._id}
+                    style={{ borderBottom: "1px solid " + theme.border }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = theme.tableRowHover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    {/* Employee ID */}
+                    <td style={{ padding: "13px 14px", fontSize: 13 }}>
+                      <span style={{ fontWeight: 600, color: "#2563eb" }}>{empId}</span>
+                    </td>
 
-                  {/* EMPLOYEE NAME */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div
-                        style={{
-                          width: 38, height: 38, borderRadius: "50%",
-                          background: "#dbeafe", color: "#2563eb",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {(employee.name || "U").charAt(0)}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600, color: "#0f172a" }}>
-                          {employee.name || "Unknown Employee"}
+                    {/* Employee Name */}
+                    <td style={{ padding: "13px 14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: avatarStyle.bg,
+                            color: avatarStyle.color,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {initials}
                         </div>
-                        <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                          {employee.email}
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 500,
+                              color: theme.text,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {employee.name || "Unknown"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 400,
+                              color: theme.subtext,
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {employee.email || ""}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* DEPARTMENT */}
-                  <td style={{ padding: "18px 12px", color: "#334155", fontWeight: 500 }}>
-                    {employee.department}
-                  </td>
-
-                  {/* DESIGNATION */}
-                  <td style={{ padding: "18px 12px", color: "#334155", fontWeight: 500 }}>
-                    {employee.designation || "System Engineer"}
-                  </td>
-
-                  {/* STATUS */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <span
+                    {/* Department */}
+                    <td
                       style={{
-                        padding: "6px 14px", borderRadius: 999,
-                        fontSize: 12, fontWeight: 700,
-                        background: employee.status === "Present" ? "#dcfce7" : "#fef3c7",
-                        color: employee.status === "Present" ? "#16a34a" : "#d97706",
+                        padding: "13px 14px",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        color: theme.text,
+                        borderBottom: "1px solid " + theme.border,
                       }}
                     >
-                      {employee.status}
-                    </span>
-                  </td>
+                      {employee.department || "—"}
+                    </td>
 
-                  {/* JOIN DATE */}
-                  <td style={{ padding: "18px 12px", color: "#64748b", fontSize: 14 }}>
-                    {employee.joinDate || "29/05/2026"}
-                  </td>
+                    {/* Designation */}
+                    <td
+                      style={{
+                        padding: "13px 14px",
+                        fontSize: 13,
+                        fontWeight: 400,
+                        color: theme.subtext,
+                        borderBottom: "1px solid " + theme.border,
+                      }}
+                    >
+                      {employee.designation || "—"}
+                    </td>
 
-                  {/* ACTIONS */}
-                  <td style={{ padding: "18px 12px" }}>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <button
-                        onClick={() => editEmployee(employee)}
+                    {/* Status */}
+                    <td style={{ padding: "13px 14px" }}>
+                      <span
                         style={{
-                          border: "none", background: "#f8fafc",
-                          width: 38, height: 38, borderRadius: 10, cursor: "pointer",
+                          ...badgeStyle,
+                          borderRadius: 999,
+                          padding: "3px 10px",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          display: "inline-block",
                         }}
                       >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        onClick={() => deleteEmployee(employee._id)}
-                        style={{
-                          border: "none", background: "#fef2f2",
-                          width: 38, height: 38, borderRadius: 10,
-                          cursor: "pointer", color: "#ef4444",
-                        }}
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
+                        {employee.status || "—"}
+                      </span>
+                    </td>
 
-                </tr>
-              ))
+                    {/* Join Date */}
+                    <td
+                      style={{
+                        padding: "13px 14px",
+                        fontSize: 13,
+                        fontWeight: 400,
+                        color: theme.subtext,
+                      }}
+                    >
+                      {employee.joinDate || "—"}
+                    </td>
+
+                    {/* Actions */}
+                    <td style={{ padding: "13px 14px" }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <button
+                          onClick={() => editEmployee(employee)}
+                          title="Edit"
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 8,
+                            border: "none",
+                            background: theme.tableRowHover,
+                            color: theme.subtext,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Pencil size={14} strokeWidth={2} />
+                        </button>
+                        <button
+                          onClick={() => deleteEmployee(employee._id)}
+                          title="Delete"
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 8,
+                            border: "1px solid #fecaca",
+                            background: "#fef2f2",
+                            color: "#ef4444",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <Trash2 size={14} strokeWidth={2} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
 
-        {/* PAGINATION */}
+        {/* ── PAGINATION ── */}
         <div
           style={{
-            display: "flex", alignItems: "center",
+            display: "flex",
+            alignItems: "center",
             justifyContent: "space-between",
-            paddingTop: 20, marginTop: 4,
-            borderTop: "1px solid #f1f5f9",
+            padding: "14px 20px",
+            borderTop: "1px solid " + theme.border,
           }}
         >
-          <p style={{ fontSize: 13, color: "#94a3b8" }}>
-            Showing {sorted.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1} to{" "}
-            {Math.min(currentPage * rowsPerPage, sorted.length)} of {sorted.length} entries
-          </p>
+          <span style={{ fontSize: 13, fontWeight: 400, color: theme.subtext }}>
+            Showing {showFrom} to {showTo} of {sorted.length}
+          </span>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               disabled={currentPage === 1}
               style={{
-                width: 36, height: 36, borderRadius: 8,
-                border: "1px solid #e2e8f0", background: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                border: "1px solid " + theme.border,
+                background: theme.cardBg,
+                color: currentPage === 1 ? theme.muted : theme.text,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                color: currentPage === 1 ? "#cbd5e1" : "#334155",
               }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} strokeWidth={1.8} />
             </button>
 
-            {Array.from({ length: totalPages || 1 }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  background: page === currentPage ? "#2563eb" : "#fff",
-                  color: page === currentPage ? "#fff" : "#334155",
-                  fontWeight: page === currentPage ? 700 : 500,
-                  fontSize: 14, cursor: "pointer",
-                  border: page === currentPage ? "none" : "1px solid #e2e8f0", // ✅ fixed: single border
-                }}
-              >
-                {page}
-              </button>
-            ))}
+            {getPageNumbers().map((page, idx) =>
+              page === "..." ? (
+                <span
+                  key={"ellipsis-" + idx}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 13,
+                    color: theme.muted,
+                  }}
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 8,
+                    border: page === currentPage ? "none" : "1px solid " + theme.border,
+                    background: page === currentPage ? "#2563eb" : theme.cardBg,
+                    color: page === currentPage ? "#fff" : theme.text,
+                    fontWeight: page === currentPage ? 700 : 500,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {page}
+                </button>
+              )
+            )}
 
             <button
-              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages || 1))}
               disabled={currentPage === totalPages || totalPages === 0}
               style={{
-                width: 36, height: 36, borderRadius: 8,
-                border: "1px solid #e2e8f0", background: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                color: currentPage === totalPages ? "#cbd5e1" : "#334155",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                border: "1px solid " + theme.border,
+                background: theme.cardBg,
+                color:
+                  currentPage === totalPages || totalPages === 0
+                    ? theme.muted
+                    : theme.text,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor:
+                  currentPage === totalPages || totalPages === 0
+                    ? "not-allowed"
+                    : "pointer",
               }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} strokeWidth={1.8} />
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
-}
+};
 
 export default Employees;
