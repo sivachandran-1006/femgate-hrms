@@ -101,14 +101,14 @@ export default function App() {
         />
       </AppShell.Navbar>
 
-      <AppShell.Main style={{ background: "#ffffff" }}>
+      <AppShell.Main style={{ background: dark ? "#0f172a" : "#f1f5f9", minHeight: "100vh" }}>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/dashboard"
             element={
               <RoleGuard routeId="dashboard" userRole={userRole}>
-                <ScreenWrapper><Dashboard /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Dashboard /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -116,7 +116,7 @@ export default function App() {
             path="/employees"
             element={
               <RoleGuard routeId="employees" userRole={userRole}>
-                <ScreenWrapper><EmployeeList /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><EmployeeList /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -124,7 +124,7 @@ export default function App() {
             path="/departments"
             element={
               <RoleGuard routeId="departments" userRole={userRole}>
-                <ScreenWrapper><Departments darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Departments darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -132,7 +132,7 @@ export default function App() {
             path="/attendance"
             element={
               <RoleGuard routeId="attendance" userRole={userRole}>
-                <ScreenWrapper><Attendance darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Attendance darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -140,7 +140,7 @@ export default function App() {
             path="/leave"
             element={
               <RoleGuard routeId="leave" userRole={userRole}>
-                <ScreenWrapper><Leave darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Leave darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -148,7 +148,7 @@ export default function App() {
             path="/payroll"
             element={
               <RoleGuard routeId="payroll" userRole={userRole}>
-                <ScreenWrapper><Payroll darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Payroll darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -156,7 +156,7 @@ export default function App() {
             path="/recruitment"
             element={
               <RoleGuard routeId="recruitment" userRole={userRole}>
-                <ScreenWrapper><Recruitment darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Recruitment darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -164,7 +164,7 @@ export default function App() {
             path="/onboarding"
             element={
               <RoleGuard routeId="onboarding" userRole={userRole}>
-                <ScreenWrapper><Onboarding darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Onboarding darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -172,7 +172,7 @@ export default function App() {
             path="/performance"
             element={
               <RoleGuard routeId="performance" userRole={userRole}>
-                <ScreenWrapper><Performance darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Performance darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -180,7 +180,7 @@ export default function App() {
             path="/assets"
             element={
               <RoleGuard routeId="assets" userRole={userRole}>
-                <ScreenWrapper><Assets darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Assets darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -188,7 +188,7 @@ export default function App() {
             path="/helpdesk"
             element={
               <RoleGuard routeId="helpdesk" userRole={userRole}>
-                <ScreenWrapper><Helpdesk darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Helpdesk darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -196,7 +196,7 @@ export default function App() {
             path="/lms"
             element={
               <RoleGuard routeId="lms" userRole={userRole}>
-                <ScreenWrapper><LMS darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><LMS darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -204,7 +204,7 @@ export default function App() {
             path="/analytics"
             element={
               <RoleGuard routeId="analytics" userRole={userRole}>
-                <ScreenWrapper><Analytics darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Analytics darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -212,7 +212,7 @@ export default function App() {
             path="/settings"
             element={
               <RoleGuard routeId="settings" userRole={userRole}>
-                <ScreenWrapper><Settings darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Settings darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
