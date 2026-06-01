@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { MOCK_USERS } from "../../constants/mockUsers";
 import { ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
@@ -19,12 +18,10 @@ const FEATURES = [
 
 export default function Login() {
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,14 +30,11 @@ export default function Login() {
       setError("Please enter your email and password.");
       return;
     }
-    setLoading(true);
     try {
       login(email, password);
-      navigate("/dashboard", { replace: true });
+      // login() is synchronous — App.jsx re-renders instantly when user state updates
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
+      setError(err.message || "Invalid email or password.");
     }
   };
 
@@ -327,7 +321,6 @@ export default function Login() {
             {/* Submit button */}
             <button
               type="submit"
-              disabled={loading}
               style={{
                 width: "100%",
                 padding: PADDING.btn,
@@ -335,21 +328,17 @@ export default function Login() {
                 fontFamily: FONT_FAMILY.main,
                 fontWeight: FONT_WEIGHT.semibold,
                 color: COLORS.white,
-                background: loading ? COLORS.gray400 : COLORS.primary,
+                background: COLORS.primary,
                 border: "none",
                 borderRadius: RADIUS.md,
-                cursor: loading ? "not-allowed" : "pointer",
+                cursor: "pointer",
                 transition: "background 0.2s ease",
                 marginTop: SPACING[2],
               }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = COLORS.primaryHover;
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.background = COLORS.primary;
-              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.primaryHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.primary; }}
             >
-              {loading ? "Signing in..." : "Login to HRMS"}
+              Login to HRMS
             </button>
           </form>
 
