@@ -1,286 +1,448 @@
 import { useState } from "react";
-import {
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Users,
-  Clock,
-  Calendar,
-  Wallet,
-  BarChart3,
-} from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { MOCK_USERS } from "../../constants/mockUsers";
+import { ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
-import { SPACING, PADDING, GAP } from "../../theme/spacing";
-import { RADIUS, SHADOW, ICON_SIZE } from "../../theme/sizes";
+import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
+import { SPACING, PADDING } from "../../theme/spacing";
+import { RADIUS, SHADOWS } from "../../theme/sizes";
+import logo from "../../assets/images/logo.png";
 
 const FEATURES = [
-  { icon: <Users size={ICON_SIZE.sm} />, label: "Employee Management" },
-  { icon: <Clock size={ICON_SIZE.sm} />, label: "Attendance Tracking" },
-  { icon: <Calendar size={ICON_SIZE.sm} />, label: "Leave Management" },
-  { icon: <Wallet size={ICON_SIZE.sm} />, label: "Payroll Processing" },
-  { icon: <BarChart3 size={ICON_SIZE.sm} />, label: "Analytics Dashboard" },
+  "Employee Management",
+  "Attendance & Leave",
+  "Payroll Processing",
+  "Recruitment & Onboarding",
+  "Analytics & Reports",
 ];
 
-const Login = ({ setIsLoggedIn }) => {
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    localStorage.setItem("token", "hrms-token");
-    setIsLoggedIn(true);
+    setError("");
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      login(email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const inputStyle = {
+  const fillCredentials = (mockUser) => {
+    setEmail(mockUser.email);
+    setPassword(mockUser.password);
+    setError("");
+  };
+
+  const inputBase = {
     width: "100%",
-    border: `1px solid ${COLORS.borderLight}`,
-    borderRadius: RADIUS.lg,
-    padding: PADDING.input,
-    fontSize: FONT_SIZE.md,
-    fontFamily: FONT_FAMILY.base,
-    outline: "none",
-    background: COLORS.surfaceLight,
-    color: COLORS.textLight,
     boxSizing: "border-box",
+    padding: PADDING.input,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.main,
+    border: "1.5px solid " + COLORS.borderLight,
+    borderRadius: RADIUS.md,
+    background: COLORS.gray50,
+    color: COLORS.textLight,
+    outline: "none",
+    transition: "border-color 0.2s ease",
   };
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: COLORS.backgroundLight,
         display: "flex",
-        fontFamily: FONT_FAMILY.base,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: SPACING[6],
+        background: COLORS.backgroundLight,
+        fontFamily: FONT_FAMILY.main,
       }}
     >
-      {/* LEFT PANEL */}
       <div
         style={{
-          flex: 1,
-          background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryHover} 100%)`,
-          color: COLORS.white,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: SPACING[10],
+          width: "100%",
+          maxWidth: 1040,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          borderRadius: RADIUS.xl,
+          overflow: "hidden",
+          boxShadow: SHADOWS.card,
+          background: COLORS.surfaceLight,
         }}
       >
-        <h1
-          style={{
-            fontSize: FONT_SIZE["4xl"],
-            fontWeight: FONT_WEIGHT.bold,
-            marginBottom: GAP.xs,
-            fontFamily: FONT_FAMILY.base,
-          }}
-        >
-          MGate HRMS
-        </h1>
-
-        <p
-          style={{
-            fontSize: FONT_SIZE.lg,
-            opacity: 0.9,
-            marginBottom: SPACING[8],
-            maxWidth: 450,
-            lineHeight: 1.6,
-            fontFamily: FONT_FAMILY.base,
-          }}
-        >
-          Human Resource Management System for managing employees, attendance,
-          leave requests and payroll operations from one centralized platform.
-        </p>
-
+        {/* ── LEFT PANEL: Branding ── */}
         <div
           style={{
+            background:
+              "linear-gradient(145deg, " +
+              COLORS.primary +
+              " 0%, " +
+              COLORS.primaryHover +
+              " 100%)",
+            color: COLORS.white,
             display: "flex",
             flexDirection: "column",
-            gap: GAP.md,
-            fontSize: FONT_SIZE.md,
-            fontWeight: FONT_WEIGHT.medium,
+            justifyContent: "center",
+            padding: PADDING.modal + "px " + SPACING[10] + "px",
           }}
         >
-          {FEATURES.map(({ icon, label }) => (
-            <div
-              key={label}
-              style={{ display: "flex", alignItems: "center", gap: GAP.sm }}
-            >
-              {icon}
-              {label}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT PANEL */}
-      <div
-        style={{
-          width: 500,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: SPACING[6],
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            background: COLORS.surfaceLight,
-            borderRadius: RADIUS["2xl"],
-            padding: SPACING[6],
-            boxShadow: SHADOW.card,
-          }}
-        >
-          <h2
+          {/* Logo + App Name */}
+          <div
             style={{
-              fontSize: FONT_SIZE["3xl"],
-              fontWeight: FONT_WEIGHT.bold,
-              color: COLORS.textLight,
-              marginBottom: GAP.xs,
-              fontFamily: FONT_FAMILY.base,
+              display: "flex",
+              alignItems: "center",
+              gap: SPACING[3],
+              marginBottom: SPACING[8],
             }}
           >
-            Welcome Back
-          </h2>
+            <img
+              src={logo}
+              alt="MGate"
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: RADIUS.lg,
+                background: COLORS.white,
+                padding: SPACING[1],
+                objectFit: "contain",
+              }}
+            />
+            <div>
+              <div
+                style={{
+                  fontSize: FONT_SIZE.xl,
+                  fontWeight: FONT_WEIGHT.bold,
+                  color: COLORS.white,
+                  lineHeight: 1.2,
+                }}
+              >
+                MGate HRMS
+              </div>
+              <div
+                style={{
+                  fontSize: FONT_SIZE.xs,
+                  color: COLORS.primaryLight,
+                  fontWeight: FONT_WEIGHT.semibold,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Technologies
+              </div>
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div
+            style={{
+              fontSize: FONT_SIZE["2xl"],
+              fontWeight: FONT_WEIGHT.bold,
+              color: COLORS.white,
+              lineHeight: 1.3,
+              marginBottom: SPACING[4],
+            }}
+          >
+            Enterprise HR
+            <br />
+            Made Simple
+          </div>
 
           <p
             style={{
-              color: COLORS.textMutedLight,
-              marginBottom: SPACING[5],
-              fontSize: FONT_SIZE.md,
-              fontFamily: FONT_FAMILY.base,
+              fontSize: FONT_SIZE.sm,
+              color: COLORS.primaryLight,
+              lineHeight: 1.85,
+              marginBottom: SPACING[8],
+              opacity: 0.92,
             }}
           >
-            Sign in to access your HRMS dashboard
+            Manage employees, attendance, leave, payroll and more from one
+            powerful platform built for modern organizations.
           </p>
 
-          <form onSubmit={handleLogin}>
-            {/* Email */}
-            <div style={{ marginBottom: SPACING[4] }}>
-              <label
+          {/* Feature list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: SPACING[3] }}>
+            {FEATURES.map((feature) => (
+              <div
+                key={feature}
                 style={{
-                  display: "block",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: SPACING[3],
                   fontSize: FONT_SIZE.sm,
                   fontWeight: FONT_WEIGHT.medium,
-                  color: COLORS.gray600,
-                  marginBottom: GAP.xs,
-                  fontFamily: FONT_FAMILY.base,
+                  color: COLORS.white,
                 }}
               >
-                Email
-              </label>
-              <div style={{ position: "relative" }}>
-                <Mail
-                  size={ICON_SIZE.sm}
-                  color={COLORS.gray400}
+                <span
                   style={{
-                    position: "absolute",
-                    left: SPACING[3],
-                    top: "50%",
-                    transform: "translateY(-50%)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 22,
+                    height: 22,
+                    borderRadius: RADIUS.full,
+                    background: COLORS.success,
+                    flexShrink: 0,
+                    fontSize: FONT_SIZE.xs,
+                    color: COLORS.white,
+                    fontWeight: FONT_WEIGHT.bold,
                   }}
-                />
-                <input
-                  type="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ ...inputStyle, paddingLeft: SPACING[8] }}
-                />
+                >
+                  ✓
+                </span>
+                {feature}
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Password */}
-            <div style={{ marginBottom: SPACING[5] }}>
+        {/* ── RIGHT PANEL: Login Form ── */}
+        <div
+          style={{
+            background: COLORS.surfaceLight,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: PADDING.modal + "px " + SPACING[10] + "px",
+            overflowY: "auto",
+            maxHeight: "95vh",
+          }}
+        >
+          {/* Heading */}
+          <div style={{ marginBottom: SPACING[6] }}>
+            <h1
+              style={{
+                fontSize: FONT_SIZE["2xl"],
+                fontWeight: FONT_WEIGHT.bold,
+                color: COLORS.textLight,
+                margin: 0,
+                marginBottom: SPACING[1],
+              }}
+            >
+              Welcome Back
+            </h1>
+            <p
+              style={{
+                fontSize: FONT_SIZE.sm,
+                color: COLORS.textMutedLight,
+                margin: 0,
+              }}
+            >
+              Sign in to access your MGate HRMS dashboard
+            </p>
+          </div>
+
+          {/* Error banner */}
+          {error && (
+            <div
+              style={{
+                background: COLORS.dangerMuted,
+                border: "1px solid " + COLORS.dangerLight,
+                borderRadius: RADIUS.md,
+                padding: SPACING[3] + "px " + SPACING[4] + "px",
+                marginBottom: SPACING[4],
+                fontSize: FONT_SIZE.sm,
+                color: COLORS.danger,
+                fontWeight: FONT_WEIGHT.medium,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: SPACING[4] }}
+          >
+            {/* Email field */}
+            <div>
               <label
                 style={{
                   display: "block",
                   fontSize: FONT_SIZE.sm,
                   fontWeight: FONT_WEIGHT.medium,
-                  color: COLORS.gray600,
-                  marginBottom: GAP.xs,
-                  fontFamily: FONT_FAMILY.base,
+                  color: COLORS.textLight,
+                  marginBottom: SPACING[1],
+                }}
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                style={inputBase}
+                onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
+                onBlur={(e) => (e.target.style.borderColor = COLORS.borderLight)}
+              />
+            </div>
+
+            {/* Password field */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: FONT_SIZE.sm,
+                  fontWeight: FONT_WEIGHT.medium,
+                  color: COLORS.textLight,
+                  marginBottom: SPACING[1],
                 }}
               >
                 Password
               </label>
-              <div style={{ position: "relative" }}>
-                <Lock
-                  size={ICON_SIZE.sm}
-                  color={COLORS.gray400}
-                  style={{
-                    position: "absolute",
-                    left: SPACING[3],
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                  }}
-                />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{ ...inputStyle, paddingLeft: SPACING[8], paddingRight: SPACING[8] }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  style={{
-                    position: "absolute",
-                    right: SPACING[3],
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: COLORS.gray400,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {showPassword ? <EyeOff size={ICON_SIZE.sm} /> : <Eye size={ICON_SIZE.sm} />}
-                </button>
-              </div>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                style={inputBase}
+                onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
+                onBlur={(e) => (e.target.style.borderColor = COLORS.borderLight)}
+              />
             </div>
 
-            {/* Submit */}
+            {/* Submit button */}
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: "100%",
-                background: COLORS.primary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: RADIUS.lg,
                 padding: PADDING.btn,
                 fontSize: FONT_SIZE.md,
+                fontFamily: FONT_FAMILY.main,
                 fontWeight: FONT_WEIGHT.semibold,
-                fontFamily: FONT_FAMILY.base,
-                cursor: "pointer",
+                color: COLORS.white,
+                background: loading ? COLORS.gray400 : COLORS.primary,
+                border: "none",
+                borderRadius: RADIUS.md,
+                cursor: loading ? "not-allowed" : "pointer",
+                transition: "background 0.2s ease",
+                marginTop: SPACING[2],
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.background = COLORS.primaryHover;
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) e.currentTarget.style.background = COLORS.primary;
               }}
             >
-              Sign In
+              {loading ? "Signing in..." : "Login to HRMS"}
             </button>
           </form>
 
+          {/* ── Test Accounts Panel ── */}
           <div
             style={{
-              marginTop: SPACING[5],
-              textAlign: "center",
-              color: COLORS.textMutedLight,
-              fontSize: FONT_SIZE.sm,
-              fontFamily: FONT_FAMILY.base,
+              marginTop: SPACING[6],
+              borderTop: "1px solid " + COLORS.borderLight,
+              paddingTop: SPACING[5],
             }}
           >
-            © 2026 MGate Technologies
+            <div
+              style={{
+                fontSize: FONT_SIZE.xs,
+                fontWeight: FONT_WEIGHT.semibold,
+                color: COLORS.textMutedLight,
+                textTransform: "uppercase",
+                letterSpacing: "0.07em",
+                marginBottom: SPACING[3],
+              }}
+            >
+              Dev — Test Accounts (click to fill)
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: SPACING[2],
+              }}
+            >
+              {MOCK_USERS.map((mockUser) => {
+                const roleColor = ROLE_COLORS[mockUser.role] || {
+                  bg: COLORS.gray100,
+                  text: COLORS.secondary,
+                };
+                const roleLabel = ROLE_LABELS[mockUser.role] || mockUser.role;
+                return (
+                  <button
+                    key={mockUser.email}
+                    type="button"
+                    onClick={() => fillCredentials(mockUser)}
+                    title={mockUser.email + " / " + mockUser.password}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      gap: 2,
+                      padding: SPACING[2] + "px " + SPACING[3] + "px",
+                      background: roleColor.bg,
+                      border: "1.5px solid " + roleColor.text + "33",
+                      borderRadius: RADIUS.md,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                      minWidth: 110,
+                      textAlign: "left",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = roleColor.text;
+                      e.currentTarget.style.boxShadow = SHADOWS.sm;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = roleColor.text + "33";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: FONT_SIZE.xs,
+                        fontWeight: FONT_WEIGHT.semibold,
+                        color: roleColor.text,
+                      }}
+                    >
+                      {roleLabel}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "0.65rem",
+                        color: COLORS.textMutedLight,
+                        fontFamily: "monospace",
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {mockUser.email.split("@")[0]}
+                      <br />
+                      pw: {mockUser.password}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default Login;
+}

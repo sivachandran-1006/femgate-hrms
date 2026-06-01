@@ -1,0 +1,93 @@
+export const ROLE_ROUTES = {
+  SUPER_ADMIN: ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings"],
+  ADMIN:       ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings"],
+  HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics"],
+  MANAGER:     ["dashboard","employees","attendance","leave","performance","lms"],
+  FINANCE:     ["dashboard","payroll","analytics","settings"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms"],
+};
+
+export const ROLE_SIDEBAR = {
+  SUPER_ADMIN: [
+    { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "employees",   label: "Employees",   icon: "IconUsers"             },
+    { id: "departments", label: "Departments", icon: "IconBuildingCommunity" },
+    { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
+    { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
+    { id: "recruitment", label: "Recruitment", icon: "IconBriefcase"         },
+    { id: "onboarding",  label: "Onboarding",  icon: "IconUserPlus"          },
+    { id: "performance", label: "Performance", icon: "IconTarget"            },
+    { id: "assets",      label: "Assets",      icon: "IconPackage"           },
+    { id: "helpdesk",    label: "Helpdesk",    icon: "IconLifebuoy"          },
+    { id: "lms",         label: "Learning",    icon: "IconBook"              },
+    { id: "analytics",   label: "Analytics",   icon: "IconChartBar"          },
+    { id: "settings",    label: "Settings",    icon: "IconSettings"          },
+  ],
+  ADMIN: [
+    { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "employees",   label: "Employees",   icon: "IconUsers"             },
+    { id: "departments", label: "Departments", icon: "IconBuildingCommunity" },
+    { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
+    { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
+    { id: "recruitment", label: "Recruitment", icon: "IconBriefcase"         },
+    { id: "onboarding",  label: "Onboarding",  icon: "IconUserPlus"          },
+    { id: "performance", label: "Performance", icon: "IconTarget"            },
+    { id: "assets",      label: "Assets",      icon: "IconPackage"           },
+    { id: "helpdesk",    label: "Helpdesk",    icon: "IconLifebuoy"          },
+    { id: "lms",         label: "Learning",    icon: "IconBook"              },
+    { id: "analytics",   label: "Analytics",   icon: "IconChartBar"          },
+    { id: "settings",    label: "Settings",    icon: "IconSettings"          },
+  ],
+  HR: [
+    { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "employees",   label: "Employees",   icon: "IconUsers"             },
+    { id: "departments", label: "Departments", icon: "IconBuildingCommunity" },
+    { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
+    { id: "recruitment", label: "Recruitment", icon: "IconBriefcase"         },
+    { id: "onboarding",  label: "Onboarding",  icon: "IconUserPlus"          },
+    { id: "performance", label: "Performance", icon: "IconTarget"            },
+    { id: "lms",         label: "Learning",    icon: "IconBook"              },
+    { id: "analytics",   label: "Analytics",   icon: "IconChartBar"          },
+  ],
+  MANAGER: [
+    { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "employees",   label: "My Team",     icon: "IconUsers"             },
+    { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
+    { id: "performance", label: "Performance", icon: "IconTarget"            },
+    { id: "lms",         label: "Learning",    icon: "IconBook"              },
+  ],
+  FINANCE: [
+    { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
+    { id: "analytics",   label: "Analytics",   icon: "IconChartBar"          },
+    { id: "settings",    label: "Settings",    icon: "IconSettings"          },
+  ],
+  EMPLOYEE: [
+    { id: "dashboard",   label: "Dashboard",    icon: "IconLayoutDashboard"  },
+    { id: "attendance",  label: "My Attendance", icon: "IconClock"           },
+    { id: "leave",       label: "My Leave",     icon: "IconCalendarOff"      },
+    { id: "lms",         label: "Learning",     icon: "IconBook"             },
+  ],
+};
+
+export const ROLE_LABELS = {
+  SUPER_ADMIN: "Super Admin",
+  ADMIN:       "Administrator",
+  HR:          "HR Manager",
+  MANAGER:     "Team Manager",
+  FINANCE:     "Finance Admin",
+  EMPLOYEE:    "Employee",
+};
+
+export const ROLE_COLORS = {
+  SUPER_ADMIN: { bg: "#fef3c7", text: "#d97706" },
+  ADMIN:       { bg: "#dbeafe", text: "#2563eb" },
+  HR:          { bg: "#f3e8ff", text: "#7c3aed" },
+  MANAGER:     { bg: "#dcfce7", text: "#16a34a" },
+  FINANCE:     { bg: "#fce7f3", text: "#be185d" },
+  EMPLOYEE:    { bg: "#f1f5f9", text: "#475569" },
+};

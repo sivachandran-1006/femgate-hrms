@@ -1,32 +1,49 @@
 import { useState, useEffect } from "react";
-import { storage } from "../utils/storage";
+import { MOCK_USERS } from "../constants/mockUsers";
 
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole]     = useState("Admin");
-  const [user, setUser]             = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const token = storage.get("token");
-    const role  = storage.get("role");
-    const emp   = storage.get("employee");
-    if (token) { setIsLoggedIn(true); setUserRole(role || "Admin"); setUser(emp); }
+    try {
+      const stored = localStorage.getItem("hrms_user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+        setIsLoggedIn(true);
+      }
+    } catch {
+      localStorage.removeItem("hrms_user");
+    }
   }, []);
 
-  const login = (role) => {
-    storage.set("token", "hrms-token");
-    storage.set("role", role);
-    setUserRole(role);
+  const login = (email, password) => {
+    const found = MOCK_USERS.find(
+      (u) =>
+        u.email.toLowerCase() === email.toLowerCase().trim() &&
+        u.password === password
+    );
+    if (!found) throw new Error("Invalid email or password");
+    const userData = {
+      email: found.email,
+      role: found.role,
+      name: found.name,
+      avatar: found.avatar,
+    };
+    localStorage.setItem("hrms_user", JSON.stringify(userData));
+    setUser(userData);
     setIsLoggedIn(true);
+    return userData;
   };
 
   const logout = () => {
-    storage.clear();
-    setIsLoggedIn(false);
+    localStorage.removeItem("hrms_user");
     setUser(null);
+    setIsLoggedIn(false);
   };
 
-  const hasAccess = (roles) => roles.includes(userRole);
+  const hasAccess = (allowedRoles) => user && allowedRoles.includes(user.role);
 
-  return { isLoggedIn, userRole, user, login, logout, hasAccess };
+  return { isLoggedIn, user, userRole: user?.role || null, login, logout, hasAccess };
 };

@@ -1,36 +1,92 @@
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
-import { NavLink, Stack, ScrollArea, Divider } from "@mantine/core";
+import { NavLink, Stack, ScrollArea, Divider, Avatar, Text, Box } from "@mantine/core";
 import {
-  IconLayoutDashboard, IconUsers, IconBuildingCommunity, IconClock, IconCalendarOff,
-  IconCurrencyRupee, IconBriefcase, IconUserPlus, IconTarget, IconPackage,
-  IconLifebuoy, IconBook, IconChartBar, IconSettings, IconLogout
+  IconLayoutDashboard,
+  IconUsers,
+  IconBuildingCommunity,
+  IconClock,
+  IconCalendarOff,
+  IconCurrencyRupee,
+  IconBriefcase,
+  IconUserPlus,
+  IconTarget,
+  IconPackage,
+  IconLifebuoy,
+  IconBook,
+  IconChartBar,
+  IconSettings,
+  IconLogout,
 } from "@tabler/icons-react";
+import { ROLE_SIDEBAR, ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
 
-const MENU_ITEMS = [
-  { id: "dashboard",   label: "Dashboard",   Icon: IconLayoutDashboard },
-  { id: "employees",   label: "Employees",   Icon: IconUsers           },
-  { id: "departments", label: "Departments", Icon: IconBuildingCommunity       },
-  { id: "attendance",  label: "Attendance",  Icon: IconClock           },
-  { id: "leave",       label: "Leave",       Icon: IconCalendarOff      },
-  { id: "payroll",     label: "Payroll",     Icon: IconCurrencyRupee     },
-  { id: "recruitment", label: "Recruitment", Icon: IconBriefcase       },
-  { id: "onboarding",  label: "Onboarding",  Icon: IconUserPlus        },
-  { id: "performance", label: "Performance", Icon: IconTarget          },
-  { id: "assets",      label: "Assets",      Icon: IconPackage         },
-  { id: "helpdesk",    label: "Helpdesk",    Icon: IconLifebuoy        },
-  { id: "lms",         label: "Learning",    Icon: IconBook        },
-  { id: "analytics",   label: "Analytics",   Icon: IconChartBar       },
-  { id: "settings",    label: "Settings",    Icon: IconSettings        },
-];
+const ICON_MAP = {
+  IconLayoutDashboard,
+  IconUsers,
+  IconBuildingCommunity,
+  IconClock,
+  IconCalendarOff,
+  IconCurrencyRupee,
+  IconBriefcase,
+  IconUserPlus,
+  IconTarget,
+  IconPackage,
+  IconLifebuoy,
+  IconBook,
+  IconChartBar,
+  IconSettings,
+};
 
-const Sidebar = ({ onLogout, onCloseMobile }) => {
+const Sidebar = ({ onLogout, user, userRole, onCloseMobile }) => {
   const location = useLocation();
+  const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
+  const roleLabel = ROLE_LABELS[userRole] || userRole;
+  const roleColor = ROLE_COLORS[userRole] || { bg: "#f1f5f9", text: "#475569" };
 
   return (
     <>
+      {/* User info section */}
+      {user && (
+        <Box mb="md" px={4}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+            <Avatar
+              size={38}
+              radius="xl"
+              color="primary"
+              style={{ flexShrink: 0 }}
+            >
+              {user.avatar || user.name?.slice(0, 2).toUpperCase()}
+            </Avatar>
+            <div style={{ minWidth: 0 }}>
+              <Text size="sm" fw={600} truncate>
+                {user.name}
+              </Text>
+              <span
+                style={{
+                  display: "inline-block",
+                  fontSize: "0.7rem",
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  background: roleColor.bg,
+                  color: roleColor.text,
+                  marginTop: 2,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {roleLabel}
+              </span>
+            </div>
+          </div>
+        </Box>
+      )}
+
+      <Divider mb="sm" />
+
+      {/* Navigation items */}
       <ScrollArea style={{ flex: 1 }} type="never">
         <Stack gap="xs">
-          {MENU_ITEMS.map(({ id, label, Icon }) => {
+          {menuItems.map(({ id, label, icon }) => {
+            const Icon = ICON_MAP[icon];
             const path = `/${id}`;
             const active = location.pathname === path;
             return (
@@ -39,7 +95,7 @@ const Sidebar = ({ onLogout, onCloseMobile }) => {
                 component={RouterNavLink}
                 to={path}
                 label={label}
-                leftSection={<Icon size={20} stroke={1.5} />}
+                leftSection={Icon ? <Icon size={20} stroke={1.5} /> : null}
                 active={active}
                 variant="filled"
                 color="primary"
@@ -50,13 +106,16 @@ const Sidebar = ({ onLogout, onCloseMobile }) => {
           })}
         </Stack>
       </ScrollArea>
+
       <Divider my="sm" />
+
+      {/* Logout */}
       <NavLink
         label="Logout"
         leftSection={<IconLogout size={20} stroke={1.5} />}
         onClick={() => {
           onLogout();
-          onCloseMobile();
+          if (onCloseMobile) onCloseMobile();
         }}
         color="red"
         active
