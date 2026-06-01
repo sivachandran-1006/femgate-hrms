@@ -1,436 +1,307 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { MOCK_USERS } from "../../constants/mockUsers";
 import { ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { SPACING, PADDING } from "../../theme/spacing";
-import { RADIUS, SHADOWS } from "../../theme/sizes";
 import logo from "../../assets/images/logo.png";
+import {
+  IconUsers, IconCalendarOff, IconCurrencyRupee,
+  IconBriefcase, IconChartBar, IconBook,
+  IconMail, IconLock, IconEye, IconEyeOff,
+  IconShieldCheck, IconArrowRight, IconAlertCircle,
+} from "@tabler/icons-react";
 
-const FEATURES = [
-  "Employee Management",
-  "Attendance & Leave",
-  "Payroll Processing",
-  "Recruitment & Onboarding",
-  "Analytics & Reports",
-];
+const C = COLORS;
 
 export default function Login() {
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError]       = useState("");
+  const [mounted, setMounted]   = useState(false);
+  const [loading, setLoading]   = useState(false);
+
+  useEffect(() => {
+    const id = "hrms-login-kf";
+    if (!document.getElementById(id)) {
+      const s = document.createElement("style");
+      s.id = id;
+      s.innerHTML = `
+        @keyframes fadeInLeft  { from { opacity:0; transform:translateX(-40px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes fadeInRight { from { opacity:0; transform:translateX(40px);  } to { opacity:1; transform:translateX(0); } }
+        @keyframes fadeInUp    { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulseOrb    { 0%,100% { transform:scale(1); opacity:.55; } 50% { transform:scale(1.18); opacity:.9; } }
+        @keyframes floatY      { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-14px); } }
+        @keyframes blinkDot    { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+        @keyframes spinSlow    { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+        @keyframes shimmer     { 0% { background-position:-400px 0; } 100% { background-position:400px 0; } }
+        @keyframes cardIn      { from { opacity:0; transform:scale(.96) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        @keyframes spin        { to { transform:rotate(360deg); } }
+        .login-input { transition: border-color .2s, background .2s, box-shadow .2s; }
+        .login-input:focus { border-color:${C.primary} !important; background:#fff !important; box-shadow:0 0 0 3px ${C.primaryLight}99 !important; outline:none !important; }
+        .submit-btn { transition: transform .2s, box-shadow .2s, background .2s !important; }
+        .submit-btn:hover:not(:disabled) { transform:translateY(-2px) !important; box-shadow:0 10px 32px ${C.primary}88 !important; background:linear-gradient(135deg,${C.primary},${C.primaryHover}) !important; }
+        .submit-btn:active:not(:disabled) { transform:translateY(0) !important; }
+        .quick-btn { transition: border-color .15s, background .15s, transform .15s, box-shadow .15s; }
+        .quick-btn:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(0,0,0,.09); }
+        .eye-btn { transition: opacity .2s, color .2s; }
+        .eye-btn:hover { opacity:1 !important; color:${C.primary} !important; }
+        .forgot-btn { transition: color .15s; }
+        .forgot-btn:hover { color:${C.primaryHover} !important; text-decoration:underline; }
+      `;
+      document.head.appendChild(s);
+    }
+    const t = setTimeout(() => setMounted(true), 30);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
-    if (!email.trim() || !password) {
-      setError("Please enter your email and password.");
-      return;
-    }
-    try {
-      login(email, password);
-      // login() is synchronous — App.jsx re-renders instantly when user state updates
-    } catch (err) {
-      setError(err.message || "Invalid email or password.");
-    }
+    if (!email.trim() || !password) { setError("Please enter your email and password."); return; }
+    setLoading(true);
+    setTimeout(() => {
+      try { login(email, password); }
+      catch (err) { setError(err.message || "Invalid email or password."); }
+      finally { setLoading(false); }
+    }, 500);
   };
 
-  const fillCredentials = (mockUser) => {
-    setEmail(mockUser.email);
-    setPassword(mockUser.password);
-    setError("");
-  };
+  const anim = (name, delay = 0, dur = 0.55) =>
+    mounted ? { animation: `${name} ${dur}s cubic-bezier(.22,.68,0,1.2) ${delay}s both` } : { opacity: 0 };
 
-  const inputBase = {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: PADDING.input,
-    fontSize: FONT_SIZE.sm,
-    fontFamily: FONT_FAMILY.main,
-    border: "1.5px solid " + COLORS.borderLight,
-    borderRadius: RADIUS.md,
-    background: COLORS.gray50,
-    color: COLORS.textLight,
-    outline: "none",
-    transition: "border-color 0.2s ease",
-  };
+  const FEATURES = [
+    { Icon: IconUsers,         text: "Employee Management"     },
+    { Icon: IconCalendarOff,   text: "Attendance & Leave"       },
+    { Icon: IconCurrencyRupee, text: "Payroll Processing"       },
+    { Icon: IconBriefcase,     text: "Recruitment & Onboarding" },
+    { Icon: IconChartBar,      text: "Analytics & Reports"      },
+    { Icon: IconBook,          text: "Learning & Development"   },
+  ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: SPACING[6],
-        background: COLORS.backgroundLight,
-        fontFamily: FONT_FAMILY.main,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 1040,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          borderRadius: RADIUS.xl,
-          overflow: "hidden",
-          boxShadow: SHADOWS.card,
-          background: COLORS.surfaceLight,
-        }}
-      >
-        {/* ── LEFT PANEL: Branding ── */}
-        <div
-          style={{
-            background:
-              "linear-gradient(145deg, " +
-              COLORS.primary +
-              " 0%, " +
-              COLORS.primaryHover +
-              " 100%)",
-            color: COLORS.white,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: PADDING.modal + "px " + SPACING[10] + "px",
-          }}
-        >
-          {/* Logo + App Name */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: SPACING[3],
-              marginBottom: SPACING[8],
-            }}
-          >
-            <img
-              src={logo}
-              alt="MGate"
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: RADIUS.lg,
-                background: COLORS.white,
-                padding: SPACING[1],
-                objectFit: "contain",
-              }}
-            />
-            <div>
-              <div
-                style={{
-                  fontSize: FONT_SIZE.xl,
-                  fontWeight: FONT_WEIGHT.bold,
-                  color: COLORS.white,
-                  lineHeight: 1.2,
-                }}
-              >
-                MGate HRMS
-              </div>
-              <div
-                style={{
-                  fontSize: FONT_SIZE.xs,
-                  color: COLORS.primaryLight,
-                  fontWeight: FONT_WEIGHT.semibold,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Technologies
-              </div>
-            </div>
+    <div style={{ minHeight:"100vh", display:"flex", fontFamily:"'Inter','Segoe UI',sans-serif", background:C.backgroundDark, overflow:"hidden" }}>
+
+      {/* LEFT — Brand panel */}
+      <div style={{
+        flex:1, position:"relative", overflow:"hidden",
+        background:`linear-gradient(145deg,${C.backgroundDark} 0%,#1e1b4b 55%,#0c1a3a 100%)`,
+        display:"flex", flexDirection:"column", justifyContent:"space-between",
+        padding:"52px 64px",
+      }}>
+
+        {/* Glowing orbs */}
+        <div style={{ position:"absolute", top:60, left:40, width:340, height:340, borderRadius:"50%", background:`radial-gradient(circle,${C.purple}70 0%,transparent 70%)`, animation:"pulseOrb 5s ease-in-out infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", bottom:80, right:30, width:270, height:270, borderRadius:"50%", background:`radial-gradient(circle,${C.info}50 0%,transparent 70%)`, animation:"pulseOrb 6s ease-in-out 1.5s infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", top:"45%", right:"12%", width:190, height:190, borderRadius:"50%", background:`radial-gradient(circle,${C.primary}40 0%,transparent 70%)`, animation:"pulseOrb 7s ease-in-out 3s infinite", pointerEvents:"none" }} />
+
+        {/* Floating rings */}
+        <div style={{ position:"absolute", top:140, right:80, width:120, height:120, borderRadius:"50%", border:`1.5px solid ${C.purple}33`, animation:"floatY 4s ease-in-out infinite", pointerEvents:"none" }} />
+        <div style={{ position:"absolute", bottom:160, left:80, width:80, height:80, borderRadius:"50%", border:`1.5px solid ${C.info}25`, animation:"floatY 5s ease-in-out 1s infinite", pointerEvents:"none" }} />
+
+        {/* Grid overlay */}
+        <div style={{ position:"absolute", inset:0, opacity:.03, pointerEvents:"none",
+          backgroundImage:"linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",
+          backgroundSize:"44px 44px" }} />
+
+        {/* Logo */}
+        <div style={{ display:"flex", alignItems:"center", gap:14, zIndex:1, ...anim("fadeInLeft", 0) }}>
+          <div style={{ width:48, height:48, borderRadius:13, background:`linear-gradient(135deg,${C.purple},${C.primary})`, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:`0 0 28px ${C.purple}99` }}>
+            <img src={logo} alt="MGate" style={{ width:28, height:28, objectFit:"contain", animation:"spinSlow 20s linear infinite" }} />
+          </div>
+          <div>
+            <p style={{ margin:0, fontSize:18, fontWeight:800, color:"#fff" }}>MGate HRMS</p>
+            <p style={{ margin:0, fontSize:10, color:C.purple, letterSpacing:"0.18em", textTransform:"uppercase", fontWeight:700 }}>Enterprise Platform</p>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <div style={{ zIndex:1 }}>
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:`${C.purple}25`, border:`1px solid ${C.purple}55`, borderRadius:100, padding:"6px 16px", marginBottom:24, ...anim("fadeInLeft", .1) }}>
+            <div style={{ width:7, height:7, borderRadius:"50%", background:C.purple, boxShadow:`0 0 8px ${C.purple}`, animation:"blinkDot 1.8s ease-in-out infinite" }} />
+            <span style={{ fontSize:11, color:"#c4b5fd", fontWeight:700, letterSpacing:"0.07em" }}>ENTERPRISE HRMS v2.0</span>
           </div>
 
-          {/* Headline */}
-          <div
-            style={{
-              fontSize: FONT_SIZE["2xl"],
-              fontWeight: FONT_WEIGHT.bold,
-              color: COLORS.white,
-              lineHeight: 1.3,
-              marginBottom: SPACING[4],
-            }}
-          >
-            Enterprise HR
-            <br />
-            Made Simple
-          </div>
+          <h1 style={{ margin:"0 0 18px", fontSize:"3rem", fontWeight:900, lineHeight:1.1, color:"#fff", letterSpacing:"-1.5px", ...anim("fadeInLeft", .18) }}>
+            Manage your<br />
+            <span style={{ background:`linear-gradient(135deg,#818cf8,${C.info},${C.success})`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundSize:"200%", animation:"shimmer 3s linear infinite" }}>
+              entire workforce
+            </span>
+          </h1>
 
-          <p
-            style={{
-              fontSize: FONT_SIZE.sm,
-              color: COLORS.primaryLight,
-              lineHeight: 1.85,
-              marginBottom: SPACING[8],
-              opacity: 0.92,
-            }}
-          >
-            Manage employees, attendance, leave, payroll and more from one
-            powerful platform built for modern organizations.
+          <p style={{ margin:"0 0 40px", fontSize:15, color:C.textMutedDark, lineHeight:1.85, maxWidth:400, ...anim("fadeInLeft", .25) }}>
+            One powerful platform for HR, payroll, attendance, recruitment and analytics — built for modern enterprises.
           </p>
 
-          {/* Feature list */}
-          <div style={{ display: "flex", flexDirection: "column", gap: SPACING[3] }}>
-            {FEATURES.map((feature) => (
-              <div
-                key={feature}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: SPACING[3],
-                  fontSize: FONT_SIZE.sm,
-                  fontWeight: FONT_WEIGHT.medium,
-                  color: COLORS.white,
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 22,
-                    height: 22,
-                    borderRadius: RADIUS.full,
-                    background: COLORS.success,
-                    flexShrink: 0,
-                    fontSize: FONT_SIZE.xs,
-                    color: COLORS.white,
-                    fontWeight: FONT_WEIGHT.bold,
-                  }}
-                >
-                  ✓
-                </span>
-                {feature}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:10, marginBottom:52 }}>
+            {FEATURES.map((f, i) => (
+              <span key={f.text} style={{
+                display:"inline-flex", alignItems:"center", gap:6,
+                padding:"7px 14px", borderRadius:100,
+                background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)",
+                fontSize:12, fontWeight:500, color:C.textDark,
+                ...anim("fadeInUp", .3 + i * .07),
+              }}>
+                <f.Icon size={14} stroke={1.8} /> {f.text}
+              </span>
+            ))}
+          </div>
+
+          <div style={{ display:"flex", gap:44, ...anim("fadeInUp", .72) }}>
+            {[["10,000+","Employees"],["500+","Companies"],["99.9%","Uptime"]].map(([v, l]) => (
+              <div key={l}>
+                <p style={{ margin:0, fontSize:22, fontWeight:900, color:"#fff" }}>{v}</p>
+                <p style={{ margin:0, fontSize:12, color:C.borderDark, fontWeight:500 }}>{l}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── RIGHT PANEL: Login Form ── */}
-        <div
-          style={{
-            background: COLORS.surfaceLight,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: PADDING.modal + "px " + SPACING[10] + "px",
-            overflowY: "auto",
-            maxHeight: "95vh",
-          }}
-        >
-          {/* Heading */}
-          <div style={{ marginBottom: SPACING[6] }}>
-            <h1
-              style={{
-                fontSize: FONT_SIZE["2xl"],
-                fontWeight: FONT_WEIGHT.bold,
-                color: COLORS.textLight,
-                margin: 0,
-                marginBottom: SPACING[1],
-              }}
-            >
-              Welcome Back
-            </h1>
-            <p
-              style={{
-                fontSize: FONT_SIZE.sm,
-                color: COLORS.textMutedLight,
-                margin: 0,
-              }}
-            >
-              Sign in to access your MGate HRMS dashboard
-            </p>
+        <p style={{ margin:0, fontSize:11, color:C.surfaceDark, zIndex:1, ...anim("fadeInUp", .8) }}>© 2026 MGate Technologies · Enterprise HRMS Platform</p>
+      </div>
+
+      {/* RIGHT — Login form */}
+      <div style={{
+        width:500, background:C.surfaceLight,
+        display:"flex", flexDirection:"column", justifyContent:"center",
+        padding:"52px 52px", overflowY:"auto",
+      }}>
+
+        {/* Heading */}
+        <div style={{ marginBottom:32, ...anim("fadeInRight", .05) }}>
+          <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:C.primaryMuted, border:`1px solid ${C.primaryLight}`, borderRadius:100, padding:"5px 14px", marginBottom:14 }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:C.primary, animation:"blinkDot 1.8s ease-in-out infinite" }} />
+            <span style={{ fontSize:11, color:C.primary, fontWeight:700, letterSpacing:"0.08em" }}>SECURE LOGIN</span>
           </div>
+          <h2 style={{ margin:"0 0 6px", fontSize:"1.9rem", fontWeight:900, color:C.textLight, letterSpacing:"-0.5px" }}>Welcome back</h2>
+          <p style={{ margin:0, fontSize:14, color:C.textMutedLight }}>Sign in to your MGate HRMS dashboard</p>
+        </div>
 
-          {/* Error banner */}
-          {error && (
-            <div
-              style={{
-                background: COLORS.dangerMuted,
-                border: "1px solid " + COLORS.dangerLight,
-                borderRadius: RADIUS.md,
-                padding: SPACING[3] + "px " + SPACING[4] + "px",
-                marginBottom: SPACING[4],
-                fontSize: FONT_SIZE.sm,
-                color: COLORS.danger,
-                fontWeight: FONT_WEIGHT.medium,
-              }}
-            >
-              {error}
-            </div>
-          )}
+        {/* Error banner */}
+        {error && (
+          <div style={{ display:"flex", alignItems:"center", gap:10, background:C.dangerMuted, border:`1px solid #fca5a5`, borderRadius:10, padding:"12px 16px", marginBottom:20, fontSize:13, color:C.error, fontWeight:500, animation:"cardIn .35s ease both" }}>
+            <IconAlertCircle size={16} style={{ flexShrink:0 }} /> {error}
+          </div>
+        )}
 
-          {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: SPACING[4] }}
-          >
-            {/* Email field */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: FONT_SIZE.sm,
-                  fontWeight: FONT_WEIGHT.medium,
-                  color: COLORS.textLight,
-                  marginBottom: SPACING[1],
-                }}
-              >
-                Email Address
-              </label>
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:18 }}>
+
+          {/* Email */}
+          <div style={{ ...anim("fadeInRight", .12) }}>
+            <label style={{ display:"block", fontSize:13, fontWeight:600, color:C.textLight, marginBottom:7 }}>Email Address</label>
+            <div style={{ position:"relative" }}>
+              <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", display:"flex", color:C.secondary }}><IconMail size={17} stroke={1.8} /></span>
               <input
+                className="login-input"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                style={inputBase}
-                onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
-                onBlur={(e) => (e.target.style.borderColor = COLORS.borderLight)}
+                style={{ width:"100%", boxSizing:"border-box", height:50, paddingLeft:44, paddingRight:16, fontSize:14, fontFamily:"inherit", border:`1.5px solid ${C.borderLight}`, borderRadius:10, background:C.backgroundLight, color:C.textLight, outline:"none" }}
               />
             </div>
+          </div>
 
-            {/* Password field */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: FONT_SIZE.sm,
-                  fontWeight: FONT_WEIGHT.medium,
-                  color: COLORS.textLight,
-                  marginBottom: SPACING[1],
-                }}
-              >
-                Password
-              </label>
+          {/* Password */}
+          <div style={{ ...anim("fadeInRight", .2) }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:7 }}>
+              <label style={{ fontSize:13, fontWeight:600, color:C.textLight }}>Password</label>
+              <button type="button" className="forgot-btn" style={{ fontSize:12, color:C.primary, background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:500, padding:0 }}>Forgot password?</button>
+            </div>
+            <div style={{ position:"relative" }}>
+              <span style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", pointerEvents:"none", display:"flex", color:C.secondary }}><IconLock size={17} stroke={1.8} /></span>
               <input
-                type="password"
+                className="login-input"
+                type={showPass ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                style={inputBase}
-                onFocus={(e) => (e.target.style.borderColor = COLORS.primary)}
-                onBlur={(e) => (e.target.style.borderColor = COLORS.borderLight)}
+                style={{ width:"100%", boxSizing:"border-box", height:50, paddingLeft:44, paddingRight:50, fontSize:14, fontFamily:"inherit", border:`1.5px solid ${C.borderLight}`, borderRadius:10, background:C.backgroundLight, color:C.textLight, outline:"none" }}
               />
-            </div>
-
-            {/* Submit button */}
-            <button
-              type="submit"
-              style={{
-                width: "100%",
-                padding: PADDING.btn,
-                fontSize: FONT_SIZE.md,
-                fontFamily: FONT_FAMILY.main,
-                fontWeight: FONT_WEIGHT.semibold,
-                color: COLORS.white,
-                background: COLORS.primary,
-                border: "none",
-                borderRadius: RADIUS.md,
-                cursor: "pointer",
-                transition: "background 0.2s ease",
-                marginTop: SPACING[2],
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.primaryHover; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.primary; }}
-            >
-              Login to HRMS
-            </button>
-          </form>
-
-          {/* ── Test Accounts Panel ── */}
-          <div
-            style={{
-              marginTop: SPACING[6],
-              borderTop: "1px solid " + COLORS.borderLight,
-              paddingTop: SPACING[5],
-            }}
-          >
-            <div
-              style={{
-                fontSize: FONT_SIZE.xs,
-                fontWeight: FONT_WEIGHT.semibold,
-                color: COLORS.textMutedLight,
-                textTransform: "uppercase",
-                letterSpacing: "0.07em",
-                marginBottom: SPACING[3],
-              }}
-            >
-              Dev — Test Accounts (click to fill)
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: SPACING[2],
-              }}
-            >
-              {MOCK_USERS.map((mockUser) => {
-                const roleColor = ROLE_COLORS[mockUser.role] || {
-                  bg: COLORS.gray100,
-                  text: COLORS.secondary,
-                };
-                const roleLabel = ROLE_LABELS[mockUser.role] || mockUser.role;
-                return (
-                  <button
-                    key={mockUser.email}
-                    type="button"
-                    onClick={() => fillCredentials(mockUser)}
-                    title={mockUser.email + " / " + mockUser.password}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "flex-start",
-                      gap: 2,
-                      padding: SPACING[2] + "px " + SPACING[3] + "px",
-                      background: roleColor.bg,
-                      border: "1.5px solid " + roleColor.text + "33",
-                      borderRadius: RADIUS.md,
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                      minWidth: 110,
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = roleColor.text;
-                      e.currentTarget.style.boxShadow = SHADOWS.sm;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = roleColor.text + "33";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: FONT_SIZE.xs,
-                        fontWeight: FONT_WEIGHT.semibold,
-                        color: roleColor.text,
-                      }}
-                    >
-                      {roleLabel}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "0.65rem",
-                        color: COLORS.textMutedLight,
-                        fontFamily: "monospace",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {mockUser.email.split("@")[0]}
-                      <br />
-                      pw: {mockUser.password}
-                    </span>
-                  </button>
-                );
-              })}
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowPass((v) => !v)}
+                style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.secondary, opacity:.55, padding:0, display:"flex" }}
+              >
+                {showPass ? <IconEyeOff size={17} stroke={1.8} /> : <IconEye size={17} stroke={1.8} />}
+              </button>
             </div>
           </div>
+
+          {/* Submit */}
+          <button
+            className="submit-btn"
+            type="submit"
+            disabled={loading}
+            style={{
+              width:"100%", height:52, marginTop:4,
+              fontSize:15, fontFamily:"inherit", fontWeight:700,
+              color:"#fff", border:"none", borderRadius:10, cursor: loading ? "not-allowed" : "pointer",
+              background:`linear-gradient(135deg,${C.primary} 0%,${C.primaryHover} 100%)`,
+              boxShadow:`0 4px 18px ${C.primary}66`,
+              display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+              opacity: loading ? .8 : 1,
+              ...anim("fadeInUp", .28),
+            }}
+          >
+            {loading
+              ? <span style={{ width:18, height:18, border:`2.5px solid rgba(255,255,255,.3)`, borderTopColor:"#fff", borderRadius:"50%", display:"inline-block", animation:"spin .7s linear infinite" }} />
+              : <><span>Sign In to HRMS</span><IconArrowRight size={16} stroke={2.5} /></>
+            }
+          </button>
+        </form>
+
+        {/* Quick Login */}
+        <div style={{ marginTop:36, ...anim("fadeInUp", .38) }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:14 }}>
+            <div style={{ flex:1, height:1, background:C.borderLight }} />
+            <span style={{ fontSize:11, fontWeight:700, color:C.secondary, letterSpacing:".1em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Quick Login</span>
+            <div style={{ flex:1, height:1, background:C.borderLight }} />
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {MOCK_USERS.map((u, i) => {
+              const rc = ROLE_COLORS[u.role] || { bg:C.backgroundLight, text:C.secondary };
+              const rl = ROLE_LABELS[u.role]  || u.role;
+              const selected = email === u.email;
+              return (
+                <button
+                  key={u.email}
+                  type="button"
+                  className="quick-btn"
+                  onClick={() => { setEmail(u.email); setPassword(u.password); setError(""); }}
+                  style={{
+                    display:"flex", alignItems:"center", gap:10,
+                    padding:"10px 12px", borderRadius:10, cursor:"pointer",
+                    background: selected ? rc.text + "12" : C.backgroundLight,
+                    border:`1.5px solid ${selected ? rc.text : C.borderLight}`,
+                    textAlign:"left",
+                    animation:`cardIn .4s cubic-bezier(.22,.68,0,1.2) ${.42 + i * .06}s both`,
+                  }}
+                >
+                  <div style={{ width:34, height:34, borderRadius:9, flexShrink:0, background:rc.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <span style={{ fontSize:11, fontWeight:800, color:rc.text }}>{u.avatar}</span>
+                  </div>
+                  <div style={{ minWidth:0, flex:1 }}>
+                    <p style={{ margin:0, fontSize:12, fontWeight:700, color:C.textLight, lineHeight:1.3 }}>{rl}</p>
+                    <p style={{ margin:0, fontSize:10, color:C.secondary, fontFamily:"monospace", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{u.email.split("@")[0]} · {u.password}</p>
+                  </div>
+                  {selected && <IconShieldCheck size={14} color={rc.text} style={{ flexShrink:0 }} />}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        <p style={{ margin:"28px 0 0", textAlign:"center", fontSize:11, color:C.borderLight, ...anim("fadeInUp", .72) }}>
+          © 2026 MGate Technologies · Enterprise HRMS Platform
+        </p>
       </div>
     </div>
   );
