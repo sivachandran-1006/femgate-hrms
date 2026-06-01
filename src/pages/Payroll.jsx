@@ -26,19 +26,19 @@ const inputStyle = {
 };
 
 const MOCK_PAYROLL_DATA = [
-  { _id: "p001", employee: "Mani",         department: "IT",         salary: 72000,  bonus: 5000,  deduction: 3000, netSalary: 74000,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p002", employee: "Siva", department: "Management", salary: 95000,  bonus: 10000, deduction: 5000, netSalary: 100000, month: "May",   year: "2026", status: "Pending" },
-  { _id: "p003", employee: "Santhosh",     department: "IT",         salary: 69000,  bonus: 4500,  deduction: 3000, netSalary: 70500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p004", employee: "Safeer",       department: "Finance",    salary: 58000,  bonus: 2000,  deduction: 2000, netSalary: 58000,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p005", employee: "Hari",         department: "IT",         salary: 62000,  bonus: 4000,  deduction: 2500, netSalary: 63500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p006", employee: "Suriya",       department: "IT",         salary: 78000,  bonus: 6000,  deduction: 3500, netSalary: 80500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p007", employee: "Big Kundi",    department: "HR",         salary: 65000,  bonus: 3000,  deduction: 2500, netSalary: 65500,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p008", employee: "Small Kundi",  department: "HR",         salary: 48000,  bonus: 1500,  deduction: 1500, netSalary: 48000,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p009", employee: "Suganthan",    department: "Management", salary: 120000, bonus: 15000, deduction: 8000, netSalary: 127000, month: "May",   year: "2026", status: "Pending" },
-  { _id: "p010", employee: "Mani",         department: "IT",         salary: 72000,  bonus: 4000,  deduction: 3000, netSalary: 73000,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p011", employee: "Suriya",       department: "IT",         salary: 78000,  bonus: 5000,  deduction: 3500, netSalary: 79500,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p012", employee: "Suganthan",    department: "Management", salary: 120000, bonus: 12000, deduction: 8000, netSalary: 124000, month: "March", year: "2026", status: "Paid"    },
-  { _id: "p013", employee: "Sabari",       department: "IT",         salary: 55000,  bonus: 2500,  deduction: 2000, netSalary: 55500,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p001", employee: "Mani",       department: "IT",         salary: 72000,  bonus: 5000,  deduction: 3000, netSalary: 74000,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p002", employee: "P Santhosh", department: "IT",         salary: 68000,  bonus: 4000,  deduction: 2800, netSalary: 69200,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p003", employee: "C Santhosh", department: "IT",         salary: 65000,  bonus: 3500,  deduction: 2500, netSalary: 66000,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p004", employee: "Suriya",     department: "IT",         salary: 78000,  bonus: 6000,  deduction: 3500, netSalary: 80500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p005", employee: "Siva",       department: "Management", salary: 95000,  bonus: 10000, deduction: 5000, netSalary: 100000, month: "May",   year: "2026", status: "Pending" },
+  { _id: "p006", employee: "Aravinth",   department: "IT",         salary: 62000,  bonus: 4000,  deduction: 2500, netSalary: 63500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p007", employee: "Safeer",     department: "Finance",    salary: 58000,  bonus: 2000,  deduction: 2000, netSalary: 58000,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p008", employee: "Sabari",     department: "IT",         salary: 55000,  bonus: 2500,  deduction: 2000, netSalary: 55500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p009", employee: "Vignesh",    department: "IT",         salary: 60000,  bonus: 3000,  deduction: 2200, netSalary: 60800,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p010", employee: "Mani",       department: "IT",         salary: 72000,  bonus: 4000,  deduction: 3000, netSalary: 73000,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p011", employee: "Suriya",     department: "IT",         salary: 78000,  bonus: 5000,  deduction: 3500, netSalary: 79500,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p012", employee: "Siva",       department: "Management", salary: 95000,  bonus: 9000,  deduction: 5000, netSalary: 99000,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p013", employee: "P Santhosh", department: "IT",         salary: 68000,  bonus: 3000,  deduction: 2800, netSalary: 68200,  month: "March", year: "2026", status: "Paid"    },
 ];
 
 const Payroll = () => {

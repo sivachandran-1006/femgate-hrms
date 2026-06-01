@@ -16,13 +16,17 @@ import Settings from "./pages/Settings";
 import Attendance from "./components/Attendance";
 import EmployeeModal from "./components/EmployeeModal";
 
-import { Building2 } from "lucide-react";
+import Recruitment from "./pages/Recruitment";
+import Onboarding  from "./pages/Onboarding";
+import Performance from "./pages/Performance";
+import Assets      from "./pages/Assets";
+import Helpdesk    from "./pages/Helpdesk";
+import LMS         from "./pages/LMS";
 
 import {
   fetchEmployeesAPI,
-  addEmployeeAPI,
-  updateEmployeeAPI,
 } from "./services/employeeService";
+import logo from "./assets/logo.png";
 
 export default function HRMSApp() {
 
@@ -56,28 +60,27 @@ export default function HRMSApp() {
 
   // ── MOCK DATA ─────────────────────────────────────────────────────────────
   const MOCK_EMPLOYEES = [
-    { _id: "emp001", name: "Mani",        department: "IT",         designation: "Software Engineer",   email: "mani@mgatetech.com",       phone: "9876543210", role: "Software Engineer",   salary: "72000",  joiningDate: "2023-06-15", joinDate: "15/06/2023", status: "Present", reportingManager: "Siva" },
-    { _id: "emp002", name: "Siva",        department: "Management", designation: "Engineering Manager", email: "siva@mgatetech.com",       phone: "9876543211", role: "Engineering Manager",  salary: "95000",  joiningDate: "2021-01-05", joinDate: "05/01/2021", status: "Present", reportingManager: "" },
-    { _id: "emp003", name: "Santhosh",    department: "IT",         designation: "Backend Developer",   email: "santhosh@mgatetech.com",   phone: "9876543212", role: "Backend Developer",    salary: "69000",  joiningDate: "2023-08-30", joinDate: "30/08/2023", status: "Present", reportingManager: "Siva" },
-    { _id: "emp004", name: "Safeer",      department: "Finance",    designation: "Finance Analyst",     email: "safeer@mgatetech.com",     phone: "9876543213", role: "Finance Analyst",      salary: "58000",  joiningDate: "2023-09-20", joinDate: "20/09/2023", status: "Leave",   reportingManager: "Suganthan" },
-    { _id: "emp005", name: "Hari",        department: "IT",         designation: "Frontend Developer",  email: "hari@mgatetech.com",       phone: "9876543214", role: "Frontend Developer",   salary: "62000",  joiningDate: "2023-04-18", joinDate: "18/04/2023", status: "Present", reportingManager: "Siva" },
-    { _id: "emp006", name: "Suriya",      department: "IT",         designation: "DevOps Engineer",     email: "suriya@mgatetech.com",     phone: "9876543215", role: "DevOps Engineer",      salary: "78000",  joiningDate: "2022-11-01", joinDate: "01/11/2022", status: "Present", reportingManager: "Siva" },
-    { _id: "emp007", name: "Big Kundi",   department: "HR",         designation: "HR Manager",          email: "bigkundi@mgatetech.com",   phone: "9876543216", role: "HR Manager",           salary: "65000",  joiningDate: "2022-03-10", joinDate: "10/03/2022", status: "Present", reportingManager: "Suganthan" },
-    { _id: "emp008", name: "Small Kundi", department: "HR",         designation: "Recruiter",           email: "smallkundi@mgatetech.com", phone: "9876543217", role: "Recruiter",            salary: "48000",  joiningDate: "2024-02-14", joinDate: "14/02/2024", status: "Present", reportingManager: "Big Kundi" },
-    { _id: "emp009", name: "Suganthan",   department: "Management", designation: "Director",            email: "suganthan@mgatetech.com",  phone: "9876543218", role: "Director",             salary: "120000", joiningDate: "2020-06-01", joinDate: "01/06/2020", status: "Present", reportingManager: "" },
-    { _id: "emp010", name: "Sabari",      department: "IT",         designation: "QA Engineer",         email: "sabari@mgatetech.com",     phone: "9876543219", role: "QA Engineer",          salary: "55000",  joiningDate: "2024-03-11", joinDate: "11/03/2024", status: "Present", reportingManager: "Siva" },
+    { _id: "emp001", name: "Mani",        department: "IT",         designation: "Software Engineer",   email: "mani@mgatetech.com",        phone: "9876543210", role: "Software Engineer",   salary: "72000",  joiningDate: "2023-06-15", joinDate: "15/06/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp002", name: "P Santhosh",  department: "IT",         designation: "Full Stack Developer", email: "psanthosh@mgatetech.com",   phone: "9876543211", role: "Full Stack Developer", salary: "68000",  joiningDate: "2023-03-10", joinDate: "10/03/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp003", name: "C Santhosh",  department: "IT",         designation: "Backend Developer",   email: "csanthosh@mgatetech.com",   phone: "9876543212", role: "Backend Developer",    salary: "65000",  joiningDate: "2023-08-20", joinDate: "20/08/2023", status: "Present", reportingManager: "Siva" },
+    { _id: "emp004", name: "Suriya",      department: "IT",         designation: "DevOps Engineer",     email: "suriya@mgatetech.com",      phone: "9876543213", role: "DevOps Engineer",      salary: "78000",  joiningDate: "2022-11-01", joinDate: "01/11/2022", status: "Present", reportingManager: "Siva" },
+    { _id: "emp005", name: "Siva",        department: "Management", designation: "Engineering Manager", email: "siva@mgatetech.com",        phone: "9876543214", role: "Engineering Manager",  salary: "95000",  joiningDate: "2021-01-05", joinDate: "05/01/2021", status: "Present", reportingManager: "" },
+    { _id: "emp006", name: "Aravinth",    department: "IT",         designation: "Frontend Developer",  email: "aravinth@mgatetech.com",    phone: "9876543215", role: "Frontend Developer",   salary: "62000",  joiningDate: "2024-01-08", joinDate: "08/01/2024", status: "Present", reportingManager: "Siva" },
+    { _id: "emp007", name: "Safeer",      department: "Finance",    designation: "Finance Analyst",     email: "safeer@mgatetech.com",      phone: "9876543216", role: "Finance Analyst",      salary: "58000",  joiningDate: "2023-09-20", joinDate: "20/09/2023", status: "Leave",   reportingManager: "Siva" },
+    { _id: "emp008", name: "Sabari",      department: "IT",         designation: "QA Engineer",         email: "sabari@mgatetech.com",      phone: "9876543217", role: "QA Engineer",          salary: "55000",  joiningDate: "2024-03-11", joinDate: "11/03/2024", status: "Present", reportingManager: "Siva" },
+    { _id: "emp009", name: "Vignesh",     department: "IT",         designation: "Mobile Developer",    email: "vignesh@mgatetech.com",     phone: "9876543218", role: "Mobile Developer",     salary: "60000",  joiningDate: "2024-05-01", joinDate: "01/05/2024", status: "Present", reportingManager: "Siva" },
   ];
 
   const MOCK_LEAVES = [
-    { _id: "lv001", employee: "Safeer",      leaveType: "Sick Leave",   fromDate: "2026-05-20", toDate: "2026-05-22", days: 3, reason: "Fever",           status: "Approved" },
-    { _id: "lv002", employee: "Suriya",      leaveType: "Casual Leave", fromDate: "2026-05-28", toDate: "2026-05-28", days: 1, reason: "Personal work",   status: "Pending"  },
-    { _id: "lv003", employee: "Small Kundi", leaveType: "Casual Leave", fromDate: "2026-06-02", toDate: "2026-06-03", days: 2, reason: "Family function", status: "Pending"  },
-    { _id: "lv004", employee: "Hari",        leaveType: "Sick Leave",   fromDate: "2026-05-30", toDate: "2026-05-30", days: 1, reason: "Doctor visit",    status: "Pending"  },
-    { _id: "lv005", employee: "Mani",        leaveType: "Annual Leave", fromDate: "2026-04-10", toDate: "2026-04-14", days: 5, reason: "Vacation",        status: "Approved" },
-    { _id: "lv006", employee: "Santhosh",    leaveType: "Casual Leave", fromDate: "2026-03-15", toDate: "2026-03-15", days: 1, reason: "Personal",        status: "Rejected" },
-    { _id: "lv007", employee: "Big Kundi",   leaveType: "Annual Leave", fromDate: "2026-05-05", toDate: "2026-05-07", days: 3, reason: "Travel",          status: "Approved" },
-    { _id: "lv008", employee: "Suganthan",   leaveType: "Sick Leave",   fromDate: "2026-02-18", toDate: "2026-02-19", days: 2, reason: "Cold & flu",      status: "Approved" },
-    { _id: "lv009", employee: "Sabari",      leaveType: "Casual Leave", fromDate: "2026-06-05", toDate: "2026-06-05", days: 1, reason: "Personal work",   status: "Pending"  },
+    { _id: "lv001", employee: "Safeer",     leaveType: "Sick Leave",   fromDate: "2026-05-20", toDate: "2026-05-22", days: 3, reason: "Fever",           status: "Approved" },
+    { _id: "lv002", employee: "Suriya",     leaveType: "Casual Leave", fromDate: "2026-05-28", toDate: "2026-05-28", days: 1, reason: "Personal work",   status: "Pending"  },
+    { _id: "lv003", employee: "Aravinth",   leaveType: "Casual Leave", fromDate: "2026-06-02", toDate: "2026-06-03", days: 2, reason: "Family function", status: "Pending"  },
+    { _id: "lv004", employee: "C Santhosh", leaveType: "Sick Leave",   fromDate: "2026-05-30", toDate: "2026-05-30", days: 1, reason: "Doctor visit",    status: "Pending"  },
+    { _id: "lv005", employee: "Mani",       leaveType: "Annual Leave", fromDate: "2026-04-10", toDate: "2026-04-14", days: 5, reason: "Vacation",        status: "Approved" },
+    { _id: "lv006", employee: "P Santhosh", leaveType: "Casual Leave", fromDate: "2026-03-15", toDate: "2026-03-15", days: 1, reason: "Personal",        status: "Rejected" },
+    { _id: "lv007", employee: "Vignesh",    leaveType: "Annual Leave", fromDate: "2026-05-05", toDate: "2026-05-07", days: 3, reason: "Travel",          status: "Approved" },
+    { _id: "lv008", employee: "Siva",       leaveType: "Sick Leave",   fromDate: "2026-02-18", toDate: "2026-02-19", days: 2, reason: "Cold & flu",      status: "Approved" },
+    { _id: "lv009", employee: "Sabari",     leaveType: "Casual Leave", fromDate: "2026-06-05", toDate: "2026-06-05", days: 1, reason: "Personal work",   status: "Pending"  },
   ];
 
   // ── DATA ──────────────────────────────────────────────────────────────────
@@ -316,7 +319,13 @@ export default function HRMSApp() {
             color: "#fff", display: "flex", flexDirection: "column",
             justifyContent: "center", padding: "60px 50px",
           }}>
-            <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 12 }}>MGate HRMS</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+              <img src={logo} alt="MGate" style={{ width: 52, height: 52, borderRadius: 12, background: "#fff", padding: 4, objectFit: "contain" }} />
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1.1 }}>MGate HRMS</div>
+                <div style={{ fontSize: 12, color: "#93c5fd", fontWeight: 500, letterSpacing: "0.05em" }}>TECHNOLOGIES</div>
+              </div>
+            </div>
             <p style={{ color: "#dbeafe", fontSize: 15, lineHeight: 1.8, marginBottom: 36 }}>
               Human Resource Management System for managing employees,
               attendance, leave requests and payroll from one platform.
@@ -336,7 +345,7 @@ export default function HRMSApp() {
   return (
     <div style={{
       display: "flex", minHeight: "100vh",
-      background: "#f1f5f9", fontFamily: "'Inter', sans-serif",
+      background: darkMode ? "#0f172a" : "#f1f5f9", fontFamily: "'Inter', sans-serif",
     }}>
 
       {/* SIDEBAR */}
@@ -351,7 +360,7 @@ export default function HRMSApp() {
       {/* MAIN CONTENT */}
       <div style={{
         marginLeft: 220, flex: 1, minHeight: "100vh",
-        overflowY: "auto", backgroundColor: "#f1f5f9",
+        overflowY: "auto", backgroundColor: darkMode ? "#0f172a" : "#f1f5f9",
       }}>
 
         {/* NOTIFICATION */}
@@ -374,6 +383,7 @@ export default function HRMSApp() {
             <Dashboard
               employees={employees}
               leaves={leaveRequests}
+              darkMode={darkMode}
             />
           )}
 
@@ -394,6 +404,7 @@ export default function HRMSApp() {
                 deleteEmployee={deleteEmployee}
                 onAddEmployee={() => { resetForm(); setEditingEmployee(null); setShowModal(true); }}
                 onExportExcel={exportToExcel}
+                darkMode={darkMode}
               />
             ) : (
               <div style={{ textAlign: "center", padding: 80, color: "#94a3b8", fontSize: 16 }}>
@@ -402,10 +413,10 @@ export default function HRMSApp() {
             )
           )}
           {/* Departments */}
-          {activePage === "departments" && <Departments />}
+          {activePage === "departments" && <Departments darkMode={darkMode} />}
 
           {/* ATTENDANCE */}
-          {activePage === "attendance" && <Attendance />}
+          {activePage === "attendance" && <Attendance darkMode={darkMode} />}
 
           {/* LEAVE */}
           {activePage === "leave" && (
@@ -414,11 +425,12 @@ export default function HRMSApp() {
               userRole={userRole}
               setShowLeaveModal={setShowLeaveModal}
               fetchLeaves={fetchLeaves}
+              darkMode={darkMode}
             />
           )}
 
           {/* PAYROLL */}
-          {activePage === "payroll" && <Payroll />}
+          {activePage === "payroll" && <Payroll darkMode={darkMode} />}
 
           {/* DEPARTMENTS */}
           {activePage === "departments" && hasAccess(["Super Admin","Admin","HR"]) && (
@@ -517,11 +529,18 @@ export default function HRMSApp() {
           )}
 
           {activePage === "analytics" && (
-            <Analytics employees={employees} leaves={leaveRequests} />
+            <Analytics employees={employees} leaves={leaveRequests} darkMode={darkMode} />
           )}
           {activePage === "settings" && (
-            <Settings />
+            <Settings darkMode={darkMode} />
           )}
+
+          {activePage === "recruitment" && <Recruitment darkMode={darkMode} />}
+          {activePage === "onboarding"  && <Onboarding  darkMode={darkMode} />}
+          {activePage === "performance" && <Performance darkMode={darkMode} />}
+          {activePage === "assets"      && <Assets      darkMode={darkMode} />}
+          {activePage === "helpdesk"    && <Helpdesk    darkMode={darkMode} />}
+          {activePage === "lms"         && <LMS         darkMode={darkMode} />}
 
         </div>
       </div>
