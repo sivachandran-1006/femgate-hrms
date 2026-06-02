@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
 import { ScrollArea } from "@mantine/core";
 import {
@@ -23,6 +24,7 @@ const ICON_MAP = {
 
 const Sidebar = ({ onLogout, user, userRole, onCloseMobile, collapsed, onToggleCollapse, dark = false }) => {
   const location  = useLocation();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
   const roleLabel = ROLE_LABELS[userRole] || userRole;
   const roleColor = ROLE_COLORS[userRole] || { bg: "#f1f5f9", text: "#475569" };
@@ -199,7 +201,7 @@ const Sidebar = ({ onLogout, user, userRole, onCloseMobile, collapsed, onToggleC
       {/* ── Logout ── */}
       <div style={{ padding: "6px", borderTop: `1px solid ${surface.border}`, flexShrink: 0 }}>
         <button
-          onClick={() => { onLogout(); if (onCloseMobile) onCloseMobile(); }}
+          onClick={() => setShowLogoutConfirm(true)}
           title={collapsed ? "Logout" : undefined}
           style={{
             width:          "100%",
@@ -224,6 +226,115 @@ const Sidebar = ({ onLogout, user, userRole, onCloseMobile, collapsed, onToggleC
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
+
+      {/* ── Logout Confirm Modal ── */}
+      {showLogoutConfirm && (
+        <div
+          onClick={() => setShowLogoutConfirm(false)}
+          style={{
+            position:        "fixed",
+            inset:           0,
+            background:      "rgba(15,23,42,0.5)",
+            zIndex:          9999,
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            padding:         16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
+              borderRadius: RADIUS["2xl"],
+              border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
+              boxShadow:    "0 25px 50px rgba(0,0,0,0.25)",
+              width:        "100%",
+              maxWidth:     380,
+              padding:      28,
+              textAlign:    "center",
+            }}
+          >
+            {/* Icon */}
+            <div style={{
+              width:          56,
+              height:         56,
+              borderRadius:   RADIUS.full,
+              background:     COLORS.dangerMuted,
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              margin:         "0 auto 16px",
+            }}>
+              <IconLogout size={26} stroke={1.8} color={COLORS.danger} />
+            </div>
+
+            {/* Text */}
+            <p style={{
+              margin:      0,
+              fontSize:    FONT_SIZE.lg,
+              fontWeight:  FONT_WEIGHT.bold,
+              color:       dark ? COLORS.dark.text : COLORS.textLight,
+            }}>
+              Logout
+            </p>
+            <p style={{
+              margin:    "8px 0 24px",
+              fontSize:  FONT_SIZE.sm,
+              color:     dark ? COLORS.dark.subtext : COLORS.textMutedLight,
+              lineHeight: 1.5,
+            }}>
+              Are you sure you want to logout?
+            </p>
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  flex:         1,
+                  padding:      "10px 0",
+                  borderRadius: RADIUS.lg,
+                  border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
+                  background:   "transparent",
+                  color:        dark ? COLORS.dark.text : COLORS.textLight,
+                  fontSize:     FONT_SIZE.sm,
+                  fontWeight:   FONT_WEIGHT.medium,
+                  cursor:       "pointer",
+                  transition:   "background 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = dark ? COLORS.dark.border : COLORS.gray200)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  if (onCloseMobile) onCloseMobile();
+                  onLogout();
+                }}
+                style={{
+                  flex:         1,
+                  padding:      "10px 0",
+                  borderRadius: RADIUS.lg,
+                  border:       "none",
+                  background:   COLORS.danger,
+                  color:        COLORS.white,
+                  fontSize:     FONT_SIZE.sm,
+                  fontWeight:   FONT_WEIGHT.semibold,
+                  cursor:       "pointer",
+                  transition:   "opacity 0.15s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                Yes, Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
