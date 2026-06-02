@@ -8,26 +8,32 @@ import Sidebar       from "./components/layout/Sidebar";
 import ScreenWrapper from "./components/layout/ScreenWrapper";
 
 // Screens
-import Login       from "./screens/auth/Login";
-import Dashboard   from "./screens/dashboard/Dashboard";
-import EmployeeList from "./screens/employees/EmployeeList";
-import Departments from "./screens/departments/Departments";
-import Attendance  from "./screens/attendance/Attendance";
-import Leave       from "./screens/leave/Leave";
-import Payroll     from "./screens/payroll/Payroll";
-import Recruitment from "./screens/recruitment/Recruitment";
-import Onboarding  from "./screens/onboarding/Onboarding";
-import Performance from "./screens/performance/Performance";
-import Assets      from "./screens/assets/Assets";
-import Helpdesk    from "./screens/helpdesk/Helpdesk";
-import LMS         from "./screens/lms/LMS";
-import Analytics   from "./screens/analytics/Analytics";
-import Settings    from "./screens/settings/Settings";
+import Login          from "./screens/auth/Login";
+import Dashboard      from "./screens/dashboard/Dashboard";
+import EmployeeList   from "./screens/employees/EmployeeList";
+import Profile        from "./screens/employees/Profile";
+import Departments    from "./screens/departments/Departments";
+import Attendance     from "./screens/attendance/Attendance";
+import Leave          from "./screens/leave/Leave";
+import Payroll        from "./screens/payroll/Payroll";
+import Recruitment    from "./screens/recruitment/Recruitment";
+import Onboarding     from "./screens/onboarding/Onboarding";
+import Performance    from "./screens/performance/Performance";
+import Assets         from "./screens/assets/Assets";
+import Helpdesk       from "./screens/helpdesk/Helpdesk";
+import LMS            from "./screens/lms/LMS";
+import Analytics      from "./screens/analytics/Analytics";
+import Settings       from "./screens/settings/Settings";
+import Calendar       from "./screens/calendar/Calendar";
+import Documents      from "./screens/documents/Documents";
+import ExitManagement from "./screens/exit/ExitManagement";
+import ShiftManagement from "./screens/shifts/ShiftManagement";
+import OrgChart       from "./screens/orgchart/OrgChart";
 
 // Hooks & permissions
 import { useAuth } from "./hooks/useAuth";
 import { ROLE_ROUTES } from "./constants/permissions";
-import logo from "./assets/images/logo.png";
+import logo from "./assets/images/logo.jpeg";
 
 // Access Denied page
 const AccessDenied = () => (
@@ -213,6 +219,54 @@ export default function App() {
             element={
               <RoleGuard routeId="settings" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><Settings darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/employees/:id"
+            element={
+              <RoleGuard routeId="employees" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><Profile darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <RoleGuard routeId="calendar" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><Calendar darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/documents"
+            element={
+              <RoleGuard routeId="documents" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><Documents darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/exit"
+            element={
+              <RoleGuard routeId="exit" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><ExitManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/shifts"
+            element={
+              <RoleGuard routeId="shifts" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><ShiftManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/orgchart"
+            element={
+              <RoleGuard routeId="orgchart" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><OrgChart darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />

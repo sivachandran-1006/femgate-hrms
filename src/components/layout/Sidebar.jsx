@@ -6,6 +6,7 @@ import {
   IconBuildingCommunity,
   IconClock,
   IconCalendarOff,
+  IconCalendar,
   IconCurrencyRupee,
   IconBriefcase,
   IconUserPlus,
@@ -16,6 +17,10 @@ import {
   IconChartBar,
   IconSettings,
   IconLogout,
+  IconHierarchy,
+  IconRotateClockwise,
+  IconFolder,
+  IconDoorExit,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR, ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
 
@@ -25,6 +30,7 @@ const ICON_MAP = {
   IconBuildingCommunity,
   IconClock,
   IconCalendarOff,
+  IconCalendar,
   IconCurrencyRupee,
   IconBriefcase,
   IconUserPlus,
@@ -34,6 +40,10 @@ const ICON_MAP = {
   IconBook,
   IconChartBar,
   IconSettings,
+  IconHierarchy,
+  IconRotateClockwise,
+  IconFolder,
+  IconDoorExit,
 };
 
 const Sidebar = ({ onLogout, user, userRole, onCloseMobile }) => {

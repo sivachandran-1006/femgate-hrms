@@ -3,7 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { MOCK_USERS } from "../../constants/mockUsers";
 import { ROLE_LABELS, ROLE_COLORS } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.jpeg";
 import {
   IconUsers, IconCalendarOff, IconCurrencyRupee,
   IconBriefcase, IconChartBar, IconBook,

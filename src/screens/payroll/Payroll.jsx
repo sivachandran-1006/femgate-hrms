@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchPayroll, createPayrollRecord, markPayrollPaid, deletePayrollRecord } from "../../api/payrollApi";
 import {
   Plus, Users, Wallet, TrendingUp, Clock,
-  Search, CheckCircle, XCircle, AlertCircle,
+  Search, CheckCircle, XCircle, AlertCircle, FileText, Printer,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -28,21 +28,367 @@ const CHART_COLORS = [
 ];
 
 const MOCK_PAYROLL_DATA = [
-  { _id: "p001", employee: "Mani",       department: "IT",         salary: 72000,  bonus: 5000,  deduction: 3000, netSalary: 74000,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p002", employee: "P Santhosh", department: "IT",         salary: 68000,  bonus: 4000,  deduction: 2800, netSalary: 69200,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p003", employee: "C Santhosh", department: "IT",         salary: 65000,  bonus: 3500,  deduction: 2500, netSalary: 66000,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p004", employee: "Suriya",     department: "IT",         salary: 78000,  bonus: 6000,  deduction: 3500, netSalary: 80500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p005", employee: "Siva",       department: "Management", salary: 95000,  bonus: 10000, deduction: 5000, netSalary: 100000, month: "May",   year: "2026", status: "Pending" },
-  { _id: "p006", employee: "Aravinth",   department: "IT",         salary: 62000,  bonus: 4000,  deduction: 2500, netSalary: 63500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p007", employee: "Safeer",     department: "Finance",    salary: 58000,  bonus: 2000,  deduction: 2000, netSalary: 58000,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p008", employee: "Sabari",     department: "IT",         salary: 55000,  bonus: 2500,  deduction: 2000, netSalary: 55500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p009", employee: "Vignesh",    department: "IT",         salary: 60000,  bonus: 3000,  deduction: 2200, netSalary: 60800,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p010", employee: "Mani",       department: "IT",         salary: 72000,  bonus: 4000,  deduction: 3000, netSalary: 73000,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p011", employee: "Suriya",     department: "IT",         salary: 78000,  bonus: 5000,  deduction: 3500, netSalary: 79500,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p012", employee: "Siva",       department: "Management", salary: 95000,  bonus: 9000,  deduction: 5000, netSalary: 99000,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p013", employee: "P Santhosh", department: "IT",         salary: 68000,  bonus: 3000,  deduction: 2800, netSalary: 68200,  month: "March", year: "2026", status: "Paid"    },
+  { _id: "p001", employee: "Mani",       department: "IT",         designation: "Senior Developer",    employeeId: "MGT001", salary: 72000,  bonus: 5000,  deduction: 3000, netSalary: 74000,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p002", employee: "P Santhosh", department: "IT",         designation: "Software Engineer",   employeeId: "MGT002", salary: 68000,  bonus: 4000,  deduction: 2800, netSalary: 69200,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p003", employee: "C Santhosh", department: "IT",         designation: "Software Engineer",   employeeId: "MGT003", salary: 65000,  bonus: 3500,  deduction: 2500, netSalary: 66000,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p004", employee: "Suriya",     department: "IT",         designation: "Tech Lead",           employeeId: "MGT004", salary: 78000,  bonus: 6000,  deduction: 3500, netSalary: 80500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p005", employee: "Siva",       department: "Management", designation: "Project Manager",     employeeId: "MGT005", salary: 95000,  bonus: 10000, deduction: 5000, netSalary: 100000, month: "May",   year: "2026", status: "Pending" },
+  { _id: "p006", employee: "Aravinth",   department: "IT",         designation: "Software Engineer",   employeeId: "MGT006", salary: 62000,  bonus: 4000,  deduction: 2500, netSalary: 63500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p007", employee: "Safeer",     department: "Finance",    designation: "Finance Analyst",     employeeId: "MGT007", salary: 58000,  bonus: 2000,  deduction: 2000, netSalary: 58000,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p008", employee: "Sabari",     department: "IT",         designation: "QA Engineer",         employeeId: "MGT008", salary: 55000,  bonus: 2500,  deduction: 2000, netSalary: 55500,  month: "May",   year: "2026", status: "Paid"    },
+  { _id: "p009", employee: "Vignesh",    department: "IT",         designation: "Frontend Developer",  employeeId: "MGT009", salary: 60000,  bonus: 3000,  deduction: 2200, netSalary: 60800,  month: "May",   year: "2026", status: "Pending" },
+  { _id: "p010", employee: "Mani",       department: "IT",         designation: "Senior Developer",    employeeId: "MGT001", salary: 72000,  bonus: 4000,  deduction: 3000, netSalary: 73000,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p011", employee: "Suriya",     department: "IT",         designation: "Tech Lead",           employeeId: "MGT004", salary: 78000,  bonus: 5000,  deduction: 3500, netSalary: 79500,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p012", employee: "Siva",       department: "Management", designation: "Project Manager",     employeeId: "MGT005", salary: 95000,  bonus: 9000,  deduction: 5000, netSalary: 99000,  month: "April", year: "2026", status: "Paid"    },
+  { _id: "p013", employee: "P Santhosh", department: "IT",         designation: "Software Engineer",   employeeId: "MGT002", salary: 68000,  bonus: 3000,  deduction: 2800, netSalary: 68200,  month: "March", year: "2026", status: "Paid"    },
 ];
 
+// ── Payslip computation helpers ───────────────────────────────────────────────
+const computePayslip = (row) => {
+  const basic       = Math.round(Number(row.salary) * 0.5);
+  const hra         = Math.round(basic * 0.4);
+  const transport   = 1500;
+  const special     = Number(row.salary) - basic - hra - transport;
+  const grossEarnings = basic + hra + transport + Math.max(0, special);
+
+  const pf          = Math.round(basic * 0.12);
+  const profTax     = 200;
+  const tds         = Math.round(Math.max(0, (grossEarnings * 12 - 250000) / 12 * 0.1));
+  const totalDeductions = pf + profTax + tds;
+
+  const netPay      = grossEarnings - totalDeductions;
+
+  return {
+    basic,
+    hra,
+    transport,
+    special: Math.max(0, special),
+    grossEarnings,
+    pf,
+    profTax,
+    tds,
+    totalDeductions,
+    netPay,
+  };
+};
+
+// ── Payslip Modal ─────────────────────────────────────────────────────────────
+const PayslipModal = ({ record, darkMode, onClose }) => {
+  const ps = computePayslip(record);
+
+  const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
+
+  const handlePrint = () => {
+    // Inject print styles temporarily
+    const styleId = "payslip-print-style";
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.innerHTML = `
+        @media print {
+          body > * { display: none !important; }
+          #payslip-printable-root { display: block !important; }
+          #payslip-printable-root * { display: revert !important; }
+          @page { margin: 18mm 14mm; size: A4 portrait; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    window.print();
+  };
+
+  // Overlay backdrop respects dark mode
+  const backdropBg = darkMode ? "rgba(0,0,0,0.70)" : "rgba(30,41,59,0.55)";
+
+  // Table row styles (always light)
+  const thStyle = {
+    padding: "9px 14px",
+    textAlign: "left",
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
+    fontFamily: FONT_FAMILY.base,
+    color: "#475569",
+    background: "#f8fafc",
+    borderBottom: "1px solid #e2e8f0",
+  };
+  const tdStyle = {
+    padding: "9px 14px",
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONT_FAMILY.base,
+    color: "#1e293b",
+    borderBottom: "1px solid #f1f5f9",
+  };
+  const tdAmtStyle = { ...tdStyle, textAlign: "right", fontWeight: FONT_WEIGHT.semibold };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: backdropBg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: Z_INDEX.modal + 10,
+        padding: `${SPACING[4]}px`,
+        overflowY: "auto",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Wrapper used for print targeting */}
+      <div
+        id="payslip-printable-root"
+        style={{
+          background: "#ffffff",
+          borderRadius: RADIUS["3xl"],
+          width: "100%",
+          maxWidth: 680,
+          boxShadow: SHADOW.modal,
+          fontFamily: FONT_FAMILY.base,
+          color: "#1e293b",
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* ── Company Header ── */}
+        <div style={{
+          background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)",
+          padding: `${SPACING[6]}px ${SPACING[6]}px ${SPACING[5]}px`,
+          display: "flex",
+          alignItems: "center",
+          gap: GAP.lg,
+        }}>
+          {/* Logo placeholder */}
+          <div style={{
+            width: 56,
+            height: 56,
+            borderRadius: RADIUS.xl,
+            background: "rgba(255,255,255,0.18)",
+            border: "2px solid rgba(255,255,255,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <span style={{ fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.extrabold, color: "#ffffff", letterSpacing: "-1px" }}>MG</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: FONT_SIZE.xl, fontWeight: FONT_WEIGHT.extrabold, color: "#ffffff", letterSpacing: "0.5px" }}>
+              MGate Technologies
+            </h2>
+            <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.sm, color: "rgba(255,255,255,0.80)", fontFamily: FONT_FAMILY.base }}>
+              No. 12, Tech Park, Coimbatore — 641 035, Tamil Nadu, India
+            </p>
+            <p style={{ margin: "1px 0 0", fontSize: FONT_SIZE.xs, color: "rgba(255,255,255,0.65)", fontFamily: FONT_FAMILY.base }}>
+              hr@mgatetech.com &nbsp;|&nbsp; +91 99999 00000
+            </p>
+          </div>
+          <div style={{
+            background: "rgba(255,255,255,0.15)",
+            borderRadius: RADIUS.lg,
+            padding: `${SPACING[2]}px ${SPACING[3]}px`,
+            textAlign: "right",
+          }}>
+            <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: "rgba(255,255,255,0.75)", fontFamily: FONT_FAMILY.base }}>PAY SLIP</p>
+            <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: "#ffffff", fontFamily: FONT_FAMILY.base }}>
+              {record.month} {record.year}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Body ── */}
+        <div style={{ padding: `${SPACING[5]}px ${SPACING[6]}px` }}>
+
+          {/* ── Employee Details ── */}
+          <div style={{
+            background: "#f8fafc",
+            borderRadius: RADIUS.xl,
+            border: "1px solid #e2e8f0",
+            padding: `${SPACING[4]}px ${SPACING[5]}px`,
+            marginBottom: SPACING[5],
+          }}>
+            <p style={{ margin: `0 0 ${SPACING[3]}px`, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: "#94a3b8", letterSpacing: "0.8px", textTransform: "uppercase", fontFamily: FONT_FAMILY.base }}>
+              Employee Details
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: `${SPACING[3]}px ${GAP.lg}px` }}>
+              {[
+                { label: "Name",         value: record.employee },
+                { label: "Employee ID",  value: record.employeeId || "MGT—" },
+                { label: "Department",   value: record.department || "—" },
+                { label: "Designation",  value: record.designation || "—" },
+                { label: "Bank Account", value: "XXXX XXXX 1234" },
+                { label: "PAN",          value: "ABXXX9999X" },
+              ].map((f) => (
+                <div key={f.label}>
+                  <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: "#94a3b8", fontFamily: FONT_FAMILY.base }}>{f.label}</p>
+                  <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: "#1e293b", fontFamily: FONT_FAMILY.base }}>{f.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Earnings & Deductions side by side ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md, marginBottom: SPACING[5] }}>
+
+            {/* Earnings */}
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: RADIUS.xl, overflow: "hidden" }}>
+              <div style={{ background: "#f0fdf4", padding: "10px 14px", borderBottom: "1px solid #bbf7d0" }}>
+                <p style={{ margin: 0, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: "#16a34a", letterSpacing: "0.8px", textTransform: "uppercase", fontFamily: FONT_FAMILY.base }}>Earnings</p>
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Component</th>
+                    <th style={{ ...thStyle, textAlign: "right" }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["Basic Salary",          ps.basic],
+                    ["HRA (40% of Basic)",     ps.hra],
+                    ["Transport Allowance",    ps.transport],
+                    ["Special Allowance",      ps.special],
+                  ].map(([label, amt]) => (
+                    <tr key={label}>
+                      <td style={tdStyle}>{label}</td>
+                      <td style={tdAmtStyle}>{fmt(amt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#f0fdf4" }}>
+                    <td style={{ ...tdStyle, fontWeight: FONT_WEIGHT.bold, color: "#16a34a", borderTop: "2px solid #bbf7d0", borderBottom: "none" }}>Gross Earnings</td>
+                    <td style={{ ...tdAmtStyle, fontWeight: FONT_WEIGHT.bold, color: "#16a34a", borderTop: "2px solid #bbf7d0", borderBottom: "none" }}>{fmt(ps.grossEarnings)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Deductions */}
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: RADIUS.xl, overflow: "hidden" }}>
+              <div style={{ background: "#fef2f2", padding: "10px 14px", borderBottom: "1px solid #fecaca" }}>
+                <p style={{ margin: 0, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: "#dc2626", letterSpacing: "0.8px", textTransform: "uppercase", fontFamily: FONT_FAMILY.base }}>Deductions</p>
+              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Component</th>
+                    <th style={{ ...thStyle, textAlign: "right" }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ["PF (12% of Basic)",      ps.pf],
+                    ["Professional Tax",       ps.profTax],
+                    ["TDS",                    ps.tds],
+                  ].map(([label, amt]) => (
+                    <tr key={label}>
+                      <td style={tdStyle}>{label}</td>
+                      <td style={tdAmtStyle}>{fmt(amt)}</td>
+                    </tr>
+                  ))}
+                  {/* spacer row to align footer with earnings table */}
+                  <tr>
+                    <td style={{ ...tdStyle, color: "transparent", userSelect: "none" }}>—</td>
+                    <td style={{ ...tdAmtStyle, color: "transparent", userSelect: "none" }}>—</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#fef2f2" }}>
+                    <td style={{ ...tdStyle, fontWeight: FONT_WEIGHT.bold, color: "#dc2626", borderTop: "2px solid #fecaca", borderBottom: "none" }}>Total Deductions</td>
+                    <td style={{ ...tdAmtStyle, fontWeight: FONT_WEIGHT.bold, color: "#dc2626", borderTop: "2px solid #fecaca", borderBottom: "none" }}>{fmt(ps.totalDeductions)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* ── Net Pay ── */}
+          <div style={{
+            background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
+            borderRadius: RADIUS.xl,
+            padding: `${SPACING[4]}px ${SPACING[5]}px`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: SPACING[5],
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: "rgba(255,255,255,0.75)", fontWeight: FONT_WEIGHT.medium, letterSpacing: "0.8px", textTransform: "uppercase", fontFamily: FONT_FAMILY.base }}>
+                Net Pay for {record.month} {record.year}
+              </p>
+              <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.xs, color: "rgba(255,255,255,0.60)", fontFamily: FONT_FAMILY.base }}>
+                Gross {fmt(ps.grossEarnings)} — Deductions {fmt(ps.totalDeductions)}
+              </p>
+            </div>
+            <p style={{ margin: 0, fontSize: "1.75rem", fontWeight: FONT_WEIGHT.extrabold, color: "#ffffff", fontFamily: FONT_FAMILY.base, letterSpacing: "-0.5px" }}>
+              {fmt(ps.netPay)}
+            </p>
+          </div>
+
+          {/* ── Footer note ── */}
+          <p style={{ margin: `0 0 ${SPACING[5]}px`, fontSize: FONT_SIZE.xs, color: "#94a3b8", textAlign: "center", fontFamily: FONT_FAMILY.base }}>
+            This is a computer-generated payslip and does not require a signature.
+          </p>
+
+          {/* ── Action Buttons (hidden during print) ── */}
+          <div
+            className="no-print"
+            style={{ display: "flex", gap: GAP.md, justifyContent: "flex-end" }}
+          >
+            <button
+              onClick={onClose}
+              style={{
+                padding: `${SPACING[2] + 2}px ${SPACING[5]}px`,
+                border: "1px solid #e2e8f0",
+                borderRadius: RADIUS.lg,
+                background: "#ffffff",
+                color: "#475569",
+                fontSize: FONT_SIZE.sm,
+                fontWeight: FONT_WEIGHT.semibold,
+                fontFamily: FONT_FAMILY.base,
+                cursor: "pointer",
+              }}
+            >
+              Close
+            </button>
+            <button
+              onClick={handlePrint}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: GAP.sm,
+                padding: `${SPACING[2] + 2}px ${SPACING[5]}px`,
+                border: "none",
+                borderRadius: RADIUS.lg,
+                background: COLORS.primary,
+                color: "#ffffff",
+                fontSize: FONT_SIZE.sm,
+                fontWeight: FONT_WEIGHT.semibold,
+                fontFamily: FONT_FAMILY.base,
+                cursor: "pointer",
+              }}
+            >
+              <Printer size={ICON_SIZE.xs + 2} strokeWidth={ICON_STROKE.normal} />
+              Print / Download
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Print-only global style: hide everything except the payslip */}
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          #payslip-printable-root { display: block !important; position: static !important; box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+// ── Main Payroll Component ────────────────────────────────────────────────────
 const Payroll = ({ darkMode = false }) => {
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
@@ -53,6 +399,10 @@ const Payroll = ({ darkMode = false }) => {
   const [monthFilter, setMonthFilter]   = useState("All");
   const [showModal, setShowModal]       = useState(false);
   const [activeTab, setActiveTab]       = useState("list");
+
+  // Payslip state
+  const [payslipRecord, setPayslipRecord] = useState(null);
+
   const rowsPerPage = 10;
 
   // Form state
@@ -326,6 +676,28 @@ const Payroll = ({ darkMode = false }) => {
               {
                 key: "_actions", label: "Action", render: (_, row) => (
                   <div style={{ display: "flex", gap: GAP.sm - 2 }}>
+                    {/* View Payslip button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPayslipRecord(row); }}
+                      title="View Payslip"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        background: COLORS.primaryLight,
+                        color: COLORS.primary,
+                        border: `1px solid ${COLORS.primaryLight}`,
+                        borderRadius: RADIUS.md,
+                        padding: `${SPACING[1] + 3}px ${SPACING[3] + 2}px`,
+                        fontSize: FONT_SIZE.sm,
+                        fontWeight: FONT_WEIGHT.semibold,
+                        fontFamily: FONT_FAMILY.base,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <FileText size={ICON_SIZE.xs} strokeWidth={ICON_STROKE.normal} />
+                      Payslip
+                    </button>
                     <button
                       disabled={row.status === "Paid"}
                       onClick={(e) => { e.stopPropagation(); markAsPaid(row._id); }}
@@ -546,6 +918,15 @@ const Payroll = ({ darkMode = false }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── PAYSLIP MODAL ── */}
+      {payslipRecord && (
+        <PayslipModal
+          record={payslipRecord}
+          darkMode={darkMode}
+          onClose={() => setPayslipRecord(null)}
+        />
       )}
     </div>
   );

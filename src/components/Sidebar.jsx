@@ -16,7 +16,7 @@ import {
   LogOut,
   Moon,
 } from "lucide-react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.jpeg";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },

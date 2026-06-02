@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -6,7 +7,7 @@ import {
 import {
   Users, UserCheck, UserMinus, Clock, Wallet,
   Calendar, Bell, ArrowUpRight, ArrowDownRight,
-  AlertCircle, Award,
+  AlertCircle, Award, CheckCheck,
 } from "lucide-react";
 
 import { useFetchAllEmployees } from "../../queries/useEmployees";
@@ -109,6 +110,23 @@ const ACTIVITY_ICON = {
   complete: { icon: <Award       size={14} />, bg: COLORS.purpleMuted,  color: COLORS.purple  },
 };
 
+const NOTIF_DATA = [
+  { id: 1, title: "Arjun Kumar submitted a leave request", time: "2 min ago",  type: "leave",   dotColor: COLORS.orange   },
+  { id: 2, title: "Payroll for May 2026 processed",        time: "1h ago",     type: "payroll", dotColor: COLORS.success  },
+  { id: 3, title: "Priya Sharma onboarding completed",     time: "3h ago",     type: "success", dotColor: COLORS.success  },
+  { id: 4, title: "Performance review cycle starts Jun 5", time: "1d ago",     type: "info",    dotColor: COLORS.info     },
+  { id: 5, title: "Asset LT-009 assigned to Mani",         time: "2d ago",     type: "asset",   dotColor: COLORS.purple   },
+  { id: 6, title: "Safeer's sick leave approved",          time: "2d ago",     type: "leave",   dotColor: COLORS.orange   },
+];
+
+const NOTIF_STRIP = {
+  leave:   COLORS.orange,
+  payroll: COLORS.success,
+  success: COLORS.success,
+  info:    COLORS.info,
+  asset:   COLORS.purple,
+};
+
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 
 // ── Main Dashboard ────────────────────────────────────────────────────────────
@@ -116,6 +134,21 @@ const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 const Dashboard = ({ darkMode: dark = false }) => {
   const { data: employees = [], isLoading: loadEmp  } = useFetchAllEmployees();
   const { data: leaves    = [], isLoading: loadLeave } = useFetchAllLeaves();
+
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [allRead,    setAllRead]    = useState(false);
+  const bellRef = useRef(null);
+
+  useEffect(() => {
+    if (!showNotifs) return;
+    const handleClickOutside = (e) => {
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
+        setShowNotifs(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifs]);
 
   if (loadEmp || loadLeave) return <AppLoader fullScreen />;
 
@@ -200,13 +233,92 @@ const Dashboard = ({ darkMode: dark = false }) => {
           <p style={{ margin: `${GAP.xs}px 0 0`, fontSize: FONT_SIZE.base, color: subtext }}>{today}</p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-          <div style={{ position: "relative" }}>
-            <div style={{ width: 38, height: 38, borderRadius: RADIUS.full, background: inputBg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <div ref={bellRef} style={{ position: "relative" }}>
+            {/* Bell button */}
+            <div
+              onClick={() => setShowNotifs((v) => !v)}
+              style={{ width: 38, height: 38, borderRadius: RADIUS.full, background: inputBg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            >
               <Bell size={17} color={subtext} />
             </div>
-            <div style={{ position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: RADIUS.full, background: COLORS.danger, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 9, color: COLORS.white, fontWeight: FONT_WEIGHT.bold }}>3</span>
-            </div>
+            {/* Unread badge — hidden once all are marked read */}
+            {!allRead && (
+              <div style={{ position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: RADIUS.full, background: COLORS.danger, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <span style={{ fontSize: 9, color: COLORS.white, fontWeight: FONT_WEIGHT.bold }}>
+                  {NOTIF_DATA.length}
+                </span>
+              </div>
+            )}
+            {/* Notifications dropdown panel */}
+            {showNotifs && (
+              <div style={{
+                position: "absolute", top: 48, right: 0, zIndex: 1000,
+                width: 340, maxHeight: 420, overflowY: "auto",
+                background: cardBg, border: `1px solid ${border}`,
+                borderRadius: RADIUS.xl, boxShadow: SHADOW.card,
+              }}>
+                {/* Panel header */}
+                <div style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: `${SPACING[3]}px ${SPACING[4]}px`,
+                  borderBottom: `1px solid ${border}`,
+                  position: "sticky", top: 0, background: cardBg, zIndex: 1,
+                }}>
+                  <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: text }}>
+                    Notifications
+                  </span>
+                  <button
+                    onClick={() => setAllRead(true)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 4,
+                      fontSize: FONT_SIZE.xs, color: COLORS.primary,
+                      background: "none", border: "none", cursor: "pointer",
+                      fontFamily: FONT_FAMILY.base, fontWeight: FONT_WEIGHT.medium,
+                      opacity: allRead ? 0.4 : 1,
+                    }}
+                    disabled={allRead}
+                  >
+                    <CheckCheck size={13} /> Mark all read
+                  </button>
+                </div>
+                {/* Notification items */}
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {NOTIF_DATA.map((n, i) => {
+                    const stripColor = NOTIF_STRIP[n.type] || COLORS.primary;
+                    return (
+                      <div
+                        key={n.id}
+                        style={{
+                          display: "flex", gap: SPACING[3],
+                          padding: `${SPACING[3]}px ${SPACING[4]}px`,
+                          borderBottom: i < NOTIF_DATA.length - 1 ? `1px solid ${border}` : "none",
+                          opacity: allRead ? 0.45 : 1,
+                          transition: "opacity 0.25s",
+                        }}
+                      >
+                        {/* Colored left strip */}
+                        <div style={{ width: 3, borderRadius: RADIUS.full, background: stripColor, flexShrink: 0, alignSelf: "stretch" }} />
+                        {/* Icon dot */}
+                        <div style={{
+                          width: 8, height: 8, borderRadius: "50%",
+                          background: n.dotColor, flexShrink: 0,
+                          marginTop: 5,
+                        }} />
+                        {/* Text */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: FONT_SIZE.sm, color: text, fontWeight: allRead ? FONT_WEIGHT.normal : FONT_WEIGHT.medium, lineHeight: 1.4 }}>
+                            {n.title}
+                          </p>
+                          <p style={{ margin: "3px 0 0", fontSize: FONT_SIZE.xs, color: subtext }}>
+                            {n.time}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <div style={{ width: 38, height: 38, borderRadius: RADIUS.full, background: COLORS.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: COLORS.primary, cursor: "pointer" }}>AD</div>
         </div>
