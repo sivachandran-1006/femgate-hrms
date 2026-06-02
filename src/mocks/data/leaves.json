@@ -8,7 +8,13 @@
     { "_id": "lv006", "employee": "P Santhosh", "leaveType": "Casual Leave", "fromDate": "2026-03-15", "toDate": "2026-03-15", "days": 1, "reason": "Personal", "status": "Rejected" },
     { "_id": "lv007", "employee": "Vignesh", "leaveType": "Annual Leave", "fromDate": "2026-05-05", "toDate": "2026-05-07", "days": 3, "reason": "Travel", "status": "Approved" },
     { "_id": "lv008", "employee": "Siva", "leaveType": "Sick Leave", "fromDate": "2026-02-18", "toDate": "2026-02-19", "days": 2, "reason": "Cold & flu", "status": "Approved" },
-    { "_id": "lv009", "employee": "Sabari", "leaveType": "Casual Leave", "fromDate": "2026-06-05", "toDate": "2026-06-05", "days": 1, "reason": "Personal work", "status": "Pending" }
+    { "_id": "lv009", "employee": "Sabari",       "leaveType": "Casual Leave", "fromDate": "2026-06-05", "toDate": "2026-06-05", "days": 1, "reason": "Personal work",             "status": "Pending"  },
+    { "_id": "lv010", "employee": "John Employee", "leaveType": "Sick Leave",   "fromDate": "2026-01-14", "toDate": "2026-01-15", "days": 2, "reason": "Fever and cold",            "status": "Approved" },
+    { "_id": "lv011", "employee": "John Employee", "leaveType": "Casual Leave", "fromDate": "2026-02-20", "toDate": "2026-02-20", "days": 1, "reason": "Personal errand",           "status": "Approved" },
+    { "_id": "lv012", "employee": "John Employee", "leaveType": "Annual Leave", "fromDate": "2026-03-24", "toDate": "2026-03-26", "days": 3, "reason": "Family vacation",           "status": "Approved" },
+    { "_id": "lv013", "employee": "John Employee", "leaveType": "Sick Leave",   "fromDate": "2026-04-08", "toDate": "2026-04-08", "days": 1, "reason": "Doctor appointment",        "status": "Rejected" },
+    { "_id": "lv014", "employee": "John Employee", "leaveType": "Casual Leave", "fromDate": "2026-05-12", "toDate": "2026-05-12", "days": 1, "reason": "Bank work",                 "status": "Approved" },
+    { "_id": "lv015", "employee": "John Employee", "leaveType": "Annual Leave", "fromDate": "2026-06-20", "toDate": "2026-06-22", "days": 3, "reason": "Travel plans",              "status": "Pending"  }
   ],
   "leave": { "_id": "lv001", "employee": "Safeer", "leaveType": "Sick Leave", "fromDate": "2026-05-20", "toDate": "2026-05-22", "days": 3, "reason": "Fever", "status": "Approved" }
 }

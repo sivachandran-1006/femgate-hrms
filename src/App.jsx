@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AppShell, Burger, Group, Title, ActionIcon, useMantineColorScheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -65,8 +66,10 @@ const RoleGuard = ({ routeId, userRole, children }) => {
 export default function App() {
   const { isLoggedIn, user, userRole, logout } = useAuth();
   const [opened, { toggle }] = useDisclosure();
+  const [collapsed, setCollapsed] = useState(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
+  const navWidth = collapsed ? 68 : 250;
 
   // ── LOGIN PAGE ─────────────────────────────────────────────────────────────
   if (!isLoggedIn) {
@@ -77,7 +80,7 @@ export default function App() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      navbar={{ width: navWidth, breakpoint: "sm", collapsed: { mobile: !opened } }}
       padding={0}
     >
       <AppShell.Header>
@@ -98,12 +101,15 @@ export default function App() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
+      <AppShell.Navbar p={0}>
         <Sidebar
           onLogout={logout}
           user={user}
           userRole={userRole}
           onCloseMobile={toggle}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((c) => !c)}
+          dark={dark}
         />
       </AppShell.Navbar>
 
