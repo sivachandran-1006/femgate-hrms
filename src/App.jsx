@@ -108,7 +108,7 @@ export default function App() {
             path="/dashboard"
             element={
               <RoleGuard routeId="dashboard" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Dashboard /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><Dashboard darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -116,7 +116,7 @@ export default function App() {
             path="/employees"
             element={
               <RoleGuard routeId="employees" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><EmployeeList /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><EmployeeList darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
