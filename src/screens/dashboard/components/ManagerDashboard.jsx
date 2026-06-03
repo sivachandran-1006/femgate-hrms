@@ -1,4 +1,4 @@
-import { SimpleGrid, Box, Group, Text, Avatar, Badge } from "@mantine/core";
+import { SimpleGrid, Box, Group, Text, Avatar, Badge, Table } from "@mantine/core";
 import { Users, UserCheck, UserMinus, Clock } from "lucide-react";
 import { AppStatCard } from "../../../components/ui/AppStatCard";
 import { AppSection } from "../../../components/ui/AppSection";
@@ -31,18 +31,18 @@ export const ManagerDashboard = ({ employees, leaves, user }) => {
             renderRow={(e, i) => {
               const statusColor = e.status==="Present"?"green":e.status==="Leave"?"yellow":"red";
               return (
-                <tr key={e._id}>
-                  <td>
+                <Table.Tr key={e._id}>
+                  <Table.Td>
                     <Group gap="sm" wrap="nowrap">
                       <Avatar color="blue" radius="xl" size="sm">{getInitials(e.name)}</Avatar>
                       <Text fz="sm" fw={500}>{e.name}</Text>
                     </Group>
-                  </td>
-                  <td><Text fz="xs" c="dimmed">{e.designation}</Text></td>
-                  <td>
+                  </Table.Td>
+                  <Table.Td><Text fz="xs" c="dimmed">{e.designation}</Text></Table.Td>
+                  <Table.Td>
                     <Badge color={statusColor} variant="light" size="sm">{e.status}</Badge>
-                  </td>
-                </tr>
+                  </Table.Td>
+                </Table.Tr>
               );
             }}
           />

@@ -1,4 +1,4 @@
-import { SimpleGrid, Box, Group, Text, Badge } from "@mantine/core";
+import { SimpleGrid, Box, Group, Text, Badge, Table } from "@mantine/core";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Wallet, TrendingUp, Award, ShieldCheck } from "lucide-react";
 import { AppStatCard } from "../../../components/ui/AppStatCard";
@@ -72,12 +72,12 @@ export const FinanceDashboard = ({ employees }) => {
             const sal  = Number(e.salary)||0;
             const band = sal>=80000?{ label:"Senior",color:"violet" }:sal>=65000?{ label:"Mid",color:"blue" }:{ label:"Junior",color:"green" };
             return (
-              <tr key={e._id}>
-                <td><Text fz="sm" fw={600}>{e.name}</Text></td>
-                <td><Text fz="sm" c="dimmed">{e.department}</Text></td>
-                <td><Text fz="sm" fw={700}>₹{sal.toLocaleString("en-IN")}</Text></td>
-                <td><Badge color={band.color} variant="light">{band.label}</Badge></td>
-              </tr>
+              <Table.Tr key={e._id}>
+                <Table.Td><Text fz="sm" fw={600}>{e.name}</Text></Table.Td>
+                <Table.Td><Text fz="sm" c="dimmed">{e.department}</Text></Table.Td>
+                <Table.Td><Text fz="sm" fw={700}>₹{sal.toLocaleString("en-IN")}</Text></Table.Td>
+                <Table.Td><Badge color={band.color} variant="light">{band.label}</Badge></Table.Td>
+              </Table.Tr>
             );
           }}
         />

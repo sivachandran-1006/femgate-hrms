@@ -38,6 +38,7 @@ export const AppTable = ({
                   color:         "#64748b",
                   whiteSpace:    "nowrap",
                   padding:       "12px 16px",
+                  textAlign:     "left",
                 }}
               >
                 {h}

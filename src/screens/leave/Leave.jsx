@@ -3,7 +3,7 @@ import {
   Users, CheckCircle, Clock, XCircle, Search, Plus, Eye, Check, X
 } from "lucide-react";
 import { 
-  Group, Stack, Text, Badge, ActionIcon, Avatar, TextInput, Select, SimpleGrid, Tooltip, Progress, Box, Paper
+  Group, Stack, Text, Badge, ActionIcon, Avatar, TextInput, Select, SimpleGrid, Tooltip, Progress, Box, Paper, Table
 } from "@mantine/core";
 import { AppModal } from "../../components/ui/AppModal";
 import { AppInput } from "../../components/ui/AppInput";
@@ -187,30 +187,30 @@ const Leave = () => {
           headers={headers}
           data={filtered}
           renderRow={(leave) => (
-            <tr key={leave._id}>
+            <Table.Tr key={leave._id}>
               {!isEmployee && (
-                <td>
+                <Table.Td>
                   <Group gap="sm" wrap="nowrap">
                     <Avatar color="blue" radius="xl" size="sm">{getInitials(leave.employee)}</Avatar>
                     <Text fz="sm" fw={600}>{leave.employee}</Text>
                   </Group>
-                </td>
+                </Table.Td>
               )}
-              <td>
+              <Table.Td>
                 <Badge color={LEAVE_TYPE_COLORS[leave.leaveType] || "gray"} variant="light" size="sm">
                   {leave.leaveType}
                 </Badge>
-              </td>
-              <td><Text fz="sm" c="dimmed">{leave.fromDate}</Text></td>
-              <td><Text fz="sm" c="dimmed">{leave.toDate}</Text></td>
-              <td><Text fz="sm" fw={600}>{leave.days}</Text></td>
-              <td style={{ maxWidth: 150 }}><Text fz="sm" c="dimmed" truncate>{leave.reason}</Text></td>
-              <td>
+              </Table.Td>
+              <Table.Td><Text fz="sm" c="dimmed">{leave.fromDate}</Text></Table.Td>
+              <Table.Td><Text fz="sm" c="dimmed">{leave.toDate}</Text></Table.Td>
+              <Table.Td><Text fz="sm" fw={600}>{leave.days}</Text></Table.Td>
+              <Table.Td style={{ maxWidth: 150 }}><Text fz="sm" c="dimmed" truncate>{leave.reason}</Text></Table.Td>
+              <Table.Td>
                 <Badge color={STATUS_COLORS[leave.status] || "gray"} variant="light" size="sm">
                   {leave.status}
                 </Badge>
-              </td>
-              <td>
+              </Table.Td>
+              <Table.Td>
                 <Group gap={6} wrap="nowrap">
                   <Tooltip label="View Details">
                     <ActionIcon variant="light" color="blue" size="sm" radius="md" onClick={() => setViewLeave(leave)}>
@@ -232,8 +232,8 @@ const Leave = () => {
                     </>
                   )}
                 </Group>
-              </td>
-            </tr>
+              </Table.Td>
+            </Table.Tr>
           )}
           emptyText="No leave requests found"
         />
