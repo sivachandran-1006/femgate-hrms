@@ -76,7 +76,7 @@ const Dashboard = () => {
                 </Group>
                 {notifs.map((n, i) => (
                   <Group key={n.id} p="sm" wrap="nowrap" style={{ borderBottom: i < notifs.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none", opacity: allRead ? 0.5 : 1 }}>
-                    <Box w={8} h={8} style={{ borderRadius: "50%", background: `var(--mantine-color-\${n.dotColor}-5)`, flexShrink: 0, marginTop: 4 }} />
+                    <Box w={8} h={8} style={{ borderRadius: "50%", background: `var(--mantine-color-${n.dotColor}-5)`, flexShrink: 0, marginTop: 4 }} />
                     <Box style={{ flex: 1 }}>
                       <Text fz="sm" fw={allRead ? 400 : 500}>{n.title}</Text>
                       <Text fz="xs" c="dimmed" mt={2}>{n.time}</Text>

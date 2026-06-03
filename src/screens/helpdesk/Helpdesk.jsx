@@ -13,7 +13,7 @@ import {
 import { COLORS }                              from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
-import { RADIUS, SHADOW, ICON_SIZE, TRANSITION } from "../../theme/sizes";
+import { RADIUS, SHADOW, ICON_SIZE, TRANSITION, Z_INDEX } from "../../theme/sizes";
 import { getAvatarColor }                      from "../../utils/helpers";
 import { useToast }                            from "../../components/ui/Toast";
 import { Stack, Group, SimpleGrid }            from "@mantine/core";

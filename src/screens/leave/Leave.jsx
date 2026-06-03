@@ -92,14 +92,14 @@ const Leave = () => {
   const handleApprove = (id) => {
     const emp = leaves.find((l) => l._id === id)?.employee || "";
     setLeaves((prev) => prev.map((l) => (l._id === id ? { ...l, status: "Approved" } : l)));
-    show(`\${emp}'s leave request approved`, "success");
+    show(`${emp}'s leave request approved`, "success");
     if (viewLeave?._id === id) setViewLeave(null);
   };
 
   const handleReject = (id) => {
     const emp = leaves.find((l) => l._id === id)?.employee || "";
     setLeaves((prev) => prev.map((l) => (l._id === id ? { ...l, status: "Rejected" } : l)));
-    show(`\${emp}'s leave request rejected`, "error");
+    show(`${emp}'s leave request rejected`, "error");
     if (viewLeave?._id === id) setViewLeave(null);
   };
 
@@ -107,7 +107,7 @@ const Leave = () => {
     if (!form.employee.trim() || !form.fromDate || !form.toDate) return;
     const from = new Date(form.fromDate), to = new Date(form.toDate);
     const days = Math.max(1, Math.round((to - from) / 86400000) + 1);
-    setLeaves((prev) => [{ _id: `lv\${Date.now()}`, ...form, days, status: "Pending" }, ...prev]);
+    setLeaves((prev) => [{ _id: `lv${Date.now()}`, ...form, days, status: "Pending" }, ...prev]);
     setForm({ employee: isEmployee ? user?.name || "" : "", leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "" });
     setShowApply(false);
     show("Leave request submitted successfully", "success");
