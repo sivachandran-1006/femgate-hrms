@@ -1,36 +1,35 @@
 import { useEffect, useState } from "react";
 import { fetchAttendance, createAttendanceRecord, checkOutAttendance } from "../../api/attendanceApi";
-import { Search, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
-import { Stack, Group } from "@mantine/core";
-import { AppModal }  from "../../components/ui/AppModal";
-import { AppInput }  from "../../components/ui/AppInput";
-import { AppButton } from "../../components/ui/AppButton";
+import { Search, Plus, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
+import { 
+  Group, Stack, Text, Badge, TextInput, Select, SimpleGrid, Tabs, Progress, Box, Table
+} from "@mantine/core";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
-// ── Theme token imports (NO hardcoded values) ─────────────────────────────
-import { COLORS, STATUS_BADGE }                                          from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }                           from "../../theme/fonts";
-import { SPACING, PADDING, GAP, LAYOUT }                                 from "../../theme/spacing";
-import { RADIUS, SHADOW, ICON_SIZE }                                     from "../../theme/sizes";
-import { getAvatarColor, getStatusBadge }                                from "../../utils/helpers";
+import { AppModal }       from "../../components/ui/AppModal";
+import { AppInput }       from "../../components/ui/AppInput";
+import { AppButton }      from "../../components/ui/AppButton";
+import { AppPageHeader }  from "../../components/ui/AppPageHeader";
+import { AppStatCard }    from "../../components/ui/AppStatCard";
+import { AppTable }       from "../../components/ui/AppTable";
+import { AppSection }     from "../../components/ui/AppSection";
+import { getInitials }    from "../../utils/helpers";
+import { useToast }       from "../../components/ui/Toast";
 
 const TODAY = new Date().toISOString().split("T")[0];
 const FMT_DATE = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-const initials = (name = "") => name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-
 const calcHours = (checkIn, checkOut) => {
   if (!checkIn || !checkOut) return "—";
   try {
-    const s = new Date(`1970-01-01 ${checkIn}`);
-    const e = new Date(`1970-01-01 ${checkOut}`);
+    const s = new Date('1970-01-01 ' + checkIn);
+    const e = new Date('1970-01-01 ' + checkOut);
     const diff = e - s;
     if (diff <= 0) return "—";
-    return `${Math.floor(diff / 3600000)}h ${Math.floor((diff % 3600000) / 60000)}m`;
+    return Math.floor(diff / 3600000) + "h " + Math.floor((diff % 3600000) / 60000) + "m";
   } catch { return "—"; }
 };
 
-// ── MOCK DATA ──────────────────────────────────────────────────────────────
 const MOCK_ATTENDANCE = [
   // Today
   { _id: "a01", employee: "Mani",       department: "IT",         date: TODAY,        checkIn: "09:05 AM", checkOut: "06:10 PM", status: "Present" },
@@ -46,34 +45,21 @@ const MOCK_ATTENDANCE = [
   { _id: "a10", employee: "Mani",       department: "IT",         date: "2026-05-29", checkIn: "09:02 AM", checkOut: "06:00 PM", status: "Present" },
   { _id: "a11", employee: "P Santhosh", department: "IT",         date: "2026-05-29", checkIn: "09:50 AM", checkOut: "06:45 PM", status: "Late"    },
   { _id: "a12", employee: "C Santhosh", department: "IT",         date: "2026-05-29", checkIn: "09:05 AM", checkOut: "06:10 PM", status: "Present" },
-  { _id: "a13", employee: "Aravinth",   department: "IT",         date: "2026-05-29", checkIn: "09:00 AM", checkOut: "05:50 PM", status: "Present" },
-  { _id: "a14", employee: "Vignesh",    department: "IT",         date: "2026-05-29", checkIn: "",         checkOut: "",         status: "Absent"  },
-  { _id: "a15", employee: "Siva",       department: "Management", date: "2026-05-29", checkIn: "08:55 AM", checkOut: "06:05 PM", status: "Present" },
-  // 2026-05-28
-  { _id: "a16", employee: "Mani",       department: "IT",         date: "2026-05-28", checkIn: "09:10 AM", checkOut: "06:05 PM", status: "Present" },
-  { _id: "a17", employee: "Suriya",     department: "IT",         date: "2026-05-28", checkIn: "09:00 AM", checkOut: "06:00 PM", status: "Present" },
-  { _id: "a18", employee: "Siva",       department: "Management", date: "2026-05-28", checkIn: "08:55 AM", checkOut: "05:55 PM", status: "Present" },
-  { _id: "a19", employee: "Safeer",     department: "Finance",    date: "2026-05-28", checkIn: "09:15 AM", checkOut: "06:20 PM", status: "Present" },
-  { _id: "a20", employee: "Sabari",     department: "IT",         date: "2026-05-28", checkIn: "09:00 AM", checkOut: "06:00 PM", status: "Present" },
-  { _id: "a21", employee: "Vignesh",    department: "IT",         date: "2026-05-28", checkIn: "10:30 AM", checkOut: "07:00 PM", status: "Late"    },
 ];
 
 const DEPARTMENTS = ["All", "IT", "HR", "Finance", "Management"];
-const ROWS_PER_PAGE = 8;
 
-const Attendance = ({ darkMode = false }) => {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
+const Attendance = () => {
+  const { show } = useToast();
 
   const [attendance, setAttendance]     = useState(MOCK_ATTENDANCE);
   const [searchTerm, setSearchTerm]     = useState("");
   const [deptFilter, setDeptFilter]     = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [dateFilter, setDateFilter]     = useState(TODAY);
-  const [currentPage, setCurrentPage]   = useState(1);
   const [showModal, setShowModal]       = useState(false);
   const [activeTab, setActiveTab]       = useState("records");
 
-  // check-in modal form
   const [fName, setFName]     = useState("");
   const [fDept, setFDept]     = useState("IT");
   const [fStatus, setFStatus] = useState("Present");
@@ -84,10 +70,8 @@ const Attendance = ({ darkMode = false }) => {
       if (data && data.length > 0) setAttendance(data);
     } catch { /* keep mock */ }
   };
-
   useEffect(() => { loadAttendance(); }, []);
 
-  // ── derived ──
   const todayRecords = attendance.filter(a => a.date === TODAY);
   const todayPresent = todayRecords.filter(a => a.status === "Present").length;
   const todayLate    = todayRecords.filter(a => a.status === "Late").length;
@@ -103,10 +87,6 @@ const Attendance = ({ darkMode = false }) => {
     return matchDate && matchSearch && matchDept && matchStatus;
   });
 
-  const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
-  const paginated  = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE);
-
-  // weekly chart
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
     const iso = d.toISOString().split("T")[0];
@@ -120,7 +100,6 @@ const Attendance = ({ darkMode = false }) => {
     };
   });
 
-  // dept summary for today
   const deptSummary = ["IT","HR","Finance","Management"].map(dept => ({
     dept,
     present: todayRecords.filter(a => a.department === dept && (a.status === "Present" || a.status === "Late")).length,
@@ -128,7 +107,7 @@ const Attendance = ({ darkMode = false }) => {
   }));
 
   const handleCheckIn = async () => {
-    if (!fName.trim()) { alert("Employee name is required"); return; }
+    if (!fName.trim()) { show("Employee name is required", "error"); return; }
     const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
     const isLate = new Date().getHours() >= 10;
     const newRecord = {
@@ -136,431 +115,213 @@ const Attendance = ({ darkMode = false }) => {
       date: TODAY, checkIn: now, checkOut: "",
       status: fStatus === "Present" && isLate ? "Late" : fStatus,
     };
-    try {
-      await createAttendanceRecord({ ...newRecord, status: newRecord.status });
-    } catch { /* offline — add locally */ }
+    try { await createAttendanceRecord({ ...newRecord, status: newRecord.status }); } catch {}
     setAttendance(prev => [newRecord, ...prev]);
     setFName(""); setFDept("IT"); setFStatus("Present");
     setShowModal(false);
+    show("Checked in successfully", "success");
   };
 
   const handleCheckOut = async (id) => {
     const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    try { await checkOutAttendance(id, { checkOut: now }); } catch { /* offline */ }
+    try { await checkOutAttendance(id, { checkOut: now }); } catch {}
     setAttendance(prev => prev.map(a => a._id === id ? { ...a, checkOut: now } : a));
+    show("Checked out successfully", "success");
   };
 
-  const kpis = [
-    { label: "Present Today", value: todayPresent, color: COLORS.success,  bg: COLORS.successMuted,  icon: <CheckCircle size={ICON_SIZE.lg} color={COLORS.success} /> },
-    { label: "Late Arrivals", value: todayLate,    color: COLORS.warning,  bg: COLORS.warningMuted,  icon: <Clock       size={ICON_SIZE.lg} color={COLORS.warning} /> },
-    { label: "Absent Today",  value: todayAbsent,  color: COLORS.danger,   bg: COLORS.dangerMuted,   icon: <XCircle     size={ICON_SIZE.lg} color={COLORS.danger} /> },
-    { label: "On Leave",      value: todayLeave,   color: COLORS.primary,  bg: COLORS.primaryMuted,  icon: <UserCheck   size={ICON_SIZE.lg} color={COLORS.primary} /> },
-  ];
-
-  const inputStyle = {
-    border: `1px solid ${surface.border}`,
-    borderRadius: RADIUS.lg,
-    padding: PADDING.input,
-    fontSize: FONT_SIZE.md,
-    fontFamily: FONT_FAMILY.base,
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-    background: surface.inputBg,
-    color: surface.text,
+  const STATUS_COLORS = {
+    Present: "green",
+    Late: "yellow",
+    Absent: "red",
+    Leave: "blue",
   };
 
   return (
-    <div style={{ fontFamily: FONT_FAMILY.base }}>
+    <Box>
+      <AppPageHeader
+        title="Attendance"
+        sub={`${FMT_DATE(TODAY)} · ${todayRecords.length} records today`}
+        action={
+          <AppButton leftSection={<Plus size={16} />} onClick={() => setShowModal(true)}>
+            Mark Attendance
+          </AppButton>
+        }
+      />
 
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: GAP.xl }}>
-        <div>
-          <h1 style={{ fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: 0, fontFamily: FONT_FAMILY.base }}>{`Attendance`}</h1>
-          <p style={{ fontSize: FONT_SIZE.base, color: surface.subtext, marginTop: GAP.xs, fontFamily: FONT_FAMILY.base }}>{FMT_DATE(TODAY)} · {todayRecords.length} records today</p>
-        </div>
-        <div style={{ display: "flex", gap: GAP.sm }}>
-          {["records", "overview"].map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} style={{
-              padding: PADDING.btn,
-              borderRadius: RADIUS.lg,
-              border: "none",
-              cursor: "pointer",
-              fontSize: FONT_SIZE.base,
-              fontWeight: FONT_WEIGHT.medium,
-              fontFamily: FONT_FAMILY.base,
-              textTransform: "capitalize",
-              background: activeTab === t ? COLORS.gray100 : "transparent",
-              color: activeTab === t ? surface.text : surface.subtext,
-            }}>{t}</button>
-          ))}
-          <button onClick={() => setShowModal(true)} style={{
-            display: "flex",
-            alignItems: "center",
-            gap: GAP.xs + GAP.xs - 1,
-            background: COLORS.success,
-            color: COLORS.white,
-            border: "none",
-            borderRadius: RADIUS.lg,
-            padding: PADDING.btn,
-            fontSize: FONT_SIZE.md,
-            fontWeight: FONT_WEIGHT.semibold,
-            fontFamily: FONT_FAMILY.base,
-            cursor: "pointer",
-          }}>
-            <Plus size={ICON_SIZE.sm} strokeWidth={2.5} /> Mark Attendance
-          </button>
-        </div>
-      </div>
+      <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md" mb="xl">
+        <AppStatCard icon={<CheckCircle size={22}/>} label="Present Today" value={todayPresent} color="green" />
+        <AppStatCard icon={<Clock size={22}/>}       label="Late Arrivals" value={todayLate}    color="yellow" />
+        <AppStatCard icon={<XCircle size={22}/>}     label="Absent Today"  value={todayAbsent}  color="red" />
+        <AppStatCard icon={<UserCheck size={22}/>}   label="On Leave"      value={todayLeave}   color="blue" />
+      </SimpleGrid>
 
-      {/* KPI cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: GAP.md, marginBottom: GAP.xl }}>
-        {kpis.map(c => (
-          <div key={c.label} style={{
-            background: surface.cardBg,
-            borderRadius: RADIUS["2xl"],
-            padding: `${SPACING[4]}px ${SPACING[4] + 2}px`,
-            display: "flex",
-            alignItems: "center",
-            gap: SPACING[3] + 2,
-            boxShadow: SHADOW.card,
-            border: `1px solid ${surface.border}`,
-          }}>
-            <div style={{
-              width: LAYOUT.iconBoxLg - 6,
-              height: LAYOUT.iconBoxLg - 6,
-              borderRadius: RADIUS.xl,
-              background: c.bg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>{c.icon}</div>
-            <div>
-              <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base }}>{c.label}</p>
-              <p style={{ margin: `${GAP.xs - 1}px 0 0`, fontSize: 24, fontWeight: FONT_WEIGHT.bold, color: c.color, lineHeight: 1, fontFamily: FONT_FAMILY.base }}>{c.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tabs.List mb="md">
+          <Tabs.Tab value="records">Records</Tabs.Tab>
+          <Tabs.Tab value="overview">Overview</Tabs.Tab>
+        </Tabs.List>
 
-      {/* ── RECORDS TAB ── */}
-      {activeTab === "records" && (
-        <div style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS["2xl"],
-          padding: PADDING.card,
-          boxShadow: SHADOW.card,
-          border: `1px solid ${surface.border}`,
-        }}>
-
-          {/* Toolbar */}
-          <div style={{ display: "flex", gap: GAP.sm + 2, marginBottom: SPACING[4] + 2, flexWrap: "wrap" }}>
-            <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
-              <Search size={ICON_SIZE.sm} color={COLORS.gray400} style={{ position: "absolute", left: SPACING[3], top: "50%", transform: "translateY(-50%)" }} />
-              <input
+        <Tabs.Panel value="records">
+          <AppSection noPadding>
+            <Group p="md" pb="sm" gap="sm" wrap="nowrap" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
+              <TextInput
                 placeholder="Search employee…"
+                leftSection={<Search size={15} />}
                 value={searchTerm}
-                onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                style={{ ...inputStyle, paddingLeft: SPACING[8] + 2 }}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{ flex: 1, minWidth: 180 }}
+                size="sm" radius="md"
               />
-            </div>
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={e => { setDateFilter(e.target.value); setCurrentPage(1); }}
-              style={{ ...inputStyle, width: 160 }}
+              <AppInput
+                type="date"
+                value={dateFilter}
+                onChange={e => setDateFilter(e.target.value)}
+                style={{ width: 160 }}
+              />
+              <Select
+                size="sm" radius="md"
+                value={deptFilter}
+                onChange={v => setDeptFilter(v || "All")}
+                data={DEPARTMENTS.map(d => ({ value: d, label: d === "All" ? "All Departments" : d }))}
+                style={{ minWidth: 150 }}
+              />
+              <Select
+                size="sm" radius="md"
+                value={statusFilter}
+                onChange={v => setStatusFilter(v || "All")}
+                data={["All","Present","Absent","Late","Leave"].map(s => ({ value: s, label: s === "All" ? "All Status" : s }))}
+                style={{ minWidth: 130 }}
+              />
+              <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                {filtered.length} record{filtered.length !== 1 ? "s" : ""}
+              </Text>
+            </Group>
+
+            <AppTable
+              headers={["Employee", "Department", "Date", "Check In", "Check Out", "Hours", "Status", "Action"]}
+              data={filtered}
+              renderRow={(item) => (
+                <Table.Tr key={item._id}>
+                  <Table.Td>
+                    <Group gap="sm" wrap="nowrap">
+                      <Box w={32} h={32} style={{ borderRadius: "50%", background: "var(--mantine-color-blue-0)", color: "var(--mantine-color-blue-7)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>
+                        {getInitials(item.employee)}
+                      </Box>
+                      <Text fz="sm" fw={600}>{item.employee}</Text>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td><Text fz="sm" c="dimmed">{item.department}</Text></Table.Td>
+                  <Table.Td><Text fz="sm" c="dimmed">{FMT_DATE(item.date)}</Text></Table.Td>
+                  <Table.Td><Text fz="sm" fw={500}>{item.checkIn || "—"}</Text></Table.Td>
+                  <Table.Td><Text fz="sm" fw={500}>{item.checkOut || "—"}</Text></Table.Td>
+                  <Table.Td><Text fz="sm" fw={600}>{calcHours(item.checkIn, item.checkOut)}</Text></Table.Td>
+                  <Table.Td>
+                    <Badge color={STATUS_COLORS[item.status] || "gray"} variant="light" size="sm">
+                      {item.status}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    {item.date === TODAY && !item.checkOut && item.checkIn ? (
+                      <AppButton size="xs" color="red" onClick={() => handleCheckOut(item._id)}>
+                        Check Out
+                      </AppButton>
+                    ) : item.checkOut ? (
+                      <Text fz="xs" c="dimmed">Done</Text>
+                    ) : (
+                      <Text fz="xs" c="dimmed">—</Text>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              )}
+              emptyText="No records found"
             />
-            <select
-              value={deptFilter}
-              onChange={e => { setDeptFilter(e.target.value); setCurrentPage(1); }}
-              style={{ ...inputStyle, width: 150, cursor: "pointer" }}
-            >
-              {DEPARTMENTS.map(d => <option key={d} value={d}>{d === "All" ? "All Departments" : d}</option>)}
-            </select>
-            <select
-              value={statusFilter}
-              onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              style={{ ...inputStyle, width: 130, cursor: "pointer" }}
-            >
-              {["All","Present","Absent","Late","Leave"].map(s => <option key={s} value={s}>{s === "All" ? "All Status" : s}</option>)}
-            </select>
-            <span style={{ fontSize: FONT_SIZE.sm, color: COLORS.gray400, display: "flex", alignItems: "center", fontFamily: FONT_FAMILY.base }}>
-              {filtered.length} record{filtered.length !== 1 ? "s" : ""}
-            </span>
-          </div>
+          </AppSection>
+        </Tabs.Panel>
 
-          {/* Table */}
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: `2px solid ${surface.theadBg}` }}>
-                {["Employee","Department","Date","Check In","Check Out","Hours","Status","Action"].map(h => (
-                  <th key={h} style={{
-                    textAlign: "left",
-                    padding: PADDING.tableHeader,
-                    fontSize: FONT_SIZE.sm,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    color: COLORS.gray600,
-                    fontFamily: FONT_FAMILY.base,
-                  }}>{h}</th>
+        <Tabs.Panel value="overview">
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            <AppSection title="Weekly Attendance (Last 7 Days)">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={weekDays} barSize={14}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+                  <YAxis tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="Present" fill="var(--mantine-color-green-5)" radius={[4,4,0,0]} />
+                  <Bar dataKey="Late"    fill="var(--mantine-color-yellow-5)" radius={[4,4,0,0]} />
+                  <Bar dataKey="Absent"  fill="var(--mantine-color-red-5)" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              <Group justify="center" mt="sm">
+                {[["Present", "green"], ["Late", "yellow"], ["Absent", "red"]].map(([l, c]) => (
+                  <Group key={l} gap="xs">
+                    <Box w={10} h={10} style={{ borderRadius: 3, background: `var(--mantine-color-${c}-5)` }} />
+                    <Text fz="sm" c="dimmed">{l}</Text>
+                  </Group>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.length === 0 ? (
-                <tr><td colSpan={8} style={{ textAlign: "center", padding: SPACING[12], color: COLORS.gray400, fontSize: FONT_SIZE.md, fontFamily: FONT_FAMILY.base }}>No records found</td></tr>
-              ) : paginated.map((item) => {
-                const av    = getAvatarColor(item.employee);
-                const badge = getStatusBadge(item.status);
-                return (
-                  <tr
-                    key={item._id}
-                    style={{ borderBottom: `1px solid ${surface.divider}` }}
-                    onMouseEnter={e => e.currentTarget.style.background = surface.rowHover}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  >
-                    <td style={{ padding: PADDING.tableCell }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: GAP.sm + 2 }}>
-                        <div style={{
-                          width: LAYOUT.avatar - 2,
-                          height: LAYOUT.avatar - 2,
-                          borderRadius: RADIUS.full,
-                          background: av.bg,
-                          color: av.color,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: FONT_SIZE.xs,
-                          fontWeight: FONT_WEIGHT.bold,
-                          fontFamily: FONT_FAMILY.base,
-                          flexShrink: 0,
-                        }}>
-                          {initials(item.employee)}
-                        </div>
-                        <span style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text, fontFamily: FONT_FAMILY.base }}>{item.employee}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: surface.subtext, fontFamily: FONT_FAMILY.base }}>{item.department}</td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: surface.subtext, fontFamily: FONT_FAMILY.base }}>{FMT_DATE(item.date)}</td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: COLORS.gray700, fontFamily: FONT_FAMILY.base }}>{item.checkIn || "—"}</td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: COLORS.gray700, fontFamily: FONT_FAMILY.base }}>{item.checkOut || "—"}</td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text, fontFamily: FONT_FAMILY.base }}>{calcHours(item.checkIn, item.checkOut)}</td>
-                    <td style={{ padding: PADDING.tableCell }}>
-                      <span style={{
-                        display: "inline-block",
-                        padding: PADDING.badge,
-                        borderRadius: RADIUS.full,
-                        fontSize: FONT_SIZE.xs,
-                        fontWeight: FONT_WEIGHT.semibold,
-                        fontFamily: FONT_FAMILY.base,
-                        background: badge.bg,
-                        color: badge.color,
-                      }}>{item.status}</span>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell }}>
-                      {item.date === TODAY && !item.checkOut && item.checkIn ? (
-                        <button onClick={() => handleCheckOut(item._id)} style={{
-                          background: COLORS.danger,
-                          color: COLORS.white,
-                          border: "none",
-                          borderRadius: RADIUS.md,
-                          padding: `${GAP.sm - 2}px ${GAP.md}px`,
-                          fontSize: FONT_SIZE.sm,
-                          fontWeight: FONT_WEIGHT.semibold,
-                          fontFamily: FONT_FAMILY.base,
-                          cursor: "pointer",
-                        }}>Check Out</button>
-                      ) : item.checkOut ? (
-                        <span style={{ fontSize: FONT_SIZE.xs, color: COLORS.gray400, fontFamily: FONT_FAMILY.base }}>Done</span>
-                      ) : (
-                        <span style={{ fontSize: FONT_SIZE.xs, color: COLORS.gray300, fontFamily: FONT_FAMILY.base }}>—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </Group>
+            </AppSection>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: `1px solid ${surface.divider}`, paddingTop: SPACING[3] + 1, marginTop: GAP.sm }}>
-              <span style={{ fontSize: FONT_SIZE.sm, color: COLORS.gray400, fontFamily: FONT_FAMILY.base }}>
-                {(currentPage - 1) * ROWS_PER_PAGE + 1}–{Math.min(currentPage * ROWS_PER_PAGE, filtered.length)} of {filtered.length}
-              </span>
-              <div style={{ display: "flex", gap: GAP.xs + 2 }}>
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  style={{
-                    width: 32, height: 32,
-                    borderRadius: RADIUS.md,
-                    border: `1px solid ${surface.border}`,
-                    background: surface.cardBg,
-                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                    color: currentPage === 1 ? COLORS.gray300 : COLORS.gray700,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                  <ChevronLeft size={ICON_SIZE.sm} />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button key={p} onClick={() => setCurrentPage(p)} style={{
-                    width: 32, height: 32,
-                    borderRadius: RADIUS.md,
-                    border: p === currentPage ? "none" : `1px solid ${surface.border}`,
-                    background: p === currentPage ? COLORS.primary : surface.cardBg,
-                    color: p === currentPage ? COLORS.white : COLORS.gray700,
-                    fontWeight: p === currentPage ? FONT_WEIGHT.bold : FONT_WEIGHT.medium,
-                    fontFamily: FONT_FAMILY.base,
-                    fontSize: FONT_SIZE.base,
-                    cursor: "pointer",
-                  }}>{p}</button>
-                ))}
-                <button
-                  onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  style={{
-                    width: 32, height: 32,
-                    borderRadius: RADIUS.md,
-                    border: `1px solid ${surface.border}`,
-                    background: surface.cardBg,
-                    cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-                    color: currentPage === totalPages ? COLORS.gray300 : COLORS.gray700,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                  <ChevronRight size={ICON_SIZE.sm} />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+            <Stack gap="md">
+              <AppSection title="Department Attendance Today">
+                {deptSummary.map((d, i) => {
+                  const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
+                  return (
+                    <Box key={d.dept} mb={i < deptSummary.length - 1 ? "sm" : 0}>
+                      <Group justify="space-between" mb={4}>
+                        <Text fz="sm" fw={500}>{d.dept}</Text>
+                        <Text fz="xs" c="dimmed">{d.present}/{d.total || "—"}</Text>
+                      </Group>
+                      <Progress value={pct} color="green" size="sm" radius="xl" />
+                    </Box>
+                  );
+                })}
+              </AppSection>
 
-      {/* ── OVERVIEW TAB ── */}
-      {activeTab === "overview" && (
-        <>
-          {/* Weekly chart */}
-          <div style={{
-            background: surface.cardBg,
-            borderRadius: RADIUS["2xl"],
-            padding: PADDING.card,
-            boxShadow: SHADOW.card,
-            border: `1px solid ${surface.border}`,
-            marginBottom: SPACING[3] + 1,
-          }}>
-            <h3 style={{ fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: `0 0 ${GAP.lg}px`, fontFamily: FONT_FAMILY.base }}>Weekly Attendance (Last 7 Days)</h3>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={weekDays} barSize={14}>
-                <CartesianGrid strokeDasharray="3 3" stroke={surface.border} />
-                <XAxis dataKey="day" tick={{ fontSize: FONT_SIZE.sm, fill: surface.subtext, fontFamily: FONT_FAMILY.base }} />
-                <YAxis tick={{ fontSize: FONT_SIZE.xs, fill: surface.subtext, fontFamily: FONT_FAMILY.base }} allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, fontFamily: FONT_FAMILY.base }} />
-                <Bar dataKey="Present" fill={COLORS.success}  radius={[4,4,0,0]} />
-                <Bar dataKey="Late"    fill={COLORS.warning}  radius={[4,4,0,0]} />
-                <Bar dataKey="Absent"  fill={COLORS.danger}   radius={[4,4,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div style={{ display: "flex", gap: SPACING[4] + 2, justifyContent: "center", marginTop: GAP.sm + 2 }}>
-              {[[`Present`, COLORS.success],[`Late`, COLORS.warning],[`Absent`, COLORS.danger]].map(([l,c]) => (
-                <div key={l} style={{ display: "flex", alignItems: "center", gap: GAP.xs + 2, fontSize: FONT_SIZE.sm, fontFamily: FONT_FAMILY.base }}>
-                  <div style={{ width: 10, height: 10, borderRadius: RADIUS.sm - 3, background: c }} />
-                  <span style={{ color: surface.subtext }}>{l}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+              <AppSection title="Today's Summary" noPadding>
+                <Box p="md" pb="xs">
+                  {[
+                    { label: "Total Expected", value: todayRecords.length, color: "var(--mantine-color-text)" },
+                    { label: "Present",        value: todayPresent,        color: "var(--mantine-color-green-6)" },
+                    { label: "Late Arrivals",  value: todayLate,           color: "var(--mantine-color-yellow-6)" },
+                    { label: "Absent",         value: todayAbsent,         color: "var(--mantine-color-red-6)" },
+                    { label: "On Leave",       value: todayLeave,          color: "var(--mantine-color-blue-6)" },
+                    { label: "Checked Out",    value: checkedOut,          color: "var(--mantine-color-violet-6)" },
+                  ].map((row, i, arr) => (
+                    <Group key={row.label} justify="space-between" py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+                      <Text fz="sm" c="dimmed">{row.label}</Text>
+                      <Text fz="md" fw={700} style={{ color: row.color }}>{row.value}</Text>
+                    </Group>
+                  ))}
+                </Box>
+              </AppSection>
+            </Stack>
+          </SimpleGrid>
+        </Tabs.Panel>
+      </Tabs>
 
-          {/* Dept summary + today's progress */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: SPACING[3] + 1 }}>
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], padding: PADDING.card, boxShadow: SHADOW.card, border: `1px solid ${surface.border}` }}>
-              <h3 style={{ fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: `0 0 ${GAP.lg}px`, fontFamily: FONT_FAMILY.base }}>Department Attendance Today</h3>
-              {deptSummary.map((d, i) => (
-                <div key={d.dept} style={{ marginBottom: i < deptSummary.length - 1 ? SPACING[3] + 1 : 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: GAP.xs + 1 }}>
-                    <span style={{ fontSize: FONT_SIZE.base, color: COLORS.gray700, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base }}>{d.dept}</span>
-                    <span style={{ fontSize: FONT_SIZE.sm, color: surface.subtext, fontFamily: FONT_FAMILY.base }}>{d.present}/{d.total || "—"}</span>
-                  </div>
-                  <div style={{ height: 6, background: surface.theadBg, borderRadius: RADIUS.full }}>
-                    <div style={{
-                      height: "100%",
-                      borderRadius: RADIUS.full,
-                      background: COLORS.success,
-                      width: d.total > 0 ? `${Math.round((d.present / d.total) * 100)}%` : "0%",
-                      transition: "width 0.4s",
-                    }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], padding: PADDING.card, boxShadow: SHADOW.card, border: `1px solid ${surface.border}` }}>
-              <h3 style={{ fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: `0 0 ${GAP.lg}px`, fontFamily: FONT_FAMILY.base }}>Today's Summary</h3>
-              {[
-                { label: "Total Expected", value: todayRecords.length, color: surface.text },
-                { label: "Present",        value: todayPresent,        color: COLORS.success },
-                { label: "Late Arrivals",  value: todayLate,           color: COLORS.warning },
-                { label: "Absent",         value: todayAbsent,         color: COLORS.danger },
-                { label: "On Leave",       value: todayLeave,          color: COLORS.primary },
-                { label: "Checked Out",    value: checkedOut,          color: COLORS.purple },
-              ].map(row => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", borderBottom: `1px solid ${surface.divider}`, paddingBottom: GAP.sm + 2, marginBottom: GAP.sm + 2 }}>
-                  <span style={{ fontSize: FONT_SIZE.base, color: surface.subtext, fontFamily: FONT_FAMILY.base }}>{row.label}</span>
-                  <span style={{ fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: row.color, fontFamily: FONT_FAMILY.base }}>{row.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ── MARK ATTENDANCE MODAL (Mantine) ── */}
-      <AppModal
-        opened={showModal}
-        onClose={() => setShowModal(false)}
-        title="Mark Attendance"
-        subtitle="Record employee check-in"
-        icon={<CheckCircle size={18} color={COLORS.success} />}
-        iconColor={COLORS.success}
-        size="sm"
-      >
+      <AppModal opened={showModal} onClose={() => setShowModal(false)} title="Mark Attendance" icon={<CheckCircle size={20} />} iconColor="#10b981" size="sm">
         <Stack gap="md">
-          <AppInput
-            label="Employee Name *"
-            placeholder="Full name"
-            value={fName}
-            onChange={(e) => setFName(e.target.value)}
-          />
+          <AppInput label="Employee Name *" placeholder="Full name" value={fName} onChange={(e) => setFName(e.target.value)} />
           <Group grow>
-            <AppInput
-              type="select"
-              label="Department"
-              value={fDept}
-              onChange={(v) => setFDept(v)}
-              data={["IT","HR","Finance","Management"]}
-            />
-            <AppInput
-              type="select"
-              label="Status"
-              value={fStatus}
-              onChange={(v) => setFStatus(v)}
-              data={["Present","Absent","Leave","Late"]}
-            />
+            <Select label="Department" value={fDept} onChange={setFDept} data={["IT","HR","Finance","Management"]} />
+            <Select label="Status" value={fStatus} onChange={setFStatus} data={["Present","Absent","Leave","Late"]} />
           </Group>
-
-          <div style={{ background: COLORS.successLight, border: `1px solid ${COLORS.success}30`, borderRadius: RADIUS.lg, padding: "10px 14px", fontSize: FONT_SIZE.sm, color: COLORS.success, fontWeight: FONT_WEIGHT.medium }}>
-            Check-in time: {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+          <Box p="sm" style={{ background: "var(--mantine-color-green-0)", border: "1px solid var(--mantine-color-green-2)", borderRadius: "var(--mantine-radius-md)" }}>
+            <Text fz="sm" c="green" fw={500}>
+              Check-in time: {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+            </Text>
             {new Date().getHours() >= 10 && fStatus === "Present" && (
-              <span style={{ color: COLORS.warning, marginLeft: GAP.sm }}> — will be marked Late</span>
+              <Text fz="sm" c="yellow.8" fw={500} mt={4}>Will be marked Late</Text>
             )}
-          </div>
-
-          <Group justify="flex-end" gap="sm" mt="xs">
+          </Box>
+          <Group justify="flex-end" mt="xs">
             <AppButton variant="default" onClick={() => setShowModal(false)}>Cancel</AppButton>
             <AppButton color="green" onClick={handleCheckIn}>Mark Check In</AppButton>
           </Group>
         </Stack>
       </AppModal>
-    </div>
+    </Box>
   );
 };
 
