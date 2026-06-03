@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { ToastProvider } from "./components/ui/Toast.jsx";
 import "./index.css";
 import "@mantine/core/styles.css";
 import { theme } from "./theme/mantineTheme.js";
@@ -32,7 +33,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme} cssVariablesResolver={() => ({ variables: { "--mantine-color-body": "#ffffff" }, light: { "--mantine-color-body": "#ffffff" }, dark: {} })}>
           <AuthProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </AuthProvider>
         </MantineProvider>
         <ReactQueryDevtools initialIsOpen={false} />

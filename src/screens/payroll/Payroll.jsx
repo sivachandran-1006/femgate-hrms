@@ -14,7 +14,8 @@ import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }            from "../../theme/font
 import { SPACING, PADDING, GAP, LAYOUT }                  from "../../theme/spacing";
 import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE } from "../../theme/sizes";
 import { getStatusBadge }                                 from "../../utils/helpers";
-import DataTable from "../../components/ui/DataTable";
+import DataTable           from "../../components/ui/DataTable";
+import { useToast }        from "../../components/ui/Toast";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -390,7 +391,8 @@ const PayslipModal = ({ record, darkMode, onClose }) => {
 
 // ── Main Payroll Component ────────────────────────────────────────────────────
 const Payroll = ({ darkMode = false }) => {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
+  const { show } = useToast();
+  const surface  = darkMode ? COLORS.dark : COLORS.light;
 
   const [payroll, setPayroll]           = useState(MOCK_PAYROLL_DATA);
   const [currentPage, setCurrentPage]   = useState(1);
@@ -445,18 +447,25 @@ const Payroll = ({ darkMode = false }) => {
   };
 
   const markAsPaid = async (id) => {
+    const rec = payroll.find((p) => p._id === id);
     try {
       await markPayrollPaid(id);
       loadPayroll();
-    } catch (e) { console.log(e); }
+    } catch (e) {
+      setPayroll((prev) => prev.map((p) => p._id === id ? { ...p, status: "Paid" } : p));
+    }
+    show(`${rec?.employee || "Payroll"} marked as Paid`, "success");
   };
 
   const deleteRecord = async (id) => {
-    if (!window.confirm("Delete this payroll record?")) return;
+    const rec = payroll.find((p) => p._id === id);
     try {
       await deletePayrollRecord(id);
       loadPayroll();
-    } catch (e) { console.log(e); }
+    } catch (e) {
+      setPayroll((prev) => prev.filter((p) => p._id !== id));
+    }
+    show(`${rec?.employee || "Record"} payroll record deleted`, "error");
   };
 
   // Derived stats

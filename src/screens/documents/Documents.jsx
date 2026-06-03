@@ -136,31 +136,24 @@ const ActionBtn = ({ icon: Icon, color, onClick, title, hoverBg }) => {
 };
 
 const SelectInput = ({ value, onChange, options, dark }) => (
-  <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        appearance:      "none",
-        WebkitAppearance:"none",
-        padding:         "8px 32px 8px 12px",
-        borderRadius:    RADIUS.lg,
-        border:          `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-        background:      dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
-        color:           dark ? COLORS.dark.text : COLORS.textLight,
-        fontSize:        FONT_SIZE.sm,
-        fontWeight:      FONT_WEIGHT.medium,
-        cursor:          "pointer",
-        outline:         "none",
-        minWidth:        120,
-      }}
-    >
-      {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
-      ))}
-    </select>
-    <IconChevronDown size={14} color={dark ? COLORS.dark.subtext : COLORS.textMutedLight} style={{ position: "absolute", right: 10, pointerEvents: "none" }} />
-  </div>
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    style={{
+      padding:      "8px 12px",
+      borderRadius: RADIUS.lg,
+      border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
+      background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
+      color:        dark ? COLORS.dark.text : COLORS.textLight,
+      fontSize:     FONT_SIZE.sm,
+      fontWeight:   FONT_WEIGHT.medium,
+      minWidth:     120,
+    }}
+  >
+    {options.map((o) => (
+      <option key={o} value={o}>{o}</option>
+    ))}
+  </select>
 );
 
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
@@ -217,7 +210,6 @@ const UploadModal = ({ onClose, dark }) => {
     fontSize:     FONT_SIZE.sm,
     outline:      "none",
     boxSizing:    "border-box",
-    appearance:   "none",
   };
 
   return (
@@ -244,12 +236,9 @@ const UploadModal = ({ onClose, dark }) => {
           {/* Employee */}
           <div>
             <label style={labelStyle}>Employee</label>
-            <div style={{ position: "relative" }}>
-              <select value={form.employee} onChange={(e) => set("employee", e.target.value)} style={{ ...inputStyle, WebkitAppearance: "none", paddingRight: 32 }}>
-                {EMPLOYEES.map((e) => <option key={e}>{e}</option>)}
-              </select>
-              <IconChevronDown size={14} color={dark ? COLORS.dark.subtext : COLORS.textMutedLight} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-            </div>
+            <select value={form.employee} onChange={(e) => set("employee", e.target.value)} style={inputStyle}>
+              {EMPLOYEES.map((e) => <option key={e}>{e}</option>)}
+            </select>
           </div>
 
           {/* Document Name */}
@@ -267,12 +256,9 @@ const UploadModal = ({ onClose, dark }) => {
           {/* Category */}
           <div>
             <label style={labelStyle}>Category</label>
-            <div style={{ position: "relative" }}>
-              <select value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle, WebkitAppearance: "none", paddingRight: 32 }}>
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-              <IconChevronDown size={14} color={dark ? COLORS.dark.subtext : COLORS.textMutedLight} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-            </div>
+            <select value={form.category} onChange={(e) => set("category", e.target.value)} style={inputStyle}>
+              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
           </div>
 
           {/* File */}

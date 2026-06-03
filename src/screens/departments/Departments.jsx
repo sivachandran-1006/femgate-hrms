@@ -1,327 +1,86 @@
 import { useState } from "react";
 import {
-  Search,
-  Plus,
-  Users,
-  Building2,
-  Edit2,
-  X,
-  Layers,
-  UserCheck,
+  Group, SimpleGrid, Text, Badge, ActionIcon,
+  Avatar, ScrollArea, Table, TextInput, Stack,
+} from "@mantine/core";
+import {
+  Building2, Users, UserCheck, Layers, Plus, Edit2, Search,
 } from "lucide-react";
 
-// ── Theme token imports (NO hardcoded values) ─────────────────────────────
-import { COLORS }                                                    from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }                       from "../../theme/fonts";
-import { SPACING, PADDING, GAP, LAYOUT }                             from "../../theme/spacing";
-import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE } from "../../theme/sizes";
-import { getStatusBadge }                                            from "../../utils/helpers";
+import { AppPageHeader }  from "../../components/ui/AppPageHeader";
+import { AppStatCard }    from "../../components/ui/AppStatCard";
+import { AppSection }     from "../../components/ui/AppSection";
+import { AppEmptyState }  from "../../components/ui/AppEmptyState";
+import { AppButton }      from "../../components/ui/AppButton";
+import { AppModal }       from "../../components/ui/AppModal";
+import { AppInput }       from "../../components/ui/AppInput";
 
 const DEPARTMENTS_INITIAL = [
-  {
-    id: 1,
-    name: "IT",
-    head: "Siva",
-    employees: 7,
-    created: "01-Jan-2026",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "HR",
-    head: "Mani",
-    employees: 1,
-    created: "01-Jan-2026",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Finance",
-    head: "Safeer",
-    employees: 1,
-    created: "01-Jan-2026",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Management",
-    head: "Siva",
-    employees: 1,
-    created: "01-Jan-2026",
-    status: "Active",
-  },
+  { id: 1, name: "IT",         head: "Siva",   employees: 7, created: "01-Jan-2026", status: "Active" },
+  { id: 2, name: "HR",         head: "Mani",   employees: 1, created: "01-Jan-2026", status: "Active" },
+  { id: 3, name: "Finance",    head: "Safeer", employees: 1, created: "01-Jan-2026", status: "Active" },
+  { id: 4, name: "Management", head: "Siva",   employees: 1, created: "01-Jan-2026", status: "Active" },
 ];
 
-/* ─── KPI Card ─────────────────────────────────────────────────── */
-const KpiCard = ({ icon, iconBg, label, value, surface }) => (
-  <div
-    style={{
-      background: surface.cardBg,
-      borderRadius: RADIUS["2xl"],
-      border: "1px solid " + surface.border,
-      boxShadow: SHADOW.card,
-      padding: PADDING.card,
-      display: "flex",
-      alignItems: "center",
-      gap: GAP.lg,
-    }}
-  >
-    <div
-      style={{
-        width: LAYOUT.iconBoxLg,
-        height: LAYOUT.iconBoxLg,
-        borderRadius: RADIUS.xl,
-        background: iconBg,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-      }}
-    >
-      {icon}
-    </div>
-    <div>
-      <div
-        style={{
-          fontSize: FONT_SIZE["3xl"],
-          fontWeight: FONT_WEIGHT.bold,
-          color: surface.text,
-          lineHeight: 1.1,
-          fontFamily: FONT_FAMILY.base,
-        }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          fontSize: FONT_SIZE.sm,
-          fontWeight: FONT_WEIGHT.medium,
-          color: surface.subtext,
-          marginTop: GAP.xs,
-          fontFamily: FONT_FAMILY.base,
-        }}
-      >
-        {label}
-      </div>
-    </div>
-  </div>
-);
-
-/* ─── Status Badge ─────────────────────────────────────────────── */
-const StatusBadge = ({ status }) => {
-  const badge = getStatusBadge(status);
-  return (
-    <span
-      style={{
-        background: badge.bg,
-        color: badge.color,
-        borderRadius: RADIUS.full,
-        padding: PADDING.badge,
-        fontSize: FONT_SIZE.xs,
-        fontWeight: FONT_WEIGHT.semibold,
-        display: "inline-block",
-        fontFamily: FONT_FAMILY.base,
-      }}
-    >
-      {status}
-    </span>
-  );
-};
-
-/* ─── Modal ────────────────────────────────────────────────────── */
-const Modal = ({ open, onClose, onSave, surface, editData }) => {
-  const [form, setForm] = useState(
-    editData || { name: "", head: "", description: "" }
-  );
+const DeptModal = ({ open, onClose, onSave, editData }) => {
+  const [form, setForm] = useState(editData || { name: "", head: "", description: "" });
 
   if (!open) return null;
 
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const inputStyle = {
-    width: "100%",
-    border: "1px solid " + surface.border,
-    borderRadius: RADIUS.lg,
-    padding: PADDING.input,
-    fontSize: FONT_SIZE.base,
-    fontWeight: FONT_WEIGHT.normal,
-    background: surface.inputBg,
-    color: surface.text,
-    outline: "none",
-    height: LAYOUT.inputHeight,
-    boxSizing: "border-box",
-    fontFamily: FONT_FAMILY.base,
-  };
-
-  const labelStyle = {
-    display: "block",
-    fontSize: FONT_SIZE.sm,
-    fontWeight: FONT_WEIGHT.semibold,
-    color: surface.subtext,
-    marginBottom: GAP.sm,
-    letterSpacing: "0.02em",
-    fontFamily: FONT_FAMILY.base,
-  };
-
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.45)",
-        zIndex: Z_INDEX.modal,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-      onClick={onClose}
+    <AppModal
+      opened={open}
+      onClose={onClose}
+      title={editData ? "Edit Department" : "Add Department"}
+      icon={<Building2 size={16} color="#3b82f6" />}
+      iconColor="#3b82f6"
     >
-      <div
-        style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS["2xl"],
-          border: "1px solid " + surface.border,
-          boxShadow: SHADOW.modal,
-          padding: PADDING.modal,
-          width: 420,
-          maxWidth: "90vw",
-          fontFamily: FONT_FAMILY.base,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: SPACING[5] ?? GAP.xl,
-          }}
-        >
-          <span
-            style={{
-              fontSize: FONT_SIZE.lg,
-              fontWeight: FONT_WEIGHT.bold,
-              color: surface.text,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            {editData ? "Edit Department" : "Add Department"}
-          </span>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: surface.subtext,
-              display: "flex",
-              alignItems: "center",
-              padding: GAP.xs,
-            }}
-          >
-            <X size={ICON_SIZE.md} strokeWidth={ICON_STROKE.normal} />
-          </button>
-        </div>
-
-        {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-          <div>
-            <label style={labelStyle}>Department Name</label>
-            <input
-              style={inputStyle}
-              placeholder="e.g. Engineering"
-              value={form.name}
-              onChange={handleChange("name")}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Department Head</label>
-            <input
-              style={inputStyle}
-              placeholder="e.g. John Smith"
-              value={form.head}
-              onChange={handleChange("head")}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Description</label>
-            <textarea
-              style={{
-                ...inputStyle,
-                height: 80,
-                resize: "vertical",
-                paddingTop: GAP.sm + 1,
-              }}
-              placeholder="Brief description of this department..."
-              value={form.description}
-              onChange={handleChange("description")}
-            />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: GAP.md,
-            marginTop: SPACING[6],
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              background: surface.cardBg,
-              color: surface.text,
-              border: "1px solid " + surface.border,
-              borderRadius: RADIUS.lg,
-              padding: PADDING.btn,
-              fontSize: FONT_SIZE.base,
-              fontWeight: FONT_WEIGHT.semibold,
-              cursor: "pointer",
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            Cancel
-          </button>
-          <button
+      <Stack gap="md">
+        <AppInput
+          label="Department Name"
+          placeholder="e.g. Engineering"
+          value={form.name}
+          onChange={handleChange("name")}
+        />
+        <AppInput
+          label="Department Head"
+          placeholder="e.g. John Smith"
+          value={form.head}
+          onChange={handleChange("head")}
+        />
+        <AppInput
+          type="textarea"
+          label="Description"
+          placeholder="Brief description of this department..."
+          value={form.description}
+          onChange={handleChange("description")}
+        />
+        <Group justify="flex-end" gap="sm" mt="xs">
+          <AppButton variant="default" onClick={onClose}>Cancel</AppButton>
+          <AppButton
             onClick={() => {
               if (form.name.trim() && form.head.trim()) {
                 onSave(form);
                 onClose();
               }
             }}
-            style={{
-              background: COLORS.primary,
-              color: COLORS.white,
-              border: "none",
-              borderRadius: RADIUS.lg,
-              padding: PADDING.btn,
-              fontSize: FONT_SIZE.base,
-              fontWeight: FONT_WEIGHT.semibold,
-              cursor: "pointer",
-              fontFamily: FONT_FAMILY.base,
-            }}
           >
             {editData ? "Save Changes" : "Add Department"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </AppButton>
+        </Group>
+      </Stack>
+    </AppModal>
   );
 };
 
-/* ─── Main Component ───────────────────────────────────────────── */
-const Departments = ({ darkMode = false }) => {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
-
+const Departments = () => {
   const [departments, setDepartments] = useState(DEPARTMENTS_INITIAL);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
+  const [searchTerm, setSearchTerm]   = useState("");
+  const [modalOpen, setModalOpen]     = useState(false);
+  const [editTarget, setEditTarget]   = useState(null);
 
   const filtered = departments.filter(
     (d) =>
@@ -330,8 +89,8 @@ const Departments = ({ darkMode = false }) => {
   );
 
   const totalEmployees = departments.reduce((s, d) => s + d.employees, 0);
-  const uniqueHeads = new Set(departments.map((d) => d.head)).size;
-  const activeTeams = departments.filter((d) => d.status === "Active").length;
+  const uniqueHeads    = new Set(departments.map((d) => d.head)).size;
+  const activeTeams    = departments.filter((d) => d.status === "Active").length;
 
   const handleAddSave = (form) => {
     setDepartments((prev) => [
@@ -342,11 +101,7 @@ const Departments = ({ darkMode = false }) => {
         head: form.head,
         employees: 0,
         created: new Date()
-          .toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })
+          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
           .replace(/ /g, "-"),
         status: "Active",
       },
@@ -362,474 +117,143 @@ const Departments = ({ darkMode = false }) => {
     setEditTarget(null);
   };
 
+  const rows = filtered.length === 0 ? (
+    <Table.Tr>
+      <Table.Td colSpan={6}>
+        <AppEmptyState message="No departments found." />
+      </Table.Td>
+    </Table.Tr>
+  ) : (
+    filtered.map((dept) => (
+      <Table.Tr key={dept.id}>
+        <Table.Td>
+          <Group gap="sm" wrap="nowrap">
+            <Avatar size={32} radius="md" color="blue" variant="light">
+              <Building2 size={16} />
+            </Avatar>
+            <Text size="sm" fw={600}>{dept.name}</Text>
+          </Group>
+        </Table.Td>
+        <Table.Td>
+          <Text size="sm" c="dimmed">{dept.head}</Text>
+        </Table.Td>
+        <Table.Td>
+          <Group gap={6} wrap="nowrap">
+            <Users size={14} />
+            <Text size="sm" fw={500}>{dept.employees}</Text>
+          </Group>
+        </Table.Td>
+        <Table.Td>
+          <Text size="sm" c="dimmed">{dept.created}</Text>
+        </Table.Td>
+        <Table.Td>
+          <Badge color="green" variant="light" radius="xl">{dept.status}</Badge>
+        </Table.Td>
+        <Table.Td>
+          <ActionIcon
+            variant="light"
+            color="blue"
+            size="sm"
+            radius="md"
+            onClick={() => { setEditTarget(dept); setModalOpen(true); }}
+          >
+            <Edit2 size={13} />
+          </ActionIcon>
+        </Table.Td>
+      </Table.Tr>
+    ))
+  );
+
   return (
-    <div
-      style={{
-        fontFamily: FONT_FAMILY.base,
-      }}
-    >
-      {/* Page Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: SPACING[6],
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: FONT_SIZE["2xl"],
-              fontWeight: FONT_WEIGHT.bold,
-              color: surface.text,
-              lineHeight: 1.2,
-              fontFamily: FONT_FAMILY.base,
-            }}
+    <>
+      <AppPageHeader
+        title="Departments"
+        sub="Manage company departments and teams"
+        action={
+          <AppButton
+            leftSection={<Plus size={16} />}
+            onClick={() => { setEditTarget(null); setModalOpen(true); }}
           >
-            Departments
-          </h1>
-          <p
-            style={{
-              margin: `${GAP.xs}px 0 0`,
-              fontSize: FONT_SIZE.base,
-              color: surface.subtext,
-              fontWeight: FONT_WEIGHT.normal,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            Manage company departments and teams
-          </p>
-        </div>
+            Add Department
+          </AppButton>
+        }
+      />
 
-        <button
-          onClick={() => {
-            setEditTarget(null);
-            setModalOpen(true);
-          }}
-          style={{
-            background: COLORS.primary,
-            color: COLORS.white,
-            border: "none",
-            borderRadius: RADIUS.lg,
-            padding: PADDING.btn,
-            fontSize: FONT_SIZE.base,
-            fontWeight: FONT_WEIGHT.semibold,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: GAP.xs + 3,
-            fontFamily: FONT_FAMILY.base,
-            flexShrink: 0,
-          }}
-        >
-          <Plus size={FONT_SIZE.lg} strokeWidth={ICON_STROKE.normal} />
-          Add Department
-        </button>
-      </div>
-
-      {/* KPI Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: GAP.lg,
-          marginBottom: SPACING[6],
-        }}
-      >
-        <KpiCard
-          surface={surface}
-          iconBg={darkMode ? COLORS.surfaceDark : COLORS.primaryMuted}
-          icon={
-            <Building2
-              size={ICON_SIZE.lg}
-              color={COLORS.primary}
-              strokeWidth={ICON_STROKE.normal}
-            />
-          }
-          value={departments.length}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mb="lg">
+        <AppStatCard
+          icon={<Building2 size={22} />}
           label="Total Departments"
+          value={departments.length}
+          color="blue"
         />
-        <KpiCard
-          surface={surface}
-          iconBg={darkMode ? COLORS.surfaceDark : COLORS.successLight}
-          icon={
-            <Users
-              size={ICON_SIZE.lg}
-              color={COLORS.success}
-              strokeWidth={ICON_STROKE.normal}
-            />
-          }
-          value={totalEmployees}
+        <AppStatCard
+          icon={<Users size={22} />}
           label="Total Employees"
+          value={totalEmployees}
+          color="green"
         />
-        <KpiCard
-          surface={surface}
-          iconBg={darkMode ? COLORS.surfaceDark : COLORS.purpleLight}
-          icon={
-            <UserCheck
-              size={ICON_SIZE.lg}
-              color={COLORS.purple}
-              strokeWidth={ICON_STROKE.normal}
-            />
-          }
-          value={uniqueHeads}
+        <AppStatCard
+          icon={<UserCheck size={22} />}
           label="Department Heads"
+          value={uniqueHeads}
+          color="violet"
         />
-        <KpiCard
-          surface={surface}
-          iconBg={darkMode ? COLORS.surfaceDark : COLORS.primaryLight}
-          icon={
-            <Layers
-              size={ICON_SIZE.lg}
-              color={COLORS.primary}
-              strokeWidth={ICON_STROKE.normal}
-            />
-          }
-          value={activeTeams}
+        <AppStatCard
+          icon={<Layers size={22} />}
           label="Active Teams"
+          value={activeTeams}
+          color="blue"
         />
-      </div>
+      </SimpleGrid>
 
-      {/* Search */}
-      <div
-        style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS["2xl"],
-          border: "1px solid " + surface.border,
-          boxShadow: SHADOW.card,
-          padding: `${GAP.lg}px ${GAP.xl}px`,
-          marginBottom: SPACING[5] ?? GAP.xl,
-        }}
+      <AppSection mb="md" p="md">
+        <TextInput
+          placeholder="Search departments..."
+          leftSection={<Search size={16} />}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ maxWidth: 340 }}
+          radius="md"
+          size="sm"
+        />
+      </AppSection>
+
+      <AppSection
+        noPadding
+        title="All Departments"
+        sub={`${filtered.length} ${filtered.length === 1 ? "result" : "results"}`}
       >
-        <div style={{ position: "relative", maxWidth: 340 }}>
-          <Search
-            size={FONT_SIZE.lg}
-            strokeWidth={ICON_STROKE.normal}
-            style={{
-              position: "absolute",
-              left: GAP.md,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: surface.subtext,
-              pointerEvents: "none",
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Search departments..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              border: "1px solid " + surface.border,
-              borderRadius: RADIUS.lg,
-              padding: `${GAP.sm + 1}px ${GAP.md}px ${GAP.sm + 1}px 36px`,
-              fontSize: FONT_SIZE.base,
-              fontWeight: FONT_WEIGHT.normal,
-              background: surface.inputBg,
-              color: surface.text,
-              outline: "none",
-              height: LAYOUT.inputHeight,
-              boxSizing: "border-box",
-              fontFamily: FONT_FAMILY.base,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Table */}
-      <div
-        style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS["2xl"],
-          border: "1px solid " + surface.border,
-          boxShadow: SHADOW.card,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: `${GAP.lg}px ${GAP.xl}px ${GAP.md}px`,
-            borderBottom: "1px solid " + surface.border,
-          }}
-        >
-          <span
-            style={{
-              fontSize: FONT_SIZE.lg,
-              fontWeight: FONT_WEIGHT.bold,
-              color: surface.text,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            All Departments
-          </span>
-          <span
-            style={{
-              marginLeft: GAP.md,
-              fontSize: FONT_SIZE.sm,
-              fontWeight: FONT_WEIGHT.medium,
-              color: surface.subtext,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            {filtered.length} {filtered.length === 1 ? "result" : "results"}
-          </span>
-        </div>
-
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              tableLayout: "fixed",
-            }}
-          >
-            <colgroup>
-              <col style={{ width: "22%" }} />
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "14%" }} />
-              <col style={{ width: "18%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "12%" }} />
-            </colgroup>
-            <thead>
-              <tr style={{ background: surface.theadBg }}>
-                {[
-                  "Department",
-                  "Head",
-                  "Employees",
-                  "Created",
-                  "Status",
-                  "Actions",
-                ].map((col) => (
-                  <th
-                    key={col}
-                    style={{
-                      textAlign: "left",
-                      padding: PADDING.tableHeader,
-                      fontSize: FONT_SIZE.sm,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      letterSpacing: "0.02em",
-                      background: surface.theadBg,
-                      whiteSpace: "nowrap",
-                      fontFamily: FONT_FAMILY.base,
-                    }}
-                  >
-                    {col}
-                  </th>
+        <ScrollArea>
+          <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md">
+            <Table.Thead>
+              <Table.Tr>
+                {["Department", "Head", "Employees", "Created", "Status", "Actions"].map((col) => (
+                  <Table.Th key={col}>
+                    <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.04em" }}>
+                      {col}
+                    </Text>
+                  </Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      padding: `${SPACING[8]}px ${GAP.md}px`,
-                      textAlign: "center",
-                      fontSize: FONT_SIZE.base,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                    }}
-                  >
-                    No departments found.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((dept, idx) => {
-                  const isHovered = hoveredRow === dept.id;
-                  const isAlt = idx % 2 === 1;
-                  const rowBg = isHovered
-                    ? surface.rowHover
-                    : isAlt
-                    ? darkMode
-                      ? COLORS.surfaceDark
-                      : COLORS.gray50
-                    : surface.cardBg;
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </ScrollArea>
+      </AppSection>
 
-                  return (
-                    <tr
-                      key={dept.id}
-                      onMouseEnter={() => setHoveredRow(dept.id)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{
-                        background: rowBg,
-                        transition: TRANSITION,
-                        cursor: "default",
-                      }}
-                    >
-                      {/* Department */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          fontSize: FONT_SIZE.base,
-                          fontWeight: FONT_WEIGHT.medium,
-                          color: surface.text,
-                          borderBottom: "1px solid " + surface.divider,
-                          fontFamily: FONT_FAMILY.base,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: GAP.md,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: LAYOUT.avatar - 4,
-                              height: LAYOUT.avatar - 4,
-                              borderRadius: RADIUS.md,
-                              background: darkMode
-                                ? COLORS.surfaceDark
-                                : COLORS.primaryMuted,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Building2
-                              size={FONT_SIZE.lg}
-                              color={COLORS.primary}
-                              strokeWidth={ICON_STROKE.normal}
-                            />
-                          </div>
-                          <span>{dept.name}</span>
-                        </div>
-                      </td>
-
-                      {/* Head */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          fontSize: FONT_SIZE.base,
-                          fontWeight: FONT_WEIGHT.normal,
-                          color: surface.subtext,
-                          borderBottom: "1px solid " + surface.divider,
-                          fontFamily: FONT_FAMILY.base,
-                        }}
-                      >
-                        {dept.head}
-                      </td>
-
-                      {/* Employees */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          fontSize: FONT_SIZE.base,
-                          fontWeight: FONT_WEIGHT.medium,
-                          color: surface.text,
-                          borderBottom: "1px solid " + surface.divider,
-                          fontFamily: FONT_FAMILY.base,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: GAP.sm,
-                          }}
-                        >
-                          <Users
-                            size={FONT_SIZE.base}
-                            color={surface.subtext}
-                            strokeWidth={ICON_STROKE.normal}
-                          />
-                          {dept.employees}
-                        </div>
-                      </td>
-
-                      {/* Created */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          fontSize: FONT_SIZE.base,
-                          fontWeight: FONT_WEIGHT.normal,
-                          color: surface.subtext,
-                          borderBottom: "1px solid " + surface.divider,
-                          fontFamily: FONT_FAMILY.base,
-                        }}
-                      >
-                        {dept.created}
-                      </td>
-
-                      {/* Status */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          borderBottom: "1px solid " + surface.divider,
-                        }}
-                      >
-                        <StatusBadge status={dept.status} />
-                      </td>
-
-                      {/* Actions */}
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          borderBottom: "1px solid " + surface.divider,
-                        }}
-                      >
-                        <button
-                          onClick={() => {
-                            setEditTarget(dept);
-                            setModalOpen(true);
-                          }}
-                          style={{
-                            background: surface.cardBg,
-                            color: surface.text,
-                            border: "1px solid " + surface.border,
-                            borderRadius: RADIUS.lg,
-                            padding: `${GAP.sm - 2}px ${GAP.md + 2}px`,
-                            fontSize: FONT_SIZE.base,
-                            fontWeight: FONT_WEIGHT.semibold,
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: GAP.sm,
-                            fontFamily: FONT_FAMILY.base,
-                          }}
-                        >
-                          <Edit2 size={FONT_SIZE.base} strokeWidth={ICON_STROKE.normal} />
-                          Edit
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Add Modal */}
-      <Modal
+      <DeptModal
         open={modalOpen && !editTarget}
         onClose={() => setModalOpen(false)}
         onSave={handleAddSave}
-        surface={surface}
         editData={null}
       />
-
-      {/* Edit Modal */}
-      <Modal
+      <DeptModal
         open={modalOpen && !!editTarget}
-        onClose={() => {
-          setModalOpen(false);
-          setEditTarget(null);
-        }}
+        onClose={() => { setModalOpen(false); setEditTarget(null); }}
         onSave={handleEditSave}
-        surface={surface}
         editData={editTarget}
       />
-    </div>
+    </>
   );
 };
 

@@ -31,6 +31,13 @@ import ExitManagement from "./screens/exit/ExitManagement";
 import ShiftManagement from "./screens/shifts/ShiftManagement";
 import OrgChart       from "./screens/orgchart/OrgChart";
 
+// Employee Self-Service screens
+import MyProfile      from "./screens/employees/MyProfile";
+import MyPayslips     from "./screens/payroll/MyPayslips";
+import MyDocuments    from "./screens/documents/MyDocuments";
+import MyAssets       from "./screens/assets/MyAssets";
+import MyAttendance   from "./screens/attendance/MyAttendance";
+
 // Hooks & permissions
 import { useAuth } from "./hooks/useAuth";
 import { ROLE_ROUTES } from "./constants/permissions";
@@ -144,7 +151,12 @@ export default function App() {
             path="/attendance"
             element={
               <RoleGuard routeId="attendance" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Attendance darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}>
+                  {userRole === "EMPLOYEE"
+                    ? <MyAttendance darkMode={dark} />
+                    : <Attendance   darkMode={dark} />
+                  }
+                </ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -273,6 +285,40 @@ export default function App() {
             element={
               <RoleGuard routeId="orgchart" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><OrgChart darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+
+          {/* ── Employee Self-Service routes ── */}
+          <Route
+            path="/my-profile"
+            element={
+              <RoleGuard routeId="my-profile" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyProfile darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/my-payslips"
+            element={
+              <RoleGuard routeId="my-payslips" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyPayslips darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/my-documents"
+            element={
+              <RoleGuard routeId="my-documents" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyDocuments darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/my-assets"
+            element={
+              <RoleGuard routeId="my-assets" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyAssets darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />

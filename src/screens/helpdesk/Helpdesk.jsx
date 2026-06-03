@@ -13,8 +13,13 @@ import {
 import { COLORS }                              from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
-import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE } from "../../theme/sizes";
+import { RADIUS, SHADOW, ICON_SIZE, TRANSITION } from "../../theme/sizes";
 import { getAvatarColor }                      from "../../utils/helpers";
+import { useToast }                            from "../../components/ui/Toast";
+import { Stack, Group, SimpleGrid }            from "@mantine/core";
+import { AppModal }  from "../../components/ui/AppModal";
+import { AppInput }  from "../../components/ui/AppInput";
+import { AppButton } from "../../components/ui/AppButton";
 
 // ── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +88,8 @@ const fmtDate  = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit"
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Helpdesk({ darkMode = false }) {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
+  const { show } = useToast();
+  const surface  = darkMode ? COLORS.dark : COLORS.light;
 
   const [tickets, setTickets]           = useState(MOCK_TICKETS);
   const [activeTab, setActiveTab]       = useState("All Tickets");
@@ -138,6 +144,7 @@ export default function Helpdesk({ darkMode = false }) {
     if (!newTicket.subject.trim() || !newTicket.description.trim()) return;
     const id = `TKT${String(tickets.length + 1).padStart(3, "0")}`;
     setTickets([{ id, ...newTicket, raisedBy: "Mani", status: "Open", createdDate: new Date().toISOString().split("T")[0] }, ...tickets]);
+    show(`Ticket ${id} raised — IT team will respond shortly`, "success");
     setNewTicket({ subject: "", category: "Hardware", priority: "Medium", description: "" });
     setShowRaiseModal(false);
   };
@@ -239,7 +246,7 @@ export default function Helpdesk({ darkMode = false }) {
             ].map(({ label, value, set, options }) => (
               <div key={label} style={{ position: "relative" }}>
                 <select value={value} onChange={(e) => { set(e.target.value); setCurrentPage(1); }}
-                  style={{ ...inputStyle, width: "auto", minWidth: 140, appearance: "none", paddingRight: SPACING[8], cursor: "pointer" }}>
+                  style={{ ...inputStyle, width: "auto", minWidth: 140, paddingRight: SPACING[8], cursor: "pointer" }}>
                   {options.map((o) => <option key={o} value={o}>{o === "All" ? `All ${label}` : o}</option>)}
                 </select>
                 <ChevronDown size={13} style={{ position: "absolute", right: SPACING[2], top: "50%", transform: "translateY(-50%)", color: surface.subtext, pointerEvents: "none" }} />
@@ -520,59 +527,58 @@ export default function Helpdesk({ darkMode = false }) {
         </div>
       )}
 
-      {/* ── Raise Ticket Modal ── */}
-      {showRaiseModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: Z_INDEX.modal, display: "flex", alignItems: "center", justifyContent: "center", padding: SPACING[5] }}
-          onClick={(e) => e.target === e.currentTarget && setShowRaiseModal(false)}>
-          <div style={{ background: surface.cardBg, borderRadius: RADIUS["3xl"], width: "100%", maxWidth: 520, boxShadow: SHADOW.modal, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: PADDING.card, borderBottom: `1px solid ${surface.border}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                <div style={{ width: 36, height: 36, borderRadius: RADIUS.lg, background: COLORS.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Plus size={ICON_SIZE.md} color={COLORS.primary} />
-                </div>
-                <h2 style={{ margin: 0, fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Raise New Ticket</h2>
-              </div>
-              <button onClick={() => setShowRaiseModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.gray400, display: "flex" }}><X size={ICON_SIZE.md} /></button>
-            </div>
-            <div style={{ padding: SPACING[5], display: "flex", flexDirection: "column", gap: GAP.md }}>
-              <div>
-                <label style={{ display: "block", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.subtext, marginBottom: GAP.xs }}>Subject *</label>
-                <input type="text" placeholder="Briefly describe the issue" value={newTicket.subject} onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })} style={inputStyle} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md }}>
-                {[
-                  { label: "Category *", key: "category", options: MODAL_CATS },
-                  { label: "Priority *", key: "priority", options: PRIORITIES  },
-                ].map(({ label, key, options }) => (
-                  <div key={key}>
-                    <label style={{ display: "block", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.subtext, marginBottom: GAP.xs }}>{label}</label>
-                    <div style={{ position: "relative" }}>
-                      <select value={newTicket[key]} onChange={(e) => setNewTicket({ ...newTicket, [key]: e.target.value })}
-                        style={{ ...inputStyle, appearance: "none", paddingRight: SPACING[8], cursor: "pointer" }}>
-                        {options.map((o) => <option key={o}>{o}</option>)}
-                      </select>
-                      <ChevronDown size={13} style={{ position: "absolute", right: SPACING[2], top: "50%", transform: "translateY(-50%)", color: surface.subtext, pointerEvents: "none" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <label style={{ display: "block", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.subtext, marginBottom: GAP.xs }}>Description *</label>
-                <textarea placeholder="Provide detailed information about the issue…" value={newTicket.description}
-                  onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                  rows={4} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: GAP.sm, padding: `${GAP.lg}px ${SPACING[5]}px`, borderTop: `1px solid ${surface.border}` }}>
-              <button onClick={() => setShowRaiseModal(false)} style={{ padding: PADDING.btn, background: "transparent", border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.medium, color: surface.subtext, cursor: "pointer", fontFamily: FONT_FAMILY.base }}>Cancel</button>
-              <button onClick={handleRaise} disabled={!newTicket.subject.trim() || !newTicket.description.trim()}
-                style={{ padding: PADDING.btn, background: !newTicket.subject.trim() || !newTicket.description.trim() ? COLORS.primaryMuted : COLORS.primary, border: "none", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.semibold, color: COLORS.white, cursor: !newTicket.subject.trim() || !newTicket.description.trim() ? "not-allowed" : "pointer", fontFamily: FONT_FAMILY.base }}>
-                Submit Ticket
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Raise Ticket Modal (Mantine) ── */}
+      <AppModal
+        opened={showRaiseModal}
+        onClose={() => setShowRaiseModal(false)}
+        title="Raise New Ticket"
+        subtitle="Describe the issue and we'll assign it to the right team"
+        icon={<Plus size={18} color={COLORS.primary} />}
+        iconColor={COLORS.primary}
+        size="md"
+      >
+        <Stack gap="md">
+          <AppInput
+            label="Subject *"
+            placeholder="Briefly describe the issue"
+            value={newTicket.subject}
+            onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
+          />
+          <SimpleGrid cols={2} spacing="md">
+            <AppInput
+              type="select"
+              label="Category *"
+              value={newTicket.category}
+              onChange={(v) => setNewTicket({ ...newTicket, category: v })}
+              data={MODAL_CATS}
+            />
+            <AppInput
+              type="select"
+              label="Priority *"
+              value={newTicket.priority}
+              onChange={(v) => setNewTicket({ ...newTicket, priority: v })}
+              data={PRIORITIES}
+            />
+          </SimpleGrid>
+          <AppInput
+            type="textarea"
+            label="Description *"
+            placeholder="Provide detailed information about the issue…"
+            value={newTicket.description}
+            onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
+            minRows={4}
+          />
+          <Group justify="flex-end" gap="sm" mt="xs">
+            <AppButton variant="default" onClick={() => setShowRaiseModal(false)}>Cancel</AppButton>
+            <AppButton
+              onClick={handleRaise}
+              disabled={!newTicket.subject.trim() || !newTicket.description.trim()}
+            >
+              Submit Ticket
+            </AppButton>
+          </Group>
+        </Stack>
+      </AppModal>
 
       {/* ── View Ticket Modal ── */}
       {viewTicket && (

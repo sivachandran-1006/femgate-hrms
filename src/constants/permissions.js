@@ -4,7 +4,7 @@ export const ROLE_ROUTES = {
   HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart"],
   MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts"],
   FINANCE:     ["dashboard","payroll","analytics","settings","documents"],
-  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart"],
 };
 
 export const ROLE_SIDEBAR = {
@@ -86,11 +86,17 @@ export const ROLE_SIDEBAR = {
     { id: "settings",    label: "Settings",    icon: "IconSettings"          },
   ],
   EMPLOYEE: [
-    { id: "dashboard",   label: "Dashboard",    icon: "IconLayoutDashboard"  },
-    { id: "attendance",  label: "My Attendance", icon: "IconClock"           },
-    { id: "leave",       label: "My Leave",     icon: "IconCalendarOff"      },
-    { id: "calendar",    label: "Calendar",     icon: "IconCalendar"         },
-    { id: "lms",         label: "Learning",     icon: "IconBook"             },
+    { id: "dashboard",     label: "Dashboard",     icon: "IconLayoutDashboard" },
+    { id: "my-profile",    label: "My Profile",    icon: "IconUser"            },
+    { id: "attendance",    label: "My Attendance", icon: "IconClock"           },
+    { id: "leave",         label: "My Leave",      icon: "IconCalendarOff"     },
+    { id: "my-payslips",   label: "My Payslips",   icon: "IconCurrencyRupee"   },
+    { id: "my-documents",  label: "My Documents",  icon: "IconFolder"          },
+    { id: "my-assets",     label: "My Assets",     icon: "IconPackage"         },
+    { id: "helpdesk",      label: "Helpdesk",      icon: "IconLifebuoy"        },
+    { id: "orgchart",      label: "Org Chart",     icon: "IconHierarchy"       },
+    { id: "calendar",      label: "Calendar",      icon: "IconCalendar"        },
+    { id: "lms",           label: "Learning",      icon: "IconBook"            },
   ],
 };
 

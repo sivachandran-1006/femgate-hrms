@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { fetchAttendance, createAttendanceRecord, checkOutAttendance } from "../../api/attendanceApi";
 import { Search, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
+import { Stack, Group } from "@mantine/core";
+import { AppModal }  from "../../components/ui/AppModal";
+import { AppInput }  from "../../components/ui/AppInput";
+import { AppButton } from "../../components/ui/AppButton";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 // ── Theme token imports (NO hardcoded values) ─────────────────────────────
 import { COLORS, STATUS_BADGE }                                          from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }                           from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }                                 from "../../theme/spacing";
-import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE }  from "../../theme/sizes";
+import { RADIUS, SHADOW, ICON_SIZE }                                     from "../../theme/sizes";
 import { getAvatarColor, getStatusBadge }                                from "../../utils/helpers";
 
 const TODAY = new Date().toISOString().split("T")[0];
@@ -509,90 +513,53 @@ const Attendance = ({ darkMode = false }) => {
         </>
       )}
 
-      {/* ── MARK ATTENDANCE MODAL ── */}
-      {showModal && (
-        <div style={{
-          position: "fixed", inset: 0,
-          background: "rgba(0,0,0,0.45)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: Z_INDEX.modal,
-        }}>
-          <div style={{
-            background: surface.cardBg,
-            borderRadius: RADIUS["3xl"],
-            padding: PADDING.modal,
-            width: "100%", maxWidth: 440,
-            boxShadow: SHADOW.modal,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: SPACING[5] + 2 }}>
-              <h2 style={{ fontSize: FONT_SIZE.xl, fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: 0, fontFamily: FONT_FAMILY.base }}>Mark Attendance</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.gray400, fontSize: FONT_SIZE.xl + 4, lineHeight: 1 }}>×</button>
-            </div>
+      {/* ── MARK ATTENDANCE MODAL (Mantine) ── */}
+      <AppModal
+        opened={showModal}
+        onClose={() => setShowModal(false)}
+        title="Mark Attendance"
+        subtitle="Record employee check-in"
+        icon={<CheckCircle size={18} color={COLORS.success} />}
+        iconColor={COLORS.success}
+        size="sm"
+      >
+        <Stack gap="md">
+          <AppInput
+            label="Employee Name *"
+            placeholder="Full name"
+            value={fName}
+            onChange={(e) => setFName(e.target.value)}
+          />
+          <Group grow>
+            <AppInput
+              type="select"
+              label="Department"
+              value={fDept}
+              onChange={(v) => setFDept(v)}
+              data={["IT","HR","Finance","Management"]}
+            />
+            <AppInput
+              type="select"
+              label="Status"
+              value={fStatus}
+              onChange={(v) => setFStatus(v)}
+              data={["Present","Absent","Leave","Late"]}
+            />
+          </Group>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: SPACING[3] + 1 }}>
-              <div>
-                <label style={{ fontSize: FONT_SIZE.sm, color: COLORS.gray600, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, display: "block", marginBottom: GAP.xs + 1 }}>Employee Name *</label>
-                <input style={inputStyle} placeholder="Full name" value={fName} onChange={e => setFName(e.target.value)} />
-              </div>
-              <div>
-                <label style={{ fontSize: FONT_SIZE.sm, color: COLORS.gray600, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, display: "block", marginBottom: GAP.xs + 1 }}>Department</label>
-                <select style={{ ...inputStyle, cursor: "pointer" }} value={fDept} onChange={e => setFDept(e.target.value)}>
-                  {["IT","HR","Finance","Management"].map(d => <option key={d}>{d}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: FONT_SIZE.sm, color: COLORS.gray600, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, display: "block", marginBottom: GAP.xs + 1 }}>Status</label>
-                <select style={{ ...inputStyle, cursor: "pointer" }} value={fStatus} onChange={e => setFStatus(e.target.value)}>
-                  {["Present","Absent","Leave","Late"].map(s => <option key={s}>{s}</option>)}
-                </select>
-              </div>
-
-              <div style={{
-                background: COLORS.successMuted,
-                border: `1px solid ${COLORS.successLight}`,
-                borderRadius: RADIUS.lg,
-                padding: PADDING.input,
-                fontSize: FONT_SIZE.base,
-                fontFamily: FONT_FAMILY.base,
-                color: COLORS.success,
-                fontWeight: FONT_WEIGHT.medium,
-              }}>
-                Check-in time: {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
-                {new Date().getHours() >= 10 && fStatus === "Present" && (
-                  <span style={{ color: COLORS.warning, marginLeft: GAP.sm, fontFamily: FONT_FAMILY.base }}>(will be marked Late)</span>
-                )}
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: GAP.sm + 2, marginTop: SPACING[5] + 2 }}>
-              <button onClick={() => setShowModal(false)} style={{
-                flex: 1,
-                padding: SPACING[3],
-                border: `1px solid ${surface.border}`,
-                borderRadius: RADIUS.lg,
-                background: surface.cardBg,
-                fontSize: FONT_SIZE.md,
-                fontWeight: FONT_WEIGHT.semibold,
-                fontFamily: FONT_FAMILY.base,
-                color: COLORS.gray600,
-                cursor: "pointer",
-              }}>Cancel</button>
-              <button onClick={handleCheckIn} style={{
-                flex: 2,
-                padding: SPACING[3],
-                border: "none",
-                borderRadius: RADIUS.lg,
-                background: COLORS.success,
-                color: COLORS.white,
-                fontSize: FONT_SIZE.md,
-                fontWeight: FONT_WEIGHT.semibold,
-                fontFamily: FONT_FAMILY.base,
-                cursor: "pointer",
-              }}>Mark Check In</button>
-            </div>
+          <div style={{ background: COLORS.successLight, border: `1px solid ${COLORS.success}30`, borderRadius: RADIUS.lg, padding: "10px 14px", fontSize: FONT_SIZE.sm, color: COLORS.success, fontWeight: FONT_WEIGHT.medium }}>
+            Check-in time: {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+            {new Date().getHours() >= 10 && fStatus === "Present" && (
+              <span style={{ color: COLORS.warning, marginLeft: GAP.sm }}> — will be marked Late</span>
+            )}
           </div>
-        </div>
-      )}
+
+          <Group justify="flex-end" gap="sm" mt="xs">
+            <AppButton variant="default" onClick={() => setShowModal(false)}>Cancel</AppButton>
+            <AppButton color="green" onClick={handleCheckIn}>Mark Check In</AppButton>
+          </Group>
+        </Stack>
+      </AppModal>
     </div>
   );
 };
