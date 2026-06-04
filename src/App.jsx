@@ -154,7 +154,7 @@ export default function App() {
                 <ScreenWrapper darkMode={dark}>
                   {userRole === "EMPLOYEE"
                     ? <MyAttendance darkMode={dark} />
-                    : <Attendance   darkMode={dark} />
+                    : <Attendance darkMode={dark} />
                   }
                 </ScreenWrapper>
               </RoleGuard>

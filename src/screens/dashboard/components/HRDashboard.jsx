@@ -34,8 +34,8 @@ export const HRDashboard = ({ employees, leaves }) => {
   return (
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="md">
-        <AppStatCard icon={<Users/>}     label="Total Employees"    value={total}         sub={`\${new Set(employees.map(e=>e.department)).size} departments`} color="blue" trend="+3" up/>
-        <AppStatCard icon={<UserCheck/>} label="Present Today"      value={present}       sub={`\${attendPct}% attendance`}  color="green" trend="+2%" up/>
+        <AppStatCard icon={<Users/>}     label="Total Employees"    value={total}         sub={`${new Set(employees.map(e=>e.department)).size} departments`} color="blue" trend="+3" up/>
+        <AppStatCard icon={<UserCheck/>} label="Present Today"      value={present}       sub={`${attendPct}% attendance`}  color="green" trend="+2%" up/>
         <AppStatCard icon={<Clock/>}     label="Pending Approvals"  value={pendingLeaves} sub="Leave requests waiting"      color="red"/>
         <AppStatCard icon={<Calendar/>}  label="Approved Leaves"    value={approvedLeaves}sub="This month"                  color="yellow"/>
       </SimpleGrid>
@@ -80,7 +80,7 @@ export const HRDashboard = ({ employees, leaves }) => {
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <AppSection title="Department Distribution" sub={`\${total} employees`}>
+        <AppSection title="Department Distribution" sub={`${total} employees`}>
           <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {deptDist.map((d)=>{
               const pct = Math.round((d.value/total)*100);
@@ -101,7 +101,7 @@ export const HRDashboard = ({ employees, leaves }) => {
           <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {ANNOUNCEMENTS.slice(0,4).map((a,i,arr)=>(
               <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i<arr.length-1?"1px solid var(--mantine-color-default-border)":"none", alignItems:"flex-start" }}>
-                <Box w={3} style={{ background:`var(--mantine-color-\${a.color}-5)`, alignSelf:"stretch", borderRadius:4 }}/>
+                <Box w={3} style={{ background:`var(--mantine-color-${a.color}-5)`, alignSelf:"stretch", borderRadius:4 }}/>
                 <Box>
                   <Text fz="sm" fw={600}>{a.title}</Text>
                   <Text fz="xs" c="dimmed" mt={2}>{a.date}</Text>

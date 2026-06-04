@@ -15,6 +15,7 @@ import { AppSection } from "../../components/ui/AppSection";
 import { getInitials } from "../../utils/helpers";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
+import { usePermission } from "../../hooks/usePermission";
 
 const MOCK_LEAVES = [
   { _id: "lv001", employee: "Safeer", leaveType: "Sick Leave", fromDate: "2026-05-20", toDate: "2026-05-22", days: 3, reason: "Fever", status: "Approved" },
@@ -55,8 +56,10 @@ const Leave = () => {
   const { user, userRole } = useAuth();
   const { show } = useToast();
 
+  const can = usePermission();
   const isEmployee = userRole === "EMPLOYEE";
-  const canApprove = ["SUPER_ADMIN", "ADMIN", "HR", "MANAGER"].includes(userRole);
+  const canApprove = can("leave.approve");
+  const canReject  = can("leave.reject");
 
   const [leaves, setLeaves] = useState(MOCK_LEAVES);
   const [searchTerm, setSearchTerm] = useState("");
@@ -217,18 +220,22 @@ const Leave = () => {
                       <Eye size={14} />
                     </ActionIcon>
                   </Tooltip>
-                  {canApprove && leave.status === "Pending" && (
+                  {leave.status === "Pending" && (canApprove || canReject) && (
                     <>
-                      <Tooltip label="Approve">
-                        <ActionIcon variant="light" color="green" size="sm" radius="md" onClick={() => handleApprove(leave._id)}>
-                          <Check size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Reject">
-                        <ActionIcon variant="light" color="red" size="sm" radius="md" onClick={() => handleReject(leave._id)}>
-                          <X size={14} />
-                        </ActionIcon>
-                      </Tooltip>
+                      {canApprove && (
+                        <Tooltip label="Approve">
+                          <ActionIcon variant="light" color="green" size="sm" radius="md" onClick={() => handleApprove(leave._id)}>
+                            <Check size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
+                      {canReject && (
+                        <Tooltip label="Reject">
+                          <ActionIcon variant="light" color="red" size="sm" radius="md" onClick={() => handleReject(leave._id)}>
+                            <X size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
                     </>
                   )}
                 </Group>
@@ -276,10 +283,10 @@ const Leave = () => {
                 <Text fz="sm">{viewLeave.reason}</Text>
               </Paper>
             </Box>
-            {canApprove && viewLeave.status === "Pending" && (
+            {viewLeave.status === "Pending" && (canApprove || canReject) && (
               <Group grow mt="md">
-                <AppButton variant="outline" color="red" onClick={() => handleReject(viewLeave._id)}>Reject</AppButton>
-                <AppButton color="green" onClick={() => handleApprove(viewLeave._id)}>Approve</AppButton>
+                {canReject  && <AppButton variant="outline" color="red"   onClick={() => handleReject(viewLeave._id)}>Reject</AppButton>}
+                {canApprove && <AppButton color="green" onClick={() => handleApprove(viewLeave._id)}>Approve</AppButton>}
               </Group>
             )}
           </Stack>

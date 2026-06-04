@@ -18,7 +18,7 @@ const ChartTooltip = ({ active, payload, label }) => {
   );
 };
 
-const fmtINR = (v) => `₹\${(v/1000).toFixed(0)}k`;
+const fmtINR = (v) => `₹${(v/1000).toFixed(0)}k`;
 
 export const FinanceDashboard = ({ employees }) => {
   const totalPayroll = employees.reduce((s,e)=>s+(Number(e.salary)||0),0);
@@ -32,9 +32,9 @@ export const FinanceDashboard = ({ employees }) => {
   return (
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="md">
-        <AppStatCard icon={<Wallet/>}     label="Total Monthly Payroll" value={`₹\${(totalPayroll/1000).toFixed(0)}k`}  sub="All employees"   color="violet"  trend="+4%" up/>
-        <AppStatCard icon={<TrendingUp/>} label="Average Salary"        value={`₹\${(avgSalary/1000).toFixed(1)}k`}     sub="Per employee"    color="blue" />
-        <AppStatCard icon={<Award/>}      label="Highest Salary"        value={`₹\${(maxSalary/1000).toFixed(0)}k`}     sub="Top earner"      color="green" />
+        <AppStatCard icon={<Wallet/>}     label="Total Monthly Payroll" value={`₹${(totalPayroll/1000).toFixed(0)}k`}  sub="All employees"   color="violet"  trend="+4%" up/>
+        <AppStatCard icon={<TrendingUp/>} label="Average Salary"        value={`₹${(avgSalary/1000).toFixed(1)}k`}     sub="Per employee"    color="blue" />
+        <AppStatCard icon={<Award/>}      label="Highest Salary"        value={`₹${(maxSalary/1000).toFixed(0)}k`}     sub="Top earner"      color="green" />
         <AppStatCard icon={<ShieldCheck/>}label="Payroll Status"        value="On Track"                               sub="Jun 2026 payroll" color="cyan"    />
       </SimpleGrid>
 

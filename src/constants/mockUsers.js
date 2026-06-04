@@ -4,5 +4,6 @@ export const MOCK_USERS = [
   { email: "hr@mgate.com",         password: "123456", role: "HR",          name: "HR Manager",    avatar: "HR" },
   { email: "manager@mgate.com",    password: "123456", role: "MANAGER",     name: "Team Manager",  avatar: "TM" },
   { email: "finance@mgate.com",    password: "123456", role: "FINANCE",     name: "Finance Admin", avatar: "FA" },
+  { email: "itadmin@mgate.com",    password: "123456", role: "IT_ADMIN",    name: "IT Admin",      avatar: "IT" },
   { email: "employee@mgate.com",   password: "123456", role: "EMPLOYEE",    name: "John Employee", avatar: "JE" },
 ];

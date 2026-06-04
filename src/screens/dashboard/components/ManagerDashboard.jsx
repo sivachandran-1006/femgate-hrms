@@ -18,14 +18,14 @@ export const ManagerDashboard = ({ employees, leaves, user }) => {
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="md">
         <AppStatCard icon={<Users/>}     label="My Team Size"      value={teamTotal}    sub="Direct reports"               color="blue"/>
-        <AppStatCard icon={<UserCheck/>} label="Present Today"     value={teamPresent}  sub={`\${attendPct}% attendance`}  color="green"/>
+        <AppStatCard icon={<UserCheck/>} label="Present Today"     value={teamPresent}  sub={`${attendPct}% attendance`}   color="green"/>
         <AppStatCard icon={<UserMinus/>} label="On Leave"          value={teamOnLeave}  sub="Team members away"            color="yellow"/>
-        <AppStatCard icon={<Clock/>}     label="Pending Approvals" value={pendingLeaves}sub="Leave requests to review"    color="red"/>
+        <AppStatCard icon={<Clock/>}     label="Pending Approvals" value={pendingLeaves}sub="Leave requests to review"     color="red"/>
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <AppSection title="My Team" sub={`\${teamTotal} members`} noPadding>
-          <AppTable 
+        <AppSection title="My Team" sub={`${teamTotal} members`} noPadding>
+          <AppTable
             headers={["Employee", "Role", "Status"]}
             data={myTeam}
             renderRow={(e, i) => {
@@ -53,7 +53,7 @@ export const ManagerDashboard = ({ employees, leaves, user }) => {
             <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
               {UPCOMING_EVENTS.slice(0,3).map((e,i,arr)=>(
                 <Group key={i} wrap="nowrap" pb="sm" style={{ borderBottom: i<arr.length-1?"1px solid var(--mantine-color-default-border)":"none" }}>
-                  <Box w={40} h={40} style={{ background:`var(--mantine-color-\${e.color}-0)`, borderRadius:"var(--mantine-radius-md)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <Box w={40} h={40} style={{ background:`var(--mantine-color-${e.color}-0)`, borderRadius:"var(--mantine-radius-md)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
                     <Text fz={9} fw={700} c={e.color} tt="uppercase">{e.date.split(" ")[0]}</Text>
                     <Text fz="sm" fw={700} c={e.color} lh={1}>{e.date.split(" ")[1]}</Text>
                   </Box>
@@ -66,7 +66,7 @@ export const ManagerDashboard = ({ employees, leaves, user }) => {
             <Box style={{ display:"flex",flexDirection:"column",gap:12 }}>
               {ANNOUNCEMENTS.slice(0,3).map((a,i,arr)=>(
                 <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i<arr.length-1?"1px solid var(--mantine-color-default-border)":"none" }}>
-                  <Box w={3} style={{ background:`var(--mantine-color-\${a.color}-5)`, alignSelf:"stretch", borderRadius:4 }}/>
+                  <Box w={3} style={{ background:`var(--mantine-color-${a.color}-5)`, alignSelf:"stretch", borderRadius:4 }}/>
                   <Text fz="sm" fw={500}>{a.title}</Text>
                 </Group>
               ))}

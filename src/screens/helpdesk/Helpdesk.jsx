@@ -16,6 +16,7 @@ import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
 import { RADIUS, SHADOW, ICON_SIZE, TRANSITION, Z_INDEX } from "../../theme/sizes";
 import { getAvatarColor }                      from "../../utils/helpers";
 import { useToast }                            from "../../components/ui/Toast";
+import { usePermission }                       from "../../hooks/usePermission";
 import { Stack, Group, SimpleGrid }            from "@mantine/core";
 import { AppModal }  from "../../components/ui/AppModal";
 import { AppInput }  from "../../components/ui/AppInput";
@@ -89,10 +90,11 @@ const fmtDate  = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit"
 
 export default function Helpdesk({ darkMode = false }) {
   const { show } = useToast();
+  const can      = usePermission();
   const surface  = darkMode ? COLORS.dark : COLORS.light;
 
   const [tickets, setTickets]           = useState(MOCK_TICKETS);
-  const [activeTab, setActiveTab]       = useState("All Tickets");
+  const [activeTab, setActiveTab]       = useState(can("helpdesk.view_all_tickets") ? "All Tickets" : "My Tickets");
   const [searchQuery, setSearchQuery]   = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -170,7 +172,12 @@ export default function Helpdesk({ darkMode = false }) {
     borderBottom: `2px solid ${surface.border}`,
   };
 
-  const TABS = ["All Tickets", "My Tickets", "Analytics", "SLA Report"];
+  const TABS = [
+    "My Tickets",
+    ...(can("helpdesk.view_all_tickets") ? ["All Tickets"]     : []),
+    ...(can("helpdesk.view_analytics")   ? ["Analytics"]       : []),
+    ...(can("helpdesk.view_sla")         ? ["SLA Report"]      : []),
+  ];
 
   return (
     <div style={{ fontFamily: FONT_FAMILY.base }}>
@@ -228,7 +235,7 @@ export default function Helpdesk({ darkMode = false }) {
       {/* ══════════════════════════════════════════
           TICKET TABLE (All Tickets / My Tickets)
       ══════════════════════════════════════════ */}
-      {(activeTab === "All Tickets" || activeTab === "My Tickets") && (
+      {(activeTab === "All Tickets" || activeTab === "My Tickets" || (!can("helpdesk.view_all_tickets") && !can("helpdesk.view_analytics") && !can("helpdesk.view_sla"))) && (
         <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, overflow: "hidden" }}>
 
           {/* Toolbar */}

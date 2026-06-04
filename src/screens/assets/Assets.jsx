@@ -17,6 +17,7 @@ import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }                           from ".
 import { SPACING, PADDING, GAP, LAYOUT }                                 from "../../theme/spacing";
 import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE }  from "../../theme/sizes";
 import { getStatusBadge }                                                from "../../utils/helpers";
+import { usePermission }                                                  from "../../hooks/usePermission";
 
 const mockAssets = [
   {
@@ -201,6 +202,7 @@ const EMPTY_FORM = {
 };
 
 export default function Assets({ darkMode = false }) {
+  const can = usePermission();
   const [assets, setAssets] = useState(mockAssets);
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
@@ -345,26 +347,28 @@ export default function Assets({ darkMode = false }) {
             Track and manage company assets
           </p>
         </div>
-        <button
-          onClick={openModal}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: GAP.sm,
-            padding: PADDING.btn,
-            background: COLORS.primary,
-            color: COLORS.white,
-            border: "none",
-            borderRadius: RADIUS.lg,
-            fontSize: FONT_SIZE.md,
-            fontWeight: FONT_WEIGHT.semibold,
-            fontFamily: FONT_FAMILY.base,
-            cursor: "pointer",
-          }}
-        >
-          <Plus size={ICON_SIZE.sm} />
-          Add Asset
-        </button>
+        {can("assets.add") && (
+          <button
+            onClick={openModal}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: GAP.sm,
+              padding: PADDING.btn,
+              background: COLORS.primary,
+              color: COLORS.white,
+              border: "none",
+              borderRadius: RADIUS.lg,
+              fontSize: FONT_SIZE.md,
+              fontWeight: FONT_WEIGHT.semibold,
+              fontFamily: FONT_FAMILY.base,
+              cursor: "pointer",
+            }}
+          >
+            <Plus size={ICON_SIZE.sm} />
+            Add Asset
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -693,8 +697,8 @@ export default function Assets({ darkMode = false }) {
         </div>
       </div>
 
-      {/* Add Asset Modal */}
-      {showModal && (
+      {/* Add Asset Modal — only IT_ADMIN / ADMIN / SUPER_ADMIN */}
+      {showModal && can("assets.add") && (
         <div
           style={{
             position: "fixed",

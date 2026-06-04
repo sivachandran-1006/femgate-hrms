@@ -18,7 +18,7 @@ const ChartTooltip = ({ active, payload, label }) => {
   );
 };
 
-const fmtINR = (v) => `₹\${(v/1000).toFixed(0)}k`;
+const fmtINR = (v) => `₹${(v/1000).toFixed(0)}k`;
 
 export const AdminDashboard = ({ employees, leaves }) => {
   const total        = employees.length;
@@ -50,11 +50,11 @@ export const AdminDashboard = ({ employees, leaves }) => {
   return (
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 5 }} spacing="md" mb="md">
-        <AppStatCard icon={<Users/>}     label="Total Employees"   value={total}        sub={`\${deptCount} departments`}                               color="blue" trend="+3"  up/>
-        <AppStatCard icon={<UserCheck/>} label="Present Today"     value={present}      sub={`\${attendPct}% attendance`}                              color="green" trend="+2%" up/>
+        <AppStatCard icon={<Users/>}     label="Total Employees"   value={total}        sub={`${deptCount} departments`}                               color="blue" trend="+3"  up/>
+        <AppStatCard icon={<UserCheck/>} label="Present Today"     value={present}      sub={`${attendPct}% attendance`}                              color="green" trend="+2%" up/>
         <AppStatCard icon={<UserMinus/>} label="On Leave"          value={onLeave}      sub="Active leave requests"                                   color="yellow" trend="-1"  up={false}/>
         <AppStatCard icon={<Clock/>}     label="Pending Approvals" value={pendingLeaves}sub="Awaiting HR review"                                      color="red" trend="+2"  up={false}/>
-        <AppStatCard icon={<Wallet/>}    label="Monthly Payroll"   value={`₹\${(totalPayroll/1000).toFixed(0)}k`} sub={`Avg ₹\${avgSalary.toLocaleString("en-IN")}`} color="violet" trend="+4%" up/>
+        <AppStatCard icon={<Wallet/>}    label="Monthly Payroll"   value={`₹${(totalPayroll/1000).toFixed(0)}k`} sub={`Avg ₹${avgSalary.toLocaleString("en-IN")}`} color="violet" trend="+4%" up/>
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md" mb="md">
@@ -71,7 +71,7 @@ export const AdminDashboard = ({ employees, leaves }) => {
           </ResponsiveContainer>
         </AppSection>
 
-        <AppSection title="Today's Attendance" sub={`\${present} present of \${total}`}>
+        <AppSection title="Today's Attendance" sub={`${present} present of ${total}`}>
           <ResponsiveContainer width="100%" height={130}>
             <PieChart>
               <Pie data={attendancePie} dataKey="value" cx="50%" cy="50%" outerRadius={58} innerRadius={34} paddingAngle={2}>
@@ -102,7 +102,7 @@ export const AdminDashboard = ({ employees, leaves }) => {
               <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
                 <Group justify="space-between" mb={pct !== null ? 4 : 0}>
                   <Text fz="sm" c="dimmed">{label}</Text>
-                  <Text fz="sm" fw={700} c={color}>{value}{pct!==null?` (\${pct}%)`:""}</Text>
+                  <Text fz="sm" fw={700} c={color}>{value}{pct!==null?` (${pct}%)`:""}</Text>
                 </Group>
                 {pct !== null && <Progress value={pct} color={color} size="sm" radius="xl" />}
               </Box>
@@ -127,7 +127,7 @@ export const AdminDashboard = ({ employees, leaves }) => {
           </ResponsiveContainer>
         </AppSection>
 
-        <AppSection title="Dept Distribution" sub={`\${total} employees · \${deptCount} depts`}>
+        <AppSection title="Dept Distribution" sub={`${total} employees · ${deptCount} depts`}>
           <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {deptDist.map((d)=>{
               const pct = Math.round((d.value/total)*100);
@@ -227,7 +227,7 @@ export const AdminDashboard = ({ employees, leaves }) => {
           <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {ANNOUNCEMENTS.map((a,i,arr)=>(
               <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none", alignItems: "flex-start" }}>
-                <Box w={3} style={{ background: `var(--mantine-color-\${a.color}-5)`, alignSelf: "stretch", borderRadius: 4 }} />
+                <Box w={3} style={{ background: `var(--mantine-color-${a.color}-5)`, alignSelf: "stretch", borderRadius: 4 }} />
                 <Box style={{ flex: 1 }}>
                   <Group justify="space-between" align="flex-start" wrap="nowrap">
                     <Text fz="sm" fw={600}>{a.title}</Text>
@@ -247,7 +247,7 @@ export const AdminDashboard = ({ employees, leaves }) => {
           <Box style={{ display:"flex", flexDirection:"column", gap:12 }}>
             {UPCOMING_EVENTS.map((e,i,arr)=>(
               <Group key={i} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
-                <Box w={40} h={40} style={{ background: `var(--mantine-color-\${e.color}-0)`, borderRadius: "var(--mantine-radius-md)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                <Box w={40} h={40} style={{ background: `var(--mantine-color-${e.color}-0)`, borderRadius: "var(--mantine-radius-md)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                   <Text fz={9} fw={700} c={e.color} tt="uppercase">{e.date.split(" ")[0]}</Text>
                   <Text fz="sm" fw={700} c={e.color} lh={1}>{e.date.split(" ")[1]}</Text>
                 </Box>
