@@ -53,11 +53,11 @@ const LEAVE_BALANCE = [
 const ROWS_PER_PAGE = 8;
 
 const Leave = () => {
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
   const { show } = useToast();
 
   const can = usePermission();
-  const isEmployee = userRole === "EMPLOYEE";
+  const isEmployee = !can("leave.view_all");
   const canApprove = can("leave.approve");
   const canReject  = can("leave.reject");
 

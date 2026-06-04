@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AppShell, Burger, Group, Title, ActionIcon, useMantineColorScheme } from "@mantine/core";
+import { AppShell, Burger, Group, Title, Box, Text, Avatar, ActionIcon, Indicator, Paper } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconSun, IconMoon } from "@tabler/icons-react";
+import { useMantineColorScheme } from "@mantine/core";
+import { IconBell, IconCheck } from "@tabler/icons-react";
+import GlobalSearch from "./components/ui/GlobalSearch";
+import { NOTIF_BY_ROLE } from "./screens/dashboard/data";
+import { ROLE_LABELS, ROLE_COLORS } from "./constants/permissions";
+import { getInitials } from "./utils/helpers";
 
 // Layout
 import Sidebar       from "./components/layout/Sidebar";
@@ -40,6 +45,7 @@ import MyAttendance   from "./screens/attendance/MyAttendance";
 
 // Hooks & permissions
 import { useAuth } from "./hooks/useAuth";
+import { usePermission } from "./hooks/usePermission";
 import { ROLE_ROUTES } from "./constants/permissions";
 import logo from "./assets/images/logo.jpeg";
 
@@ -72,11 +78,37 @@ const RoleGuard = ({ routeId, userRole, children }) => {
 
 export default function App() {
   const { isLoggedIn, user, userRole, logout } = useAuth();
+  const can = usePermission();
   const [opened, { toggle }] = useDisclosure();
   const [collapsed, setCollapsed] = useState(false);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
   const navWidth = collapsed ? 68 : 250;
+
+  // ── Notifications state ────────────────────────────────────────────────────
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [allRead,    setAllRead]    = useState(false);
+  const bellRef = useRef(null);
+  const notifs  = NOTIF_BY_ROLE[userRole] || NOTIF_BY_ROLE.EMPLOYEE;
+
+  useEffect(() => {
+    if (!showNotifs) return;
+    const handler = (e) => {
+      if (bellRef.current && !bellRef.current.contains(e.target)) setShowNotifs(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showNotifs]);
+
+  const roleLabel = ROLE_LABELS[userRole]  || userRole;
+  const roleColor = ROLE_COLORS[userRole]  || { bg: "#f1f5f9", text: "#475569" };
+
+  // header colours
+  const hdrBg     = dark ? "#1e293b" : "#ffffff";
+  const hdrBorder = dark ? "#334155" : "#e2e8f0";
+  const hdrText   = dark ? "#f1f5f9" : "#0f172a";
+  const hdrSub    = dark ? "#94a3b8" : "#64748b";
+  const hdrHover  = dark ? "#0f172a" : "#f1f5f9";
 
   // ── LOGIN PAGE ─────────────────────────────────────────────────────────────
   if (!isLoggedIn) {
@@ -86,25 +118,92 @@ export default function App() {
   // ── MAIN APP ───────────────────────────────────────────────────────────────
   return (
     <AppShell
-      header={{ height: 60 }}
+      header={{ height: 64 }}
       navbar={{ width: navWidth, breakpoint: "sm", collapsed: { mobile: !opened } }}
       padding={0}
     >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <img src={logo} alt="MGate" style={{ height: 32 }} />
-            <Title order={4}>MGate HRMS</Title>
+      <AppShell.Header style={{ background: hdrBg, borderBottom: `1px solid ${hdrBorder}`, padding: 0 }}>
+        <Group h="100%" px={20} justify="space-between" wrap="nowrap" gap={0}>
+
+          {/* ── Left: burger + logo + title ── */}
+          <Group gap={10} wrap="nowrap" style={{ flexShrink: 0 }}>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color={hdrSub} />
+            <img src={logo} alt="MGate" style={{ height: 34, borderRadius: 6 }} />
+            <Title order={4} style={{ color: hdrText, fontWeight: 800, letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>
+              MGate HRMS
+            </Title>
           </Group>
-          <ActionIcon
-            variant="default"
-            onClick={() => toggleColorScheme()}
-            size="lg"
-            aria-label="Toggle color scheme"
-          >
-            {dark ? <IconSun size={18} /> : <IconMoon size={18} />}
-          </ActionIcon>
+
+          {/* ── Center: global search ── */}
+          <Box style={{ flex: 1, maxWidth: 440, margin: "0 24px" }}>
+            <GlobalSearch userRole={userRole} dark={dark} />
+          </Box>
+
+          {/* ── Right: notifications + user ── */}
+          <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
+
+            {/* Bell */}
+            <Box ref={bellRef} style={{ position: "relative" }}>
+              <ActionIcon
+                size={38} radius="xl" variant="subtle"
+                onClick={() => setShowNotifs((v) => !v)}
+                style={{ color: hdrSub, background: showNotifs ? hdrHover : "transparent" }}
+              >
+                <Indicator disabled={allRead} color="red" size={8} offset={4} processing={!allRead}>
+                  <IconBell size={18} stroke={1.8} />
+                </Indicator>
+              </ActionIcon>
+
+              {showNotifs && (
+                <Paper
+                  withBorder shadow="xl" radius="xl" p={0}
+                  style={{ position: "absolute", top: 46, right: 0, zIndex: 9999, width: 320, maxHeight: 380, overflowY: "auto",
+                           background: hdrBg, border: `1px solid ${hdrBorder}` }}
+                >
+                  <Group justify="space-between" p="sm" pb="xs"
+                    style={{ borderBottom: `1px solid ${hdrBorder}`, position: "sticky", top: 0, background: hdrBg, zIndex: 1 }}>
+                    <Text fz="sm" fw={700} c={hdrText}>Notifications</Text>
+                    <ActionIcon variant="subtle" size="sm" color="blue"
+                      onClick={() => setAllRead(true)} disabled={allRead} title="Mark all read">
+                      <IconCheck size={13} stroke={2.5} />
+                    </ActionIcon>
+                  </Group>
+                  {notifs.map((n, i) => (
+                    <Group key={n.id} p="sm" wrap="nowrap"
+                      style={{ borderBottom: i < notifs.length - 1 ? `1px solid ${hdrBorder}` : "none",
+                               opacity: allRead ? 0.5 : 1, cursor: "default" }}>
+                      <Box w={8} h={8} style={{ borderRadius: "50%", background: `var(--mantine-color-${n.dotColor}-5)`, flexShrink: 0, marginTop: 4 }} />
+                      <Box style={{ flex: 1 }}>
+                        <Text fz="sm" fw={allRead ? 400 : 500} c={hdrText}>{n.title}</Text>
+                        <Text fz="xs" c={hdrSub} mt={2}>{n.time}</Text>
+                      </Box>
+                    </Group>
+                  ))}
+                </Paper>
+              )}
+            </Box>
+
+            {/* Divider */}
+            <Box style={{ width: 1, height: 28, background: hdrBorder, flexShrink: 0 }} />
+
+            {/* User avatar + name + role */}
+            <Group gap={8} wrap="nowrap" style={{ cursor: "default" }}>
+              <Avatar size={34} radius="xl" color="blue"
+                style={{ border: `2px solid ${dark ? "#3b82f6" : "#bfdbfe"}`, fontWeight: 700 }}>
+                {getInitials(user?.name || "U")}
+              </Avatar>
+              <Box visibleFrom="sm">
+                <Text fz="sm" fw={600} lh={1.2} c={hdrText} style={{ whiteSpace: "nowrap" }}>
+                  {user?.name || "User"}
+                </Text>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 20,
+                               background: roleColor.bg, color: roleColor.text, whiteSpace: "nowrap" }}>
+                  {roleLabel}
+                </span>
+              </Box>
+            </Group>
+          </Group>
+
         </Group>
       </AppShell.Header>
 
@@ -117,6 +216,7 @@ export default function App() {
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed((c) => !c)}
           dark={dark}
+          onToggleDark={toggleColorScheme}
         />
       </AppShell.Navbar>
 
@@ -152,9 +252,9 @@ export default function App() {
             element={
               <RoleGuard routeId="attendance" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}>
-                  {userRole === "EMPLOYEE"
-                    ? <MyAttendance darkMode={dark} />
-                    : <Attendance darkMode={dark} />
+                  {can("attendance.view_all")
+                    ? <Attendance darkMode={dark} />
+                    : <MyAttendance darkMode={dark} />
                   }
                 </ScreenWrapper>
               </RoleGuard>

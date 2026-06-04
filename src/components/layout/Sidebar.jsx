@@ -25,6 +25,8 @@ import {
   IconX,
   IconMenu2,
   IconUser,
+  IconSun,
+  IconMoon,
 } from "@tabler/icons-react";
 import {
   ROLE_SIDEBAR,
@@ -66,6 +68,7 @@ const Sidebar = ({
   collapsed,
   onToggleCollapse,
   dark = false,
+  onToggleDark,
 }) => {
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -290,14 +293,50 @@ const Sidebar = ({
         </div>
       </ScrollArea>
 
-      {/* ── Logout ── */}
+      {/* ── Dark mode + Logout ── */}
       <div
         style={{
           padding: "6px",
           borderTop: `1px solid ${surface.border}`,
           flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
         }}
       >
+        {/* Dark mode toggle */}
+        {onToggleDark && (
+          <button
+            onClick={onToggleDark}
+            title={collapsed ? (dark ? "Light mode" : "Dark mode") : undefined}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: collapsed ? "center" : "flex-start",
+              gap: 10,
+              padding: collapsed ? "9px 0" : "9px 10px",
+              borderRadius: RADIUS.lg,
+              border: "none",
+              background: "transparent",
+              color: surface.subtext,
+              fontSize: FONT_SIZE.sm,
+              fontWeight: FONT_WEIGHT.medium,
+              cursor: "pointer",
+              transition: "background 0.13s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = surface.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            {dark
+              ? <IconSun  size={18} stroke={1.8} color={surface.subtext} style={{ flexShrink: 0 }} />
+              : <IconMoon size={18} stroke={1.8} color={surface.subtext} style={{ flexShrink: 0 }} />
+            }
+            {!collapsed && <span>{dark ? "Light Mode" : "Dark Mode"}</span>}
+          </button>
+        )}
+
+        {/* Logout */}
         <button
           onClick={() => setShowLogoutConfirm(true)}
           title={collapsed ? "Logout" : undefined}
@@ -318,16 +357,9 @@ const Sidebar = ({
             transition: "background 0.13s ease",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
-          <IconLogout
-            size={18}
-            stroke={1.8}
-            color={COLORS.danger}
-            style={{ flexShrink: 0 }}
-          />
+          <IconLogout size={18} stroke={1.8} color={COLORS.danger} style={{ flexShrink: 0 }} />
           {!collapsed && <span>Logout</span>}
         </button>
       </div>
