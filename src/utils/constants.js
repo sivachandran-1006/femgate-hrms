@@ -1,9 +1,9 @@
-// ── MGate HRMS — App Constants ─────────────────────────────────────────────
+// ── MGate Systems — App Constants ─────────────────────────────────────────────
 // Colors, fonts, sizes → see src/theme/*
 // This file is for business-logic constants only.
 
 export { COLORS, STATUS_BADGE } from "../theme/colors";
-export { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT, LINE_HEIGHT } from "../theme/fonts";
+export { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../theme/fonts";
 export { SPACING, PADDING, GAP, LAYOUT } from "../theme/spacing";
 export { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE } from "../theme/sizes";
 

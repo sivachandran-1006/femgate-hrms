@@ -6,11 +6,12 @@ import { AppLoader }            from "../../components/ui/AppLoader";
 import { useAuth }              from "../../hooks/useAuth";
 import { usePermission }        from "../../hooks/usePermission";
 
-import { AdminDashboard }    from "./components/AdminDashboard";
-import { HRDashboard }       from "./components/HRDashboard";
-import { ManagerDashboard }  from "./components/ManagerDashboard";
-import { FinanceDashboard }  from "./components/FinanceDashboard";
-import { EmployeeDashboard } from "./components/EmployeeDashboard";
+import { SuperAdminDashboard } from "./components/SuperAdminDashboard";
+import { AdminDashboard }      from "./components/AdminDashboard";
+import { HRDashboard }         from "./components/HRDashboard";
+import { ManagerDashboard }    from "./components/ManagerDashboard";
+import { FinanceDashboard }    from "./components/FinanceDashboard";
+import { EmployeeDashboard }   from "./components/EmployeeDashboard";
 
 const Dashboard = () => {
   const { user, userRole } = useAuth();
@@ -24,7 +25,7 @@ const Dashboard = () => {
 
   const ROLE_WELCOME = {
     SUPER_ADMIN: "Full system overview",
-    ADMIN:       "Full system overview",
+    ADMIN:       "Operational administrator dashboard",
     HR:          "HR & people operations",
     MANAGER:     "Your team at a glance",
     FINANCE:     "Payroll & compensation",
@@ -47,12 +48,13 @@ const Dashboard = () => {
       </Group>
 
       {/* ── Role-specific content ── */}
-      {can("employees.add")                                                                         && <AdminDashboard   employees={employees} leaves={leaves} />}
-      {can("attendance.view_all")    && !can("employees.add")                                      && <HRDashboard      employees={employees} leaves={leaves} />}
-      {can("leave.approve")          && !can("attendance.view_all")                                && <ManagerDashboard employees={employees} leaves={leaves} user={user} />}
-      {can("payroll.generate")       && !can("employees.add")                                      && <FinanceDashboard employees={employees} />}
-      {can("helpdesk.manage_tickets") && !can("employees.add") && !can("payroll.generate")         && <EmployeeDashboard leaves={leaves} user={user} />}
-      {!can("employees.add") && !can("attendance.view_all") && !can("leave.approve") && !can("payroll.generate") && !can("helpdesk.manage_tickets") && <EmployeeDashboard leaves={leaves} user={user} />}
+      {can("company.manage")                                                                               && <SuperAdminDashboard employees={employees} leaves={leaves} />}
+      {can("employees.add")          && !can("company.manage")                                            && <AdminDashboard      employees={employees} leaves={leaves} />}
+      {can("attendance.view_all")    && !can("employees.add")  && !can("company.manage")                  && <HRDashboard         employees={employees} leaves={leaves} />}
+      {can("leave.approve")          && !can("attendance.view_all") && !can("company.manage")             && <ManagerDashboard    employees={employees} leaves={leaves} user={user} />}
+      {can("payroll.generate")       && !can("employees.add")  && !can("company.manage")                  && <FinanceDashboard    employees={employees} />}
+      {can("helpdesk.manage_tickets") && !can("employees.add") && !can("payroll.generate") && !can("company.manage") && <EmployeeDashboard leaves={leaves} user={user} />}
+      {!can("company.manage") && !can("employees.add") && !can("attendance.view_all") && !can("leave.approve") && !can("payroll.generate") && !can("helpdesk.manage_tickets") && <EmployeeDashboard leaves={leaves} user={user} />}
     </Box>
   );
 };

@@ -81,6 +81,11 @@ export const NOTIF_BY_ROLE = {
     { id:2, title:"New payroll policy effective Jun 15",     time:"1d ago",   type:"info",    dotColor:"cyan"    },
     { id:3, title:"Safeer expense claim pending approval",   time:"2d ago",   type:"leave",   dotColor:"orange"  },
   ],
+  IT_ADMIN: [
+    { id:1, title:"Asset LT-009 reported as faulty",         time:"30m ago",  type:"asset",   dotColor:"orange"  },
+    { id:2, title:"New helpdesk ticket from Suriya",         time:"1h ago",   type:"leave",   dotColor:"red"  },
+    { id:3, title:"Server maintenance window: Jun 8 11pm",   time:"2d ago",   type:"info",    dotColor:"cyan"    },
+  ],
   EMPLOYEE: [
     { id:1, title:"Your leave request was approved",         time:"3h ago",   type:"success", dotColor:"green" },
     { id:2, title:"Q2 appraisal form is due Jun 10",         time:"1d ago",   type:"alert",   dotColor:"red"  },

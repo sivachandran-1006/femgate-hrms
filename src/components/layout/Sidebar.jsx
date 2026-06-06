@@ -27,6 +27,13 @@ import {
   IconUser,
   IconSun,
   IconMoon,
+  IconUserCog,
+  IconShieldLock,
+  IconClipboardList,
+  IconShield,
+  IconPlug,
+  IconCreditCard,
+  IconBuildingFactory,
 } from "@tabler/icons-react";
 import {
   ROLE_SIDEBAR,
@@ -58,6 +65,13 @@ const ICON_MAP = {
   IconFolder,
   IconDoorExit,
   IconUser,
+  IconUserCog,
+  IconShieldLock,
+  IconClipboardList,
+  IconShield,
+  IconPlug,
+  IconCreditCard,
+  IconBuildingFactory,
 };
 
 const Sidebar = ({

@@ -31,7 +31,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <MantineProvider theme={theme} cssVariablesResolver={() => ({ variables: { "--mantine-color-body": "#ffffff" }, light: { "--mantine-color-body": "#ffffff" }, dark: {} })}>
+        <MantineProvider theme={theme} forceColorScheme="light" cssVariablesResolver={() => ({ variables: {}, light: { "--mantine-color-body": "#f1f5f9" }, dark: { "--mantine-color-body": "#0f172a" } })}>
           <AuthProvider>
             <ToastProvider>
               <App />

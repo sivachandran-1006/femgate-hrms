@@ -49,7 +49,7 @@ const Login = ({ setIsLoggedIn }) => {
           marginBottom: 12,
         }}
       >
-        MGate HRMS
+        MGate Systems
       </h1>
 
       <p

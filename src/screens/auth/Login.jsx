@@ -112,7 +112,7 @@ export default function Login() {
             <img src={logo} alt="MGate" style={{ width:28, height:28, objectFit:"contain", animation:"spinSlow 20s linear infinite" }} />
           </div>
           <div>
-            <p style={{ margin:0, fontSize:18, fontWeight:800, color:"#fff" }}>MGate HRMS</p>
+            <p style={{ margin:0, fontSize:18, fontWeight:800, color:"#fff" }}>MGate Systems</p>
             <p style={{ margin:0, fontSize:10, color:C.purple, letterSpacing:"0.18em", textTransform:"uppercase", fontWeight:700 }}>Enterprise Platform</p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function Login() {
             <span style={{ fontSize:11, color:C.primary, fontWeight:700, letterSpacing:"0.08em" }}>SECURE LOGIN</span>
           </div>
           <h2 style={{ margin:"0 0 6px", fontSize:"1.9rem", fontWeight:900, color:C.textLight, letterSpacing:"-0.5px" }}>Welcome back</h2>
-          <p style={{ margin:0, fontSize:14, color:C.textMutedLight }}>Sign in to your MGate HRMS dashboard</p>
+          <p style={{ margin:0, fontSize:14, color:C.textMutedLight }}>Sign in to your HRMS dashboard</p>
         </div>
 
         {/* Error banner */}

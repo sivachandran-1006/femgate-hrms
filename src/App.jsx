@@ -36,6 +36,15 @@ import ExitManagement from "./screens/exit/ExitManagement";
 import ShiftManagement from "./screens/shifts/ShiftManagement";
 import OrgChart       from "./screens/orgchart/OrgChart";
 
+// Super Admin screens
+import RolesPermissions from "./screens/roles/RolesPermissions";
+import UserManagement  from "./screens/superadmin/UserManagement";
+import AuditLogs       from "./screens/superadmin/AuditLogs";
+import SecurityCenter  from "./screens/superadmin/SecurityCenter";
+import Integrations    from "./screens/superadmin/Integrations";
+import Billing         from "./screens/superadmin/Billing";
+import MultiCompany    from "./screens/superadmin/MultiCompany";
+
 // Employee Self-Service screens
 import MyProfile      from "./screens/employees/MyProfile";
 import MyPayslips     from "./screens/payroll/MyPayslips";
@@ -388,6 +397,46 @@ export default function App() {
               </RoleGuard>
             }
           />
+
+          {/* ── Super Admin–only routes ── */}
+          <Route
+            path="/roles-permissions"
+            element={
+              <RoleGuard routeId="roles-permissions" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><RolesPermissions darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route path="/user-management" element={
+            <RoleGuard routeId="user-management" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><UserManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/audit-logs" element={
+            <RoleGuard routeId="audit-logs" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><AuditLogs darkMode={dark} userRole={userRole} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/security" element={
+            <RoleGuard routeId="security" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><SecurityCenter darkMode={dark} userRole={userRole} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/integrations" element={
+            <RoleGuard routeId="integrations" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Integrations darkMode={dark} userRole={userRole} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/billing" element={
+            <RoleGuard routeId="billing" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Billing darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/companies" element={
+            <RoleGuard routeId="companies" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><MultiCompany darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
 
           {/* ── Employee Self-Service routes ── */}
           <Route

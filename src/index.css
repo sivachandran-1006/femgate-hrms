@@ -1,19 +1,22 @@
-@import "tailwindcss";
-
-/* ── Force white background — kill Mantine gray ── */
-:root {
-  --mantine-color-body: #ffffff;
+/* ── Color scheme body background ── */
+:root,
+[data-mantine-color-scheme="light"] {
+  --mantine-color-body: #f1f5f9;
 }
 
-body,
+[data-mantine-color-scheme="dark"] {
+  --mantine-color-body: #0f172a;
+}
+
+body {
+  margin: 0;
+  background-color: var(--mantine-color-body);
+}
+
 #root,
 .mantine-AppShell-root,
 .mantine-AppShell-main {
-  background-color: #ffffff !important;
-}
-
-[data-mantine-color-scheme="light"] {
-  --mantine-color-body: #ffffff;
+  background-color: var(--mantine-color-body);
 }
 
 /* ── Global select fix — consistent chevron across all screens ── */
@@ -33,7 +36,7 @@ select:focus {
   outline-offset: -1px;
 }
 
-/* ── Input focus ring ── */
+/* ── Input / textarea focus ring ── */
 input:focus,
 textarea:focus {
   outline: 2px solid #3b82f6;

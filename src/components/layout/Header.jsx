@@ -19,7 +19,7 @@ const Header = ({
   return (
     <Group justify="space-between" align="flex-start" mb="xl">
       <div>
-        <Title order={2}>MGate HRMS</Title>
+        <Title order={2}>MGate Systems</Title>
         <Text c="dimmed" size="sm">Admin Portal</Text>
       </div>
 

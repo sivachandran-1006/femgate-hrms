@@ -1,4 +1,4 @@
-// ── MGate HRMS — Theme Barrel Export ──────────────────────────────────────
+// ── MGate Systems — Theme Barrel Export ──────────────────────────────────────
 // Usage: import { COLORS, FONT_SIZE, SPACING, RADIUS } from "../theme"
 
 export * from "./colors";

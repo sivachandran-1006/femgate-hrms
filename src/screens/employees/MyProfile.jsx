@@ -88,7 +88,7 @@ const MyProfile = () => {
   const emp = {
     employeeId:    "MGT-EMP-009",
     name:          user?.name  || "John Employee",
-    email:         user?.email || "employee@mgate.com",
+    email:         user?.email || "employee@mgatesystems.com",
     department:    "IT",
     designation:   "Software Engineer",
     manager:       "Siva",

@@ -8,6 +8,8 @@ import {
   IconBuildingCommunity, IconHierarchy, IconCalendar, IconDoorExit,
   IconRotateClockwise, IconUser, IconArrowRight,
   IconUserCircle, IconCalendarEvent, IconWallet, IconBox,
+  IconUserCog, IconShieldLock, IconClipboardList, IconShield,
+  IconPlug, IconCreditCard, IconBuildingFactory,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR } from "../../constants/permissions";
 import EMPLOYEES_DATA from "../../mocks/data/employees.json";
@@ -21,6 +23,8 @@ const PAGE_ICON_MAP = {
   IconUserPlus, IconTarget, IconPackage, IconLifebuoy, IconBook,
   IconChartBar, IconSettings, IconHierarchy, IconRotateClockwise,
   IconFolder, IconDoorExit, IconUser,
+  IconUserCog, IconShieldLock, IconClipboardList, IconShield,
+  IconPlug, IconCreditCard, IconBuildingFactory,
 };
 
 const PAGE_COLOR = {
@@ -32,6 +36,8 @@ const PAGE_COLOR = {
   exit: "red", shifts: "orange", orgchart: "violet",
   "my-profile": "blue", "my-payslips": "pink", "my-documents": "yellow",
   "my-assets": "gray",
+  "user-management": "indigo", "roles-permissions": "violet", "audit-logs": "slate",
+  "security": "red", "integrations": "teal", "billing": "green", "companies": "cyan",
 };
 
 const STATUS_COLOR = {
