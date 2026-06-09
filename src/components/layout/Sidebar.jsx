@@ -34,6 +34,9 @@ import {
   IconPlug,
   IconCreditCard,
   IconBuildingFactory,
+  IconReportAnalytics,
+  IconBell,
+  IconBuildingCog,
 } from "@tabler/icons-react";
 import {
   ROLE_SIDEBAR,
@@ -72,6 +75,9 @@ const ICON_MAP = {
   IconPlug,
   IconCreditCard,
   IconBuildingFactory,
+  IconReportAnalytics,
+  IconBell,
+  IconBuildingCog,
 };
 
 const Sidebar = ({

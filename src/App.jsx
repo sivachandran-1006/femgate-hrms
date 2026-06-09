@@ -43,7 +43,10 @@ import AuditLogs       from "./screens/superadmin/AuditLogs";
 import SecurityCenter  from "./screens/superadmin/SecurityCenter";
 import Integrations    from "./screens/superadmin/Integrations";
 import Billing         from "./screens/superadmin/Billing";
-import MultiCompany    from "./screens/superadmin/MultiCompany";
+import MultiCompany         from "./screens/superadmin/MultiCompany";
+import CompanySettings      from "./screens/superadmin/CompanySettings";
+import NotificationCenter   from "./screens/superadmin/NotificationCenter";
+import Reports              from "./screens/reports/Reports";
 
 // Employee Self-Service screens
 import MyProfile      from "./screens/employees/MyProfile";
@@ -435,6 +438,21 @@ export default function App() {
           <Route path="/companies" element={
             <RoleGuard routeId="companies" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><MultiCompany darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/company-settings" element={
+            <RoleGuard routeId="company-settings" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><CompanySettings darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/notifications" element={
+            <RoleGuard routeId="notifications" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><NotificationCenter darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/reports" element={
+            <RoleGuard routeId="reports" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Reports darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 
