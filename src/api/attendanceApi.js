@@ -1,12 +1,5 @@
-import axios from "axios";
+import api from "./axios";
 
-const BASE = "http://localhost:5000";
-
-export const fetchAttendance = () =>
-  axios.get(`${BASE}/attendance`).then((r) => r.data);
-
-export const createAttendanceRecord = (data) =>
-  axios.post(`${BASE}/attendance`, data).then((r) => r.data);
-
-export const checkOutAttendance = (id, data) =>
-  axios.put(`${BASE}/attendance-checkout/${id}`, data).then((r) => r.data);
+export const fetchAttendance        = (params) => api.get("/attendance", { params }).then(r => r.data);
+export const createAttendanceRecord = (data)   => api.post("/attendance", data).then(r => r.data);
+export const checkOutAttendance     = (id, data) => api.put(`/attendance/${id}`, data).then(r => r.data);

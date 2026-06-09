@@ -1,91 +1,101 @@
 import { useState } from "react";
 import {
   Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid, Modal,
-  TextInput, Select, ActionIcon, Avatar, Notification, Center,
+  TextInput, Select, ActionIcon, Avatar, Center, Loader,
 } from "@mantine/core";
 import { IconSearch, IconPlus, IconEye, IconPencil, IconUserOff, IconBuilding } from "@tabler/icons-react";
-import { COLORS } from "../../theme/colors";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCompanies, createCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
+import { useToast } from "../../components/ui/Toast";
 
-const BRAND_COLORS = [COLORS.primary, COLORS.purple, COLORS.info, "#be185d", COLORS.success, COLORS.warning];
-
-const INIT_COMPANIES = [
-  { id: 1, name: "MGate Systems",    industry: "Technology", plan: "Enterprise", employees: 13, status: "Active",    city: "Chennai",   country: "India", admin: "Super Admin", created: "Jan 2024", cost: "45000",  color: BRAND_COLORS[0] },
-  { id: 2, name: "Vertex Solutions", industry: "Software",  plan: "Pro",        employees: 42, status: "Active",    city: "Bangalore", country: "India", admin: "Nithya S",   created: "Mar 2024", cost: "28000",  color: BRAND_COLORS[1] },
-  { id: 3, name: "SynEx Systems",    industry: "Consulting", plan: "Starter",    employees: 8,  status: "Trial",     city: "Hyderabad", country: "India", admin: "Rajan M",    created: "May 2026", cost: "8000",   color: BRAND_COLORS[2] },
-  { id: 4, name: "Vela Partners",    industry: "Finance",   plan: "Pro",        employees: 19, status: "Active",    city: "Mumbai",    country: "India", admin: "Preethi V",  created: "Sep 2024", cost: "28000",  color: BRAND_COLORS[3] },
-];
-
-const PLAN_COLORS = { Enterprise: "yellow", Pro: "blue", Starter: "violet" };
+const PLAN_COLORS  = { Enterprise: "yellow", Pro: "blue", Starter: "violet" };
 const STATUS_COLORS = { Active: "green", Trial: "orange", Suspended: "red" };
 
 const INDUSTRIES = ["Technology", "Software", "Consulting", "Finance", "Healthcare", "Retail", "Manufacturing", "Education"];
-const PLANS = ["Starter", "Pro", "Enterprise"];
-const COST_MAP = { Starter: "8000", Pro: "28000", Enterprise: "45000" };
-const COST_LABEL = { "8000": "8,000", "28000": "28,000", "45000": "45,000" };
+const PLANS      = ["Starter", "Pro", "Enterprise"];
+const COST_MAP   = { Starter: 8000, Pro: 28000, Enterprise: 45000 };
+const COST_LABEL = { 8000: "8,000", 28000: "28,000", 45000: "45,000" };
+
+const EMPTY_FORM = { name: "", industry: "Technology", adminEmail: "", adminPassword: "", adminName: "", plan: "Pro", city: "", country: "India" };
 
 export default function MultiCompany() {
-  const [companies, setCompanies] = useState(INIT_COMPANIES);
-  const [search, setSearch] = useState("");
+  const [search, setSearch]           = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [newCo, setNewCo] = useState({ name: "", industry: "Technology", adminEmail: "", plan: "Pro", city: "", country: "India" });
+  const [newCo, setNewCo]             = useState(EMPTY_FORM);
 
-  const showToast = (msg, color = "green") => {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const toast       = useToast();
+  const queryClient = useQueryClient();
 
-  const filtered = companies.filter((c) => {
-    const q = search.toLowerCase();
-    return (c.name.toLowerCase().includes(q) || c.industry.toLowerCase().includes(q) || c.admin.toLowerCase().includes(q))
-      && (statusFilter === "All" || c.status === statusFilter);
+  // ── Fetch ─────────────────────────────────────────────────────────────────
+  const { data, isLoading } = useQuery({
+    queryKey: ["companies", search, statusFilter],
+    queryFn: () => getCompanies({
+      search: search || undefined,
+      status: statusFilter !== "All" ? statusFilter : undefined,
+    }),
   });
 
-  const handleAddCompany = () => {
-    if (!newCo.name || !newCo.adminEmail || !newCo.city) { showToast("Please fill all required fields", "red"); return; }
-    const id = companies.length + 1;
-    setCompanies([...companies, {
-      id, name: newCo.name, industry: newCo.industry, plan: newCo.plan, employees: 0,
-      status: "Trial", city: newCo.city, country: newCo.country,
-      admin: newCo.adminEmail.split("@")[0], created: "Jun 2026",
-      cost: COST_MAP[newCo.plan], color: BRAND_COLORS[id % BRAND_COLORS.length],
-    }]);
-    setNewCo({ name: "", industry: "Technology", adminEmail: "", plan: "Pro", city: "", country: "India" });
-    setShowAddModal(false);
-    showToast(`Company "${newCo.name}" created successfully`);
-  };
+  const companies = data?.data?.companies || [];
 
-  const handleSuspend = (id) => {
-    const co = companies.find((c) => c.id === id);
-    if (!co) return;
-    const next = co.status === "Suspended" ? "Active" : "Suspended";
-    setCompanies(companies.map((c) => c.id === id ? { ...c, status: next } : c));
-    showToast(`${co.name} ${next === "Suspended" ? "suspended" : "reactivated"}`, next === "Suspended" ? "red" : "green");
-  };
-
-  const totalEmployees = companies.reduce((s, c) => s + c.employees, 0);
-  const totalRevenue = companies.reduce((s, c) => s + parseInt(c.cost, 10), 0);
+  // ── Computed stats ────────────────────────────────────────────────────────
+  const totalEmployees = companies.reduce((s, c) => s + (c._count?.employees ?? c.employees ?? 0), 0);
+  const totalRevenue   = companies.reduce((s, c) => s + (COST_MAP[c.plan] || 0), 0);
 
   const STATS = [
-    { label: "Total Companies", value: companies.length,                                      sub: "tenants registered" },
-    { label: "Active",          value: companies.filter((c) => c.status === "Active").length, sub: "live accounts" },
-    { label: "Total Employees", value: totalEmployees,                                        sub: "across all tenants" },
-    { label: "Total Revenue",   value: `INR ${totalRevenue.toLocaleString("en-IN")}/mo`,      sub: "combined monthly" },
+    { label: "Total Companies", value: companies.length,                                       sub: "tenants registered" },
+    { label: "Active",          value: companies.filter((c) => c.status === "Active").length,  sub: "live accounts" },
+    { label: "Total Employees", value: totalEmployees,                                         sub: "across all tenants" },
+    { label: "Total Revenue",   value: `INR ${totalRevenue.toLocaleString("en-IN")}/mo`,       sub: "combined monthly" },
   ];
 
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: createCompany,
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      setNewCo(EMPTY_FORM);
+      setShowAddModal(false);
+      toast.show(`Company "${vars.name}" created successfully`, "success");
+    },
+    onError: () => toast.show("Failed to create company. Please try again.", "error"),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => updateCompanyStatus(id, status),
+    onSuccess: (_, { status, name }) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      toast.show(`${name} ${status === "Suspended" ? "suspended" : "reactivated"}`, status === "Suspended" ? "error" : "success");
+    },
+    onError: () => toast.show("Failed to update company status.", "error"),
+  });
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleAddCompany = () => {
+    if (!newCo.name || !newCo.adminEmail || !newCo.adminPassword || !newCo.city) {
+      toast.show("Please fill all required fields", "error");
+      return;
+    }
+    createMutation.mutate({
+      name:          newCo.name,
+      industry:      newCo.industry,
+      adminEmail:    newCo.adminEmail,
+      adminPassword: newCo.adminPassword,
+      adminName:     newCo.adminName,
+      plan:          newCo.plan,
+      city:          newCo.city,
+      country:       newCo.country,
+    });
+  };
+
+  const handleSuspend = (co) => {
+    const next = co.status === "Suspended" ? "Active" : "Suspended";
+    statusMutation.mutate({ id: co.id, status: next, name: co.name });
+  };
+
+  // ── UI ────────────────────────────────────────────────────────────────────
   return (
     <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
-      {toast && (
-        <Notification
-          color={toast.color}
-          onClose={() => setToast(null)}
-          style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, minWidth: 260 }}
-        >
-          {toast.msg}
-        </Notification>
-      )}
-
       <Group justify="space-between">
         <div>
           <Title order={3}>Multi-Company Management</Title>
@@ -122,83 +132,101 @@ export default function MultiCompany() {
         />
       </Group>
 
-      <SimpleGrid cols={2} spacing="lg">
-        {filtered.map((co) => (
-          <Paper
-            key={co.id} withBorder p="lg" radius="lg"
-            style={{ borderColor: co.status === "Suspended" ? "var(--mantine-color-red-3)" : undefined }}
-          >
-            <Group justify="space-between" align="flex-start" mb="md">
-              <Group gap="md">
-                <Avatar radius="md" size={48} style={{ background: co.color }}>
-                  <Text c="white" fw={700} size="sm">{co.name.slice(0, 2).toUpperCase()}</Text>
-                </Avatar>
-                <div>
-                  <Text fw={700}>{co.name}</Text>
-                  <Text size="xs" c="dimmed">{co.industry} - {co.city}, {co.country}</Text>
-                </div>
-              </Group>
-              <Stack gap={4} align="flex-end">
-                <Badge color={STATUS_COLORS[co.status]} variant="light">{co.status}</Badge>
-                <Badge color={PLAN_COLORS[co.plan]} variant="light">{co.plan}</Badge>
-              </Stack>
-            </Group>
-
-            <Group
-              grow py="sm"
-              style={{ borderTop: "1px solid var(--mantine-color-gray-2)", borderBottom: "1px solid var(--mantine-color-gray-2)" }}
-              mb="md"
-            >
-              <Stack gap={2} align="center">
-                <Text fw={700} size="lg">{co.employees}</Text>
-                <Text size="xs" c="dimmed">Employees</Text>
-              </Stack>
-              <Stack gap={2} align="center" style={{ borderLeft: "1px solid var(--mantine-color-gray-2)", borderRight: "1px solid var(--mantine-color-gray-2)" }}>
-                <Text fw={700} size="lg">INR {COST_LABEL[co.cost] || co.cost}</Text>
-                <Text size="xs" c="dimmed">Monthly</Text>
-              </Stack>
-              <Stack gap={2} align="center">
-                <Text fw={600}>{co.created}</Text>
-                <Text size="xs" c="dimmed">Since</Text>
-              </Stack>
-            </Group>
-
-            <Group justify="space-between">
-              <Group gap="xs">
-                <Avatar size={26} radius="xl" style={{ background: co.color + "33" }}>
-                  <Text size="xs" fw={700} c={co.color}>{co.admin.slice(0, 2).toUpperCase()}</Text>
-                </Avatar>
-                <Text size="xs" c="dimmed">Admin: <Text span size="xs" fw={500}>{co.admin}</Text></Text>
-              </Group>
-              <Group gap={6}>
-                <ActionIcon variant="default" size="sm" title="View" onClick={() => showToast(`Viewing ${co.name} dashboard...`)}>
-                  <IconEye size={13} />
-                </ActionIcon>
-                <ActionIcon variant="default" size="sm" title="Edit" onClick={() => showToast(`Editing ${co.name}...`)}>
-                  <IconPencil size={13} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="light"
-                  color={co.status === "Suspended" ? "green" : "red"}
-                  size="sm"
-                  title={co.status === "Suspended" ? "Reactivate" : "Suspend"}
-                  onClick={() => handleSuspend(co.id)}
-                >
-                  <IconUserOff size={13} />
-                </ActionIcon>
-              </Group>
-            </Group>
-          </Paper>
-        ))}
-      </SimpleGrid>
-
-      {filtered.length === 0 && (
-        <Center py={60}>
-          <Stack align="center" gap="xs">
-            <IconBuilding size={32} color="gray" />
-            <Text size="sm" c="dimmed">No companies found matching your search.</Text>
-          </Stack>
+      {isLoading ? (
+        <Center py={80}>
+          <Loader size="md" />
         </Center>
+      ) : (
+        <>
+          <SimpleGrid cols={2} spacing="lg">
+            {companies.map((co) => {
+              const adminLabel = co.adminName || co.admin || co.adminEmail?.split("@")[0] || "—";
+              const monthlyCost = COST_MAP[co.plan] || 0;
+              const createdLabel = co.createdAt
+                ? new Date(co.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+                : co.created || "—";
+              const employeeCount = co._count?.employees ?? co.employees ?? 0;
+
+              return (
+                <Paper
+                  key={co.id} withBorder p="lg" radius="lg"
+                  style={{ borderColor: co.status === "Suspended" ? "var(--mantine-color-red-3)" : undefined }}
+                >
+                  <Group justify="space-between" align="flex-start" mb="md">
+                    <Group gap="md">
+                      <Avatar radius="md" size={48} color="blue">
+                        <Text c="white" fw={700} size="sm">{co.name.slice(0, 2).toUpperCase()}</Text>
+                      </Avatar>
+                      <div>
+                        <Text fw={700}>{co.name}</Text>
+                        <Text size="xs" c="dimmed">{co.industry} - {co.city}, {co.country}</Text>
+                      </div>
+                    </Group>
+                    <Stack gap={4} align="flex-end">
+                      <Badge color={STATUS_COLORS[co.status] || "gray"} variant="light">{co.status}</Badge>
+                      <Badge color={PLAN_COLORS[co.plan]   || "gray"} variant="light">{co.plan}</Badge>
+                    </Stack>
+                  </Group>
+
+                  <Group
+                    grow py="sm"
+                    style={{ borderTop: "1px solid var(--mantine-color-gray-2)", borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+                    mb="md"
+                  >
+                    <Stack gap={2} align="center">
+                      <Text fw={700} size="lg">{employeeCount}</Text>
+                      <Text size="xs" c="dimmed">Employees</Text>
+                    </Stack>
+                    <Stack gap={2} align="center" style={{ borderLeft: "1px solid var(--mantine-color-gray-2)", borderRight: "1px solid var(--mantine-color-gray-2)" }}>
+                      <Text fw={700} size="lg">INR {COST_LABEL[monthlyCost] ?? monthlyCost.toLocaleString("en-IN")}</Text>
+                      <Text size="xs" c="dimmed">Monthly</Text>
+                    </Stack>
+                    <Stack gap={2} align="center">
+                      <Text fw={600}>{createdLabel}</Text>
+                      <Text size="xs" c="dimmed">Since</Text>
+                    </Stack>
+                  </Group>
+
+                  <Group justify="space-between">
+                    <Group gap="xs">
+                      <Avatar size={26} radius="xl" color="blue">
+                        <Text size="xs" fw={700}>{adminLabel.slice(0, 2).toUpperCase()}</Text>
+                      </Avatar>
+                      <Text size="xs" c="dimmed">Admin: <Text span size="xs" fw={500}>{adminLabel}</Text></Text>
+                    </Group>
+                    <Group gap={6}>
+                      <ActionIcon variant="default" size="sm" title="View" onClick={() => toast.show(`Viewing ${co.name} dashboard...`, "info")}>
+                        <IconEye size={13} />
+                      </ActionIcon>
+                      <ActionIcon variant="default" size="sm" title="Edit" onClick={() => toast.show(`Editing ${co.name}...`, "info")}>
+                        <IconPencil size={13} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="light"
+                        color={co.status === "Suspended" ? "green" : "red"}
+                        size="sm"
+                        title={co.status === "Suspended" ? "Reactivate" : "Suspend"}
+                        loading={statusMutation.isPending && statusMutation.variables?.id === co.id}
+                        onClick={() => handleSuspend(co)}
+                      >
+                        <IconUserOff size={13} />
+                      </ActionIcon>
+                    </Group>
+                  </Group>
+                </Paper>
+              );
+            })}
+          </SimpleGrid>
+
+          {companies.length === 0 && (
+            <Center py={60}>
+              <Stack align="center" gap="xs">
+                <IconBuilding size={32} color="gray" />
+                <Text size="sm" c="dimmed">No companies found matching your search.</Text>
+              </Stack>
+            </Center>
+          )}
+        </>
       )}
 
       <Modal opened={showAddModal} onClose={() => setShowAddModal(false)} title="Add New Company" size="md">
@@ -216,11 +244,24 @@ export default function MultiCompany() {
             data={INDUSTRIES}
           />
           <TextInput
+            label="Admin Name"
+            placeholder="Full name of admin"
+            value={newCo.adminName}
+            onChange={(e) => setNewCo({ ...newCo, adminName: e.currentTarget.value })}
+          />
+          <TextInput
             type="email"
             label="Admin Email *"
             placeholder="admin@company.com"
             value={newCo.adminEmail}
             onChange={(e) => setNewCo({ ...newCo, adminEmail: e.currentTarget.value })}
+          />
+          <TextInput
+            type="password"
+            label="Admin Password *"
+            placeholder="Set initial password"
+            value={newCo.adminPassword}
+            onChange={(e) => setNewCo({ ...newCo, adminPassword: e.currentTarget.value })}
           />
           <Select
             label="Plan *"
@@ -244,7 +285,7 @@ export default function MultiCompany() {
           </Group>
           <Group justify="flex-end" mt="sm">
             <Button variant="default" onClick={() => setShowAddModal(false)}>Cancel</Button>
-            <Button onClick={handleAddCompany}>Create Company</Button>
+            <Button onClick={handleAddCompany} loading={createMutation.isPending}>Create Company</Button>
           </Group>
         </Stack>
       </Modal>

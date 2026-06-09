@@ -8,10 +8,19 @@ import {
   IconFilter, IconShield, IconCreditCard, IconUsers,
   IconCalendar, IconPackage, IconFileText, IconInfoCircle,
 } from "@tabler/icons-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
+import { AppLoader }     from "../../components/ui/AppLoader";
 import { useToast }      from "../../components/ui/Toast";
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  deleteNotification,
+  clearReadNotifications,
+} from "../../api/notificationsApi";
 
 const CATEGORIES = ["All", "HR", "Payroll", "Security", "System", "Assets", "Leave"];
 
@@ -27,44 +36,71 @@ const CAT_CONFIG = {
 
 const SEV_DOT_COLOR = { critical: "red", warning: "yellow", info: "blue" };
 
-const INIT_NOTIFICATIONS = [
-  { id: 1,  category: "Security", title: "Failed login attempt detected",       body: "3 consecutive failed login attempts from IP 203.0.113.12 for superadmin account.",           time: "2 min ago",   read: false, severity: "critical" },
-  { id: 2,  category: "Payroll",  title: "May 2026 payroll processed",           body: "Payroll for 12 employees has been processed. Total disbursement: ₹4,85,000.",               time: "1 hour ago",  read: false, severity: "info"     },
-  { id: 3,  category: "HR",       title: "New employee onboarding: Arjun Kumar", body: "Arjun Kumar (EMP-013) has completed onboarding and is now active in the system.",            time: "3 hours ago", read: false, severity: "info"     },
-  { id: 4,  category: "Leave",    title: "Leave request pending approval",        body: "Priya Sharma has requested 3 days of Annual Leave (Jun 15–17). Awaiting manager approval.", time: "4 hours ago", read: false, severity: "info"     },
-  { id: 5,  category: "System",   title: "System backup completed",               body: "Automated backup (BKP-20260609) completed successfully. Size: 2.3 GB.",                     time: "6 hours ago", read: true,  severity: "info"     },
-  { id: 6,  category: "Assets",   title: "Asset assigned: MacBook Pro",           body: "Asset AST-045 (MacBook Pro 14\") assigned to Kavitha R by IT Admin.",                       time: "Yesterday",   read: true,  severity: "info"     },
-  { id: 7,  category: "Security", title: "MFA enabled globally",                 body: "Super Admin has enforced Multi-Factor Authentication for all admin accounts.",               time: "Yesterday",   read: true,  severity: "warning"  },
-  { id: 8,  category: "HR",       title: "Performance review cycle started",      body: "Q2 2026 performance review cycle has been initiated for all employees.",                     time: "2 days ago",  read: true,  severity: "info"     },
-  { id: 9,  category: "Payroll",  title: "Tax report ready for download",         body: "FY 2025-26 tax summary report is available for download in the Payroll module.",             time: "2 days ago",  read: true,  severity: "info"     },
-  { id: 10, category: "System",   title: "API rate limit warning",                body: "Endpoint /api/employees exceeded 80% of rate limit (800/1000 req/hour).",                   time: "3 days ago",  read: true,  severity: "warning"  },
-  { id: 11, category: "Leave",    title: "Leave balance updated",                 body: "Annual leave balance refreshed for all employees. Policy: 18 days per year.",               time: "4 days ago",  read: true,  severity: "info"     },
-  { id: 12, category: "Assets",   title: "Asset maintenance due",                 body: "2 assets (AST-012, AST-031) are due for scheduled maintenance this week.",                  time: "5 days ago",  read: true,  severity: "warning"  },
-];
+function isToday(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth()    === now.getMonth()    &&
+    d.getDate()     === now.getDate()
+  );
+}
 
 export default function NotificationCenter() {
   const { show } = useToast();
-  const [notifications, setNotifications] = useState(INIT_NOTIFICATIONS);
-  const [category, setCategory]           = useState("All");
-  const [search, setSearch]               = useState("");
-  const [showUnread, setShowUnread]       = useState(false);
+  const queryClient = useQueryClient();
 
+  const [category, setCategory]     = useState("All");
+  const [search, setSearch]         = useState("");
+  const [showUnread, setShowUnread] = useState(false);
+
+  // ── Fetch ──────────────────────────────────────────────────────────────────
+  const { data, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: getNotifications,
+  });
+  const notifications = data?.data?.notifications ?? [];
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+  // ── Mutations ──────────────────────────────────────────────────────────────
+  const markReadMutation = useMutation({
+    mutationFn: markNotificationRead,
+    onSuccess: invalidate,
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () => { invalidate(); show("All notifications marked as read", "success"); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: invalidate,
+  });
+
+  const clearReadMutation = useMutation({
+    mutationFn: clearReadNotifications,
+    onSuccess: () => { invalidate(); show("Read notifications cleared", "success"); },
+  });
+
+  // ── Derived stats ──────────────────────────────────────────────────────────
+  const unreadCount   = notifications.filter(n => !n.read).length;
+  const criticalCount = notifications.filter(n => n.severity === "critical").length;
+  const todayCount    = notifications.filter(n => isToday(n.createdAt ?? n.timestamp ?? n.time)).length;
+
+  // ── Filtered list ──────────────────────────────────────────────────────────
   const filtered = notifications.filter(n => {
-    const catMatch   = category === "All" || n.category === category;
-    const readMatch  = !showUnread || !n.read;
-    const q          = search.toLowerCase();
+    const catMatch    = category === "All" || n.category === category;
+    const readMatch   = !showUnread || !n.read;
+    const q           = search.toLowerCase();
     const searchMatch = !q || n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
     return catMatch && readMatch && searchMatch;
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markRead    = (id) => setNotifications(p => p.map(n => n.id === id ? { ...n, read: true } : n));
-  const markAllRead = () => { setNotifications(p => p.map(n => ({ ...n, read: true }))); show("All notifications marked as read", "success"); };
-  const deleteNotif = (id) => setNotifications(p => p.filter(n => n.id !== id));
-  const clearAll    = () => { setNotifications(p => p.filter(n => !n.read)); show("Read notifications cleared", "success"); };
-
-  const todayTimes = ["2 min ago","1 hour ago","3 hours ago","4 hours ago","6 hours ago"];
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (isLoading) return <AppLoader fullScreen />;
 
   return (
     <Stack gap="lg">
@@ -73,13 +109,20 @@ export default function NotificationCenter() {
         sub={unreadCount > 0 ? `${unreadCount} unread notifications` : "All caught up!"}
         action={
           <Group gap="sm">
-            <Button variant="outline" size="sm" leftSection={<IconTrash size={14} />} onClick={clearAll}>
+            <Button
+              variant="outline"
+              size="sm"
+              leftSection={<IconTrash size={14} />}
+              onClick={() => clearReadMutation.mutate()}
+              loading={clearReadMutation.isPending}
+            >
               Clear Read
             </Button>
             <Button
               size="sm"
               leftSection={<IconChecks size={14} />}
-              onClick={markAllRead}
+              onClick={() => markAllReadMutation.mutate()}
+              loading={markAllReadMutation.isPending}
               disabled={unreadCount === 0}
             >
               Mark All Read
@@ -89,10 +132,10 @@ export default function NotificationCenter() {
       />
 
       <SimpleGrid cols={{ base: 2, sm: 4 }}>
-        <AppStatCard label="Total"    value={String(notifications.length)}                                              color="blue"   />
-        <AppStatCard label="Unread"   value={String(unreadCount)}                                                       color="red"    />
-        <AppStatCard label="Critical" value={String(notifications.filter(n => n.severity === "critical").length)}       color="orange" />
-        <AppStatCard label="Today"    value={String(notifications.filter(n => todayTimes.includes(n.time)).length)}     color="green"  />
+        <AppStatCard label="Total"    value={String(notifications.length)} color="blue"   />
+        <AppStatCard label="Unread"   value={String(unreadCount)}          color="red"    />
+        <AppStatCard label="Critical" value={String(criticalCount)}        color="orange" />
+        <AppStatCard label="Today"    value={String(todayCount)}           color="green"  />
       </SimpleGrid>
 
       <Paper radius="lg" withBorder>
@@ -146,17 +189,17 @@ export default function NotificationCenter() {
                 gap="sm"
                 align="flex-start"
                 wrap="nowrap"
-                onClick={() => markRead(n.id)}
+                onClick={() => !n.read && markReadMutation.mutate(n.id)}
                 style={{
                   borderBottom: i < filtered.length - 1 ? "1px solid var(--mantine-color-gray-2)" : "none",
                   background: n.read ? "transparent" : "var(--mantine-color-blue-0)",
-                  cursor: "pointer",
+                  cursor: n.read ? "default" : "pointer",
                 }}
               >
                 {/* Severity dot */}
                 <div style={{
                   width: 8, height: 8, borderRadius: "50%", flexShrink: 0, marginTop: 6,
-                  background: n.read ? "transparent" : `var(--mantine-color-${SEV_DOT_COLOR[n.severity]}-5)`,
+                  background: n.read ? "transparent" : `var(--mantine-color-${SEV_DOT_COLOR[n.severity] ?? "blue"}-5)`,
                 }} />
 
                 {/* Category icon */}
@@ -169,12 +212,15 @@ export default function NotificationCenter() {
                   <Group justify="space-between" gap="xs" wrap="nowrap">
                     <Text size="sm" fw={n.read ? 400 : 700}>{n.title}</Text>
                     <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
-                      <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>{n.time}</Text>
+                      <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                        {n.time ?? n.createdAt ?? ""}
+                      </Text>
                       <ActionIcon
                         size="sm"
                         variant="subtle"
                         color="gray"
-                        onClick={e => { e.stopPropagation(); deleteNotif(n.id); }}
+                        onClick={e => { e.stopPropagation(); deleteMutation.mutate(n.id); }}
+                        loading={deleteMutation.isPending && deleteMutation.variables === n.id}
                       >
                         <IconTrash size={13} />
                       </ActionIcon>

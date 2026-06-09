@@ -9,7 +9,7 @@ export { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE } from "../
 
 export const APP_NAME      = "MGate HRMS";
 export const COMPANY_NAME  = "MGate Technologies";
-export const API_BASE      = "http://localhost:5000";
+export const API_BASE      = "http://localhost:4000/api/v1";
 
 export const ROLES = {
   SUPER_ADMIN: "Super Admin",

@@ -1,207 +1,414 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Stack, Group, Text, Title, Paper, Button, Tabs, SimpleGrid,
-  Switch, Select, Checkbox, TextInput, ActionIcon, Alert, Notification,
+  Stack, Group, Text, Paper, Badge, Button, Switch, TextInput,
+  Table, ActionIcon, SimpleGrid, Tabs, Select, Progress, Alert,
 } from "@mantine/core";
-import { IconShield, IconDeviceFloppy, IconPlus, IconX } from "@tabler/icons-react";
+import {
+  IconShield, IconDeviceFloppy, IconPlus, IconX, IconLogout,
+  IconUsers, IconAlertTriangle, IconLock, IconStarFilled,
+} from "@tabler/icons-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-const STATS = [
-  { label: "Active Sessions",     value: "8",      sub: "users online now" },
-  { label: "Failed Logins Today", value: "3",      sub: "suspicious attempts" },
-  { label: "MFA Enabled",         value: "5/12",   sub: "users protected" },
-  { label: "Security Score",      value: "74/100", sub: "good standing" },
-];
+import {
+  getSecuritySettings,
+  updateSecuritySettings,
+  getActiveSessions,
+  forceLogoutSession,
+  forceLogoutAll,
+  getSecurityStats,
+  addIpToWhitelist,
+  removeIpFromWhitelist,
+} from "../../api/securityApi";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
+import { AppStatCard } from "../../components/ui/AppStatCard";
+import { useToast } from "../../components/ui/Toast";
 
 export default function SecurityCenter({ userRole = "SUPER_ADMIN" }) {
-  const [toast, setToast] = useState(null);
   const isReadOnly = userRole !== "SUPER_ADMIN";
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-  const [mfaEnabled, setMfaEnabled] = useState(true);
-  const [passwordMinLength, setPasswordMinLength] = useState("10");
-  const [complexityUppercase, setComplexityUppercase] = useState(true);
-  const [complexityLowercase, setComplexityLowercase] = useState(true);
-  const [complexityNumbers, setComplexityNumbers] = useState(true);
-  const [complexitySymbols, setComplexitySymbols] = useState(false);
-  const [loginAttemptLimit, setLoginAttemptLimit] = useState("5");
+  // ── Queries ────────────────────────────────────────────────────────────────
 
-  const [sessionTimeout, setSessionTimeout] = useState("30");
-  const [singleSession, setSingleSession] = useState(false);
-  const [rememberDevice, setRememberDevice] = useState("14");
+  const { data: statsData } = useQuery({
+    queryKey: ["security-stats"],
+    queryFn: getSecurityStats,
+  });
 
-  const [whitelistEnabled, setWhitelistEnabled] = useState(true);
+  const { data: settingsData } = useQuery({
+    queryKey: ["security-settings"],
+    queryFn: getSecuritySettings,
+  });
+
+  const { data: sessionsData } = useQuery({
+    queryKey: ["security-sessions"],
+    queryFn: getActiveSessions,
+  });
+
+  // ── Local settings form state (seeded from API) ────────────────────────────
+
+  const [settings, setSettings] = useState({
+    mfaEnabled: false,
+    sessionTimeout: "30",
+    passwordPolicy: "",
+    ipWhitelistEnabled: false,
+    auditLogging: false,
+  });
+
+  useEffect(() => {
+    const sd = settingsData?.data || settingsData;
+    if (sd) {
+      setSettings({
+        mfaEnabled:         sd.mfaEnabled         ?? false,
+        sessionTimeout:     String(sd.sessionTimeout ?? "30"),
+        passwordPolicy:     sd.passwordPolicy      ?? "",
+        ipWhitelistEnabled: sd.ipWhitelistEnabled  ?? false,
+        auditLogging:       sd.auditLogging        ?? false,
+      });
+    }
+  }, [settingsData]);
+
+  const patchSettings = (key, value) =>
+    setSettings((prev) => ({ ...prev, [key]: value }));
+
+  // ── Settings mutation ──────────────────────────────────────────────────────
+
+  const saveSettingsMutation = useMutation({
+    mutationFn: updateSecuritySettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
+      toast.show("Security settings saved successfully", "success");
+    },
+    onError: () => toast.show("Failed to save settings", "error"),
+  });
+
+  // ── Session mutations ──────────────────────────────────────────────────────
+
+  const forceLogoutOneMutation = useMutation({
+    mutationFn: forceLogoutSession,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["security-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
+      toast.show("Session terminated", "success");
+    },
+    onError: () => toast.show("Failed to terminate session", "error"),
+  });
+
+  const forceLogoutAllMutation = useMutation({
+    mutationFn: forceLogoutAll,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["security-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
+      toast.show("All sessions terminated", "success");
+    },
+    onError: () => toast.show("Failed to terminate sessions", "error"),
+  });
+
+  // ── IP whitelist mutations ─────────────────────────────────────────────────
+
   const [ipInput, setIpInput] = useState("");
-  const [ipList, setIpList] = useState(["10.0.1.0/24", "203.0.113.12", "198.51.100.5"]);
 
-  const [logRetention, setLogRetention] = useState("90");
-  const [autoExport, setAutoExport] = useState(false);
-  const [siemIntegration, setSiemIntegration] = useState(false);
+  const addIpMutation = useMutation({
+    mutationFn: addIpToWhitelist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
+      setIpInput("");
+      toast.show("IP added to whitelist", "success");
+    },
+    onError: () => toast.show("Failed to add IP", "error"),
+  });
 
-  const showToast = (msg, color = "green") => {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const removeIpMutation = useMutation({
+    mutationFn: removeIpFromWhitelist,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
+      toast.show("IP removed from whitelist", "success");
+    },
+    onError: () => toast.show("Failed to remove IP", "error"),
+  });
 
   const handleAddIp = () => {
     const trimmed = ipInput.trim();
     if (!trimmed) return;
-    if (ipList.includes(trimmed)) { showToast("IP already in list", "red"); return; }
-    setIpList([...ipList, trimmed]);
-    setIpInput("");
-    showToast(`IP ${trimmed} added to whitelist`);
+    addIpMutation.mutate(trimmed);
   };
 
-  const handleRemoveIp = (ip) => {
-    setIpList(ipList.filter((i) => i !== ip));
-    showToast(`IP ${ip} removed from whitelist`, "red");
-  };
+  // ── Derived values ─────────────────────────────────────────────────────────
 
-  const complexityOptions = [
-    { label: "Uppercase letters (A-Z)", val: complexityUppercase, set: setComplexityUppercase },
-    { label: "Lowercase letters (a-z)", val: complexityLowercase, set: setComplexityLowercase },
-    { label: "Numbers (0-9)",           val: complexityNumbers,   set: setComplexityNumbers },
-    { label: "Special symbols (!@#$)",  val: complexitySymbols,   set: setComplexitySymbols },
-  ];
+  const stats    = statsData?.data    || statsData    || {};
+  const sd       = settingsData?.data || settingsData || {};
+  const sessions = sessionsData?.data?.sessions || sessionsData?.sessions || sessionsData || [];
+  const ipList   = sd.ipList ?? sd.ipWhitelist ?? [];
+
+  const score = stats.securityScore ?? 0;
+  const scoreColor = score >= 80 ? "green" : score >= 60 ? "yellow" : "red";
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
-      {toast && (
-        <Notification
-          color={toast.color}
-          onClose={() => setToast(null)}
-          style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, minWidth: 260 }}
-        >
-          {toast.msg}
-        </Notification>
-      )}
+
+      <AppPageHeader
+        title="Security Center"
+        sub="Configure authentication, sessions and access policies"
+        action={
+          !isReadOnly && (
+            <Button
+              leftSection={<IconDeviceFloppy size={16} />}
+              loading={saveSettingsMutation.isPending}
+              onClick={() => saveSettingsMutation.mutate(settings)}
+            >
+              Save Changes
+            </Button>
+          )
+        }
+      />
 
       {isReadOnly && (
         <Alert color="yellow" icon={<IconShield size={16} />}>
-          View Only - Security policy configuration is restricted to Super Admin.
+          View Only — Security policy configuration is restricted to Super Admin.
         </Alert>
       )}
 
-      <Group justify="space-between">
-        <div>
-          <Title order={3}>Security Center</Title>
-          <Text size="sm" c="dimmed">Configure authentication, sessions and access policies</Text>
-        </div>
-        {!isReadOnly && (
-          <Button leftSection={<IconDeviceFloppy size={16} />} onClick={() => showToast("Security settings saved successfully")}>
-            Save Changes
-          </Button>
-        )}
-      </Group>
-
-      <SimpleGrid cols={4}>
-        {STATS.map((s) => (
-          <Paper key={s.label} withBorder p="md" radius="lg">
-            <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>{s.label}</Text>
-            <Text size="xl" fw={700}>{s.value}</Text>
-            <Text size="xs" c="dimmed" mt={4}>{s.sub}</Text>
-          </Paper>
-        ))}
+      {/* Stats row */}
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }}>
+        <AppStatCard
+          icon={<IconUsers size={22} />}
+          label="Active Sessions"
+          value={stats.activeSessions ?? "—"}
+          sub="users online now"
+          color="blue"
+        />
+        <AppStatCard
+          icon={<IconAlertTriangle size={22} />}
+          label="Failed Logins Today"
+          value={stats.failedLoginsToday ?? "—"}
+          sub="suspicious attempts"
+          color="red"
+        />
+        <AppStatCard
+          icon={<IconLock size={22} />}
+          label="MFA Enabled"
+          value={
+            stats.securityScore !== undefined
+              ? `${stats.mfaEnabled}/${stats.mfaTotal}`
+              : "—"
+          }
+          sub="users protected"
+          color="teal"
+        />
+        <AppStatCard
+          icon={<IconStarFilled size={22} />}
+          label="Security Score"
+          value={stats.securityScore !== undefined ? `${stats.securityScore}/100` : "—"}
+          sub="overall standing"
+          color={scoreColor}
+        />
       </SimpleGrid>
 
+      {/* Score progress bar */}
+      {stats.securityScore !== undefined && (
+        <Paper withBorder radius="lg" p="md">
+          <Group justify="space-between" mb="xs">
+            <Text size="sm" fw={600}>Security Score</Text>
+            <Badge color={scoreColor}>{score}/100</Badge>
+          </Group>
+          <Progress value={score} color={scoreColor} radius="xl" size="md" />
+        </Paper>
+      )}
+
+      {/* Tabs */}
       <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
-        <Tabs defaultValue="authentication">
+        <Tabs defaultValue="overview">
           <Tabs.List>
-            <Tabs.Tab value="authentication">Authentication</Tabs.Tab>
-            <Tabs.Tab value="session">Session Policy</Tabs.Tab>
-            <Tabs.Tab value="ip">IP Restrictions</Tabs.Tab>
-            <Tabs.Tab value="audit">Audit Settings</Tabs.Tab>
+            <Tabs.Tab value="overview">Overview</Tabs.Tab>
+            <Tabs.Tab value="settings">Settings</Tabs.Tab>
+            <Tabs.Tab value="sessions">
+              Sessions{sessions.length > 0 && ` (${sessions.length})`}
+            </Tabs.Tab>
+            <Tabs.Tab value="ip">IP Whitelist</Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="authentication" p="lg">
+          {/* ── Overview ──────────────────────────────────────────────────── */}
+          <Tabs.Panel value="overview" p="lg">
+            <Stack gap="md" maw={560}>
+              <Text fw={600}>Current Security Status</Text>
+              <SimpleGrid cols={2}>
+                <Paper withBorder p="sm" radius="md">
+                  <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>Active Sessions</Text>
+                  <Text size="xl" fw={700}>{stats.activeSessions ?? "—"}</Text>
+                </Paper>
+                <Paper withBorder p="sm" radius="md">
+                  <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>Failed Logins Today</Text>
+                  <Text size="xl" fw={700}>{stats.failedLoginsToday ?? "—"}</Text>
+                </Paper>
+                <Paper withBorder p="sm" radius="md">
+                  <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>MFA Coverage</Text>
+                  <Text size="xl" fw={700}>
+                    {statsData ? `${stats.mfaEnabled}/${stats.mfaTotal}` : "—"}
+                  </Text>
+                </Paper>
+                <Paper withBorder p="sm" radius="md">
+                  <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>Security Score</Text>
+                  <Text size="xl" fw={700} c={scoreColor}>
+                    {statsData ? `${stats.securityScore}/100` : "—"}
+                  </Text>
+                </Paper>
+              </SimpleGrid>
+              {stats.securityScore !== undefined && (
+                <>
+                  <Text size="sm" fw={500} mt="xs">Score breakdown</Text>
+                  <Progress value={score} color={scoreColor} radius="xl" size="lg" />
+                  <Text size="xs" c="dimmed">
+                    {score >= 80
+                      ? "Excellent — your security posture is strong."
+                      : score >= 60
+                      ? "Good — consider enabling MFA for remaining users."
+                      : "Needs attention — review settings and active sessions."}
+                  </Text>
+                </>
+              )}
+            </Stack>
+          </Tabs.Panel>
+
+          {/* ── Settings ──────────────────────────────────────────────────── */}
+          <Tabs.Panel value="settings" p="lg">
             <Stack maw={560} gap="lg">
-              <Text fw={600}>Multi-Factor Authentication</Text>
               <Switch
                 label="Require MFA for all users"
                 description="Users must set up MFA on next login"
-                checked={mfaEnabled}
-                onChange={(e) => !isReadOnly && setMfaEnabled(e.currentTarget.checked)}
+                checked={settings.mfaEnabled}
+                onChange={(e) =>
+                  !isReadOnly && patchSettings("mfaEnabled", e.currentTarget.checked)
+                }
                 disabled={isReadOnly}
               />
 
-              <Text fw={600}>Password Policy</Text>
-              <Select
-                label="Minimum Password Length"
-                value={passwordMinLength}
-                onChange={(v) => setPasswordMinLength(v)}
-                data={[{ value: "8", label: "8 characters" }, { value: "10", label: "10 characters" }, { value: "12", label: "12 characters" }]}
-                disabled={isReadOnly}
-                w={200}
-              />
-
-              <Stack gap="xs">
-                <Text size="sm" fw={500}>Complexity Requirements</Text>
-                {complexityOptions.map((c) => (
-                  <Checkbox
-                    key={c.label}
-                    label={c.label}
-                    checked={c.val}
-                    onChange={(e) => !isReadOnly && c.set(e.currentTarget.checked)}
-                    disabled={isReadOnly}
-                  />
-                ))}
-              </Stack>
-
-              <Select
-                label="Login Attempt Limit (before lockout)"
-                value={loginAttemptLimit}
-                onChange={(v) => setLoginAttemptLimit(v)}
-                data={[{ value: "3", label: "3 attempts" }, { value: "5", label: "5 attempts" }, { value: "10", label: "10 attempts" }]}
-                disabled={isReadOnly}
-                w={200}
-              />
-            </Stack>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="session" p="lg">
-            <Stack maw={560} gap="lg">
-              <Text fw={600}>Session Settings</Text>
               <Select
                 label="Session Timeout"
                 description="Users will be logged out after this period of inactivity."
-                value={sessionTimeout}
-                onChange={(v) => setSessionTimeout(v)}
+                value={settings.sessionTimeout}
+                onChange={(v) => patchSettings("sessionTimeout", v)}
                 data={[
-                  { value: "15", label: "15 minutes" }, { value: "30", label: "30 minutes" },
-                  { value: "60", label: "1 hour" }, { value: "120", label: "2 hours" },
+                  { value: "15", label: "15 minutes" },
+                  { value: "30", label: "30 minutes" },
+                  { value: "60", label: "1 hour" },
+                  { value: "120", label: "2 hours" },
                 ]}
                 disabled={isReadOnly}
                 w={200}
               />
-              <Switch
-                label="Single Session Enforcement"
-                description="Users can only be logged in from one device at a time"
-                checked={singleSession}
-                onChange={(e) => !isReadOnly && setSingleSession(e.currentTarget.checked)}
-                disabled={isReadOnly}
-              />
-              <Select
-                label="Remember Device Duration"
-                value={rememberDevice}
-                onChange={(v) => setRememberDevice(v)}
-                data={[
-                  { value: "7", label: "7 days" }, { value: "14", label: "14 days" },
-                  { value: "30", label: "30 days" }, { value: "0", label: "Never" },
-                ]}
-                disabled={isReadOnly}
-                w={200}
-              />
-            </Stack>
-          </Tabs.Panel>
 
-          <Tabs.Panel value="ip" p="lg">
-            <Stack maw={560} gap="lg">
-              <Text fw={600}>IP Whitelist</Text>
+              <TextInput
+                label="Password Policy"
+                description="Describe the password requirements enforced for all users"
+                placeholder="e.g. min 10 chars, uppercase, numbers, symbols"
+                value={settings.passwordPolicy}
+                onChange={(e) => patchSettings("passwordPolicy", e.currentTarget.value)}
+                disabled={isReadOnly}
+              />
+
               <Switch
                 label="Enable IP Whitelist"
                 description="Only allow logins from whitelisted IP addresses"
-                checked={whitelistEnabled}
-                onChange={(e) => !isReadOnly && setWhitelistEnabled(e.currentTarget.checked)}
+                checked={settings.ipWhitelistEnabled}
+                onChange={(e) =>
+                  !isReadOnly && patchSettings("ipWhitelistEnabled", e.currentTarget.checked)
+                }
                 disabled={isReadOnly}
               />
+
+              <Switch
+                label="Audit Logging"
+                description="Record all security-relevant events to the audit log"
+                checked={settings.auditLogging}
+                onChange={(e) =>
+                  !isReadOnly && patchSettings("auditLogging", e.currentTarget.checked)
+                }
+                disabled={isReadOnly}
+              />
+
+              {!isReadOnly && (
+                <Button
+                  leftSection={<IconDeviceFloppy size={16} />}
+                  loading={saveSettingsMutation.isPending}
+                  onClick={() => saveSettingsMutation.mutate(settings)}
+                  w="fit-content"
+                >
+                  Save Settings
+                </Button>
+              )}
+            </Stack>
+          </Tabs.Panel>
+
+          {/* ── Sessions ──────────────────────────────────────────────────── */}
+          <Tabs.Panel value="sessions" p="lg">
+            <Stack gap="md">
+              {!isReadOnly && sessions.length > 0 && (
+                <Group justify="flex-end">
+                  <Button
+                    variant="light"
+                    color="red"
+                    leftSection={<IconLogout size={16} />}
+                    loading={forceLogoutAllMutation.isPending}
+                    onClick={() => forceLogoutAllMutation.mutate()}
+                  >
+                    Force Logout All
+                  </Button>
+                </Group>
+              )}
+
+              {sessions.length === 0 ? (
+                <Text size="sm" c="dimmed" ta="center" py="xl">
+                  No active sessions found.
+                </Text>
+              ) : (
+                <Table highlightOnHover withTableBorder withColumnBorders>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>User</Table.Th>
+                      <Table.Th>Email</Table.Th>
+                      <Table.Th>Device</Table.Th>
+                      <Table.Th>IP Address</Table.Th>
+                      <Table.Th>Last Active</Table.Th>
+                      {!isReadOnly && <Table.Th>Action</Table.Th>}
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {sessions.map((session) => (
+                      <Table.Tr key={session.id}>
+                        <Table.Td fw={500}>{session.user}</Table.Td>
+                        <Table.Td>{session.email}</Table.Td>
+                        <Table.Td>{session.device}</Table.Td>
+                        <Table.Td ff="monospace">{session.ip}</Table.Td>
+                        <Table.Td>{session.lastActive}</Table.Td>
+                        {!isReadOnly && (
+                          <Table.Td>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              loading={forceLogoutOneMutation.isPending}
+                              onClick={() => forceLogoutOneMutation.mutate(session.id)}
+                            >
+                              <IconLogout size={14} />
+                            </ActionIcon>
+                          </Table.Td>
+                        )}
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              )}
+            </Stack>
+          </Tabs.Panel>
+
+          {/* ── IP Whitelist ───────────────────────────────────────────────── */}
+          <Tabs.Panel value="ip" p="lg">
+            <Stack maw={560} gap="md">
+              <Text fw={600}>Whitelisted IP Addresses</Text>
+
               {!isReadOnly && (
                 <Group gap="sm" align="flex-end">
                   <TextInput
@@ -212,59 +419,42 @@ export default function SecurityCenter({ userRole = "SUPER_ADMIN" }) {
                     onKeyDown={(e) => e.key === "Enter" && handleAddIp()}
                     style={{ flex: 1 }}
                   />
-                  <Button leftSection={<IconPlus size={14} />} onClick={handleAddIp}>Add</Button>
+                  <Button
+                    leftSection={<IconPlus size={14} />}
+                    loading={addIpMutation.isPending}
+                    onClick={handleAddIp}
+                  >
+                    Add
+                  </Button>
                 </Group>
               )}
+
               <Stack gap="xs">
-                {ipList.map((ip) => (
-                  <Paper key={ip} withBorder p="sm" radius="md">
-                    <Group justify="space-between">
-                      <Text size="sm" ff="monospace">{ip}</Text>
-                      {!isReadOnly && (
-                        <ActionIcon variant="subtle" color="red" size="sm" onClick={() => handleRemoveIp(ip)}>
-                          <IconX size={14} />
-                        </ActionIcon>
-                      )}
-                    </Group>
-                  </Paper>
-                ))}
-                {ipList.length === 0 && (
-                  <Text size="sm" c="dimmed" ta="center" py="lg">No IPs whitelisted. All IPs are allowed.</Text>
+                {ipList.length === 0 ? (
+                  <Text size="sm" c="dimmed" ta="center" py="lg">
+                    No IPs whitelisted. All IPs are allowed.
+                  </Text>
+                ) : (
+                  ipList.map((ip) => (
+                    <Paper key={ip} withBorder p="sm" radius="md">
+                      <Group justify="space-between">
+                        <Text size="sm" ff="monospace">{ip}</Text>
+                        {!isReadOnly && (
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            size="sm"
+                            loading={removeIpMutation.isPending}
+                            onClick={() => removeIpMutation.mutate(ip)}
+                          >
+                            <IconX size={14} />
+                          </ActionIcon>
+                        )}
+                      </Group>
+                    </Paper>
+                  ))
                 )}
               </Stack>
-            </Stack>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="audit" p="lg">
-            <Stack maw={560} gap="lg">
-              <Text fw={600}>Log Retention</Text>
-              <Select
-                label="Retain Audit Logs For"
-                description="Logs older than this period will be permanently deleted."
-                value={logRetention}
-                onChange={(v) => setLogRetention(v)}
-                data={[
-                  { value: "30", label: "30 days" }, { value: "60", label: "60 days" },
-                  { value: "90", label: "90 days" }, { value: "180", label: "180 days" },
-                ]}
-                disabled={isReadOnly}
-                w={200}
-              />
-              <Text fw={600}>Integrations</Text>
-              <Switch
-                label="Auto-Export Logs"
-                description="Automatically export logs to storage at end of each week"
-                checked={autoExport}
-                onChange={(e) => !isReadOnly && setAutoExport(e.currentTarget.checked)}
-                disabled={isReadOnly}
-              />
-              <Switch
-                label="SIEM Integration"
-                description="Stream events to your security information and event management tool"
-                checked={siemIntegration}
-                onChange={(e) => !isReadOnly && setSiemIntegration(e.currentTarget.checked)}
-                disabled={isReadOnly}
-              />
             </Stack>
           </Tabs.Panel>
         </Tabs>

@@ -1,54 +1,38 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Stack, TextInput, Select, Tabs, Paper, Button, Badge,
   Switch, ColorInput, Modal, Textarea, Text, Title, Group, Box,
-  ActionIcon, Table, Notification, ThemeIcon, Divider, SimpleGrid,
+  ActionIcon, Table, ThemeIcon, Divider, SimpleGrid,
   FileButton, Image,
 } from "@mantine/core";
 import {
   IconBuilding, IconPalette, IconMail, IconBell, IconUpload,
-  IconDeviceFloppy, IconCheck, IconX, IconChevronRight,
+  IconDeviceFloppy, IconX, IconChevronRight,
   IconFileText, IconWorld,
 } from "@tabler/icons-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getCompanySettings, updateCompanySettings,
+  uploadCompanyLogo, uploadCompanyFavicon,
+  getEmailTemplates, updateEmailTemplate,
+  getNotificationSettings, updateNotificationSettings,
+} from "../../api/companyApi";
+import { useToast } from "../../components/ui/Toast";
 
-// ── Static data ───────────────────────────────────────────────────────────────
+// ── Static config only (no fake data) ────────────────────────────────────────
 const INIT_COMPANY = {
-  name: "MGate Systems", legalName: "MGate Systems Pvt. Ltd.",
-  gstin: "29ABCDE1234F1Z5", pan: "ABCDE1234F", cin: "U72900KA2020PTC123456",
-  email: "contact@mgatesystems.com", phone: "+91 98765 43210",
-  website: "www.mgatesystems.com", address: "123, Tech Park, Whitefield",
-  city: "Bengaluru", state: "Karnataka", pincode: "560066", country: "India",
-  industry: "Information Technology", employees: "50-200", founded: "2020",
+  name: "", legalName: "", gstin: "", pan: "", cin: "",
+  email: "", phone: "", website: "", address: "",
+  city: "", state: "", pincode: "", country: "India",
+  industry: "", employees: "", founded: "",
   timezone: "Asia/Kolkata", currency: "INR", dateFormat: "DD/MM/YYYY",
   fiscalYear: "April - March",
 };
 
 const INIT_BRANDING = {
   primaryColor: "#2563eb", accentColor: "#7c3aed",
-  logoUrl: "", logoName: "", faviconUrl: "", faviconName: "",
-  emailHeader: "MGate HRMS",
-  tagline: "Empowering People. Enabling Growth.",
-  footerText: "© 2026 MGate Systems Pvt. Ltd. All rights reserved.",
+  logoUrl: "", faviconUrl: "", emailHeader: "", tagline: "", footerText: "",
 };
-
-const EMAIL_TEMPLATES = [
-  { id: "welcome",        label: "Welcome Email",        subject: "Welcome to MGate HRMS!",          body: "Dear {{employee_name}}, Welcome aboard! Your account has been created." },
-  { id: "leave_approval", label: "Leave Approval",       subject: "Leave Request Approved",           body: "Dear {{employee_name}}, Your {{leave_type}} leave from {{from_date}} to {{to_date}} has been approved." },
-  { id: "leave_reject",   label: "Leave Rejection",      subject: "Leave Request Rejected",           body: "Dear {{employee_name}}, Unfortunately your leave request has been rejected." },
-  { id: "payslip",        label: "Payslip Notification", subject: "Your Payslip for {{month}} Ready", body: "Dear {{employee_name}}, Your payslip for {{month}} {{year}} is now available." },
-  { id: "reset_pass",     label: "Password Reset",       subject: "Reset Your Password",              body: "Hi {{name}}, A password reset was requested for your account." },
-  { id: "birthday",       label: "Birthday Greetings",   subject: "Happy Birthday {{name}}!",         body: "Dear {{name}}, Wishing you a very Happy Birthday from the entire MGate family!" },
-];
-
-const INIT_NOTIFS = [
-  { id: "leave_apply",    label: "Leave Applied",           channel: "In-App + Email", trigger: "When employee applies leave",         active: true  },
-  { id: "leave_approved", label: "Leave Approved/Rejected", channel: "In-App + Email", trigger: "When manager acts on leave request",  active: true  },
-  { id: "payroll_run",    label: "Payroll Processed",       channel: "In-App",         trigger: "When payroll is generated",           active: true  },
-  { id: "asset_assign",   label: "Asset Assigned",          channel: "In-App + Email", trigger: "When asset is assigned to employee", active: true  },
-  { id: "birthday",       label: "Birthday Reminder",       channel: "In-App",         trigger: "Day of employee birthday",            active: false },
-  { id: "doc_expiry",     label: "Document Expiry Alert",   channel: "Email",          trigger: "30 days before document expiry",      active: true  },
-  { id: "task_due",       label: "Task Due Reminder",       channel: "In-App",         trigger: "1 day before task due date",          active: false },
-];
 
 const VARIABLES = "{{employee_name}}  {{company_name}}  {{leave_type}}  {{from_date}}  {{to_date}}  {{month}}  {{year}}  {{name}}";
 
@@ -61,24 +45,93 @@ const sf = (label, key, state, set, opts) => (
 export default function CompanySettings() {
   const [company,  setCompany]  = useState(INIT_COMPANY);
   const [branding, setBranding] = useState(INIT_BRANDING);
-  const [notifs,   setNotifs]   = useState(INIT_NOTIFS);
+  const [notifs,   setNotifs]   = useState([]);
   const [editTpl,  setEditTpl]  = useState(null);
-  const [toast,    setToast]    = useState(null);
   const [tab,      setTab]      = useState("profile");
 
   const logoRef    = useRef(null);
   const faviconRef = useRef(null);
 
-  const notify = (msg, color = "green") => {
-    setToast({ msg, color });
-    setTimeout(() => setToast(null), 2500);
-  };
+  const toast = useToast();
+  const notify = (msg, type = "success") => toast?.show(msg, type);
 
+  const queryClient = useQueryClient();
+
+  // ── Queries ──────────────────────────────────────────────────────────────────
+  const { data: settingsData } = useQuery({ queryKey: ["company-settings"], queryFn: getCompanySettings });
+  const { data: templatesData } = useQuery({ queryKey: ["email-templates"], queryFn: getEmailTemplates });
+  const { data: notifsData } = useQuery({ queryKey: ["notif-settings"], queryFn: getNotificationSettings });
+
+  useEffect(() => {
+    const d = settingsData?.data;
+    if (d?.profile) setCompany(p => ({ ...p, ...d.profile }));
+    if (d?.branding) setBranding(p => ({ ...p, ...d.branding }));
+  }, [settingsData]);
+
+  useEffect(() => {
+    const notifs = notifsData?.data?.notifications;
+    if (notifs?.length) setNotifs(notifs);
+  }, [notifsData]);
+
+  // ── Mutations ─────────────────────────────────────────────────────────────────
+  const settingsMutation = useMutation({
+    mutationFn: (data) => updateCompanySettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+      notify("Settings saved successfully");
+    },
+    onError: () => notify("Failed to save settings", "error"),
+  });
+
+  const logoMutation = useMutation({
+    mutationFn: (file) => uploadCompanyLogo(file),
+    onSuccess: (res) => {
+      if (res?.url) setBranding(p => ({ ...p, logoUrl: res.url }));
+      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+      notify("Logo uploaded successfully");
+    },
+    onError: () => notify("Failed to upload logo", "error"),
+  });
+
+  const faviconMutation = useMutation({
+    mutationFn: (file) => uploadCompanyFavicon(file),
+    onSuccess: (res) => {
+      if (res?.url) setBranding(p => ({ ...p, faviconUrl: res.url }));
+      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
+      notify("Favicon uploaded successfully");
+    },
+    onError: () => notify("Failed to upload favicon", "error"),
+  });
+
+  const emailTplMutation = useMutation({
+    mutationFn: ({ id, data }) => updateEmailTemplate(id, data),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["email-templates"] });
+      notify(`"${vars.label}" template saved`);
+      setEditTpl(null);
+    },
+    onError: () => notify("Failed to save template", "error"),
+  });
+
+  const notifsMutation = useMutation({
+    mutationFn: (data) => updateNotificationSettings(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notif-settings"] });
+      notify("Notification settings saved");
+    },
+    onError: () => notify("Failed to save notification settings", "error"),
+  });
+
+  // ── File handlers ─────────────────────────────────────────────────────────────
   const handleFile = (key, nameKey, _ref, file) => {
     if (!file) return;
-    if (!file.type.startsWith("image/")) { notify("Please upload an image file", "red"); return; }
+    if (!file.type.startsWith("image/")) { notify("Please upload an image file", "error"); return; }
     setBranding(p => ({ ...p, [key]: URL.createObjectURL(file), [nameKey]: file.name }));
-    notify(`${nameKey === "logoName" ? "Logo" : "Favicon"} uploaded: ${file.name}`);
+    if (key === "logoUrl") {
+      logoMutation.mutate(file);
+    } else {
+      faviconMutation.mutate(file);
+    }
   };
 
   const clearFile = (key, nameKey, ref) => {
@@ -147,7 +200,9 @@ export default function CompanySettings() {
       </Paper>
 
       <Group justify="flex-end">
-        <Button leftSection={<IconDeviceFloppy size={14} />} onClick={() => notify("Company profile saved successfully")}>
+        <Button leftSection={<IconDeviceFloppy size={14} />}
+          loading={settingsMutation.isPending}
+          onClick={() => settingsMutation.mutate({ profile: company, branding })}>
           Save Changes
         </Button>
       </Group>
@@ -268,7 +323,9 @@ export default function CompanySettings() {
       </Paper>
 
       <Group justify="flex-end">
-        <Button leftSection={<IconDeviceFloppy size={14} />} onClick={() => notify("Branding saved successfully")}>
+        <Button leftSection={<IconDeviceFloppy size={14} />}
+          loading={settingsMutation.isPending}
+          onClick={() => settingsMutation.mutate({ profile: company, branding })}>
           Save Branding
         </Button>
       </Group>
@@ -276,52 +333,60 @@ export default function CompanySettings() {
   );
 
   // ── Email Templates Tab ───────────────────────────────────────────────────────
-  const EmailTab = () => (
-    <Stack gap="md">
-      <div>
-        <Text fw={600} size="sm">Email Templates</Text>
-        <Text size="xs" c="dimmed">Customize automated emails. Use {"{{variable}}"} placeholders.</Text>
-      </div>
-      {EMAIL_TEMPLATES.map(tpl => (
-        <Paper key={tpl.id} withBorder radius="md" p="md">
-          <Group justify="space-between" wrap="nowrap">
-            <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-              <Text size="sm" fw={600}>{tpl.label}</Text>
-              <Text size="xs" c="dimmed">Subject: {tpl.subject}</Text>
-              <Text size="xs" c="dimmed" truncate>{tpl.body}</Text>
-            </Stack>
-            <Button size="xs" variant="default" rightSection={<IconChevronRight size={12} />}
-              onClick={() => setEditTpl({ ...tpl })} style={{ flexShrink: 0 }}>
-              Edit
-            </Button>
-          </Group>
-        </Paper>
-      ))}
-
-      <Modal opened={!!editTpl} onClose={() => setEditTpl(null)} title={`Edit: ${editTpl?.label}`} size="lg" radius="md">
-        {editTpl && (
-          <Stack gap="md">
-            <TextInput label="Subject" value={editTpl.subject}
-              onChange={e => setEditTpl(p => ({ ...p, subject: e.target.value }))} />
-            <Textarea label="Body" value={editTpl.body} rows={7} autosize minRows={5}
-              onChange={e => setEditTpl(p => ({ ...p, body: e.target.value }))}
-              styles={{ input: { fontFamily: "monospace", fontSize: 13 } }} />
-            <Paper withBorder radius="sm" p="sm" bg="blue.0">
-              <Text size="xs" fw={700} c="blue" mb={4}>AVAILABLE VARIABLES</Text>
-              <Text size="xs" c="blue" style={{ fontFamily: "monospace" }}>{VARIABLES}</Text>
-            </Paper>
-            <Group justify="flex-end" gap="sm">
-              <Button variant="default" onClick={() => setEditTpl(null)}>Cancel</Button>
-              <Button leftSection={<IconDeviceFloppy size={13} />}
-                onClick={() => { setEditTpl(null); notify(`"${editTpl.label}" template saved`); }}>
-                Save Template
+  const EmailTab = () => {
+    const templates = templatesData?.data?.templates || [];
+    return (
+      <Stack gap="md">
+        <div>
+          <Text fw={600} size="sm">Email Templates</Text>
+          <Text size="xs" c="dimmed">Customize automated emails. Use {"{{variable}}"} placeholders.</Text>
+        </div>
+        {templates.map(tpl => (
+          <Paper key={tpl.id} withBorder radius="md" p="md">
+            <Group justify="space-between" wrap="nowrap">
+              <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600}>{tpl.label}</Text>
+                <Text size="xs" c="dimmed">Subject: {tpl.subject}</Text>
+                <Text size="xs" c="dimmed" truncate>{tpl.body}</Text>
+              </Stack>
+              <Button size="xs" variant="default" rightSection={<IconChevronRight size={12} />}
+                onClick={() => setEditTpl({ ...tpl })} style={{ flexShrink: 0 }}>
+                Edit
               </Button>
             </Group>
-          </Stack>
-        )}
-      </Modal>
-    </Stack>
-  );
+          </Paper>
+        ))}
+
+        <Modal opened={!!editTpl} onClose={() => setEditTpl(null)} title={`Edit: ${editTpl?.label}`} size="lg" radius="md">
+          {editTpl && (
+            <Stack gap="md">
+              <TextInput label="Subject" value={editTpl.subject}
+                onChange={e => setEditTpl(p => ({ ...p, subject: e.target.value }))} />
+              <Textarea label="Body" value={editTpl.body} rows={7} autosize minRows={5}
+                onChange={e => setEditTpl(p => ({ ...p, body: e.target.value }))}
+                styles={{ input: { fontFamily: "monospace", fontSize: 13 } }} />
+              <Paper withBorder radius="sm" p="sm" bg="blue.0">
+                <Text size="xs" fw={700} c="blue" mb={4}>AVAILABLE VARIABLES</Text>
+                <Text size="xs" c="blue" style={{ fontFamily: "monospace" }}>{VARIABLES}</Text>
+              </Paper>
+              <Group justify="flex-end" gap="sm">
+                <Button variant="default" onClick={() => setEditTpl(null)}>Cancel</Button>
+                <Button leftSection={<IconDeviceFloppy size={13} />}
+                  loading={emailTplMutation.isPending}
+                  onClick={() => emailTplMutation.mutate({
+                    id: editTpl.id,
+                    label: editTpl.label,
+                    data: { subject: editTpl.subject, body: editTpl.body },
+                  })}>
+                  Save Template
+                </Button>
+              </Group>
+            </Stack>
+          )}
+        </Modal>
+      </Stack>
+    );
+  };
 
   // ── Notification Templates Tab ────────────────────────────────────────────────
   const NotifTab = () => (
@@ -357,7 +422,9 @@ export default function CompanySettings() {
         </Table>
       </Paper>
       <Group justify="flex-end">
-        <Button leftSection={<IconDeviceFloppy size={14} />} onClick={() => notify("Notification settings saved")}>
+        <Button leftSection={<IconDeviceFloppy size={14} />}
+          loading={notifsMutation.isPending}
+          onClick={() => notifsMutation.mutate({ notifications: notifs })}>
           Save Settings
         </Button>
       </Group>
@@ -367,16 +434,6 @@ export default function CompanySettings() {
   // ── Root ──────────────────────────────────────────────────────────────────────
   return (
     <Stack gap="lg" p="lg">
-      {toast && (
-        <Notification
-          color={toast.color} icon={<IconCheck size={16} />}
-          onClose={() => setToast(null)} withCloseButton
-          style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, minWidth: 280 }}
-        >
-          {toast.msg}
-        </Notification>
-      )}
-
       <Group gap="sm">
         <ThemeIcon size="xl" radius="md" variant="light"><IconBuilding size={20} /></ThemeIcon>
         <div>

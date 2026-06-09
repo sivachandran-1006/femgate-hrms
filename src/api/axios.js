@@ -6,7 +6,7 @@ const api = axios.create({ baseURL: API_BASE });
 
 api.interceptors.request.use((config) => {
   const token = storage.get("token");
-  if (token) config.headers.authorization = token;
+  if (token) config.headers.Authorization = token;
   return config;
 });
 

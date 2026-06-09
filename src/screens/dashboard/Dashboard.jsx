@@ -2,7 +2,6 @@ import { Group, Text, Box } from "@mantine/core";
 
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useFetchAllLeaves }    from "../../queries/useLeaves";
-import { AppLoader }            from "../../components/ui/AppLoader";
 import { useAuth }              from "../../hooks/useAuth";
 import { usePermission }        from "../../hooks/usePermission";
 
@@ -16,10 +15,8 @@ import { EmployeeDashboard }   from "./components/EmployeeDashboard";
 const Dashboard = () => {
   const { user, userRole } = useAuth();
   const can = usePermission();
-  const { data: employees = [], isLoading: loadEmp  } = useFetchAllEmployees();
-  const { data: leaves    = [], isLoading: loadLeave } = useFetchAllLeaves();
-
-  if (loadEmp || loadLeave) return <AppLoader fullScreen />;
+  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: leaves    = [] } = useFetchAllLeaves();
 
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
@@ -48,7 +45,7 @@ const Dashboard = () => {
       </Group>
 
       {/* ── Role-specific content ── */}
-      {can("company.manage")                                                                               && <SuperAdminDashboard employees={employees} leaves={leaves} />}
+      {can("company.manage")                                                                               && <SuperAdminDashboard />}
       {can("employees.add")          && !can("company.manage")                                            && <AdminDashboard      employees={employees} leaves={leaves} />}
       {can("attendance.view_all")    && !can("employees.add")  && !can("company.manage")                  && <HRDashboard         employees={employees} leaves={leaves} />}
       {can("leave.approve")          && !can("attendance.view_all") && !can("company.manage")             && <ManagerDashboard    employees={employees} leaves={leaves} user={user} />}

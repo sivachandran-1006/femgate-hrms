@@ -1,15 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const BASE = "http://localhost:5000";
-
-export const fetchPayroll = () =>
-  axios.get(`${BASE}/payroll`).then((r) => r.data);
-
-export const createPayrollRecord = (data) =>
-  axios.post(`${BASE}/payroll`, data).then((r) => r.data);
-
-export const markPayrollPaid = (id) =>
-  axios.put(`${BASE}/payroll/${id}`, { status: "Paid" }).then((r) => r.data);
-
-export const deletePayrollRecord = (id) =>
-  axios.delete(`${BASE}/payroll/${id}`).then((r) => r.data);
+export const fetchPayroll         = (params) => api.get("/payroll", { params }).then(r => r.data);
+export const createPayrollRecord  = (data)   => api.post("/payroll", data).then(r => r.data);
+export const markPayrollPaid      = (id)     => api.put(`/payroll/${id}`, { status: "Paid" }).then(r => r.data);
+export const deletePayrollRecord  = (id)     => api.delete(`/payroll/${id}`).then(r => r.data);

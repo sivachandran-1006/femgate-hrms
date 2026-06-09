@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
-import { MOCK_USERS } from "../constants/mockUsers";
+import { loginApi, logoutApi } from "../api/authApi";
+import { storage } from "../utils/storage";
 
 const getStoredUser = () => {
   try {
@@ -16,24 +17,30 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => getStoredUser());
 
-  const login = (email, password) => {
-    const found = MOCK_USERS.find(
-      (u) =>
-        u.email.toLowerCase() === email.toLowerCase().trim() &&
-        u.password === password
-    );
-    if (!found) throw new Error("Invalid email or password");
+  const login = async (email, password) => {
+    const res  = await loginApi({ email, password });
+    const data = res.data;
+
+    if (!data.success) throw new Error(data.message || "Invalid email or password");
+
+    const { token, user: u } = data.data;
+
+    storage.set("token", `Bearer ${token}`);
+
     const userData = {
-      email:  found.email,
-      role:   found.role,
-      name:   found.name,
-      avatar: found.avatar,
+      id:        u.id,
+      email:     u.email,
+      role:      u.role,
+      name:      u.name,
+      companyId: u.companyId,
     };
     localStorage.setItem("hrms_user", JSON.stringify(userData));
     setUser(userData);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try { await logoutApi(); } catch {}
+    storage.clear();
     localStorage.removeItem("hrms_user");
     setUser(null);
   };

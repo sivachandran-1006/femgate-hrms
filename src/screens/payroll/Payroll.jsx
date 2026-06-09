@@ -196,8 +196,17 @@ const Payroll = () => {
 
   const loadPayroll = async () => {
     try {
-      const data = await fetchPayroll();
-      if (data && data.length > 0) setPayroll(data);
+      const res = await fetchPayroll();
+      const records = res?.data ?? res ?? [];
+      if (records.length > 0) {
+        // Normalize API fields to match screen expectations
+        setPayroll(records.map(r => ({
+          ...r,
+          _id:        r.id,
+          employee:   r.employeeName   || r.employee?.name || r.employee || "",
+          department: r.departmentName || r.department     || "",
+        })));
+      }
     } catch { /* keep mock data */ }
   };
 

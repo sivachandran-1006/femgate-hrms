@@ -1,22 +1,11 @@
-import AxiosClient from "../api/AxiosClient";
-import { isMockEnabled, getMockData } from "../config/MockConfig";
-
-const employeeService = new AxiosClient("/employees");
+import api from "../api/axios";
 
 export const getAllEmployees = async () => {
-  if (isMockEnabled()) {
-    const mockData = await getMockData("/employees");
-    return mockData ?? [];
-  }
-  const response = await employeeService.get();
-  return response ?? [];
+  const res = await api.get("/employees");
+  return res.data?.data ?? res.data ?? [];
 };
 
 export const getEmployee = async (id) => {
-  if (isMockEnabled()) {
-    const mockData = await getMockData(`/employees/${id}`);
-    return mockData ?? {};
-  }
-  const response = await employeeService.get(`/${id}`);
-  return response ?? {};
+  const res = await api.get(`/employees/${id}`);
+  return res.data?.data ?? res.data ?? {};
 };
