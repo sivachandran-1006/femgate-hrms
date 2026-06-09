@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
-import { SPACING, GAP } from "../../theme/spacing";
-import { RADIUS, SHADOWS } from "../../theme/sizes";
+import {
+  Stack, Group, Text, Paper, Badge, Button, TextInput, Select,
+  Avatar, Popover,
+} from "@mantine/core";
+import { IconSearch, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
 
 // ─── Org Data ────────────────────────────────────────────────────────────────
@@ -25,26 +28,8 @@ const ORG_DATA = {
       phone: "+91 98765 00002",
       joinDate: "2019-03-10",
       children: [
-        {
-          id: "hr-exec",
-          name: "Suriya",
-          designation: "HR Executive",
-          department: "HR",
-          email: "suriya@company.com",
-          phone: "+91 98765 00005",
-          joinDate: "2021-06-01",
-          children: [],
-        },
-        {
-          id: "hr-coord",
-          name: "P Santhosh",
-          designation: "HR Coordinator",
-          department: "HR",
-          email: "psanthosh@company.com",
-          phone: "+91 98765 00006",
-          joinDate: "2022-01-20",
-          children: [],
-        },
+        { id: "hr-exec",  name: "Suriya",    designation: "HR Executive",   department: "HR", email: "suriya@company.com",   phone: "+91 98765 00005", joinDate: "2021-06-01", children: [] },
+        { id: "hr-coord", name: "P Santhosh",designation: "HR Coordinator", department: "HR", email: "psanthosh@company.com",phone: "+91 98765 00006", joinDate: "2022-01-20", children: [] },
       ],
     },
     {
@@ -54,38 +39,23 @@ const ORG_DATA = {
       department: "IT",
       email: "mani@company.com",
       phone: "+91 98765 00003",
-      joinDate: "2019-07-22",
+      joinDate: "2019-06-15",
       children: [
         {
-          id: "fe-dev",
-          name: "Aravinth",
-          designation: "Frontend Dev",
+          id: "tech-lead",
+          name: "Suriya",
+          designation: "Tech Lead",
           department: "IT",
-          email: "aravinth@company.com",
+          email: "suriya2@company.com",
           phone: "+91 98765 00007",
-          joinDate: "2021-09-15",
-          children: [],
+          joinDate: "2020-02-10",
+          children: [
+            { id: "dev1", name: "C Santhosh", designation: "Software Engineer",  department: "IT", email: "csanthosh@company.com", phone: "+91 98765 00009", joinDate: "2021-08-01", children: [] },
+            { id: "dev2", name: "Aravinth",   designation: "Software Engineer",  department: "IT", email: "aravinth@company.com",  phone: "+91 98765 00010", joinDate: "2022-03-15", children: [] },
+            { id: "dev3", name: "Vignesh",    designation: "Frontend Developer", department: "IT", email: "vignesh@company.com",   phone: "+91 98765 00011", joinDate: "2022-07-01", children: [] },
+          ],
         },
-        {
-          id: "be-dev",
-          name: "C Santhosh",
-          designation: "Backend Dev",
-          department: "IT",
-          email: "csanthosh@company.com",
-          phone: "+91 98765 00008",
-          joinDate: "2021-11-01",
-          children: [],
-        },
-        {
-          id: "qa-eng",
-          name: "Sabari",
-          designation: "QA Engineer",
-          department: "IT",
-          email: "sabari@company.com",
-          phone: "+91 98765 00009",
-          joinDate: "2022-04-10",
-          children: [],
-        },
+        { id: "qa1", name: "Sabari", designation: "QA Engineer", department: "IT", email: "sabari@company.com", phone: "+91 98765 00012", joinDate: "2021-11-01", children: [] },
       ],
     },
     {
@@ -95,631 +65,204 @@ const ORG_DATA = {
       department: "Finance",
       email: "safeer@company.com",
       phone: "+91 98765 00004",
-      joinDate: "2020-02-14",
-      children: [],
+      joinDate: "2020-01-20",
+      children: [
+        { id: "fin1", name: "Suganthan", designation: "Finance Analyst", department: "Finance", email: "suganthan@company.com", phone: "+91 98765 00013", joinDate: "2021-04-10", children: [] },
+      ],
     },
   ],
 };
 
-// ─── Department Badge Colors ─────────────────────────────────────────────────
+// ─── Dept colors ─────────────────────────────────────────────────────────────
 
-const DEPT_COLORS = {
-  Management: { bg: "#ede9fe", color: "#7c3aed" },
-  HR: { bg: "#fce7f3", color: "#be185d" },
-  IT: { bg: "#dbeafe", color: "#1d4ed8" },
-  Finance: { bg: "#dcfce7", color: "#15803d" },
+const DEPT_COLOR = {
+  Management: "violet",
+  HR:         "cyan",
+  IT:         "blue",
+  Finance:    "green",
 };
 
-const getDeptColor = (dept) =>
-  DEPT_COLORS[dept] || { bg: COLORS.gray100, color: COLORS.gray600 };
+const getDeptColor = (dept) => DEPT_COLOR[dept] || "gray";
 
-// ─── Flatten tree for search/filter ─────────────────────────────────────────
+// ─── Flatten tree ─────────────────────────────────────────────────────────────
 
 const flattenTree = (node, result = []) => {
   result.push(node);
-  (node.children || []).forEach((child) => flattenTree(child, result));
+  (node.children || []).forEach(c => flattenTree(c, result));
   return result;
 };
 
-const getAllDepartments = (node) => {
-  const all = flattenTree(node).map((n) => n.department);
+const getAllDepts = (node) => {
+  const all = flattenTree(node).map(n => n.department);
   return ["All", ...Array.from(new Set(all))];
 };
 
-// ─── Popover ────────────────────────────────────────────────────────────────
+// ─── ConnectedChildren — measures DOM to draw exact horizontal bar ────────────
 
-function NodePopover({ node, darkMode, onClose, anchorRef }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
-  const popRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (
-        popRef.current &&
-        !popRef.current.contains(e.target) &&
-        anchorRef.current &&
-        !anchorRef.current.contains(e.target)
-      ) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose, anchorRef]);
-
-  const deptColor = getDeptColor(node.department);
-
-  const row = (label, value) => (
-    <div
-      key={label}
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        gap: GAP.sm,
-        paddingBottom: GAP.xs,
-        borderBottom: `1px solid ${th.border}`,
-        marginBottom: GAP.xs,
-      }}
-    >
-      <span
-        style={{
-          fontSize: FONT_SIZE.xs,
-          color: th.subtext,
-          fontWeight: FONT_WEIGHT.medium,
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontSize: FONT_SIZE.xs,
-          color: th.text,
-          fontWeight: FONT_WEIGHT.normal,
-          textAlign: "right",
-          wordBreak: "break-all",
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-
-  return (
-    <div
-      ref={popRef}
-      style={{
-        position: "absolute",
-        top: "calc(100% + 8px)",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 200,
-        background: th.cardBg,
-        border: `1px solid ${th.border}`,
-        borderRadius: RADIUS.lg,
-        boxShadow: SHADOWS.lg,
-        padding: `${SPACING.sm} ${SPACING.md}`,
-        minWidth: 220,
-        maxWidth: 260,
-      }}
-    >
-      {/* Arrow */}
-      <div
-        style={{
-          position: "absolute",
-          top: -6,
-          left: "50%",
-          transform: "translateX(-50%) rotate(45deg)",
-          width: 10,
-          height: 10,
-          background: th.cardBg,
-          border: `1px solid ${th.border}`,
-          borderBottom: "none",
-          borderRight: "none",
-        }}
-      />
-      <div
-        style={{
-          fontSize: FONT_SIZE.sm,
-          fontWeight: FONT_WEIGHT.semibold,
-          color: th.text,
-          marginBottom: GAP.xs,
-        }}
-      >
-        {node.name}
-      </div>
-      <div
-        style={{
-          display: "inline-block",
-          fontSize: FONT_SIZE.xs,
-          background: deptColor.bg,
-          color: deptColor.color,
-          borderRadius: RADIUS.full,
-          padding: "2px 8px",
-          fontWeight: FONT_WEIGHT.medium,
-          marginBottom: GAP.sm,
-        }}
-      >
-        {node.department}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        {row("Email", node.email)}
-        {row("Phone", node.phone)}
-        {row("Joined", new Date(node.joinDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }))}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: GAP.sm,
-          }}
-        >
-          <span
-            style={{
-              fontSize: FONT_SIZE.xs,
-              color: th.subtext,
-              fontWeight: FONT_WEIGHT.medium,
-            }}
-          >
-            Direct Reports
-          </span>
-          <span
-            style={{
-              fontSize: FONT_SIZE.xs,
-              color: th.text,
-              fontWeight: FONT_WEIGHT.semibold,
-              background: COLORS.primaryMuted,
-              color: COLORS.primary,
-              borderRadius: RADIUS.full,
-              padding: "1px 8px",
-            }}
-          >
-            {(node.children || []).length}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Node Card ───────────────────────────────────────────────────────────────
-
-function NodeCard({ node, darkMode, searchQuery, deptFilter, isExpanded, onToggle }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
-  const [showPopover, setShowPopover] = useState(false);
-  const cardRef = useRef(null);
-
-  const avatarColor = getAvatarColor(node.name);
-  const initials = getInitials(node.name);
-  const deptColor = getDeptColor(node.department);
-
-  const allNodes = flattenTree(node);
-  const matchesSearch =
-    !searchQuery ||
-    allNodes.some(
-      (n) =>
-        n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.department.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-  const selfMatchesSearch =
-    !searchQuery ||
-    node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    node.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    node.department.toLowerCase().includes(searchQuery.toLowerCase());
-
-  const matchesDept =
-    deptFilter === "All" || node.department === deptFilter;
-
-  if (!matchesSearch) return null;
-
-  const isHighlighted = selfMatchesSearch && searchQuery;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "relative",
-      }}
-    >
-      {/* Card */}
-      <div
-        ref={cardRef}
-        onClick={() => setShowPopover((v) => !v)}
-        style={{
-          background: th.cardBg,
-          border: `1.5px solid ${isHighlighted ? COLORS.primary : th.border}`,
-          borderRadius: RADIUS.xl,
-          padding: `${GAP.md}px ${GAP.lg}px`,
-          cursor: "pointer",
-          boxShadow: isHighlighted ? `0 0 0 3px ${COLORS.primaryLight}` : SHADOWS.sm,
-          transition: "box-shadow 0.2s ease, border-color 0.2s ease",
-          minWidth: 160,
-          maxWidth: 190,
-          textAlign: "center",
-          userSelect: "none",
-          opacity: deptFilter !== "All" && !matchesDept ? 0.35 : 1,
-          position: "relative",
-        }}
-      >
-        {/* Avatar */}
-        <div
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: RADIUS.full,
-            background: avatarColor.bg,
-            color: avatarColor.color,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: FONT_SIZE.sm,
-            fontWeight: FONT_WEIGHT.bold,
-            margin: "0 auto",
-            marginBottom: GAP.sm,
-            flexShrink: 0,
-          }}
-        >
-          {initials}
-        </div>
-
-        {/* Name */}
-        <div
-          style={{
-            fontSize: FONT_SIZE.sm,
-            fontWeight: FONT_WEIGHT.semibold,
-            color: th.text,
-            marginBottom: 2,
-            lineHeight: 1.3,
-          }}
-        >
-          {node.name}
-        </div>
-
-        {/* Designation */}
-        <div
-          style={{
-            fontSize: FONT_SIZE.xs,
-            color: th.subtext,
-            marginBottom: GAP.sm,
-            lineHeight: 1.3,
-          }}
-        >
-          {node.designation}
-        </div>
-
-        {/* Dept Badge */}
-        <div
-          style={{
-            display: "inline-block",
-            fontSize: FONT_SIZE.xs,
-            background: deptColor.bg,
-            color: deptColor.color,
-            borderRadius: RADIUS.full,
-            padding: "2px 10px",
-            fontWeight: FONT_WEIGHT.medium,
-          }}
-        >
-          {node.department}
-        </div>
-
-        {/* Expand/collapse indicator */}
-        {(node.children || []).length > 0 && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(node.id);
-            }}
-            style={{
-              position: "absolute",
-              bottom: -12,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 22,
-              height: 22,
-              borderRadius: RADIUS.full,
-              background: COLORS.primary,
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "14px",
-              fontWeight: FONT_WEIGHT.bold,
-              lineHeight: 1,
-              cursor: "pointer",
-              zIndex: 10,
-              boxShadow: SHADOWS.sm,
-              userSelect: "none",
-            }}
-            title={isExpanded ? "Collapse" : "Expand"}
-          >
-            {isExpanded ? "−" : "+"}
-          </div>
-        )}
-      </div>
-
-      {/* Popover */}
-      {showPopover && (
-        <NodePopover
-          node={node}
-          darkMode={darkMode}
-          onClose={() => setShowPopover(false)}
-          anchorRef={cardRef}
-        />
-      )}
-    </div>
-  );
-}
-
-// ─── Tree Level ──────────────────────────────────────────────────────────────
-
-function TreeNode({ node, darkMode, searchQuery, deptFilter, expandedNodes, onToggle, isRoot = false }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
-  const hasChildren = (node.children || []).length > 0;
-  const isExpanded = expandedNodes.has(node.id);
-
-  const visibleChildren = (node.children || []).filter((child) => {
-    const allNodes = flattenTree(child);
-    return (
-      !searchQuery ||
-      allNodes.some(
-        (n) =>
-          n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          n.department.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  });
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "relative",
-      }}
-    >
-      {/* Node card */}
-      <NodeCard
-        node={node}
-        darkMode={darkMode}
-        searchQuery={searchQuery}
-        deptFilter={deptFilter}
-        isExpanded={isExpanded}
-        onToggle={onToggle}
-      />
-
-      {/* Children area */}
-      {hasChildren && isExpanded && visibleChildren.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            marginTop: 0,
-          }}
-        >
-          {/* Vertical stem down from card (to horizontal bar) */}
-          <div
-            style={{
-              width: 2,
-              height: 28,
-              background: th.border,
-              marginTop: 12,
-              flexShrink: 0,
-            }}
-          />
-
-          {/* Horizontal connector bar + children row */}
-          <div style={{ position: "relative", display: "flex", alignItems: "flex-start" }}>
-            {/* Horizontal bar */}
-            {visibleChildren.length > 1 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "calc(50% - 1px)",
-                  /* We'll compute this with a trick — use the full container width minus first/last child half-widths.
-                     Since we can't know exact widths at render, we use percentage overflow trick. */
-                  width: "calc(100% - 190px)",
-                  height: 2,
-                  background: th.border,
-                  transform: "translateX(calc(-50% + 0.5px))",
-                  /* Ensure it spans from first child center to last child center */
-                  left: 0,
-                  right: 0,
-                  margin: "0 auto",
-                  zIndex: 0,
-                }}
-              />
-            )}
-
-            {/* Children */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: GAP.lg + GAP.md,
-                alignItems: "flex-start",
-                position: "relative",
-              }}
-            >
-              {visibleChildren.map((child, idx) => (
-                <div
-                  key={child.id}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    position: "relative",
-                  }}
-                >
-                  {/* Vertical drop from horizontal bar to child card */}
-                  <div
-                    style={{
-                      width: 2,
-                      height: 28,
-                      background: th.border,
-                      flexShrink: 0,
-                    }}
-                  />
-
-                  <TreeNode
-                    node={child}
-                    darkMode={darkMode}
-                    searchQuery={searchQuery}
-                    deptFilter={deptFilter}
-                    expandedNodes={expandedNodes}
-                    onToggle={onToggle}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Horizontal bar connector (overrides the broken width approach above) ────
-
-function ConnectedChildren({ children, darkMode }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
+function ConnectedChildren({ children }) {
   const containerRef = useRef(null);
-  const [barStyle, setBarStyle] = useState({ left: 0, width: 0 });
+  const [bar, setBar] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
     if (!containerRef.current) return;
-    const childEls = Array.from(containerRef.current.children);
-    if (childEls.length < 2) return;
-
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const firstRect = childEls[0].getBoundingClientRect();
-    const lastRect = childEls[childEls.length - 1].getBoundingClientRect();
-
-    const firstCenter = firstRect.left + firstRect.width / 2 - containerRect.left;
-    const lastCenter = lastRect.left + lastRect.width / 2 - containerRect.left;
-
-    setBarStyle({
-      left: firstCenter,
-      width: lastCenter - firstCenter,
-    });
+    const els = Array.from(containerRef.current.children).filter(el => el.dataset.connector !== "bar");
+    if (els.length < 2) return;
+    const parentRect = containerRef.current.getBoundingClientRect();
+    const firstCenter = els[0].getBoundingClientRect().left + els[0].getBoundingClientRect().width / 2 - parentRect.left;
+    const lastCenter  = els[els.length - 1].getBoundingClientRect().left + els[els.length - 1].getBoundingClientRect().width / 2 - parentRect.left;
+    setBar({ left: firstCenter, width: lastCenter - firstCenter });
   }, [children]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        gap: GAP.lg + GAP.md,
-        alignItems: "flex-start",
-        position: "relative",
-      }}
-    >
-      {/* Horizontal bar — positioned after measure */}
+    <div ref={containerRef} style={{ display: "flex", flexDirection: "row", gap: 24, alignItems: "flex-start", position: "relative" }}>
       {React.Children.count(children) > 1 && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: barStyle.left,
-            width: barStyle.width,
-            height: 2,
-            background: th.border,
-            zIndex: 0,
-          }}
-        />
+        <div data-connector="bar" style={{ position: "absolute", top: 0, left: bar.left, width: bar.width, height: 2, background: "var(--mantine-color-gray-3)", zIndex: 0 }} />
       )}
       {children}
     </div>
   );
 }
 
-// ─── Redesigned TreeNode using ConnectedChildren ─────────────────────────────
+// ─── NodeCard ─────────────────────────────────────────────────────────────────
 
-function TreeNodeV2({ node, darkMode, searchQuery, deptFilter, expandedNodes, onToggle }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
+function NodeCard({ node, searchQuery, deptFilter, isExpanded, onToggle }) {
+  const av       = getAvatarColor(node.name);
+  const initials = getInitials(node.name);
+  const color    = getDeptColor(node.department);
+
+  const allNodes = flattenTree(node);
+  const matchesSearch = !searchQuery || allNodes.some(n =>
+    n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    n.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const selfMatch = !searchQuery ||
+    node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    node.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    node.department.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const dimmed = deptFilter !== "All" && node.department !== deptFilter;
+
+  if (!matchesSearch) return null;
+
+  const popoverContent = (
+    <Stack gap={4} p={4} style={{ minWidth: 200 }}>
+      <Text size="sm" fw={700}>{node.name}</Text>
+      <Badge color={color} variant="light" size="xs" w="fit-content">{node.department}</Badge>
+      <Group justify="space-between" gap="xs">
+        <Text size="xs" c="dimmed">Email</Text>
+        <Text size="xs">{node.email}</Text>
+      </Group>
+      <Group justify="space-between" gap="xs">
+        <Text size="xs" c="dimmed">Phone</Text>
+        <Text size="xs">{node.phone}</Text>
+      </Group>
+      <Group justify="space-between" gap="xs">
+        <Text size="xs" c="dimmed">Joined</Text>
+        <Text size="xs">{new Date(node.joinDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</Text>
+      </Group>
+      <Group justify="space-between" gap="xs">
+        <Text size="xs" c="dimmed">Direct Reports</Text>
+        <Badge color="blue" variant="light" size="xs">{(node.children || []).length}</Badge>
+      </Group>
+    </Stack>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", opacity: dimmed ? 0.35 : 1 }}>
+      <Popover width={240} position="bottom" withArrow shadow="md">
+        <Popover.Target>
+          <Paper
+            p="md"
+            radius="xl"
+            withBorder
+            style={{
+              minWidth: 160, maxWidth: 190, textAlign: "center", cursor: "pointer",
+              userSelect: "none",
+              border: selfMatch && searchQuery ? "1.5px solid var(--mantine-color-blue-5)" : undefined,
+              boxShadow: selfMatch && searchQuery ? "0 0 0 3px var(--mantine-color-blue-1)" : undefined,
+            }}
+          >
+            <Avatar
+              size={44}
+              radius="xl"
+              mx="auto"
+              mb={8}
+              style={{ background: av.bg, color: av.color }}
+            >
+              <Text size="xs" fw={700}>{initials}</Text>
+            </Avatar>
+            <Text size="sm" fw={600} lh={1.3} mb={2}>{node.name}</Text>
+            <Text size="xs" c="dimmed" lh={1.3} mb={8}>{node.designation}</Text>
+            <Badge color={color} variant="light" size="xs">{node.department}</Badge>
+
+            {(node.children || []).length > 0 && (
+              <div
+                onClick={e => { e.stopPropagation(); onToggle(node.id); }}
+                style={{
+                  position: "absolute", bottom: -11, left: "50%", transform: "translateX(-50%)",
+                  width: 22, height: 22, borderRadius: "50%",
+                  background: "var(--mantine-color-blue-6)", color: "#fff",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", zIndex: 10, boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                }}
+              >
+                {isExpanded
+                  ? <IconChevronUp size={12} strokeWidth={3} />
+                  : <IconChevronDown size={12} strokeWidth={3} />}
+              </div>
+            )}
+          </Paper>
+        </Popover.Target>
+        <Popover.Dropdown>{popoverContent}</Popover.Dropdown>
+      </Popover>
+    </div>
+  );
+}
+
+// ─── TreeNodeV2 ───────────────────────────────────────────────────────────────
+
+function TreeNodeV2({ node, searchQuery, deptFilter, expandedNodes, onToggle }) {
   const hasChildren = (node.children || []).length > 0;
-  const isExpanded = expandedNodes.has(node.id);
+  const isExpanded  = expandedNodes.has(node.id);
 
-  const visibleChildren = (node.children || []).filter((child) => {
-    const allNodes = flattenTree(child);
-    return (
-      !searchQuery ||
-      allNodes.some(
-        (n) =>
-          n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          n.department.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  const visibleChildren = (node.children || []).filter(child => {
+    const all = flattenTree(child);
+    return !searchQuery || all.some(n =>
+      n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      n.department.toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "relative",
-      }}
-    >
-      {/* Node card */}
-      <NodeCard
-        node={node}
-        darkMode={darkMode}
-        searchQuery={searchQuery}
-        deptFilter={deptFilter}
-        isExpanded={isExpanded}
-        onToggle={onToggle}
-      />
+  const card = (
+    <NodeCard
+      node={node}
+      searchQuery={searchQuery}
+      deptFilter={deptFilter}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
+    />
+  );
 
-      {/* Children */}
+  if (!card) return null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {card}
+
       {hasChildren && isExpanded && visibleChildren.length > 0 && (
         <>
-          {/* Vertical stem down */}
-          <div
-            style={{
-              width: 2,
-              height: 28,
-              background: th.border,
-              marginTop: 12,
-              flexShrink: 0,
-              zIndex: 1,
-            }}
-          />
+          {/* Vertical stem */}
+          <div style={{ width: 2, height: 28, background: "var(--mantine-color-gray-3)", marginTop: 12, flexShrink: 0 }} />
 
-          <ConnectedChildren darkMode={darkMode}>
-            {visibleChildren.map((child) => (
-              <div
-                key={child.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                {/* Drop line from horizontal bar */}
-                <div
-                  style={{
-                    width: 2,
-                    height: 28,
-                    background: th.border,
-                    flexShrink: 0,
-                    zIndex: 1,
-                  }}
-                />
+          <ConnectedChildren>
+            {visibleChildren.map(child => (
+              <div key={child.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                {/* Drop line */}
+                <div style={{ width: 2, height: 28, background: "var(--mantine-color-gray-3)", flexShrink: 0 }} />
                 <TreeNodeV2
                   node={child}
-                  darkMode={darkMode}
                   searchQuery={searchQuery}
                   deptFilter={deptFilter}
                   expandedNodes={expandedNodes}
@@ -734,276 +277,90 @@ function TreeNodeV2({ node, darkMode, searchQuery, deptFilter, expandedNodes, on
   );
 }
 
-// ─── Main OrgChart Screen ────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function OrgChart({ darkMode = false }) {
-  const th = darkMode ? COLORS.dark : COLORS.light;
-
+export default function OrgChart() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [deptFilter, setDeptFilter] = useState("All");
+  const [deptFilter, setDeptFilter]   = useState("All");
   const [expandedNodes, setExpandedNodes] = useState(
-    () => new Set(flattenTree(ORG_DATA).map((n) => n.id))
+    () => new Set(flattenTree(ORG_DATA).map(n => n.id))
   );
 
-  const departments = getAllDepartments(ORG_DATA);
-  const allNodeIds = flattenTree(ORG_DATA).map((n) => n.id);
+  const departments = getAllDepts(ORG_DATA);
+  const allNodeIds  = flattenTree(ORG_DATA).map(n => n.id);
   const allExpanded = expandedNodes.size === allNodeIds.length;
 
   const handleToggle = (id) => {
-    setExpandedNodes((prev) => {
+    setExpandedNodes(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
   const handleExpandAll = () => {
-    if (allExpanded) {
-      setExpandedNodes(new Set());
-    } else {
-      setExpandedNodes(new Set(allNodeIds));
-    }
+    setExpandedNodes(allExpanded ? new Set() : new Set(allNodeIds));
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: th.pageBg,
-        fontFamily: "'Inter', sans-serif",
-        padding: `${SPACING.lg} ${SPACING.xl}`,
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: GAP.md,
-          marginBottom: SPACING.lg,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: FONT_SIZE.xl,
-              fontWeight: FONT_WEIGHT.bold,
-              color: th.text,
-              margin: 0,
-              lineHeight: 1.3,
-            }}
-          >
-            Organisation Chart
-          </h1>
-          <p
-            style={{
-              fontSize: FONT_SIZE.sm,
-              color: th.subtext,
-              margin: "4px 0 0",
-            }}
-          >
-            Visual hierarchy of the company structure
-          </p>
-        </div>
-
-        {/* Controls */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: GAP.md,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Search */}
-          <div style={{ position: "relative" }}>
-            <span
-              style={{
-                position: "absolute",
-                left: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 14,
-                color: th.subtext,
-                pointerEvents: "none",
-              }}
-            >
-              🔍
-            </span>
-            <input
+    <Stack gap="lg">
+      <AppPageHeader
+        title="Organisation Chart"
+        sub="Visual hierarchy of the company structure"
+        action={
+          <Group gap="sm">
+            <TextInput
+              placeholder="Search name or role…"
+              leftSection={<IconSearch size={14} />}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search name or role..."
-              style={{
-                height: 38,
-                paddingLeft: 32,
-                paddingRight: 12,
-                fontSize: FONT_SIZE.sm,
-                color: th.text,
-                background: th.inputBg,
-                border: `1px solid ${th.inputBorder}`,
-                borderRadius: RADIUS.lg,
-                outline: "none",
-                width: 200,
-                fontFamily: "inherit",
-              }}
+              onChange={e => setSearchQuery(e.target.value)}
+              size="sm"
+              w={200}
             />
-          </div>
-
-          {/* Department filter */}
-          <select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            style={{
-              height: 38,
-              padding: "0 12px",
-              fontSize: FONT_SIZE.sm,
-              color: th.text,
-              background: th.inputBg,
-              border: `1px solid ${th.inputBorder}`,
-              borderRadius: RADIUS.lg,
-              outline: "none",
-              cursor: "pointer",
-              fontFamily: "inherit",
-            }}
-          >
-            {departments.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-
-          {/* Expand/Collapse toggle */}
-          <button
-            onClick={handleExpandAll}
-            style={{
-              height: 38,
-              padding: "0 16px",
-              fontSize: FONT_SIZE.sm,
-              fontWeight: FONT_WEIGHT.medium,
-              color: COLORS.primary,
-              background: COLORS.primaryMuted,
-              border: `1px solid ${COLORS.primaryLight}`,
-              borderRadius: RADIUS.lg,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              transition: "background 0.15s ease",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {allExpanded ? "Collapse All" : "Expand All"}
-          </button>
-        </div>
-      </div>
+            <Select
+              data={departments}
+              value={deptFilter}
+              onChange={v => setDeptFilter(v)}
+              size="sm"
+              w={160}
+            />
+            <Button size="sm" variant="light" onClick={handleExpandAll}>
+              {allExpanded ? "Collapse All" : "Expand All"}
+            </Button>
+          </Group>
+        }
+      />
 
       {/* Legend */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: GAP.md,
-          flexWrap: "wrap",
-          marginBottom: SPACING.lg,
-          padding: `${GAP.sm}px ${GAP.md}px`,
-          background: th.cardBg,
-          border: `1px solid ${th.border}`,
-          borderRadius: RADIUS.lg,
-        }}
-      >
-        <span
-          style={{
-            fontSize: FONT_SIZE.xs,
-            color: th.subtext,
-            fontWeight: FONT_WEIGHT.medium,
-          }}
-        >
-          Departments:
-        </span>
-        {Object.entries(DEPT_COLORS).map(([dept, colors]) => (
-          <div
-            key={dept}
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: RADIUS.full,
-                background: colors.color,
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: FONT_SIZE.xs,
-                color: th.subtext,
-              }}
-            >
-              {dept}
-            </span>
-          </div>
-        ))}
-        <span
-          style={{
-            fontSize: FONT_SIZE.xs,
-            color: th.subtext,
-            marginLeft: "auto",
-          }}
-        >
-          Click any card for details • Click +/− to expand/collapse
-        </span>
-      </div>
+      <Paper p="sm" radius="lg" withBorder>
+        <Group gap="md" wrap="wrap">
+          <Text size="xs" c="dimmed" fw={500}>Departments:</Text>
+          {Object.entries(DEPT_COLOR).map(([dept, color]) => (
+            <Group key={dept} gap={6}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: `var(--mantine-color-${color}-5)` }} />
+              <Text size="xs" c="dimmed">{dept}</Text>
+            </Group>
+          ))}
+          <Text size="xs" c="dimmed" ml="auto">Click any card for details · Click ▲/▼ to expand/collapse</Text>
+        </Group>
+      </Paper>
 
       {/* Chart area */}
-      <div
-        style={{
-          background: th.cardBg,
-          border: `1px solid ${th.border}`,
-          borderRadius: RADIUS.xl,
-          boxShadow: SHADOWS.sm,
-          padding: `${SPACING.xl} ${SPACING.lg}`,
-          overflowX: "auto",
-          overflowY: "visible",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            minWidth: "max-content",
-            paddingBottom: SPACING.lg,
-          }}
-        >
+      <Paper radius="xl" withBorder p="xl" style={{ overflowX: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "center", minWidth: "max-content", paddingBottom: 24 }}>
           <TreeNodeV2
             node={ORG_DATA}
-            darkMode={darkMode}
             searchQuery={searchQuery}
             deptFilter={deptFilter}
             expandedNodes={expandedNodes}
             onToggle={handleToggle}
           />
         </div>
-      </div>
+      </Paper>
 
-      {/* Footer count */}
-      <div
-        style={{
-          marginTop: SPACING.md,
-          textAlign: "center",
-          fontSize: FONT_SIZE.xs,
-          color: th.subtext,
-        }}
-      >
-        {flattenTree(ORG_DATA).length} employees across{" "}
-        {Object.keys(DEPT_COLORS).length} departments
-      </div>
-    </div>
+      <Text ta="center" size="xs" c="dimmed">
+        {flattenTree(ORG_DATA).length} employees across {Object.keys(DEPT_COLOR).length} departments
+      </Text>
+    </Stack>
   );
 }

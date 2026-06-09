@@ -1,25 +1,30 @@
 import { useState } from "react";
-import { Search, Download, ChevronDown, ChevronRight, Shield, Settings, User } from "lucide-react";
-import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { RADIUS } from "../../theme/sizes";
-import { StatCard, PageHeader, Toast, TableHead, Td, mkInputStyle, mkCard } from "../../components/ui/AdminUI";
+import {
+  Stack, Group, Text, Paper, Badge, Button, TextInput,
+  Select, Tabs, Table, ScrollArea, SimpleGrid,
+} from "@mantine/core";
+import {
+  IconShield, IconSettings, IconUser, IconSearch, IconDownload,
+  IconChevronDown, IconChevronRight,
+} from "@tabler/icons-react";
 
-const SEV = {
-  Critical: { bg: COLORS.dangerMuted,  text: COLORS.danger  },
-  Warning:  { bg: COLORS.warningLight, text: COLORS.warning  },
-  Info:     { bg: COLORS.primaryLight, text: COLORS.primary  },
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
+import { AppStatCard }   from "../../components/ui/AppStatCard";
+
+const SEV_COLOR = { Critical: "red", Warning: "yellow", Info: "blue" };
+
+const MOD_ICON = {
+  Security:     <IconShield size={13} />,
+  System:       <IconSettings size={13} />,
+  "User Actions": <IconUser size={13} />,
 };
-
-const MOD_ICON = { Security: Shield, System: Settings };
-const ModIcon = ({ m }) => { const I = MOD_ICON[m] || User; return <I size={13} />; };
 
 const LOGS = [
   { id:1,  ts:"2026-06-09 09:14", actor:"superadmin@mgatesystems.com", action:"Login failed — 3 attempts",              module:"Security",     ip:"203.0.113.12", sev:"Critical", detail:{ event:"brute_force",  attempts:3, blocked:true } },
   { id:2,  ts:"2026-06-09 08:30", actor:"finance@mgatesystems.com",    action:"Payroll approved for May 2026",           module:"System",       ip:"10.0.1.22",    sev:"Info",     detail:{ payroll_id:"PAY-2026-05", total:485000, employees:12 } },
   { id:3,  ts:"2026-06-08 07:45", actor:"admin@mgatesystems.com",      action:"Role permissions updated: HR",            module:"System",       ip:"10.0.1.15",    sev:"Warning",  detail:{ role:"HR", added:["edit_employees","export_reports"] } },
   { id:4,  ts:"2026-06-08 16:20", actor:"admin@mgatesystems.com",      action:"Employee record deleted: EMP-009",        module:"User Actions", ip:"10.0.1.15",    sev:"Warning",  detail:{ employee_id:"EMP-009", reason:"Resigned" } },
-  { id:5,  ts:"2026-06-08 15:10", actor:"admin@mgatesystems.com",      action:"New user created: kavitha@mgatesystems.com", module:"User Actions",ip:"10.0.1.15",  sev:"Info",     detail:{ user_id:12, role:"HR" } },
+  { id:5,  ts:"2026-06-08 15:10", actor:"admin@mgatesystems.com",      action:"New user created: kavitha@mgatesystems.com", module:"User Actions",ip:"10.0.1.15", sev:"Info",     detail:{ user_id:12, role:"HR" } },
   { id:6,  ts:"2026-06-07 14:00", actor:"superadmin@mgatesystems.com", action:"MFA enabled globally",                    module:"Security",     ip:"203.0.113.12", sev:"Critical", detail:{ policy:"mfa_enforcement", before:"optional", after:"required" } },
   { id:7,  ts:"2026-06-07 12:30", actor:"hr@mgatesystems.com",         action:"Leave approved: Priya Sharma",            module:"User Actions", ip:"10.0.1.18",    sev:"Info",     detail:{ leave_id:"LV-045", days:3, type:"Annual" } },
   { id:8,  ts:"2026-06-07 11:15", actor:"itadmin@mgatesystems.com",    action:"System backup initiated",                 module:"System",       ip:"10.0.1.30",    sev:"Info",     detail:{ backup_id:"BKP-20260607", size:"2.3 GB" } },
@@ -37,142 +42,188 @@ const LOGS = [
   { id:20, ts:"2026-06-01 09:00", actor:"superadmin@mgatesystems.com", action:"Session timeout changed: 30 min",        module:"Security",     ip:"203.0.113.12", sev:"Warning",  detail:{ before:"60", after:"30", unit:"minutes" } },
 ];
 
-const ALL_TABS   = ["All Logs","Security","System","User Actions"];
-const DATE_OPT   = ["All Time","Today","This Week","This Month"];
-const SEV_OPT    = ["All","Critical","Warning","Info"];
-const ACTOR_OPT  = ["All", ...Array.from(new Set(LOGS.map(l=>l.actor)))];
+const DATE_OPT  = ["All Time","Today","This Week","This Month"];
+const SEV_OPT   = ["All","Critical","Warning","Info"];
+const ACTOR_OPT = ["All", ...Array.from(new Set(LOGS.map(l => l.actor)))];
 
-const todayPfx   = "2026-06-09";
-const weekPfxs   = ["2026-06-09","2026-06-08","2026-06-07","2026-06-06","2026-06-05","2026-06-04","2026-06-03"];
-const monthPfxs  = weekPfxs.concat(["2026-06-02","2026-06-01"]);
+const todayPfx  = "2026-06-09";
+const weekPfxs  = ["2026-06-09","2026-06-08","2026-06-07","2026-06-06","2026-06-05","2026-06-04","2026-06-03"];
+const monthPfxs = [...weekPfxs,"2026-06-02","2026-06-01"];
 
-export default function AuditLogs({ darkMode = false, userRole = "SUPER_ADMIN" }) {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
-  const inp = mkInputStyle(surface);
-
+export default function AuditLogs({ userRole = "SUPER_ADMIN" }) {
   const [search, setSearch]       = useState("");
   const [dateFilter, setDate]     = useState("This Month");
   const [sevFilter, setSev]       = useState("All");
   const [actorFilter, setActor]   = useState("All");
-  const [activeTab, setTab]       = useState("All Logs");
+  const [activeTab, setTab]       = useState("all");
   const [expanded, setExpanded]   = useState(null);
-  const [toastMsg, setToastMsg]   = useState(null);
 
-  const toast = (msg) => { setToastMsg(msg); setTimeout(()=>setToastMsg(null), 2500); };
-
-  const visibleLogs = userRole === "SUPER_ADMIN" ? LOGS : LOGS.filter(l=>l.module!=="Security");
+  const visibleLogs = userRole === "SUPER_ADMIN" ? LOGS : LOGS.filter(l => l.module !== "Security");
 
   const filtered = visibleLogs.filter(l => {
-    const tabOk  = activeTab === "All Logs" || l.module === activeTab;
-    const sevOk  = sevFilter === "All" || l.sev === sevFilter;
+    const tabOk   = activeTab === "all" || l.module.toLowerCase().replace(" ", "-") === activeTab;
+    const sevOk   = sevFilter === "All" || l.sev === sevFilter;
     const actorOk = actorFilter === "All" || l.actor === actorFilter;
-    const q = search.toLowerCase();
+    const q       = search.toLowerCase();
     const searchOk = !q || l.action.toLowerCase().includes(q) || l.actor.toLowerCase().includes(q);
-    const dateOk = dateFilter === "All Time"
+    const dateOk  = dateFilter === "All Time"
       || (dateFilter === "Today"      && l.ts.startsWith(todayPfx))
-      || (dateFilter === "This Week"  && weekPfxs.some(p=>l.ts.startsWith(p)))
-      || (dateFilter === "This Month" && monthPfxs.some(p=>l.ts.startsWith(p)));
+      || (dateFilter === "This Week"  && weekPfxs.some(p => l.ts.startsWith(p)))
+      || (dateFilter === "This Month" && monthPfxs.some(p => l.ts.startsWith(p)));
     return tabOk && sevOk && actorOk && searchOk && dateOk;
   });
 
   const stats = [
-    { label:"Total Events",    value:248, sub:"all time"     },
-    { label:"Security Events", value:LOGS.filter(l=>l.module==="Security").length, sub:"in dataset" },
-    { label:"System Changes",  value:LOGS.filter(l=>l.module==="System").length,   sub:"in dataset" },
-    { label:"User Actions",    value:LOGS.filter(l=>l.module==="User Actions").length, sub:"in dataset" },
+    { label:"Total Events",    value:"248",  color:"blue"   },
+    { label:"Security Events", value:String(LOGS.filter(l=>l.module==="Security").length),     color:"red"    },
+    { label:"System Changes",  value:String(LOGS.filter(l=>l.module==="System").length),       color:"violet" },
+    { label:"User Actions",    value:String(LOGS.filter(l=>l.module==="User Actions").length), color:"green"  },
   ];
 
   return (
-    <div style={{ padding:24, fontFamily:FONT_FAMILY.base, background:surface.pageBg, minHeight:"100vh", position:"relative" }}>
-      {toastMsg && <Toast msg={toastMsg} />}
+    <Stack gap="lg">
+      <AppPageHeader
+        title="Audit Logs"
+        sub="Track all system events and user actions"
+        action={
+          userRole === "SUPER_ADMIN" && (
+            <Button leftSection={<IconDownload size={14} />} color="blue" size="sm">
+              Export CSV
+            </Button>
+          )
+        }
+      />
 
       {userRole !== "SUPER_ADMIN" && (
-        <div style={{ marginBottom:16, padding:"10px 16px", background:COLORS.warningLight, border:`1px solid ${COLORS.warning}40`, borderRadius:RADIUS.lg, fontSize:FONT_SIZE.xs, color:COLORS.warning, fontWeight:FONT_WEIGHT.medium }}>
-          View Only — Security logs restricted to Super Admin.
-        </div>
+        <Paper p="sm" radius="md" bg="yellow.0" style={{ border: "1px solid var(--mantine-color-yellow-3)" }}>
+          <Text size="sm" c="yellow.8" fw={500}>View Only — Security logs restricted to Super Admin.</Text>
+        </Paper>
       )}
 
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:24 }}>
-        <PageHeader icon={Shield} iconBg={COLORS.dangerMuted} iconColor={COLORS.danger} title="Audit Logs" sub="Track all system events and user actions" surface={surface} />
-        {userRole==="SUPER_ADMIN" && (
-          <button onClick={()=>toast("Exporting logs as CSV…")} style={{ display:"flex", alignItems:"center", gap:6, background:COLORS.primary, color:COLORS.white, border:"none", borderRadius:RADIUS.lg, padding:"8px 16px", fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.semibold, cursor:"pointer", fontFamily:FONT_FAMILY.base, marginTop:4 }}>
-            <Download size={14}/> Export CSV
-          </button>
-        )}
-      </div>
+      <SimpleGrid cols={{ base: 2, sm: 4 }}>
+        {stats.map(s => (
+          <AppStatCard key={s.label} label={s.label} value={s.value} color={s.color} />
+        ))}
+      </SimpleGrid>
 
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16, marginBottom:24 }}>
-        {stats.map(s=><StatCard key={s.label} {...s} surface={surface}/>)}
-      </div>
+      <Paper radius="lg" withBorder>
+        <Tabs value={activeTab} onChange={setTab}>
+          <Tabs.List px="md" pt="xs">
+            <Tabs.Tab value="all">All Logs</Tabs.Tab>
+            <Tabs.Tab value="security">Security</Tabs.Tab>
+            <Tabs.Tab value="system">System</Tabs.Tab>
+            <Tabs.Tab value="user-actions">User Actions</Tabs.Tab>
+          </Tabs.List>
 
-      <div style={{ ...mkCard(surface), overflow:"hidden" }}>
-        {/* Tabs */}
-        <div style={{ display:"flex", borderBottom:`1px solid ${surface.border}` }}>
-          {ALL_TABS.map(t=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ padding:"12px 20px", fontSize:FONT_SIZE.sm, fontWeight:activeTab===t?FONT_WEIGHT.semibold:FONT_WEIGHT.normal, color:activeTab===t?COLORS.primary:surface.subtext, background:"transparent", border:"none", borderBottom:activeTab===t?`2px solid ${COLORS.primary}`:"2px solid transparent", cursor:"pointer", whiteSpace:"nowrap" }}>
-              {t}
-            </button>
-          ))}
-        </div>
+          <Group p="md" gap="sm" wrap="wrap" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
+            <TextInput
+              placeholder="Search actions or actors…"
+              leftSection={<IconSearch size={14} />}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ flex: 1, minWidth: 200 }}
+              size="sm"
+            />
+            <Select
+              data={DATE_OPT}
+              value={dateFilter}
+              onChange={v => setDate(v)}
+              size="sm"
+              w={140}
+            />
+            <Select
+              data={ACTOR_OPT.map(a => ({ value: a, label: a === "All" ? "All Users" : a.split("@")[0] }))}
+              value={actorFilter}
+              onChange={v => setActor(v)}
+              size="sm"
+              w={160}
+            />
+            <Select
+              data={SEV_OPT.map(s => ({ value: s, label: s === "All" ? "All Severity" : s }))}
+              value={sevFilter}
+              onChange={v => setSev(v)}
+              size="sm"
+              w={130}
+            />
+          </Group>
 
-        {/* Filters */}
-        <div style={{ padding:"16px 20px", borderBottom:`1px solid ${surface.border}`, display:"flex", gap:12, flexWrap:"wrap" }}>
-          <div style={{ position:"relative", flex:1, minWidth:200 }}>
-            <Search size={15} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:surface.subtext }} />
-            <input style={{ ...inp, paddingLeft:32 }} placeholder="Search actions or actors…" value={search} onChange={e=>setSearch(e.target.value)} />
-          </div>
-          <select style={{ ...inp, width:"auto", minWidth:130 }} value={dateFilter} onChange={e=>setDate(e.target.value)}>
-            {DATE_OPT.map(d=><option key={d} value={d}>{d}</option>)}
-          </select>
-          <select style={{ ...inp, width:"auto", minWidth:140 }} value={actorFilter} onChange={e=>setActor(e.target.value)}>
-            {ACTOR_OPT.map(a=><option key={a} value={a}>{a==="All"?"All Users":a.split("@")[0]}</option>)}
-          </select>
-          <select style={{ ...inp, width:"auto", minWidth:120 }} value={sevFilter} onChange={e=>setSev(e.target.value)}>
-            {SEV_OPT.map(s=><option key={s} value={s}>{s==="All"?"All Severity":s}</option>)}
-          </select>
-        </div>
-
-        {/* Table */}
-        <div style={{ overflowX:"auto" }}>
-          <table style={{ width:"100%", borderCollapse:"collapse", minWidth:700 }}>
-            <TableHead cols={["","Timestamp","Actor","Action","Module","IP","Severity"]} surface={surface}/>
-            <tbody>
-              {filtered.map((log,i)=>(
-                <div key={log.id} style={{ display:"contents" }}>
-                  <tr style={{ background:i%2===0?"transparent":(darkMode?COLORS.dark.rowHover+"20":COLORS.gray50), cursor:"pointer" }} onClick={()=>setExpanded(expanded===log.id?null:log.id)}>
-                    <Td style={{ color:surface.subtext, width:32, borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>
-                      {expanded===log.id?<ChevronDown size={14}/>:<ChevronRight size={14}/>}
-                    </Td>
-                    <Td style={{ fontSize:FONT_SIZE.xs, color:surface.subtext, whiteSpace:"nowrap", borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>{log.ts}</Td>
-                    <Td style={{ borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>{log.actor}</Td>
-                    <Td style={{ maxWidth:260, borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>{log.action}</Td>
-                    <Td style={{ borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:FONT_SIZE.xs, color:surface.subtext }}>
-                        <ModIcon m={log.module}/> {log.module}
-                      </div>
-                    </Td>
-                    <Td style={{ fontSize:FONT_SIZE.xs, color:surface.subtext, fontFamily:"monospace", borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>{log.ip}</Td>
-                    <Td style={{ borderBottom: expanded===log.id?"none":`1px solid ${surface.border}` }}>
-                      <span style={{ display:"inline-block", fontSize:11, fontWeight:FONT_WEIGHT.semibold, padding:"2px 9px", borderRadius:RADIUS.full, background:SEV[log.sev]?.bg, color:SEV[log.sev]?.text }}>{log.sev}</span>
-                    </Td>
-                  </tr>
-                  {expanded===log.id && (
-                    <tr key={`${log.id}-d`}>
-                      <td colSpan={7} style={{ padding:"0 16px 14px", borderBottom:`1px solid ${surface.border}`, background: darkMode?COLORS.dark.rowHover+"30":COLORS.gray50 }}>
-                        <div style={{ background:surface.inputBg, border:`1px solid ${surface.border}`, borderRadius:RADIUS.md, padding:"12px 14px" }}>
-                          <p style={{ margin:"0 0 6px", fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, color:surface.subtext }}>EVENT DETAILS</p>
-                          <pre style={{ margin:0, fontSize:12, color:surface.text, fontFamily:"monospace", whiteSpace:"pre-wrap", wordBreak:"break-word" }}>{JSON.stringify(log.detail,null,2)}</pre>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </div>
-              ))}
-            </tbody>
-          </table>
-          {filtered.length===0 && <div style={{ padding:40, textAlign:"center", color:surface.subtext, fontSize:FONT_SIZE.sm }}>No log entries match your filters.</div>}
-        </div>
-      </div>
-    </div>
+          <Tabs.Panel value={activeTab}>
+            <ScrollArea>
+              <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md" style={{ minWidth: 700 }}>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th w={32} />
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">Timestamp</Text></Table.Th>
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">Actor</Text></Table.Th>
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">Action</Text></Table.Th>
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">Module</Text></Table.Th>
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">IP</Text></Table.Th>
+                    <Table.Th><Text size="xs" fw={600} c="dimmed" tt="uppercase">Severity</Text></Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filtered.length === 0 ? (
+                    <Table.Tr>
+                      <Table.Td colSpan={7}>
+                        <Text ta="center" py="xl" c="dimmed" size="sm">No log entries match your filters.</Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  ) : filtered.map(log => (
+                    <>
+                      <Table.Tr
+                        key={log.id}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => setExpanded(expanded === log.id ? null : log.id)}
+                      >
+                        <Table.Td c="dimmed">
+                          {expanded === log.id
+                            ? <IconChevronDown size={14} />
+                            : <IconChevronRight size={14} />}
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>{log.ts}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{log.actor}</Text>
+                        </Table.Td>
+                        <Table.Td style={{ maxWidth: 260 }}>
+                          <Text size="sm">{log.action}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap={5} wrap="nowrap">
+                            <Text size="xs" c="dimmed">{MOD_ICON[log.module]}</Text>
+                            <Text size="xs" c="dimmed">{log.module}</Text>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="xs" c="dimmed" ff="monospace">{log.ip}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge color={SEV_COLOR[log.sev]} variant="light" radius="xl" size="sm">
+                            {log.sev}
+                          </Badge>
+                        </Table.Td>
+                      </Table.Tr>
+                      {expanded === log.id && (
+                        <Table.Tr key={`${log.id}-detail`}>
+                          <Table.Td colSpan={7} bg="gray.0">
+                            <Paper p="sm" radius="md" withBorder my={4}>
+                              <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={6}>Event Details</Text>
+                              <Text size="xs" ff="monospace" style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                                {JSON.stringify(log.detail, null, 2)}
+                              </Text>
+                            </Paper>
+                          </Table.Td>
+                        </Table.Tr>
+                      )}
+                    </>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
+          </Tabs.Panel>
+        </Tabs>
+      </Paper>
+    </Stack>
   );
 }
