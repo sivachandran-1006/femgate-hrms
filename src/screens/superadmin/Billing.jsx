@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Download, CreditCard, Check, Plus, TrendingUp } from "lucide-react";
-import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { RADIUS, SHADOW } from "../../theme/sizes";
+import {
+  Stack, Group, Text, Title, Paper, Badge, Button, Tabs,
+  SimpleGrid, Progress, Table, ActionIcon, Notification,
+} from "@mantine/core";
+import {
+  IconDownload, IconCreditCard, IconCheck, IconPlus, IconTrendingUp,
+} from "@tabler/icons-react";
 
 const INVOICES = [
   { id: "INV-2026-006", date: "Jun 1, 2026", amount: "₹45,000", status: "Paid" },
@@ -29,22 +32,27 @@ const PAYMENT_METHODS = [
   { id: 2, type: "Mastercard", last4: "8888", expiry: "08/26", primary: false },
 ];
 
-const TABS = ["Overview", "Invoices", "Usage", "Payment Methods"];
+const USAGE_BARS = [
+  { label: "User Seats",          used: 12,   total: 50,    unit: "",    color: "blue" },
+  { label: "Storage",             used: 30.5, total: 50,    unit: " GB", color: "violet" },
+  { label: "API Calls Today",     used: 2847, total: 10000, unit: "",    color: "cyan" },
+  { label: "Active Integrations", used: 4,    total: 20,    unit: "",    color: "green" },
+];
 
-const STATUS_COLORS = {
-  Paid: { bg: "#dcfce7", text: "#16a34a" },
-  Pending: { bg: "#fef3c7", text: "#d97706" },
-  Failed: { bg: "#fee2e2", text: "#dc2626" },
-};
+const STATS = [
+  { label: "Monthly Cost",  value: "₹45,000", sub: "Enterprise plan" },
+  { label: "Users",         value: "12/50",   sub: "seats used" },
+  { label: "Storage Used",  value: "61%",     sub: "30.5 GB of 50 GB" },
+  { label: "Next Invoice",  value: "Aug 1",   sub: "auto-renews" },
+];
 
-export default function Billing({ darkMode = false }) {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
-  const [activeTab, setActiveTab] = useState("Overview");
+export default function Billing() {
+  const [activeTab, setActiveTab] = useState("overview");
   const [toast, setToast] = useState(null);
   const [cards, setCards] = useState(PAYMENT_METHODS);
 
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
+  const showToast = (msg, color = "green") => {
+    setToast({ msg, color });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -53,208 +61,197 @@ export default function Billing({ darkMode = false }) {
     showToast("Primary payment method updated");
   };
 
-  const handleDownloadInvoice = (id) => showToast(`Downloading ${id}...`);
-
-  const inputStyle = {
-    border: `1px solid ${surface.border}`,
-    borderRadius: RADIUS.lg,
-    padding: "8px 12px",
-    fontSize: FONT_SIZE.sm,
-    background: surface.inputBg,
-    color: surface.text,
-    fontFamily: FONT_FAMILY.base,
-    outline: "none",
-  };
-
-  const UsageBar = ({ label, used, total, unit, color }) => {
-    const pct = Math.round((used / total) * 100);
-    return (
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{label}</span>
-          <span style={{ fontSize: FONT_SIZE.sm, color: surface.subtext }}>{used}{unit} / {total}{unit} <span style={{ color: pct > 80 ? COLORS.danger : COLORS.success, fontWeight: FONT_WEIGHT.semibold }}>({pct}%)</span></span>
-        </div>
-        <div style={{ height: 8, background: surface.inputBg, borderRadius: RADIUS.full, border: `1px solid ${surface.border}`, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${pct}%`, background: pct > 80 ? COLORS.danger : color, borderRadius: RADIUS.full, transition: "width 0.3s ease" }} />
-        </div>
-      </div>
-    );
-  };
-
-  const stats = [
-    { label: "Monthly Cost", value: "₹45,000", sub: "Enterprise plan" },
-    { label: "Users", value: "12/50", sub: "seats used" },
-    { label: "Storage Used", value: "61%", sub: "30.5 GB of 50 GB" },
-    { label: "Next Invoice", value: "Aug 1", sub: "auto-renews" },
-  ];
-
   return (
-    <div style={{ padding: 24, fontFamily: FONT_FAMILY.base, background: surface.pageBg, minHeight: "100vh", position: "relative" }}>
+    <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
       {toast && (
-        <div style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, background: toast.type === "error" ? COLORS.danger : COLORS.success, color: COLORS.white, padding: "10px 20px", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, boxShadow: SHADOW.md }}>
+        <Notification
+          color={toast.color}
+          onClose={() => setToast(null)}
+          style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, minWidth: 260 }}
+        >
           {toast.msg}
-        </div>
+        </Notification>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+      <Group justify="space-between">
         <div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Billing &amp; Subscription</h1>
-          <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.sm, color: surface.subtext }}>Manage your plan, invoices and payment methods</p>
+          <Title order={3}>Billing &amp; Subscription</Title>
+          <Text size="sm" c="dimmed">Manage your plan, invoices and payment methods</Text>
         </div>
-        <button onClick={() => showToast("Opening upgrade plan page...")} style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, padding: "8px 16px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-          <TrendingUp size={16} /> Upgrade Plan
-        </button>
-      </div>
+        <Button leftSection={<IconTrendingUp size={16} />} onClick={() => showToast("Opening upgrade plan page...")}>
+          Upgrade Plan
+        </Button>
+      </Group>
 
-      <div style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)", borderRadius: RADIUS["2xl"], padding: "24px 28px", marginBottom: 24, color: COLORS.white, boxShadow: SHADOW.md }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+      <Paper
+        p="xl"
+        radius="lg"
+        style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)", color: "#fff" }}
+      >
+        <Group justify="space-between" wrap="wrap" gap="md">
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold }}>Enterprise Plan</span>
-              <span style={{ background: "#22c55e", color: COLORS.white, fontSize: 11, fontWeight: FONT_WEIGHT.semibold, padding: "2px 10px", borderRadius: RADIUS.full }}>Active</span>
-            </div>
-            <p style={{ margin: "0 0 4px", fontSize: FONT_SIZE.sm, opacity: 0.85 }}>50 user seats included</p>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.xs, opacity: 0.7 }}>Renews August 1, 2026 — auto-renewal enabled</p>
+            <Group gap="xs" mb={6}>
+              <Text size="xl" fw={700} c="white">Enterprise Plan</Text>
+              <Badge color="green" variant="filled">Active</Badge>
+            </Group>
+            <Text size="sm" c="white" opacity={0.85}>50 user seats included</Text>
+            <Text size="xs" c="white" opacity={0.7}>Renews August 1, 2026 — auto-renewal enabled</Text>
           </div>
           <div style={{ textAlign: "right" }}>
-            <p style={{ margin: "0 0 2px", fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold }}>₹45,000</p>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.sm, opacity: 0.8 }}>per month</p>
+            <Text size="xl" fw={700} c="white">₹45,000</Text>
+            <Text size="sm" c="white" opacity={0.8}>per month</Text>
           </div>
-        </div>
-      </div>
+        </Group>
+      </Paper>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        {stats.map((s) => (
-          <div key={s.label} style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS["2xl"], padding: "16px 20px", boxShadow: SHADOW.xs }}>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium, marginBottom: 4 }}>{s.label.toUpperCase()}</p>
-            <p style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>{s.value}</p>
-            <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>{s.sub}</p>
-          </div>
+      <SimpleGrid cols={4}>
+        {STATS.map((s) => (
+          <Paper key={s.label} withBorder p="md" radius="lg">
+            <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>{s.label}</Text>
+            <Text size="xl" fw={700}>{s.value}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{s.sub}</Text>
+          </Paper>
         ))}
-      </div>
+      </SimpleGrid>
 
-      <div style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS["2xl"], boxShadow: SHADOW.xs, overflow: "hidden" }}>
-        <div style={{ display: "flex", borderBottom: `1px solid ${surface.border}` }}>
-          {TABS.map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: "12px 20px", fontSize: FONT_SIZE.sm, fontWeight: activeTab === tab ? FONT_WEIGHT.semibold : FONT_WEIGHT.normal, color: activeTab === tab ? COLORS.primary : surface.subtext, background: "transparent", border: "none", borderBottom: activeTab === tab ? `2px solid ${COLORS.primary}` : "2px solid transparent", cursor: "pointer", whiteSpace: "nowrap" }}>
-              {tab}
-            </button>
-          ))}
-        </div>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="overview">Overview</Tabs.Tab>
+            <Tabs.Tab value="invoices">Invoices</Tabs.Tab>
+            <Tabs.Tab value="usage">Usage</Tabs.Tab>
+            <Tabs.Tab value="payment">Payment Methods</Tabs.Tab>
+          </Tabs.List>
 
-        <div style={{ padding: 24 }}>
-          {activeTab === "Overview" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              <div>
-                <p style={{ margin: "0 0 14px", fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>Plan Features</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {PLAN_FEATURES.map((feat) => (
-                    <div key={feat} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: RADIUS.full, background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <Check size={12} color="#16a34a" />
-                      </div>
-                      <span style={{ fontSize: FONT_SIZE.sm, color: surface.text }}>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p style={{ margin: "0 0 14px", fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>Plan Actions</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <button onClick={() => showToast("Upgrade options coming soon")} style={{ padding: "10px 16px", background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, cursor: "pointer", textAlign: "left" }}>
-                    Upgrade to Custom Enterprise
-                  </button>
-                  <button onClick={() => showToast("Downgrade confirmation required")} style={{ padding: "10px 16px", background: "transparent", color: surface.subtext, border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, cursor: "pointer", textAlign: "left" }}>
-                    Downgrade Plan
-                  </button>
-                  <button onClick={() => showToast("Cancellation request initiated")} style={{ padding: "10px 16px", background: "transparent", color: COLORS.danger, border: `1px solid #fecaca`, borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, cursor: "pointer", textAlign: "left" }}>
-                    Cancel Subscription
-                  </button>
-                </div>
-                <div style={{ marginTop: 20, padding: 14, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-                  <p style={{ margin: "0 0 4px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext }}>BILLING CONTACT</p>
-                  <p style={{ margin: 0, fontSize: FONT_SIZE.sm, color: surface.text }}>superadmin@mgatesystems.com</p>
-                  <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>Billing notifications sent here</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "Invoices" && (
-            <div>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: surface.theadBg }}>
-                    {["Date", "Invoice #", "Amount", "Status", ""].map((col, ci) => (
-                      <th key={ci} style={{ textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: surface.subtext, borderBottom: `1px solid ${surface.border}` }}>{col.toUpperCase()}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {INVOICES.map((inv, i) => (
-                    <tr key={inv.id} style={{ background: i % 2 === 0 ? "transparent" : (darkMode ? "#1e293b20" : "#f8fafc") }}>
-                      <td style={{ padding: "12px 16px", borderBottom: `1px solid ${surface.border}`, fontSize: FONT_SIZE.sm, color: surface.subtext }}>{inv.date}</td>
-                      <td style={{ padding: "12px 16px", borderBottom: `1px solid ${surface.border}`, fontSize: FONT_SIZE.sm, color: surface.text, fontWeight: FONT_WEIGHT.medium }}>{inv.id}</td>
-                      <td style={{ padding: "12px 16px", borderBottom: `1px solid ${surface.border}`, fontSize: FONT_SIZE.sm, color: surface.text, fontWeight: FONT_WEIGHT.semibold }}>{inv.amount}</td>
-                      <td style={{ padding: "12px 16px", borderBottom: `1px solid ${surface.border}` }}>
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: FONT_WEIGHT.semibold, padding: "2px 9px", borderRadius: RADIUS.full, background: STATUS_COLORS[inv.status]?.bg, color: STATUS_COLORS[inv.status]?.text }}>{inv.status}</span>
-                      </td>
-                      <td style={{ padding: "12px 16px", borderBottom: `1px solid ${surface.border}` }}>
-                        <button onClick={() => handleDownloadInvoice(inv.id)} style={{ background: "transparent", border: `1px solid ${surface.border}`, borderRadius: RADIUS.md, padding: "5px 10px", cursor: "pointer", color: surface.subtext, fontSize: FONT_SIZE.xs, display: "flex", alignItems: "center", gap: 5 }}>
-                          <Download size={12} /> PDF
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {activeTab === "Usage" && (
-            <div style={{ maxWidth: 580 }}>
-              <p style={{ margin: "0 0 20px", fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>Current Usage</p>
-              <UsageBar label="User Seats" used={12} total={50} unit="" color={COLORS.primary} />
-              <UsageBar label="Storage" used={30.5} total={50} unit=" GB" color="#7c3aed" />
-              <UsageBar label="API Calls Today" used={2847} total={10000} unit="" color="#0284c7" />
-              <UsageBar label="Active Integrations" used={4} total={20} unit="" color={COLORS.success} />
-              <div style={{ marginTop: 12, padding: "12px 16px", background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-                <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext }}>Usage data refreshes every 15 minutes. API calls reset daily at midnight UTC.</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "Payment Methods" && (
-            <div style={{ maxWidth: 500 }}>
-              <p style={{ margin: "0 0 16px", fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>Saved Cards</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                {cards.map((card) => (
-                  <div key={card.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", background: surface.inputBg, border: `1px solid ${card.primary ? COLORS.primary : surface.border}`, borderRadius: RADIUS.lg }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <CreditCard size={20} color={card.primary ? COLORS.primary : surface.subtext} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{card.type} ending in {card.last4}</p>
-                        <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>Expires {card.expiry}</p>
-                      </div>
-                      {card.primary && (
-                        <span style={{ fontSize: 11, fontWeight: FONT_WEIGHT.semibold, padding: "1px 8px", borderRadius: RADIUS.full, background: COLORS.primaryMuted, color: COLORS.primary, marginLeft: 4 }}>Primary</span>
-                      )}
-                    </div>
-                    {!card.primary && (
-                      <button onClick={() => handleSetPrimary(card.id)} style={{ background: "transparent", border: `1px solid ${surface.border}`, borderRadius: RADIUS.md, padding: "5px 10px", fontSize: FONT_SIZE.xs, cursor: "pointer", color: surface.subtext }}>
-                        Set Primary
-                      </button>
-                    )}
-                  </div>
+          <Tabs.Panel value="overview" p="lg">
+            <SimpleGrid cols={2} spacing="xl">
+              <Stack gap="xs">
+                <Text fw={600}>Plan Features</Text>
+                {PLAN_FEATURES.map((feat) => (
+                  <Group key={feat} gap="xs">
+                    <Paper
+                      w={20} h={20} radius="xl"
+                      style={{ background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                    >
+                      <IconCheck size={12} color="#16a34a" />
+                    </Paper>
+                    <Text size="sm">{feat}</Text>
+                  </Group>
                 ))}
-              </div>
-              <button onClick={() => showToast("Add card flow coming soon")} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "transparent", border: `1px dashed ${surface.border}`, borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, color: surface.subtext, cursor: "pointer", width: "100%", justifyContent: "center" }}>
-                <Plus size={16} /> Add Payment Method
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+              </Stack>
+              <Stack gap="sm">
+                <Text fw={600}>Plan Actions</Text>
+                <Button fullWidth justify="left" onClick={() => showToast("Upgrade options coming soon")}>
+                  Upgrade to Custom Enterprise
+                </Button>
+                <Button fullWidth justify="left" variant="default" onClick={() => showToast("Downgrade confirmation required")}>
+                  Downgrade Plan
+                </Button>
+                <Button fullWidth justify="left" variant="outline" color="red" onClick={() => showToast("Cancellation request initiated")}>
+                  Cancel Subscription
+                </Button>
+                <Paper withBorder p="sm" radius="md" bg="gray.0">
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Billing Contact</Text>
+                  <Text size="sm">superadmin@mgatesystems.com</Text>
+                  <Text size="xs" c="dimmed" mt={2}>Billing notifications sent here</Text>
+                </Paper>
+              </Stack>
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="invoices" p="lg">
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Invoice #</Table.Th>
+                  <Table.Th>Amount</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th />
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {INVOICES.map((inv) => (
+                  <Table.Tr key={inv.id}>
+                    <Table.Td c="dimmed">{inv.date}</Table.Td>
+                    <Table.Td fw={500}>{inv.id}</Table.Td>
+                    <Table.Td fw={600}>{inv.amount}</Table.Td>
+                    <Table.Td>
+                      <Badge color="green" variant="light">{inv.status}</Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <ActionIcon variant="default" size="sm" onClick={() => showToast(`Downloading ${inv.id}...`)}>
+                        <IconDownload size={12} />
+                      </ActionIcon>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="usage" p="lg">
+            <Stack maw={580} gap="md">
+              <Text fw={600}>Current Usage</Text>
+              {USAGE_BARS.map((u) => {
+                const pct = Math.round((u.used / u.total) * 100);
+                return (
+                  <Stack key={u.label} gap={6}>
+                    <Group justify="space-between">
+                      <Text size="sm" fw={500}>{u.label}</Text>
+                      <Text size="sm" c="dimmed">
+                        {u.used}{u.unit} / {u.total}{u.unit}{" "}
+                        <Text span fw={600} c={pct > 80 ? "red" : "green"}>({pct}%)</Text>
+                      </Text>
+                    </Group>
+                    <Progress value={pct} color={pct > 80 ? "red" : u.color} size="sm" radius="xl" />
+                  </Stack>
+                );
+              })}
+              <Paper withBorder p="sm" radius="md" bg="gray.0">
+                <Text size="xs" c="dimmed">Usage data refreshes every 15 minutes. API calls reset daily at midnight UTC.</Text>
+              </Paper>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="payment" p="lg">
+            <Stack maw={500} gap="md">
+              <Text fw={600}>Saved Cards</Text>
+              {cards.map((card) => (
+                <Paper
+                  key={card.id} withBorder p="md" radius="md"
+                  style={{ borderColor: card.primary ? "var(--mantine-color-blue-5)" : undefined }}
+                >
+                  <Group justify="space-between">
+                    <Group gap="md">
+                      <IconCreditCard size={20} color={card.primary ? "var(--mantine-color-blue-6)" : undefined} />
+                      <div>
+                        <Text size="sm" fw={500}>{card.type} ending in {card.last4}</Text>
+                        <Text size="xs" c="dimmed">Expires {card.expiry}</Text>
+                      </div>
+                      {card.primary && <Badge variant="light">Primary</Badge>}
+                    </Group>
+                    {!card.primary && (
+                      <Button size="xs" variant="default" onClick={() => handleSetPrimary(card.id)}>
+                        Set Primary
+                      </Button>
+                    )}
+                  </Group>
+                </Paper>
+              ))}
+              <Button
+                variant="default"
+                leftSection={<IconPlus size={16} />}
+                fullWidth
+                style={{ borderStyle: "dashed" }}
+                onClick={() => showToast("Add card flow coming soon")}
+              >
+                Add Payment Method
+              </Button>
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
+      </Paper>
+    </Stack>
   );
 }

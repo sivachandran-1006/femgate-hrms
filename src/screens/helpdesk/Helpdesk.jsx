@@ -1,146 +1,120 @@
 import { useState } from "react";
 import {
-  Ticket, Plus, Search, Eye, X, CheckCircle2, Clock,
-  AlertCircle, BarChart2, ChevronDown, Filter,
-  TrendingUp, ArrowUpRight, MessageSquare, RefreshCw,
-  CheckCheck, Activity, Zap,
-} from "lucide-react";
+  Stack, Group, SimpleGrid, Text, Title, Paper, Badge, Button,
+  TextInput, Select, ActionIcon, Tabs, Table, Pagination, Modal,
+  Textarea, ThemeIcon,
+} from "@mantine/core";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
+  IconTicket, IconSearch, IconEye, IconX, IconAlertCircle,
+  IconRefresh, IconCheckbox, IconBolt, IconChartBar, IconPlus,
+} from "@tabler/icons-react";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 
-import { COLORS }                              from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
-import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
-import { RADIUS, SHADOW, ICON_SIZE, TRANSITION, Z_INDEX } from "../../theme/sizes";
-import { getAvatarColor }                      from "../../utils/helpers";
-import { useToast }                            from "../../components/ui/Toast";
-import { usePermission }                       from "../../hooks/usePermission";
-import { Stack, Group, SimpleGrid }            from "@mantine/core";
-import { AppModal }  from "../../components/ui/AppModal";
-import { AppInput }  from "../../components/ui/AppInput";
-import { AppButton } from "../../components/ui/AppButton";
-
-// ── Mock Data ─────────────────────────────────────────────────────────────────
+import { COLORS }            from "../../theme/colors";
+import { getAvatarColor }    from "../../utils/helpers";
+import { useToast }          from "../../components/ui/Toast";
+import { usePermission }     from "../../hooks/usePermission";
+import { AppModal }          from "../../components/ui/AppModal";
+import { AppInput }          from "../../components/ui/AppInput";
+import { AppButton }         from "../../components/ui/AppButton";
 
 const MOCK_TICKETS = [
-  { id: "TKT001", subject: "Laptop not booting",               category: "Hardware",           raisedBy: "Mani",        priority: "High",   status: "Open",        createdDate: "2026-05-30", description: "The laptop does not boot. Power button shows no response. Needs immediate hardware inspection."           },
-  { id: "TKT002", subject: "VPN access required",              category: "Access Request",     raisedBy: "Hari",        priority: "Medium", status: "In Progress", createdDate: "2026-05-29", description: "Need VPN access to connect to the office network while working remotely."                                  },
-  { id: "TKT003", subject: "Software installation - VS Code",  category: "Software",           raisedBy: "Santhosh",    priority: "Low",    status: "Resolved",    createdDate: "2026-05-28", description: "Request to install Visual Studio Code on my work laptop for development purposes."                        },
-  { id: "TKT004", subject: "Monitor display issue",            category: "Hardware",           raisedBy: "Suriya",      priority: "Medium", status: "Pending",     createdDate: "2026-05-28", description: "External monitor shows flickering and distorted colors after the recent OS update."                        },
-  { id: "TKT005", subject: "New employee setup for Arjun",     category: "New Employee Setup", raisedBy: "Big Kundi",   priority: "High",   status: "In Progress", createdDate: "2026-05-27", description: "New employee Arjun Kumar joining on 2026-06-02. Requires laptop, email, software licenses."              },
-  { id: "TKT006", subject: "Internet slow in Finance floor",   category: "Network",            raisedBy: "Safeer",      priority: "High",   status: "Open",        createdDate: "2026-05-27", description: "Finance department floor experiencing very slow internet speeds since yesterday morning."                 },
-  { id: "TKT007", subject: "Printer not working",              category: "Hardware",           raisedBy: "Small Kundi", priority: "Low",    status: "Resolved",    createdDate: "2026-05-25", description: "The shared printer on 3rd floor is not responding to print jobs. Paper jam reported."                   },
-  { id: "TKT008", subject: "Email password reset",             category: "Access Request",     raisedBy: "Suganthan",   priority: "Medium", status: "Closed",      createdDate: "2026-05-24", description: "Unable to log in to corporate email. Password reset required urgently."                                   },
-  { id: "TKT009", subject: "Antivirus license renewal",        category: "Software",           raisedBy: "Aravinth",    priority: "Medium", status: "Pending",     createdDate: "2026-05-23", description: "Antivirus license expiring in 3 days. Needs renewal before expiry."                                      },
-  { id: "TKT010", subject: "Zoom not connecting to audio",     category: "Software",           raisedBy: "Vignesh",     priority: "Low",    status: "Resolved",    createdDate: "2026-05-22", description: "Audio device not detected during Zoom calls. Tried reinstalling drivers, issue persists."               },
-  { id: "TKT011", subject: "USB ports not working",            category: "Hardware",           raisedBy: "Sabari",      priority: "High",   status: "Open",        createdDate: "2026-05-21", description: "All USB ports on the desktop suddenly stopped working. Cannot connect mouse or external drives."         },
-  { id: "TKT012", subject: "Office 365 license missing",       category: "Software",           raisedBy: "P Santhosh",  priority: "High",   status: "In Progress", createdDate: "2026-05-20", description: "Office 365 subscription expired. Unable to use Word, Excel, and Outlook for work tasks."               },
+  { id: "TKT001", subject: "Laptop not booting",               category: "Hardware",            raisedBy: "Mani",        priority: "High",   status: "Open",        createdDate: "2026-05-30", description: "The laptop does not boot. Power button shows no response. Needs immediate hardware inspection." },
+  { id: "TKT002", subject: "VPN access required",              category: "Access Request",      raisedBy: "Hari",        priority: "Medium", status: "In Progress", createdDate: "2026-05-29", description: "Need VPN access to connect to the office network while working remotely." },
+  { id: "TKT003", subject: "Software installation - VS Code",  category: "Software",            raisedBy: "Santhosh",    priority: "Low",    status: "Resolved",    createdDate: "2026-05-28", description: "Request to install Visual Studio Code on my work laptop for development purposes." },
+  { id: "TKT004", subject: "Monitor display issue",            category: "Hardware",            raisedBy: "Suriya",      priority: "Medium", status: "Pending",     createdDate: "2026-05-28", description: "External monitor shows flickering and distorted colors after the recent OS update." },
+  { id: "TKT005", subject: "New employee setup for Arjun",     category: "New Employee Setup",  raisedBy: "Big Kundi",   priority: "High",   status: "In Progress", createdDate: "2026-05-27", description: "New employee Arjun Kumar joining on 2026-06-02. Requires laptop, email, software licenses." },
+  { id: "TKT006", subject: "Internet slow in Finance floor",   category: "Network",             raisedBy: "Safeer",      priority: "High",   status: "Open",        createdDate: "2026-05-27", description: "Finance department floor experiencing very slow internet speeds since yesterday morning." },
+  { id: "TKT007", subject: "Printer not working",              category: "Hardware",            raisedBy: "Small Kundi", priority: "Low",    status: "Resolved",    createdDate: "2026-05-25", description: "The shared printer on 3rd floor is not responding to print jobs. Paper jam reported." },
+  { id: "TKT008", subject: "Email password reset",             category: "Access Request",      raisedBy: "Suganthan",   priority: "Medium", status: "Closed",      createdDate: "2026-05-24", description: "Unable to log in to corporate email. Password reset required urgently." },
+  { id: "TKT009", subject: "Antivirus license renewal",        category: "Software",            raisedBy: "Aravinth",    priority: "Medium", status: "Pending",     createdDate: "2026-05-23", description: "Antivirus license expiring in 3 days. Needs renewal before expiry." },
+  { id: "TKT010", subject: "Zoom not connecting to audio",     category: "Software",            raisedBy: "Vignesh",     priority: "Low",    status: "Resolved",    createdDate: "2026-05-22", description: "Audio device not detected during Zoom calls. Tried reinstalling drivers, issue persists." },
+  { id: "TKT011", subject: "USB ports not working",            category: "Hardware",            raisedBy: "Sabari",      priority: "High",   status: "Open",        createdDate: "2026-05-21", description: "All USB ports on the desktop suddenly stopped working. Cannot connect mouse or external drives." },
+  { id: "TKT012", subject: "Office 365 license missing",       category: "Software",            raisedBy: "P Santhosh",  priority: "High",   status: "In Progress", createdDate: "2026-05-20", description: "Office 365 subscription expired. Unable to use Word, Excel, and Outlook for work tasks." },
 ];
 
-const PRIORITY_STYLE = {
-  High:   { bg: COLORS.dangerMuted,  text: COLORS.danger,  dot: COLORS.danger  },
-  Medium: { bg: COLORS.warningLight, text: COLORS.warning, dot: COLORS.warning },
-  Low:    { bg: COLORS.primaryMuted, text: COLORS.primary, dot: COLORS.primary },
+const PRIORITY_COLORS = { High: "red", Medium: "yellow", Low: "blue" };
+const STATUS_COLORS   = { Open: "red", "In Progress": "yellow", Pending: "cyan", Resolved: "green", Closed: "gray" };
+const CATEGORY_COLORS_MAP = {
+  Hardware: "red", Software: "blue", Network: "violet",
+  "Access Request": "cyan", "New Employee Setup": "green",
 };
 
-const STATUS_STYLE = {
-  Open:        { bg: COLORS.dangerMuted,  text: COLORS.danger,  dot: COLORS.danger  },
-  "In Progress":{ bg: COLORS.warningLight,text: COLORS.warning, dot: COLORS.warning },
-  Pending:     { bg: COLORS.infoLight,    text: COLORS.info,    dot: COLORS.info    },
-  Resolved:    { bg: COLORS.successLight, text: COLORS.success, dot: COLORS.success },
-  Closed:      { bg: COLORS.gray50,       text: COLORS.gray700, dot: COLORS.gray700 },
-};
-
-const CATEGORY_COLORS = {
-  Hardware:           { bg: COLORS.dangerMuted,  text: COLORS.danger  },
-  Software:           { bg: COLORS.primaryMuted, text: COLORS.primary },
-  Network:            { bg: COLORS.purpleMuted,  text: COLORS.purple  },
-  "Access Request":   { bg: COLORS.infoLight,    text: COLORS.info    },
-  "New Employee Setup":{ bg: COLORS.successLight,text: COLORS.success },
-};
-
-const CATEGORIES  = ["All", "Hardware", "Software", "Network", "Access Request", "New Employee Setup"];
-const STATUSES    = ["All", "Open", "In Progress", "Pending", "Resolved", "Closed"];
-const PRIORITIES  = ["High", "Medium", "Low"];
-const MODAL_CATS  = ["Hardware", "Software", "Network", "Access Request", "New Employee Setup"];
+const CATEGORIES = ["All", "Hardware", "Software", "Network", "Access Request", "New Employee Setup"];
+const STATUSES   = ["All", "Open", "In Progress", "Pending", "Resolved", "Closed"];
+const PRIORITIES = ["High", "Medium", "Low"];
+const MODAL_CATS = ["Hardware", "Software", "Network", "Access Request", "New Employee Setup"];
 
 const TREND_DATA = [
-  { day: "Mon", opened: 3, resolved: 2 },
-  { day: "Tue", opened: 5, resolved: 4 },
-  { day: "Wed", opened: 2, resolved: 3 },
-  { day: "Thu", opened: 4, resolved: 2 },
-  { day: "Fri", opened: 6, resolved: 5 },
-  { day: "Sat", opened: 1, resolved: 2 },
+  { day: "Mon", opened: 3, resolved: 2 }, { day: "Tue", opened: 5, resolved: 4 },
+  { day: "Wed", opened: 2, resolved: 3 }, { day: "Thu", opened: 4, resolved: 2 },
+  { day: "Fri", opened: 6, resolved: 5 }, { day: "Sat", opened: 1, resolved: 2 },
 ];
 
 const SLA_DATA = [
-  { category: "Hardware",            total: 5, resolved: 3, breached: 1 },
-  { category: "Software",            total: 4, resolved: 3, breached: 0 },
-  { category: "Network",             total: 1, resolved: 0, breached: 1 },
-  { category: "Access Request",      total: 2, resolved: 1, breached: 0 },
-  { category: "New Employee Setup",  total: 1, resolved: 0, breached: 0 },
+  { category: "Hardware",           total: 5, resolved: 3, breached: 1 },
+  { category: "Software",           total: 4, resolved: 3, breached: 0 },
+  { category: "Network",            total: 1, resolved: 0, breached: 1 },
+  { category: "Access Request",     total: 2, resolved: 1, breached: 0 },
+  { category: "New Employee Setup", total: 1, resolved: 0, breached: 0 },
 ];
 
 const initials = (name = "") => name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 const fmtDate  = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-// ── Component ─────────────────────────────────────────────────────────────────
+const ROWS = 6;
 
-export default function Helpdesk({ darkMode = false }) {
+export default function Helpdesk() {
   const { show } = useToast();
-  const can      = usePermission();
-  const surface  = darkMode ? COLORS.dark : COLORS.light;
+  const can = usePermission();
 
   const [tickets, setTickets]           = useState(MOCK_TICKETS);
-  const [activeTab, setActiveTab]       = useState(can("helpdesk.view_all_tickets") ? "All Tickets" : "My Tickets");
+  const [activeTab, setActiveTab]       = useState(can("helpdesk.view_all_tickets") ? "all" : "mine");
   const [searchQuery, setSearchQuery]   = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
   const [showRaiseModal, setShowRaiseModal] = useState(false);
   const [viewTicket, setViewTicket]     = useState(null);
-  const [currentPage, setCurrentPage]  = useState(1);
-  const ROWS = 6;
+  const [page, setPage]                 = useState(1);
 
   const [newTicket, setNewTicket] = useState({ subject: "", category: "Hardware", priority: "Medium", description: "" });
 
-  // ── Stats ──
   const total      = tickets.length;
   const openCount  = tickets.filter((t) => t.status === "Open").length;
   const inProgress = tickets.filter((t) => t.status === "In Progress").length;
   const resolved   = tickets.filter((t) => t.status === "Resolved").length;
-  const pending    = tickets.filter((t) => t.status === "Pending").length;
   const highPrio   = tickets.filter((t) => t.priority === "High").length;
 
   const kpis = [
-    { label: "Total Tickets",   value: total,      icon: Ticket,      color: COLORS.primary, bg: COLORS.primaryMuted, sub: "All time"          },
-    { label: "Open",            value: openCount,  icon: AlertCircle, color: COLORS.danger,  bg: COLORS.dangerMuted,  sub: "Needs attention"   },
-    { label: "In Progress",     value: inProgress, icon: RefreshCw,   color: COLORS.warning, bg: COLORS.warningLight, sub: "Being worked on"   },
-    { label: "Resolved",        value: resolved,   icon: CheckCheck,  color: COLORS.success, bg: COLORS.successLight, sub: "Closed successfully"},
-    { label: "High Priority",   value: highPrio,   icon: Zap,         color: COLORS.orange,  bg: COLORS.orangeLight,  sub: "Urgent tickets"    },
+    { label: "Total Tickets", value: total,      color: "blue",   icon: <IconTicket size={20} /> },
+    { label: "Open",          value: openCount,  color: "red",    icon: <IconAlertCircle size={20} /> },
+    { label: "In Progress",   value: inProgress, color: "yellow", icon: <IconRefresh size={20} /> },
+    { label: "Resolved",      value: resolved,   color: "green",  icon: <IconCheckbox size={20} /> },
+    { label: "High Priority", value: highPrio,   color: "orange", icon: <IconBolt size={20} /> },
   ];
 
-  // ── Category pie ──
   const catPie = MODAL_CATS.map((c) => ({
     name: c, value: tickets.filter((t) => t.category === c).length,
-    color: CATEGORY_COLORS[c]?.text || COLORS.primary,
   })).filter((d) => d.value > 0);
 
-  // ── Filter ──
+  const PIE_COLORS = ["#ef4444", "#3b82f6", "#8b5cf6", "#06b6d4", "#22c55e"];
+
   const filtered = tickets.filter((t) => {
     const q = searchQuery.toLowerCase();
     const matchSearch   = !q || t.subject.toLowerCase().includes(q) || t.id.toLowerCase().includes(q) || t.raisedBy.toLowerCase().includes(q);
     const matchCategory = categoryFilter === "All" || t.category === categoryFilter;
     const matchStatus   = statusFilter   === "All" || t.status   === statusFilter;
     const matchPriority = priorityFilter === "All" || t.priority === priorityFilter;
-    const matchTab      = activeTab === "All Tickets" || (activeTab === "My Tickets" && t.raisedBy === "Mani");
+    const matchTab      = activeTab === "all" || (activeTab === "mine" && t.raisedBy === "Mani");
     return matchSearch && matchCategory && matchStatus && matchPriority && matchTab;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS));
-  const paginated  = filtered.slice((currentPage - 1) * ROWS, currentPage * ROWS);
+  const paginated  = filtered.slice((page - 1) * ROWS, page * ROWS);
 
   const handleRaise = () => {
     if (!newTicket.subject.trim() || !newTicket.description.trim()) return;
@@ -151,396 +125,302 @@ export default function Helpdesk({ darkMode = false }) {
     setShowRaiseModal(false);
   };
 
-  const inputStyle = {
-    width: "100%", boxSizing: "border-box",
-    border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg,
-    padding: PADDING.input, fontSize: FONT_SIZE.md,
-    fontFamily: FONT_FAMILY.base, background: surface.inputBg,
-    color: surface.text, outline: "none",
-  };
-
-  const thStyle = {
-    padding: PADDING.tableHeader,
-    textAlign: "left",
-    fontSize: FONT_SIZE.xs,
-    fontWeight: FONT_WEIGHT.semibold,
-    color: COLORS.gray700,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    whiteSpace: "nowrap",
-    background: surface.theadBg,
-    borderBottom: `2px solid ${surface.border}`,
-  };
+  const clearFilters = () => { setCategoryFilter("All"); setStatusFilter("All"); setPriorityFilter("All"); setSearchQuery(""); setPage(1); };
+  const hasFilters = categoryFilter !== "All" || statusFilter !== "All" || priorityFilter !== "All" || searchQuery;
 
   const TABS = [
-    "My Tickets",
-    ...(can("helpdesk.view_all_tickets") ? ["All Tickets"]     : []),
-    ...(can("helpdesk.view_analytics")   ? ["Analytics"]       : []),
-    ...(can("helpdesk.view_sla")         ? ["SLA Report"]      : []),
+    { value: "mine", label: "My Tickets" },
+    ...(can("helpdesk.view_all_tickets") ? [{ value: "all", label: "All Tickets" }] : []),
+    ...(can("helpdesk.view_analytics")   ? [{ value: "analytics", label: "Analytics", icon: <IconChartBar size={13} /> }] : []),
+    ...(can("helpdesk.view_sla")         ? [{ value: "sla", label: "SLA Report" }] : []),
   ];
 
+  const showTable = activeTab === "all" || activeTab === "mine";
+
   return (
-    <div style={{ fontFamily: FONT_FAMILY.base }}>
-
-      {/* ── Header ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: SPACING[5], flexWrap: "wrap", gap: GAP.md }}>
+    <Stack gap="lg">
+      <Group justify="space-between">
         <div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>IT Helpdesk</h1>
-          <p style={{ margin: `${GAP.xs}px 0 0`, fontSize: FONT_SIZE.base, color: surface.subtext }}>Manage and track IT support tickets</p>
+          <Title order={3}>IT Helpdesk</Title>
+          <Text size="sm" c="dimmed">Manage and track IT support tickets</Text>
         </div>
-        <button
-          onClick={() => setShowRaiseModal(true)}
-          style={{ display: "flex", alignItems: "center", gap: GAP.sm, padding: PADDING.btn, background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.semibold, fontFamily: FONT_FAMILY.base, cursor: "pointer" }}
-        >
-          <Plus size={ICON_SIZE.sm} /> Raise Ticket
-        </button>
-      </div>
+        <Button leftSection={<IconPlus size={16} />} onClick={() => setShowRaiseModal(true)}>
+          Raise Ticket
+        </Button>
+      </Group>
 
-      {/* ── KPI Cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: GAP.md, marginBottom: SPACING[5] }}>
+      <SimpleGrid cols={5}>
         {kpis.map((k) => (
-          <div key={k.label} style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, padding: `${SPACING[4]}px ${SPACING[4]}px` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: SPACING[3] }}>
-              <div style={{ width: 40, height: 40, borderRadius: RADIUS.lg, background: k.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <k.icon size={ICON_SIZE.md} color={k.color} />
-              </div>
-              <span style={{ padding: "2px 8px", borderRadius: RADIUS.full, fontSize: 10, fontWeight: FONT_WEIGHT.bold, background: k.bg, color: k.color }}>LIVE</span>
-            </div>
-            <p style={{ margin: "0 0 2px", fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text, lineHeight: 1 }}>{k.value}</p>
-            <p style={{ margin: "0 0 1px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>{k.label}</p>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext }}>{k.sub}</p>
-          </div>
+          <Paper key={k.label} withBorder p="md" radius="lg">
+            <Group justify="space-between" mb="xs">
+              <ThemeIcon color={k.color} variant="light" size="md" radius="md">{k.icon}</ThemeIcon>
+              <Badge size="xs" color={k.color} variant="light">LIVE</Badge>
+            </Group>
+            <Text size="xl" fw={700} lh={1}>{k.value}</Text>
+            <Text size="xs" fw={600} mt={2}>{k.label}</Text>
+          </Paper>
         ))}
-      </div>
+      </SimpleGrid>
 
-      {/* ── Tab Bar ── */}
-      <div style={{ display: "flex", gap: GAP.xs, marginBottom: SPACING[5], background: surface.cardBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg, padding: GAP.xs, width: "fit-content" }}>
-        {TABS.map((t) => (
-          <button key={t} onClick={() => { setActiveTab(t); setCurrentPage(1); }} style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: `${GAP.sm}px ${SPACING[4]}px`,
-            borderRadius: RADIUS.md, border: "none", cursor: "pointer",
-            fontSize: FONT_SIZE.base, fontWeight: activeTab === t ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium,
-            fontFamily: FONT_FAMILY.base,
-            background: activeTab === t ? COLORS.primary : "transparent",
-            color: activeTab === t ? COLORS.white : surface.subtext,
-            transition: TRANSITION.fast,
-          }}>
-            {t === "Analytics" && <BarChart2 size={13} />}
-            {t}
-          </button>
-        ))}
-      </div>
+      <Tabs value={activeTab} onChange={(v) => { setActiveTab(v); setPage(1); }}>
+        <Tabs.List>
+          {TABS.map((t) => (
+            <Tabs.Tab key={t.value} value={t.value} leftSection={t.icon}>
+              {t.label}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
 
-      {/* ══════════════════════════════════════════
-          TICKET TABLE (All Tickets / My Tickets)
-      ══════════════════════════════════════════ */}
-      {(activeTab === "All Tickets" || activeTab === "My Tickets" || (!can("helpdesk.view_all_tickets") && !can("helpdesk.view_analytics") && !can("helpdesk.view_sla"))) && (
-        <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, overflow: "hidden" }}>
+        {/* ── TICKET TABLE ── */}
+        {TABS.filter((t) => t.value === "mine" || t.value === "all").map((t) => (
+          <Tabs.Panel key={t.value} value={t.value} pt="md">
+            <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
+              <Group p="md" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }} wrap="wrap" gap="sm">
+                <TextInput
+                  placeholder="Search tickets, ID, employee..."
+                  leftSection={<IconSearch size={15} />}
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.currentTarget.value); setPage(1); }}
+                  style={{ flex: 1, minWidth: 220 }}
+                />
+                <Select
+                  value={categoryFilter}
+                  onChange={(v) => { setCategoryFilter(v); setPage(1); }}
+                  data={CATEGORIES.map((c) => ({ value: c, label: c === "All" ? "All Categories" : c }))}
+                  w={160}
+                />
+                <Select
+                  value={statusFilter}
+                  onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                  data={STATUSES.map((s) => ({ value: s, label: s === "All" ? "All Status" : s }))}
+                  w={150}
+                />
+                <Select
+                  value={priorityFilter}
+                  onChange={(v) => { setPriorityFilter(v); setPage(1); }}
+                  data={["All", ...PRIORITIES].map((p) => ({ value: p, label: p === "All" ? "All Priority" : p }))}
+                  w={140}
+                />
+                <Group gap="xs" ml="auto">
+                  <Text size="sm" c="dimmed">{filtered.length} ticket{filtered.length !== 1 ? "s" : ""}</Text>
+                  {hasFilters && (
+                    <ActionIcon variant="light" color="red" size="sm" onClick={clearFilters} title="Clear filters">
+                      <IconX size={12} />
+                    </ActionIcon>
+                  )}
+                </Group>
+              </Group>
 
-          {/* Toolbar */}
-          <div style={{ display: "flex", gap: GAP.md, padding: `${SPACING[4]}px ${SPACING[5]}px`, borderBottom: `1px solid ${surface.border}`, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-              <Search size={15} color={COLORS.gray400} style={{ position: "absolute", left: SPACING[3], top: "50%", transform: "translateY(-50%)" }} />
-              <input placeholder="Search tickets, ID, employee…" value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                style={{ ...inputStyle, paddingLeft: SPACING[8] }} />
-            </div>
-            {[
-              { label: "Category", value: categoryFilter, set: setCategoryFilter, options: CATEGORIES },
-              { label: "Status",   value: statusFilter,   set: setStatusFilter,   options: STATUSES   },
-              { label: "Priority", value: priorityFilter, set: setPriorityFilter, options: ["All", ...PRIORITIES] },
-            ].map(({ label, value, set, options }) => (
-              <div key={label} style={{ position: "relative" }}>
-                <select value={value} onChange={(e) => { set(e.target.value); setCurrentPage(1); }}
-                  style={{ ...inputStyle, width: "auto", minWidth: 140, paddingRight: SPACING[8], cursor: "pointer" }}>
-                  {options.map((o) => <option key={o} value={o}>{o === "All" ? `All ${label}` : o}</option>)}
-                </select>
-                <ChevronDown size={13} style={{ position: "absolute", right: SPACING[2], top: "50%", transform: "translateY(-50%)", color: surface.subtext, pointerEvents: "none" }} />
-              </div>
-            ))}
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: GAP.sm }}>
-              <span style={{ fontSize: FONT_SIZE.sm, color: surface.subtext }}>{filtered.length} ticket{filtered.length !== 1 ? "s" : ""}</span>
-              {(categoryFilter !== "All" || statusFilter !== "All" || priorityFilter !== "All" || searchQuery) && (
-                <button onClick={() => { setCategoryFilter("All"); setStatusFilter("All"); setPriorityFilter("All"); setSearchQuery(""); setCurrentPage(1); }}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: RADIUS.md, border: `1px solid ${surface.border}`, background: "transparent", color: COLORS.danger, fontSize: FONT_SIZE.xs, fontFamily: FONT_FAMILY.base, cursor: "pointer" }}>
-                  <X size={11} /> Clear
-                </button>
+              <Table highlightOnHover>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Ticket ID</Table.Th>
+                    <Table.Th>Subject</Table.Th>
+                    <Table.Th>Category</Table.Th>
+                    <Table.Th>Raised By</Table.Th>
+                    <Table.Th>Priority</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                    <Table.Th>Created</Table.Th>
+                    <Table.Th>Action</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {paginated.length === 0 ? (
+                    <Table.Tr>
+                      <Table.Td colSpan={8} ta="center" py="xl" c="dimmed">No tickets found</Table.Td>
+                    </Table.Tr>
+                  ) : paginated.map((tk) => {
+                    const av = getAvatarColor(tk.raisedBy);
+                    return (
+                      <Table.Tr key={tk.id}>
+                        <Table.Td>
+                          <Text size="sm" fw={700} c="blue" ff="monospace">{tk.id}</Text>
+                        </Table.Td>
+                        <Table.Td maw={220} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <Text size="sm" fw={600} truncate>{tk.subject}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge size="sm" color={CATEGORY_COLORS_MAP[tk.category] || "gray"} variant="light">{tk.category}</Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap="xs">
+                            <div style={{ width: 26, height: 26, borderRadius: "50%", background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                              {initials(tk.raisedBy)}
+                            </div>
+                            <Text size="sm">{tk.raisedBy}</Text>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge size="sm" color={PRIORITY_COLORS[tk.priority]} variant="dot">{tk.priority}</Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge size="sm" color={STATUS_COLORS[tk.status]} variant="light">{tk.status}</Badge>
+                        </Table.Td>
+                        <Table.Td c="dimmed" style={{ whiteSpace: "nowrap" }}>{fmtDate(tk.createdDate)}</Table.Td>
+                        <Table.Td>
+                          <Button size="xs" variant="light" leftSection={<IconEye size={12} />} onClick={() => setViewTicket(tk)}>
+                            View
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+
+              {totalPages > 1 && (
+                <Group justify="space-between" p="md" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
+                  <Text size="sm" c="dimmed">
+                    Showing {(page - 1) * ROWS + 1}–{Math.min(page * ROWS, filtered.length)} of {filtered.length}
+                  </Text>
+                  <Pagination total={totalPages} value={page} onChange={setPage} size="sm" />
+                </Group>
               )}
-            </div>
-          </div>
+            </Paper>
+          </Tabs.Panel>
+        ))}
 
-          {/* Table */}
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_FAMILY.base }}>
-              <thead>
-                <tr>
-                  {["Ticket ID", "Subject", "Category", "Raised By", "Priority", "Status", "Created", "Action"].map((h) => (
-                    <th key={h} style={thStyle}>{h}</th>
+        {/* ── ANALYTICS TAB ── */}
+        <Tabs.Panel value="analytics" pt="md">
+          <Stack gap="md">
+            <SimpleGrid cols={2} spacing="md">
+              <Paper withBorder p="md" radius="lg">
+                <Text fw={600} mb="md">Ticket Trend — This Week</Text>
+                <ResponsiveContainer width="100%" height={220}>
+                  <AreaChart data={TREND_DATA}>
+                    <defs>
+                      <linearGradient id="openGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="resolGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="opened" name="Opened" stroke="#ef4444" fill="url(#openGrad)" strokeWidth={2} dot={false} />
+                    <Area type="monotone" dataKey="resolved" name="Resolved" stroke="#22c55e" fill="url(#resolGrad)" strokeWidth={2} dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Paper>
+              <Paper withBorder p="md" radius="lg">
+                <Text fw={600} mb="md">Tickets by Category</Text>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie data={catPie} dataKey="value" cx="50%" cy="50%" outerRadius={65} innerRadius={38} paddingAngle={2}>
+                      {catPie.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <Stack gap={6} mt="xs">
+                  {catPie.map((d, i) => (
+                    <Group key={d.name} justify="space-between">
+                      <Group gap="xs">
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        <Text size="xs" c="dimmed">{d.name}</Text>
+                      </Group>
+                      <Text size="xs" fw={700}>{d.value}</Text>
+                    </Group>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: "center", padding: `${SPACING[10]}px`, color: COLORS.gray400, fontSize: FONT_SIZE.md }}>No tickets found</td></tr>
-                ) : paginated.map((t) => {
-                  const av    = getAvatarColor(t.raisedBy);
-                  const prio  = PRIORITY_STYLE[t.priority]  || PRIORITY_STYLE.Medium;
-                  const stat  = STATUS_STYLE[t.status]      || STATUS_STYLE.Open;
-                  const cat   = CATEGORY_COLORS[t.category] || { bg: COLORS.gray50, text: COLORS.gray700 };
+                </Stack>
+              </Paper>
+            </SimpleGrid>
+
+            <SimpleGrid cols={2} spacing="md">
+              {[
+                { title: "By Priority", items: PRIORITIES, getter: (p) => tickets.filter((t) => t.priority === p).length, colorOf: (p) => ({ High: "#ef4444", Medium: "#f59e0b", Low: "#3b82f6" })[p] },
+                { title: "By Status", items: ["Open", "In Progress", "Pending", "Resolved", "Closed"], getter: (s) => tickets.filter((t) => t.status === s).length, colorOf: (s) => ({ Open: "#ef4444", "In Progress": "#f59e0b", Pending: "#06b6d4", Resolved: "#22c55e", Closed: "#94a3b8" })[s] },
+              ].map(({ title, items, getter, colorOf }) => (
+                <Paper key={title} withBorder p="md" radius="lg">
+                  <Text fw={600} mb="md">{title}</Text>
+                  <Stack gap="sm">
+                    {items.map((item) => {
+                      const count = getter(item);
+                      const pct = Math.round((count / total) * 100);
+                      return (
+                        <Stack key={item} gap={4}>
+                          <Group justify="space-between">
+                            <Text size="sm" fw={500}>{item}</Text>
+                            <Text size="xs" c="dimmed">{count} ({pct}%)</Text>
+                          </Group>
+                          <div style={{ height: 8, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: colorOf(item), borderRadius: 999, transition: "width 0.5s" }} />
+                          </div>
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                </Paper>
+              ))}
+            </SimpleGrid>
+          </Stack>
+        </Tabs.Panel>
+
+        {/* ── SLA REPORT TAB ── */}
+        <Tabs.Panel value="sla" pt="md">
+          <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
+            <Stack p="md" gap={2} style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
+              <Text fw={600}>SLA Performance Report</Text>
+              <Text size="xs" c="dimmed">Service Level Agreement compliance by category</Text>
+            </Stack>
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Category</Table.Th>
+                  <Table.Th ta="center">Total</Table.Th>
+                  <Table.Th ta="center">Resolved</Table.Th>
+                  <Table.Th ta="center">Breached</Table.Th>
+                  <Table.Th>SLA %</Table.Th>
+                  <Table.Th>Health</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {SLA_DATA.map((row) => {
+                  const pct = row.total > 0 ? Math.round(((row.total - row.breached) / row.total) * 100) : 100;
+                  const barColor = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+                  const healthColor = pct >= 80 ? "green" : pct >= 50 ? "yellow" : "red";
                   return (
-                    <tr key={t.id} style={{ borderBottom: `1px solid ${surface.border}`, transition: TRANSITION.fast }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = surface.rowHover)}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-
-                      {/* Ticket ID */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: COLORS.primary, fontFamily: "monospace" }}>{t.id}</span>
-                      </td>
-
-                      {/* Subject */}
-                      <td style={{ padding: PADDING.tableCell, maxWidth: 220 }}>
-                        <p style={{ margin: 0, fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.subject}</p>
-                      </td>
-
-                      {/* Category */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <span style={{ padding: "3px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: cat.bg, color: cat.text, whiteSpace: "nowrap" }}>{t.category}</span>
-                      </td>
-
-                      {/* Raised By */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                          <div style={{ width: 28, height: 28, borderRadius: RADIUS.full, background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: FONT_WEIGHT.bold, flexShrink: 0 }}>{initials(t.raisedBy)}</div>
-                          <span style={{ fontSize: FONT_SIZE.base, color: surface.text, whiteSpace: "nowrap" }}>{t.raisedBy}</span>
-                        </div>
-                      </td>
-
-                      {/* Priority */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: prio.bg, color: prio.text, whiteSpace: "nowrap" }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: prio.dot }} />
-                          {t.priority}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: stat.bg, color: stat.text, whiteSpace: "nowrap" }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: stat.dot }} />
-                          {t.status}
-                        </span>
-                      </td>
-
-                      {/* Date */}
-                      <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: surface.subtext, whiteSpace: "nowrap" }}>{fmtDate(t.createdDate)}</td>
-
-                      {/* Action */}
-                      <td style={{ padding: PADDING.tableCell }}>
-                        <button onClick={() => setViewTicket(t)}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: RADIUS.md, border: `1px solid ${COLORS.primaryMuted}`, background: COLORS.primaryMuted, color: COLORS.primary, fontSize: FONT_SIZE.sm, fontFamily: FONT_FAMILY.base, cursor: "pointer", fontWeight: FONT_WEIGHT.medium }}>
-                          <Eye size={13} /> View
-                        </button>
-                      </td>
-                    </tr>
+                    <Table.Tr key={row.category}>
+                      <Table.Td>
+                        <Badge size="sm" color={CATEGORY_COLORS_MAP[row.category] || "gray"} variant="light">{row.category}</Badge>
+                      </Table.Td>
+                      <Table.Td ta="center" fw={600}>{row.total}</Table.Td>
+                      <Table.Td ta="center" fw={600} c="green">{row.resolved}</Table.Td>
+                      <Table.Td ta="center" fw={600} c={row.breached > 0 ? "red" : "green"}>{row.breached}</Table.Td>
+                      <Table.Td miw={140}>
+                        <Group gap="xs">
+                          <div style={{ flex: 1, height: 8, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 999 }} />
+                          </div>
+                          <Text size="sm" fw={700} c={healthColor} miw={36}>{pct}%</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge size="sm" color={healthColor} variant="light">
+                          {pct >= 80 ? "Good" : pct >= 50 ? "At Risk" : "Breached"}
+                        </Badge>
+                      </Table.Td>
+                    </Table.Tr>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </Table.Tbody>
+            </Table>
+          </Paper>
+        </Tabs.Panel>
+      </Tabs>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: `${SPACING[3]}px ${SPACING[5]}px`, borderTop: `1px solid ${surface.border}` }}>
-              <span style={{ fontSize: FONT_SIZE.sm, color: surface.subtext }}>
-                Showing {(currentPage - 1) * ROWS + 1}–{Math.min(currentPage * ROWS, filtered.length)} of {filtered.length}
-              </span>
-              <div style={{ display: "flex", gap: GAP.xs }}>
-                <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}
-                  style={{ padding: `${GAP.xs}px ${GAP.md}px`, borderRadius: RADIUS.md, border: `1px solid ${surface.border}`, background: surface.cardBg, color: currentPage === 1 ? COLORS.gray400 : surface.text, fontSize: FONT_SIZE.sm, cursor: currentPage === 1 ? "not-allowed" : "pointer", fontFamily: FONT_FAMILY.base }}>
-                  Prev
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button key={p} onClick={() => setCurrentPage(p)}
-                    style={{ width: 32, height: 32, borderRadius: RADIUS.md, border: p === currentPage ? "none" : `1px solid ${surface.border}`, background: p === currentPage ? COLORS.primary : surface.cardBg, color: p === currentPage ? COLORS.white : surface.text, fontWeight: p === currentPage ? FONT_WEIGHT.bold : FONT_WEIGHT.normal, fontSize: FONT_SIZE.sm, cursor: "pointer" }}>
-                    {p}
-                  </button>
-                ))}
-                <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}
-                  style={{ padding: `${GAP.xs}px ${GAP.md}px`, borderRadius: RADIUS.md, border: `1px solid ${surface.border}`, background: surface.cardBg, color: currentPage === totalPages ? COLORS.gray400 : surface.text, fontSize: FONT_SIZE.sm, cursor: currentPage === totalPages ? "not-allowed" : "pointer", fontFamily: FONT_FAMILY.base }}>
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════
-          ANALYTICS TAB
-      ══════════════════════════════════════════ */}
-      {activeTab === "Analytics" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: GAP.lg }}>
-
-            {/* Ticket trend */}
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, padding: PADDING.card }}>
-              <p style={{ margin: `0 0 ${SPACING[4]}px`, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Ticket Trend — This Week</p>
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={TREND_DATA}>
-                  <defs>
-                    <linearGradient id="openGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.danger} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={COLORS.danger} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="resolGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor={COLORS.success} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={COLORS.success} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={surface.border} />
-                  <XAxis dataKey="day" tick={{ fontSize: FONT_SIZE.xs, fill: surface.subtext }} />
-                  <YAxis tick={{ fontSize: FONT_SIZE.xs, fill: surface.subtext }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, background: surface.cardBg, border: `1px solid ${surface.border}` }} />
-                  <Area type="monotone" dataKey="opened"   name="Opened"   stroke={COLORS.danger}  fill="url(#openGrad)"  strokeWidth={2} dot={false} />
-                  <Area type="monotone" dataKey="resolved" name="Resolved" stroke={COLORS.success} fill="url(#resolGrad)" strokeWidth={2} dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Category pie */}
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, padding: PADDING.card }}>
-              <p style={{ margin: `0 0 ${SPACING[4]}px`, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Tickets by Category</p>
-              <ResponsiveContainer width="100%" height={160}>
-                <PieChart>
-                  <Pie data={catPie} dataKey="value" cx="50%" cy="50%" outerRadius={65} innerRadius={38} paddingAngle={2}>
-                    {catPie.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: GAP.sm }}>
-                {catPie.map((d) => (
-                  <div key={d.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: d.color }} />
-                      <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext }}>{d.name}</span>
-                    </div>
-                    <span style={{ fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>{d.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Priority + Status bars */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.lg }}>
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, padding: PADDING.card }}>
-              <p style={{ margin: `0 0 ${SPACING[4]}px`, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>By Priority</p>
-              {PRIORITIES.map((p) => {
-                const count = tickets.filter((t) => t.priority === p).length;
-                const pct   = Math.round((count / total) * 100);
-                const st    = PRIORITY_STYLE[p];
-                return (
-                  <div key={p} style={{ marginBottom: SPACING[3] }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                      <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{p}</span>
-                      <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext }}>{count} <span style={{ color: COLORS.gray400 }}>({pct}%)</span></span>
-                    </div>
-                    <div style={{ height: 8, background: surface.border, borderRadius: RADIUS.full, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: st.dot, borderRadius: RADIUS.full, transition: "width 0.5s" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, padding: PADDING.card }}>
-              <p style={{ margin: `0 0 ${SPACING[4]}px`, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>By Status</p>
-              {["Open", "In Progress", "Pending", "Resolved", "Closed"].map((s) => {
-                const count = tickets.filter((t) => t.status === s).length;
-                const pct   = Math.round((count / total) * 100);
-                const st    = STATUS_STYLE[s];
-                return (
-                  <div key={s} style={{ marginBottom: SPACING[3] }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                      <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{s}</span>
-                      <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext }}>{count} <span style={{ color: COLORS.gray400 }}>({pct}%)</span></span>
-                    </div>
-                    <div style={{ height: 8, background: surface.border, borderRadius: RADIUS.full, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: st.dot, borderRadius: RADIUS.full, transition: "width 0.5s" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════
-          SLA REPORT TAB
-      ══════════════════════════════════════════ */}
-      {activeTab === "SLA Report" && (
-        <div style={{ background: surface.cardBg, borderRadius: RADIUS["2xl"], border: `1px solid ${surface.border}`, boxShadow: SHADOW.card, overflow: "hidden" }}>
-          <div style={{ padding: `${SPACING[4]}px ${SPACING[5]}px`, borderBottom: `1px solid ${surface.border}` }}>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>SLA Performance Report</p>
-            <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>Service Level Agreement compliance by category</p>
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_FAMILY.base }}>
-            <thead>
-              <tr>
-                {["Category", "Total", "Resolved", "Breached", "SLA %", "Health"].map((h) => (
-                  <th key={h} style={thStyle}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {SLA_DATA.map((row, i, arr) => {
-                const pct      = row.total > 0 ? Math.round(((row.total - row.breached) / row.total) * 100) : 100;
-                const barColor = pct >= 80 ? COLORS.success : pct >= 50 ? COLORS.warning : COLORS.danger;
-                const cat      = CATEGORY_COLORS[row.category] || { bg: COLORS.gray50, text: COLORS.gray700 };
-                return (
-                  <tr key={row.category} style={{ borderBottom: i < arr.length - 1 ? `1px solid ${surface.border}` : "none", transition: TRANSITION.fast }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = surface.rowHover)}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-                    <td style={{ padding: PADDING.tableCell }}>
-                      <span style={{ padding: "3px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: cat.bg, color: cat.text }}>{row.category}</span>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.base, color: surface.text, fontWeight: FONT_WEIGHT.semibold, textAlign: "center" }}>{row.total}</td>
-                    <td style={{ padding: PADDING.tableCell, textAlign: "center" }}>
-                      <span style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: COLORS.success }}>{row.resolved}</span>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell, textAlign: "center" }}>
-                      <span style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: row.breached > 0 ? COLORS.danger : COLORS.success }}>{row.breached}</span>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell, minWidth: 140 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                        <div style={{ flex: 1, height: 8, background: surface.border, borderRadius: RADIUS.full, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: RADIUS.full, transition: "width 0.5s" }} />
-                        </div>
-                        <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: barColor, minWidth: 36 }}>{pct}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: PADDING.tableCell }}>
-                      <span style={{ padding: "3px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: pct >= 80 ? COLORS.successLight : pct >= 50 ? COLORS.warningLight : COLORS.dangerMuted, color: barColor }}>
-                        {pct >= 80 ? "Good" : pct >= 50 ? "At Risk" : "Breached"}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* ── Raise Ticket Modal (Mantine) ── */}
+      {/* ── Raise Ticket Modal ── */}
       <AppModal
         opened={showRaiseModal}
         onClose={() => setShowRaiseModal(false)}
         title="Raise New Ticket"
         subtitle="Describe the issue and we'll assign it to the right team"
-        icon={<Plus size={18} color={COLORS.primary} />}
+        icon={<IconPlus size={18} color={COLORS.primary} />}
         iconColor={COLORS.primary}
         size="md"
       >
@@ -570,17 +450,14 @@ export default function Helpdesk({ darkMode = false }) {
           <AppInput
             type="textarea"
             label="Description *"
-            placeholder="Provide detailed information about the issue…"
+            placeholder="Provide detailed information about the issue..."
             value={newTicket.description}
             onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
             minRows={4}
           />
           <Group justify="flex-end" gap="sm" mt="xs">
             <AppButton variant="default" onClick={() => setShowRaiseModal(false)}>Cancel</AppButton>
-            <AppButton
-              onClick={handleRaise}
-              disabled={!newTicket.subject.trim() || !newTicket.description.trim()}
-            >
+            <AppButton onClick={handleRaise} disabled={!newTicket.subject.trim() || !newTicket.description.trim()}>
               Submit Ticket
             </AppButton>
           </Group>
@@ -588,77 +465,44 @@ export default function Helpdesk({ darkMode = false }) {
       </AppModal>
 
       {/* ── View Ticket Modal ── */}
-      {viewTicket && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: Z_INDEX.modal, display: "flex", alignItems: "center", justifyContent: "center", padding: SPACING[5] }}
-          onClick={(e) => e.target === e.currentTarget && setViewTicket(null)}>
-          <div style={{ background: surface.cardBg, borderRadius: RADIUS["3xl"], width: "100%", maxWidth: 560, boxShadow: SHADOW.modal, overflow: "hidden" }}>
-            {/* Modal Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: PADDING.card, borderBottom: `1px solid ${surface.border}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                <div style={{ width: 36, height: 36, borderRadius: RADIUS.lg, background: COLORS.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Ticket size={ICON_SIZE.md} color={COLORS.primary} />
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.bold, color: surface.text, fontFamily: "monospace" }}>{viewTicket.id}</p>
-                  <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext }}>Ticket Details</p>
-                </div>
-              </div>
-              <button onClick={() => setViewTicket(null)} style={{ background: "none", border: "none", cursor: "pointer", color: COLORS.gray400, display: "flex" }}><X size={ICON_SIZE.md} /></button>
-            </div>
-
-            {/* Subject */}
-            <div style={{ margin: SPACING[5], padding: `${GAP.md}px ${GAP.lg}px`, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-              <p style={{ margin: "0 0 3px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, textTransform: "uppercase", letterSpacing: "0.06em" }}>Subject</p>
-              <p style={{ margin: 0, fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>{viewTicket.subject}</p>
-            </div>
-
-            {/* Meta grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md, padding: `0 ${SPACING[5]}px ${SPACING[5]}px` }}>
+      <Modal opened={!!viewTicket} onClose={() => setViewTicket(null)} title={viewTicket?.id} size="md">
+        {viewTicket && (
+          <Stack gap="md">
+            <Paper withBorder p="sm" radius="md" bg="gray.0">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Subject</Text>
+              <Text size="md" fw={600}>{viewTicket.subject}</Text>
+            </Paper>
+            <SimpleGrid cols={2} spacing="sm">
               {[
-                ["Raised By",    viewTicket.raisedBy],
-                ["Category",     viewTicket.category],
+                ["Raised By", viewTicket.raisedBy],
+                ["Category", viewTicket.category],
                 ["Created Date", fmtDate(viewTicket.createdDate)],
-                ["Ticket ID",    viewTicket.id],
+                ["Ticket ID", viewTicket.id],
               ].map(([label, value]) => (
-                <div key={label} style={{ padding: `${GAP.md}px ${GAP.md}px`, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-                  <p style={{ margin: "0 0 3px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
-                  <p style={{ margin: 0, fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{value}</p>
-                </div>
+                <Paper key={label} withBorder p="sm" radius="md" bg="gray.0">
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={2}>{label}</Text>
+                  <Text size="sm" fw={500}>{value}</Text>
+                </Paper>
               ))}
-
-              {/* Priority */}
-              <div style={{ padding: `${GAP.md}px ${GAP.md}px`, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-                <p style={{ margin: "0 0 5px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, textTransform: "uppercase", letterSpacing: "0.05em" }}>Priority</p>
-                {(() => { const s = PRIORITY_STYLE[viewTicket.priority] || PRIORITY_STYLE.Medium; return (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: s.bg, color: s.text }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot }} />{viewTicket.priority}
-                  </span>
-                ); })()}
-              </div>
-
-              {/* Status */}
-              <div style={{ padding: `${GAP.md}px ${GAP.md}px`, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-                <p style={{ margin: "0 0 5px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</p>
-                {(() => { const s = STATUS_STYLE[viewTicket.status] || STATUS_STYLE.Open; return (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: s.bg, color: s.text }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot }} />{viewTicket.status}
-                  </span>
-                ); })()}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div style={{ margin: `0 ${SPACING[5]}px ${SPACING[5]}px`, padding: `${GAP.md}px ${GAP.lg}px`, background: surface.inputBg, borderRadius: RADIUS.lg, border: `1px solid ${surface.border}` }}>
-              <p style={{ margin: "0 0 6px", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, textTransform: "uppercase", letterSpacing: "0.06em" }}>Description</p>
-              <p style={{ margin: 0, fontSize: FONT_SIZE.base, color: surface.text, lineHeight: 1.7 }}>{viewTicket.description}</p>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", padding: `${GAP.lg}px ${SPACING[5]}px`, borderTop: `1px solid ${surface.border}` }}>
-              <button onClick={() => setViewTicket(null)} style={{ padding: PADDING.btn, background: COLORS.primary, border: "none", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.semibold, color: COLORS.white, cursor: "pointer", fontFamily: FONT_FAMILY.base }}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+              <Paper withBorder p="sm" radius="md" bg="gray.0">
+                <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Priority</Text>
+                <Badge color={PRIORITY_COLORS[viewTicket.priority]} variant="dot">{viewTicket.priority}</Badge>
+              </Paper>
+              <Paper withBorder p="sm" radius="md" bg="gray.0">
+                <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Status</Text>
+                <Badge color={STATUS_COLORS[viewTicket.status]} variant="light">{viewTicket.status}</Badge>
+              </Paper>
+            </SimpleGrid>
+            <Paper withBorder p="sm" radius="md" bg="gray.0">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Description</Text>
+              <Text size="sm" style={{ lineHeight: 1.7 }}>{viewTicket.description}</Text>
+            </Paper>
+            <Group justify="flex-end">
+              <Button onClick={() => setViewTicket(null)}>Close</Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
+    </Stack>
   );
 }

@@ -1,42 +1,20 @@
 import { useState } from "react";
-import { Shield, Plus, X, Save } from "lucide-react";
-import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { RADIUS, SHADOW } from "../../theme/sizes";
+import {
+  Stack, Group, Text, Title, Paper, Button, Tabs, SimpleGrid,
+  Switch, Select, Checkbox, TextInput, ActionIcon, Alert, Notification,
+} from "@mantine/core";
+import { IconShield, IconDeviceFloppy, IconPlus, IconX } from "@tabler/icons-react";
 
-const TABS = ["Authentication", "Session Policy", "IP Restrictions", "Audit Settings"];
+const STATS = [
+  { label: "Active Sessions",     value: "8",      sub: "users online now" },
+  { label: "Failed Logins Today", value: "3",      sub: "suspicious attempts" },
+  { label: "MFA Enabled",         value: "5/12",   sub: "users protected" },
+  { label: "Security Score",      value: "74/100", sub: "good standing" },
+];
 
-const Toggle = ({ checked, onChange, surface }) => (
-  <button
-    onClick={() => onChange(!checked)}
-    style={{ width: 44, height: 26, borderRadius: RADIUS.full, background: checked ? COLORS.primary : surface.border, border: "none", cursor: "pointer", padding: 3, display: "flex", alignItems: "center", justifyContent: checked ? "flex-end" : "flex-start", flexShrink: 0 }}
-  >
-    <div style={{ width: 20, height: 20, borderRadius: RADIUS.full, background: COLORS.white, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-  </button>
-);
-
-const ToggleRow = ({ label, sub, checked, onChange, surface, last, disabled }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: last ? "none" : `1px solid ${surface.border}` }}>
-    <div>
-      <p style={{ margin: 0, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{label}</p>
-      {sub && <p style={{ margin: "3px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>{sub}</p>}
-    </div>
-    <Toggle checked={checked} onChange={disabled ? () => {} : onChange} surface={surface} />
-  </div>
-);
-
-const StatCard = ({ label, value, sub, surface }) => (
-  <div style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS["2xl"], padding: "16px 20px", boxShadow: SHADOW.xs }}>
-    <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium, marginBottom: 4 }}>{label.toUpperCase()}</p>
-    <p style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>{value}</p>
-    <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>{sub}</p>
-  </div>
-);
-
-export default function SecurityCenter({ darkMode = false, userRole = "SUPER_ADMIN" }) {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
-  const [activeTab, setActiveTab] = useState("Authentication");
+export default function SecurityCenter({ userRole = "SUPER_ADMIN" }) {
   const [toast, setToast] = useState(null);
+  const isReadOnly = userRole !== "SUPER_ADMIN";
 
   const [mfaEnabled, setMfaEnabled] = useState(true);
   const [passwordMinLength, setPasswordMinLength] = useState("10");
@@ -58,17 +36,15 @@ export default function SecurityCenter({ darkMode = false, userRole = "SUPER_ADM
   const [autoExport, setAutoExport] = useState(false);
   const [siemIntegration, setSiemIntegration] = useState(false);
 
-  const isReadOnly = userRole !== "SUPER_ADMIN";
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
+  const showToast = (msg, color = "green") => {
+    setToast({ msg, color });
     setTimeout(() => setToast(null), 3000);
   };
 
   const handleAddIp = () => {
     const trimmed = ipInput.trim();
     if (!trimmed) return;
-    if (ipList.includes(trimmed)) { showToast("IP already in list", "error"); return; }
+    if (ipList.includes(trimmed)) { showToast("IP already in list", "red"); return; }
     setIpList([...ipList, trimmed]);
     setIpInput("");
     showToast(`IP ${trimmed} added to whitelist`);
@@ -76,172 +52,223 @@ export default function SecurityCenter({ darkMode = false, userRole = "SUPER_ADM
 
   const handleRemoveIp = (ip) => {
     setIpList(ipList.filter((i) => i !== ip));
-    showToast(`IP ${ip} removed from whitelist`, "error");
+    showToast(`IP ${ip} removed from whitelist`, "red");
   };
-
-  const inputStyle = {
-    border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg, padding: "8px 12px",
-    fontSize: FONT_SIZE.sm, background: surface.inputBg, color: surface.text,
-    fontFamily: FONT_FAMILY.base, outline: "none",
-  };
-
-  const labelStyle = { display: "block", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, marginBottom: 6 };
-
-  const sectionHead = (text) => (
-    <p style={{ margin: "0 0 14px", fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>{text}</p>
-  );
-
-  const stats = [
-    { label: "Active Sessions",    value: "8",     sub: "users online now" },
-    { label: "Failed Logins Today", value: "3",    sub: "suspicious attempts" },
-    { label: "MFA Enabled",        value: "5/12",  sub: "users protected" },
-    { label: "Security Score",     value: "74/100", sub: "good standing" },
-  ];
 
   const complexityOptions = [
-    { label: "Uppercase letters (A–Z)", key: "upper", val: complexityUppercase, set: setComplexityUppercase },
-    { label: "Lowercase letters (a–z)", key: "lower", val: complexityLowercase, set: setComplexityLowercase },
-    { label: "Numbers (0–9)",           key: "nums",  val: complexityNumbers,   set: setComplexityNumbers },
-    { label: "Special symbols (!@#$)",  key: "sym",   val: complexitySymbols,   set: setComplexitySymbols },
+    { label: "Uppercase letters (A-Z)", val: complexityUppercase, set: setComplexityUppercase },
+    { label: "Lowercase letters (a-z)", val: complexityLowercase, set: setComplexityLowercase },
+    { label: "Numbers (0-9)",           val: complexityNumbers,   set: setComplexityNumbers },
+    { label: "Special symbols (!@#$)",  val: complexitySymbols,   set: setComplexitySymbols },
   ];
 
   return (
-    <div style={{ padding: 24, fontFamily: FONT_FAMILY.base, background: surface.pageBg, minHeight: "100vh", position: "relative" }}>
+    <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
       {toast && (
-        <div style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, background: toast.type === "error" ? COLORS.danger : COLORS.success, color: COLORS.white, padding: "10px 20px", borderRadius: RADIUS.lg, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, boxShadow: SHADOW.md }}>
+        <Notification
+          color={toast.color}
+          onClose={() => setToast(null)}
+          style={{ position: "fixed", top: 20, right: 24, zIndex: 9999, minWidth: 260 }}
+        >
           {toast.msg}
-        </div>
+        </Notification>
       )}
 
       {isReadOnly && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, padding: "10px 16px", background: COLORS.warningLight, border: `1px solid ${COLORS.warning}40`, borderRadius: RADIUS.lg }}>
-          <span style={{ fontSize: FONT_SIZE.xs, color: COLORS.warning, fontWeight: FONT_WEIGHT.medium }}>View Only — Security policy configuration is restricted to Super Admin.</span>
-        </div>
+        <Alert color="yellow" icon={<IconShield size={16} />}>
+          View Only - Security policy configuration is restricted to Super Admin.
+        </Alert>
       )}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+
+      <Group justify="space-between">
         <div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Security Center</h1>
-          <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.sm, color: surface.subtext }}>Configure authentication, sessions and access policies</p>
+          <Title order={3}>Security Center</Title>
+          <Text size="sm" c="dimmed">Configure authentication, sessions and access policies</Text>
         </div>
-{!isReadOnly && (
-          <button onClick={() => showToast("Security settings saved successfully")} style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, padding: "8px 16px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-            <Save size={16} /> Save Changes
-          </button>
+        {!isReadOnly && (
+          <Button leftSection={<IconDeviceFloppy size={16} />} onClick={() => showToast("Security settings saved successfully")}>
+            Save Changes
+          </Button>
         )}
-      </div>
+      </Group>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
-        {stats.map((s) => <StatCard key={s.label} {...s} surface={surface} />)}
-      </div>
+      <SimpleGrid cols={4}>
+        {STATS.map((s) => (
+          <Paper key={s.label} withBorder p="md" radius="lg">
+            <Text size="xs" c="dimmed" fw={500} tt="uppercase" mb={4}>{s.label}</Text>
+            <Text size="xl" fw={700}>{s.value}</Text>
+            <Text size="xs" c="dimmed" mt={4}>{s.sub}</Text>
+          </Paper>
+        ))}
+      </SimpleGrid>
 
-      <div style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS["2xl"], boxShadow: SHADOW.xs, overflow: "hidden" }}>
-        <div style={{ display: "flex", borderBottom: `1px solid ${surface.border}` }}>
-          {TABS.map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: "12px 20px", fontSize: FONT_SIZE.sm, fontWeight: activeTab === tab ? FONT_WEIGHT.semibold : FONT_WEIGHT.normal, color: activeTab === tab ? COLORS.primary : surface.subtext, background: "transparent", border: "none", borderBottom: activeTab === tab ? `2px solid ${COLORS.primary}` : "2px solid transparent", cursor: "pointer", whiteSpace: "nowrap" }}>
-              {tab}
-            </button>
-          ))}
-        </div>
+      <Paper withBorder radius="lg" style={{ overflow: "hidden" }}>
+        <Tabs defaultValue="authentication">
+          <Tabs.List>
+            <Tabs.Tab value="authentication">Authentication</Tabs.Tab>
+            <Tabs.Tab value="session">Session Policy</Tabs.Tab>
+            <Tabs.Tab value="ip">IP Restrictions</Tabs.Tab>
+            <Tabs.Tab value="audit">Audit Settings</Tabs.Tab>
+          </Tabs.List>
 
-        <div style={{ padding: 24 }}>
-          {activeTab === "Authentication" && (
-            <div style={{ maxWidth: 560 }}>
-              {sectionHead("Multi-Factor Authentication")}
-              <ToggleRow label="Require MFA for all users" sub="Users must set up MFA on next login" checked={mfaEnabled} onChange={setMfaEnabled} surface={surface}  disabled={isReadOnly}/>
+          <Tabs.Panel value="authentication" p="lg">
+            <Stack maw={560} gap="lg">
+              <Text fw={600}>Multi-Factor Authentication</Text>
+              <Switch
+                label="Require MFA for all users"
+                description="Users must set up MFA on next login"
+                checked={mfaEnabled}
+                onChange={(e) => !isReadOnly && setMfaEnabled(e.currentTarget.checked)}
+                disabled={isReadOnly}
+              />
 
-              <div style={{ marginTop: 24, marginBottom: 14 }}>{sectionHead("Password Policy")}</div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Minimum Password Length</label>
-                <select value={passwordMinLength} onChange={(e) => setPasswordMinLength(e.target.value)} style={{ ...inputStyle, minWidth: 120 }}>
-                  {["8", "10", "12"].map((v) => <option key={v} value={v}>{v} characters</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>Complexity Requirements</label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {complexityOptions.map((c) => (
-                    <label key={c.key} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-                      <input type="checkbox" checked={c.val} onChange={(e) => c.set(e.target.checked)} style={{ width: 15, height: 15, accentColor: COLORS.primary, cursor: "pointer" }} />
-                      <span style={{ fontSize: FONT_SIZE.sm, color: surface.text }}>{c.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div style={{ marginTop: 20 }}>
-                <label style={labelStyle}>Login Attempt Limit (before lockout)</label>
-                <select value={loginAttemptLimit} onChange={(e) => setLoginAttemptLimit(e.target.value)} style={{ ...inputStyle, minWidth: 120 }}>
-                  {["3", "5", "10"].map((v) => <option key={v} value={v}>{v} attempts</option>)}
-                </select>
-              </div>
-            </div>
-          )}
+              <Text fw={600}>Password Policy</Text>
+              <Select
+                label="Minimum Password Length"
+                value={passwordMinLength}
+                onChange={(v) => setPasswordMinLength(v)}
+                data={[{ value: "8", label: "8 characters" }, { value: "10", label: "10 characters" }, { value: "12", label: "12 characters" }]}
+                disabled={isReadOnly}
+                w={200}
+              />
 
-          {activeTab === "Session Policy" && (
-            <div style={{ maxWidth: 560 }}>
-              {sectionHead("Session Settings")}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Session Timeout</label>
-                <select value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)} style={{ ...inputStyle, minWidth: 160 }}>
-                  {[["15", "15 minutes"], ["30", "30 minutes"], ["60", "1 hour"], ["120", "2 hours"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-                <p style={{ margin: "6px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>Users will be logged out after this period of inactivity.</p>
-              </div>
-              <ToggleRow label="Single Session Enforcement" sub="Users can only be logged in from one device at a time" checked={singleSession} onChange={setSingleSession} surface={surface}  disabled={isReadOnly}/>
-              <div style={{ marginTop: 20 }}>
-                <label style={labelStyle}>Remember Device Duration</label>
-                <select value={rememberDevice} onChange={(e) => setRememberDevice(e.target.value)} style={{ ...inputStyle, minWidth: 160 }}>
-                  {[["7", "7 days"], ["14", "14 days"], ["30", "30 days"], ["0", "Never"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>Complexity Requirements</Text>
+                {complexityOptions.map((c) => (
+                  <Checkbox
+                    key={c.label}
+                    label={c.label}
+                    checked={c.val}
+                    onChange={(e) => !isReadOnly && c.set(e.currentTarget.checked)}
+                    disabled={isReadOnly}
+                  />
+                ))}
+              </Stack>
 
-          {activeTab === "IP Restrictions" && (
-            <div style={{ maxWidth: 560 }}>
-              {sectionHead("IP Whitelist")}
-              <ToggleRow label="Enable IP Whitelist" sub="Only allow logins from whitelisted IP addresses" checked={whitelistEnabled} onChange={setWhitelistEnabled} surface={surface}  disabled={isReadOnly}/>
-              <div style={{ marginTop: 20, marginBottom: 16 }}>
-                <label style={labelStyle}>Add IP Address or CIDR Range</label>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <input style={{ ...inputStyle, flex: 1 }} placeholder="e.g. 192.168.1.0/24 or 203.0.113.5" value={ipInput} onChange={(e) => setIpInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddIp()} />
-                  <button onClick={handleAddIp} style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, padding: "8px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium }}>
-                    <Plus size={14} /> Add
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Select
+                label="Login Attempt Limit (before lockout)"
+                value={loginAttemptLimit}
+                onChange={(v) => setLoginAttemptLimit(v)}
+                data={[{ value: "3", label: "3 attempts" }, { value: "5", label: "5 attempts" }, { value: "10", label: "10 attempts" }]}
+                disabled={isReadOnly}
+                w={200}
+              />
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="session" p="lg">
+            <Stack maw={560} gap="lg">
+              <Text fw={600}>Session Settings</Text>
+              <Select
+                label="Session Timeout"
+                description="Users will be logged out after this period of inactivity."
+                value={sessionTimeout}
+                onChange={(v) => setSessionTimeout(v)}
+                data={[
+                  { value: "15", label: "15 minutes" }, { value: "30", label: "30 minutes" },
+                  { value: "60", label: "1 hour" }, { value: "120", label: "2 hours" },
+                ]}
+                disabled={isReadOnly}
+                w={200}
+              />
+              <Switch
+                label="Single Session Enforcement"
+                description="Users can only be logged in from one device at a time"
+                checked={singleSession}
+                onChange={(e) => !isReadOnly && setSingleSession(e.currentTarget.checked)}
+                disabled={isReadOnly}
+              />
+              <Select
+                label="Remember Device Duration"
+                value={rememberDevice}
+                onChange={(v) => setRememberDevice(v)}
+                data={[
+                  { value: "7", label: "7 days" }, { value: "14", label: "14 days" },
+                  { value: "30", label: "30 days" }, { value: "0", label: "Never" },
+                ]}
+                disabled={isReadOnly}
+                w={200}
+              />
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="ip" p="lg">
+            <Stack maw={560} gap="lg">
+              <Text fw={600}>IP Whitelist</Text>
+              <Switch
+                label="Enable IP Whitelist"
+                description="Only allow logins from whitelisted IP addresses"
+                checked={whitelistEnabled}
+                onChange={(e) => !isReadOnly && setWhitelistEnabled(e.currentTarget.checked)}
+                disabled={isReadOnly}
+              />
+              {!isReadOnly && (
+                <Group gap="sm" align="flex-end">
+                  <TextInput
+                    label="Add IP Address or CIDR Range"
+                    placeholder="e.g. 192.168.1.0/24 or 203.0.113.5"
+                    value={ipInput}
+                    onChange={(e) => setIpInput(e.currentTarget.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddIp()}
+                    style={{ flex: 1 }}
+                  />
+                  <Button leftSection={<IconPlus size={14} />} onClick={handleAddIp}>Add</Button>
+                </Group>
+              )}
+              <Stack gap="xs">
                 {ipList.map((ip) => (
-                  <div key={ip} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: surface.inputBg, border: `1px solid ${surface.border}`, borderRadius: RADIUS.md }}>
-                    <span style={{ fontSize: FONT_SIZE.sm, color: surface.text, fontFamily: "monospace" }}>{ip}</span>
-                    <button onClick={() => handleRemoveIp(ip)} style={{ background: "transparent", border: "none", cursor: "pointer", color: COLORS.danger, display: "flex", alignItems: "center", padding: 4 }}>
-                      <X size={14} />
-                    </button>
-                  </div>
+                  <Paper key={ip} withBorder p="sm" radius="md">
+                    <Group justify="space-between">
+                      <Text size="sm" ff="monospace">{ip}</Text>
+                      {!isReadOnly && (
+                        <ActionIcon variant="subtle" color="red" size="sm" onClick={() => handleRemoveIp(ip)}>
+                          <IconX size={14} />
+                        </ActionIcon>
+                      )}
+                    </Group>
+                  </Paper>
                 ))}
                 {ipList.length === 0 && (
-                  <div style={{ padding: 20, textAlign: "center", color: surface.subtext, fontSize: FONT_SIZE.sm }}>No IPs whitelisted. All IPs are allowed.</div>
+                  <Text size="sm" c="dimmed" ta="center" py="lg">No IPs whitelisted. All IPs are allowed.</Text>
                 )}
-              </div>
-            </div>
-          )}
+              </Stack>
+            </Stack>
+          </Tabs.Panel>
 
-          {activeTab === "Audit Settings" && (
-            <div style={{ maxWidth: 560 }}>
-              {sectionHead("Log Retention")}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Retain Audit Logs For</label>
-                <select value={logRetention} onChange={(e) => setLogRetention(e.target.value)} style={{ ...inputStyle, minWidth: 160 }}>
-                  {[["30", "30 days"], ["60", "60 days"], ["90", "90 days"], ["180", "180 days"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select>
-                <p style={{ margin: "6px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>Logs older than this period will be permanently deleted.</p>
-              </div>
-              <div style={{ marginTop: 8 }}>{sectionHead("Integrations")}</div>
-              <ToggleRow label="Auto-Export Logs" sub="Automatically export logs to storage at end of each week" checked={autoExport} onChange={setAutoExport} surface={surface}  disabled={isReadOnly}/>
-              <ToggleRow label="SIEM Integration" sub="Stream events to your security information and event management tool" checked={siemIntegration} onChange={setSiemIntegration} surface={surface} last  disabled={isReadOnly}/>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+          <Tabs.Panel value="audit" p="lg">
+            <Stack maw={560} gap="lg">
+              <Text fw={600}>Log Retention</Text>
+              <Select
+                label="Retain Audit Logs For"
+                description="Logs older than this period will be permanently deleted."
+                value={logRetention}
+                onChange={(v) => setLogRetention(v)}
+                data={[
+                  { value: "30", label: "30 days" }, { value: "60", label: "60 days" },
+                  { value: "90", label: "90 days" }, { value: "180", label: "180 days" },
+                ]}
+                disabled={isReadOnly}
+                w={200}
+              />
+              <Text fw={600}>Integrations</Text>
+              <Switch
+                label="Auto-Export Logs"
+                description="Automatically export logs to storage at end of each week"
+                checked={autoExport}
+                onChange={(e) => !isReadOnly && setAutoExport(e.currentTarget.checked)}
+                disabled={isReadOnly}
+              />
+              <Switch
+                label="SIEM Integration"
+                description="Stream events to your security information and event management tool"
+                checked={siemIntegration}
+                onChange={(e) => !isReadOnly && setSiemIntegration(e.currentTarget.checked)}
+                disabled={isReadOnly}
+              />
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
+      </Paper>
+    </Stack>
   );
 }
