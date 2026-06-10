@@ -16,6 +16,7 @@ import {
   useFetchAllEmployees, useCreateEmployee,
   useUpdateEmployee, useDeleteEmployee,
 } from "../../queries/useEmployees";
+import { useDepartments } from "../../queries/useDepartments";
 import { AppButton }            from "../../components/ui/AppButton";
 import { AppLoader }            from "../../components/ui/AppLoader";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
@@ -25,7 +26,6 @@ import { useToast }             from "../../components/ui/Toast";
 
 import { getAvatarColor, getInitials } from "../../utils/helpers";
 
-const DEPARTMENTS  = ["Engineering","HR","Finance","Marketing","Management","IT"];
 const EMPTY_FORM = {
   name: "", email: "", phone: "", designation: "",
   department: "Engineering", salary: "", joinDate: "", status: "Active",
@@ -68,9 +68,15 @@ const EmployeeList = () => {
   const [form,         setForm]         = useState(EMPTY_FORM);
 
   const { data: employees = [], isLoading, isError } = useFetchAllEmployees();
+  const { data: deptList = [] } = useDepartments();
   const createMut = useCreateEmployee();
   const updateMut = useUpdateEmployee();
   const deleteMut = useDeleteEmployee();
+
+  // All departments from DB (fallback to ones present on employees)
+  const DEPARTMENTS = deptList.length
+    ? deptList.map((d) => d.name)
+    : [...new Set(employees.map((e) => e.department).filter(Boolean))];
 
   const openAdd = () => {
     setForm(EMPTY_FORM);
@@ -102,8 +108,13 @@ const EmployeeList = () => {
         await updateMut.mutateAsync({ id: editTarget, ...form, salary: Number(form.salary) || 0 });
         showToast("Employee updated", "success");
       } else {
-        await createMut.mutateAsync({ ...form, salary: Number(form.salary) || 0 });
-        showToast("Employee added", "success");
+        const created = await createMut.mutateAsync({ ...form, salary: Number(form.salary) || 0 });
+        showToast(
+          created?.loginCreated
+            ? `Employee added — login: ${form.email} / ${created.defaultPassword}`
+            : "Employee added",
+          "success"
+        );
       }
       setModalOpen(false);
     } catch (err) {

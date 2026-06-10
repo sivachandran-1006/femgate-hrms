@@ -28,7 +28,7 @@ const ChartTooltip = ({ active, payload, label }) => {
 };
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
-const ANNOUNCE_COLORS = { info: "blue", hr: "green", finance: "violet" };
+const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 
 export const AdminDashboard = ({ employees }) => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });

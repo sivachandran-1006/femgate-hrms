@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useFetchAllLeaves }    from "../../queries/useLeaves";
+import { useCandidates, useExits } from "../../queries/useHr";
 import { AppLoader }            from "../../components/ui/AppLoader";
 import { COLORS }                            from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
@@ -18,23 +19,6 @@ import { SPACING, PADDING, GAP, LAYOUT }     from "../../theme/spacing";
 import { RADIUS, SHADOW }                    from "../../theme/sizes";
 
 // ── Static reference data (recruitment funnel + attrition trend — no live source) ──
-
-const ATTRITION = [
-  { month:"Jan", rate:1.2, resigned:1 }, { month:"Feb", rate:0.8, resigned:1 },
-  { month:"Mar", rate:2.1, resigned:2 }, { month:"Apr", rate:1.5, resigned:1 },
-  { month:"May", rate:0.5, resigned:0 }, { month:"Jun", rate:1.8, resigned:2 },
-  { month:"Jul", rate:2.4, resigned:2 }, { month:"Aug", rate:1.1, resigned:1 },
-  { month:"Sep", rate:1.6, resigned:1 }, { month:"Oct", rate:0.9, resigned:1 },
-  { month:"Nov", rate:1.3, resigned:1 }, { month:"Dec", rate:2.0, resigned:2 },
-];
-
-const HIRING_FUNNEL = [
-  { stage:"Applied",     value:148, fill: COLORS.primaryLight  },
-  { stage:"Screened",    value:92,  fill: COLORS.primary       },
-  { stage:"Interviewed", value:54,  fill: COLORS.purple        },
-  { stage:"Offered",     value:21,  fill: COLORS.warning       },
-  { stage:"Hired",       value:14,  fill: COLORS.success       },
-];
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -133,6 +117,35 @@ const Analytics = ({ darkMode: dark = false }) => {
 
   const { data: rawEmployees = [], isLoading: loadEmp  } = useFetchAllEmployees();
   const { data: rawLeaves    = [], isLoading: loadLeave } = useFetchAllLeaves();
+  const { data: candidates   = [] } = useCandidates();
+  const { data: exits        = [] } = useExits();
+
+  // Attrition per month — resignations from real exit records (current year)
+  const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const headcount = rawEmployees.length || 1;
+  const ATTRITION = MONTH_LABELS.map((month, idx) => {
+    const resigned = exits.filter((e) => {
+      const d = new Date(e.lastWorkingDay);
+      return d.getMonth() === idx && d.getFullYear() === new Date().getFullYear();
+    }).length;
+    return { month, resigned, rate: Math.round((resigned / headcount) * 1000) / 10 };
+  });
+
+  // Hiring funnel — from real candidate pipeline
+  const stageCounts = {
+    Applied:     candidates.length,
+    Screened:    candidates.filter((c) => ["Screening","Interview","Selected"].includes(c.status)).length,
+    Interviewed: candidates.filter((c) => ["Interview","Selected"].includes(c.status)).length,
+    Offered:     candidates.filter((c) => c.status === "Selected").length,
+    Hired:       candidates.filter((c) => c.status === "Selected").length,
+  };
+  const HIRING_FUNNEL = [
+    { stage:"Applied",     value: stageCounts.Applied,     fill: COLORS.primaryLight },
+    { stage:"Screened",    value: stageCounts.Screened,    fill: COLORS.primary      },
+    { stage:"Interviewed", value: stageCounts.Interviewed, fill: COLORS.purple       },
+    { stage:"Offered",     value: stageCounts.Offered,     fill: COLORS.warning      },
+    { stage:"Hired",       value: stageCounts.Hired,       fill: COLORS.success      },
+  ];
 
   const surface   = dark ? COLORS.dark : COLORS.light;
   const text      = surface.text;

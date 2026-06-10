@@ -18,99 +18,27 @@ import { SPACING, PADDING, GAP, LAYOUT }                                 from ".
 import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE }  from "../../theme/sizes";
 import { getStatusBadge }                                                from "../../utils/helpers";
 import { usePermission }                                                  from "../../hooks/usePermission";
+import { useAssets, useCreateAsset }                                      from "../../queries/useHr";
+import { useToast }                                                       from "../../components/ui/Toast";
 
-const mockAssets = [
-  {
-    id: "AST001",
-    name: "Dell Laptop XPS 15",
-    type: "Laptop",
-    assignedTo: "Mani",
-    department: "IT",
-    status: "Assigned",
-    warrantyExpiry: "2026-12-31",
-  },
-  {
-    id: "AST002",
-    name: "HP Desktop",
-    type: "Desktop",
-    assignedTo: "Siva",
-    department: "Management",
-    status: "Assigned",
-    warrantyExpiry: "2025-08-15",
-  },
-  {
-    id: "AST003",
-    name: "iPhone 14",
-    type: "Mobile",
-    assignedTo: "Big Kundi",
-    department: "HR",
-    status: "Assigned",
-    warrantyExpiry: "2027-01-20",
-  },
-  {
-    id: "AST004",
-    name: 'LG Monitor 27"',
-    type: "Monitor",
-    assignedTo: "Santhosh",
-    department: "IT",
-    status: "Assigned",
-    warrantyExpiry: "2028-06-30",
-  },
-  {
-    id: "AST005",
-    name: "MacBook Pro M3",
-    type: "Laptop",
-    assignedTo: "Hari",
-    department: "IT",
-    status: "Assigned",
-    warrantyExpiry: "2027-09-10",
-  },
-  {
-    id: "AST006",
-    name: "Dell Laptop G15",
-    type: "Laptop",
-    assignedTo: "—",
-    department: "IT",
-    status: "Available",
-    warrantyExpiry: "2027-03-15",
-  },
-  {
-    id: "AST007",
-    name: "Adobe Creative Cloud",
-    type: "License",
-    assignedTo: "Suriya",
-    department: "IT",
-    status: "Assigned",
-    warrantyExpiry: "2026-07-01",
-  },
-  {
-    id: "AST008",
-    name: "Samsung Monitor",
-    type: "Monitor",
-    assignedTo: "—",
-    department: "HR",
-    status: "Available",
-    warrantyExpiry: "2028-01-01",
-  },
-  {
-    id: "AST009",
-    name: "Lenovo ThinkPad",
-    type: "Laptop",
-    assignedTo: "Safeer",
-    department: "Finance",
-    status: "Assigned",
-    warrantyExpiry: "2026-08-20",
-  },
-  {
-    id: "AST010",
-    name: "Microsoft Office 365",
-    type: "License",
-    assignedTo: "Suganthan",
-    department: "Management",
-    status: "Assigned",
-    warrantyExpiry: "2026-06-30",
-  },
-];
+// API status → UI label
+const STATUS_LABELS = {
+  Available: "Available",
+  InUse: "Assigned",
+  Maintenance: "Maintenance",
+  Disposed: "Retired",
+};
+
+const mapAsset = (a) => ({
+  id: a.assetId || a.id,
+  name: a.name,
+  type: a.category,
+  serial: a.serialNumber || "—",
+  assignedTo: a.assignedTo?.name || "—",
+  status: STATUS_LABELS[a.status] || a.status,
+  purchaseDate: a.purchaseDate ? a.purchaseDate.slice(0, 10) : "—",
+  value: a.purchaseValue,
+});
 
 const TYPE_ICONS = {
   Laptop: Laptop,
@@ -120,57 +48,6 @@ const TYPE_ICONS = {
   License: Package,
   Server: Server,
 };
-
-function getDaysUntilExpiry(dateStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const expiry = new Date(dateStr);
-  expiry.setHours(0, 0, 0, 0);
-  return Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-}
-
-function WarrantyBadge({ dateStr, darkMode }) {
-  const days = getDaysUntilExpiry(dateStr);
-  let bg, color, icon;
-
-  if (days < 0) {
-    bg = COLORS.dangerMuted;
-    color = COLORS.danger;
-    icon = true;
-  } else if (days < 30) {
-    bg = COLORS.dangerMuted;
-    color = COLORS.danger;
-    icon = true;
-  } else if (days < 90) {
-    bg = COLORS.warningLight;
-    color = COLORS.warning;
-    icon = true;
-  } else {
-    bg = darkMode ? COLORS.dark.rowHover : COLORS.successLight;
-    color = COLORS.success;
-    icon = false;
-  }
-
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: GAP.xs,
-        padding: PADDING.badge,
-        borderRadius: RADIUS.full,
-        fontSize: FONT_SIZE.sm,
-        fontWeight: FONT_WEIGHT.semibold,
-        fontFamily: FONT_FAMILY.base,
-        background: bg,
-        color: color,
-      }}
-    >
-      {icon && <AlertTriangle size={ICON_SIZE.sm - 5} />}
-      {dateStr}
-    </span>
-  );
-}
 
 function StatusBadge({ status }) {
   const badge = getStatusBadge(status);
@@ -192,18 +69,19 @@ function StatusBadge({ status }) {
 }
 
 const EMPTY_FORM = {
-  id: "",
   name: "",
-  type: "Laptop",
-  assignedTo: "",
-  department: "",
-  status: "Available",
-  warrantyExpiry: "",
+  category: "Laptop",
+  serialNumber: "",
+  purchaseDate: "",
+  purchaseValue: "",
 };
 
 export default function Assets({ darkMode = false }) {
   const can = usePermission();
-  const [assets, setAssets] = useState(mockAssets);
+  const { show } = useToast();
+  const { data: assetsData = [], isLoading } = useAssets();
+  const createAsset = useCreateAsset();
+  const assets = assetsData.map(mapAsset);
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -214,45 +92,36 @@ export default function Assets({ darkMode = false }) {
 
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
-  // KPI card accent colors
-  const kpiColors = [COLORS.primary, COLORS.purple, COLORS.success, COLORS.warning];
-
-  // KPIs
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // KPIs (computed from API data)
   const totalAssets = assets.length;
   const assignedCount = assets.filter((a) => a.status === "Assigned").length;
   const availableCount = assets.filter((a) => a.status === "Available").length;
-  const expiringCount = assets.filter((a) => {
-    const d = getDaysUntilExpiry(a.warrantyExpiry);
-    return d >= 0 && d <= 90;
-  }).length;
+  const maintenanceCount = assets.filter((a) => a.status === "Maintenance").length;
 
   const kpiCards = [
     { label: "Total Assets", value: totalAssets, color: COLORS.primary, icon: Package },
     { label: "Assigned", value: assignedCount, color: COLORS.purple, icon: Laptop },
     { label: "Available", value: availableCount, color: COLORS.success, icon: Server },
-    { label: "Expiring Warranty", value: expiringCount, color: COLORS.warning, icon: AlertTriangle },
+    { label: "Maintenance", value: maintenanceCount, color: COLORS.warning, icon: AlertTriangle },
   ];
 
   // Tabs
-  const tabs = ["All", "Assigned", "Available", "Warranty"];
+  const tabs = ["All", "Assigned", "Available", "Maintenance"];
+
+  // Type options from API data
+  const typeOptions = [...new Set(assets.map((a) => a.type).filter(Boolean))];
 
   // Filtering
   const filtered = assets.filter((a) => {
-    const matchTab =
-      activeTab === "All" ||
-      (activeTab === "Assigned" && a.status === "Assigned") ||
-      (activeTab === "Available" && a.status === "Available") ||
-      (activeTab === "Warranty" && getDaysUntilExpiry(a.warrantyExpiry) < 90);
+    const matchTab = activeTab === "All" || a.status === activeTab;
 
     const q = search.toLowerCase();
     const matchSearch =
       !q ||
-      a.id.toLowerCase().includes(q) ||
+      String(a.id).toLowerCase().includes(q) ||
       a.name.toLowerCase().includes(q) ||
       a.assignedTo.toLowerCase().includes(q) ||
-      a.department.toLowerCase().includes(q);
+      a.serial.toLowerCase().includes(q);
 
     const matchType = typeFilter === "All" || a.type === typeFilter;
     const matchStatus = statusFilter === "All" || a.status === statusFilter;
@@ -262,7 +131,7 @@ export default function Assets({ darkMode = false }) {
 
   // Modal
   function openModal() {
-    setForm({ ...EMPTY_FORM, id: `AST${String(assets.length + 1).padStart(3, "0")}` });
+    setForm(EMPTY_FORM);
     setFormError("");
     setShowModal(true);
   }
@@ -278,18 +147,28 @@ export default function Assets({ darkMode = false }) {
 
   function handleAddAsset(e) {
     e.preventDefault();
-    if (!form.name.trim() || !form.warrantyExpiry || !form.department.trim()) {
+    if (!form.name.trim() || !form.category) {
       setFormError("Please fill in all required fields.");
       return;
     }
-    setAssets((prev) => [
-      ...prev,
+    createAsset.mutate(
       {
-        ...form,
-        assignedTo: form.assignedTo.trim() || "—",
+        name: form.name.trim(),
+        category: form.category,
+        serialNumber: form.serialNumber.trim() || undefined,
+        purchaseDate: form.purchaseDate || undefined,
+        purchaseValue: form.purchaseValue !== "" ? Number(form.purchaseValue) : undefined,
       },
-    ]);
-    closeModal();
+      {
+        onSuccess: () => {
+          show("Asset added successfully");
+          closeModal();
+        },
+        onError: (err) => {
+          setFormError(err?.response?.data?.message || "Failed to add asset.");
+        },
+      }
+    );
   }
 
   const inputStyle = {
@@ -516,7 +395,7 @@ export default function Assets({ darkMode = false }) {
           <div style={{ position: "relative", flex: "0 1 160px" }}>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={selectStyle}>
               <option value="All">All Types</option>
-              {["Laptop", "Desktop", "Mobile", "Monitor", "License", "Server"].map((t) => (
+              {typeOptions.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
@@ -538,7 +417,7 @@ export default function Assets({ darkMode = false }) {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: FONT_SIZE.md, fontFamily: FONT_FAMILY.base }}>
             <thead>
               <tr style={{ background: surface.theadBg }}>
-                {["Asset ID", "Asset Name", "Type", "Assigned To", "Department", "Status", "Warranty Expiry", "Action"].map((col) => (
+                {["Asset ID", "Asset Name", "Type", "Assigned To", "Serial No", "Status", "Purchase Date", "Action"].map((col) => (
                   <th
                     key={col}
                     style={{
@@ -571,19 +450,13 @@ export default function Assets({ darkMode = false }) {
                       fontFamily: FONT_FAMILY.base,
                     }}
                   >
-                    No assets found.
+                    {isLoading ? "Loading assets..." : "No assets found."}
                   </td>
                 </tr>
               ) : (
                 filtered.map((asset) => {
                   const Icon = TYPE_ICONS[asset.type] || Package;
-                  const days = getDaysUntilExpiry(asset.warrantyExpiry);
-                  const rowBg =
-                    days < 0
-                      ? darkMode ? COLORS.surfaceDark : COLORS.dangerMuted
-                      : days < 30
-                      ? darkMode ? COLORS.gray700 : COLORS.warningMuted
-                      : surface.cardBg;
+                  const rowBg = surface.cardBg;
 
                   return (
                     <tr
@@ -650,13 +523,20 @@ export default function Assets({ darkMode = false }) {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {asset.department}
+                        {asset.serial}
                       </td>
                       <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
                         <StatusBadge status={asset.status} />
                       </td>
-                      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-                        <WarrantyBadge dateStr={asset.warrantyExpiry} darkMode={darkMode} />
+                      <td
+                        style={{
+                          padding: PADDING.tableCell,
+                          color: surface.subtext,
+                          fontFamily: FONT_FAMILY.base,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {asset.purchaseDate}
                       </td>
                       <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
                         <button
@@ -806,7 +686,7 @@ export default function Assets({ darkMode = false }) {
                   </label>
                   <input
                     name="id"
-                    value={form.id}
+                    value="Auto-generated"
                     readOnly
                     style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }}
                   />
@@ -826,7 +706,7 @@ export default function Assets({ darkMode = false }) {
                   >
                     Type *
                   </label>
-                  <select name="type" value={form.type} onChange={handleFormChange} style={selectStyle}>
+                  <select name="category" value={form.category} onChange={handleFormChange} style={selectStyle}>
                     {["Laptop", "Desktop", "Mobile", "Monitor", "License", "Server"].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
@@ -870,18 +750,18 @@ export default function Assets({ darkMode = false }) {
                       marginBottom: GAP.sm - 2,
                     }}
                   >
-                    Assigned To
+                    Serial Number
                   </label>
                   <input
-                    name="assignedTo"
-                    value={form.assignedTo}
+                    name="serialNumber"
+                    value={form.serialNumber}
                     onChange={handleFormChange}
-                    placeholder="Leave blank if available"
+                    placeholder="e.g. SN-12345"
                     style={inputStyle}
                   />
                 </div>
 
-                {/* Department */}
+                {/* Purchase Value */}
                 <div>
                   <label
                     style={{
@@ -893,19 +773,23 @@ export default function Assets({ darkMode = false }) {
                       marginBottom: GAP.sm - 2,
                     }}
                   >
-                    Department *
+                    Purchase Value
                   </label>
-                  <select name="department" value={form.department} onChange={handleFormChange} style={selectStyle}>
-                    <option value="">Select Department</option>
-                    {["IT", "HR", "Finance", "Management", "Operations", "Sales"].map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
+                  <input
+                    name="purchaseValue"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.purchaseValue}
+                    onChange={handleFormChange}
+                    placeholder="e.g. 85000"
+                    style={inputStyle}
+                  />
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md + 2 }}>
-                {/* Status */}
+                {/* Purchase Date */}
                 <div>
                   <label
                     style={{
@@ -917,33 +801,12 @@ export default function Assets({ darkMode = false }) {
                       marginBottom: GAP.sm - 2,
                     }}
                   >
-                    Status
-                  </label>
-                  <select name="status" value={form.status} onChange={handleFormChange} style={selectStyle}>
-                    {["Available", "Assigned", "Maintenance", "Retired"].map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Warranty Expiry */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
-                    Warranty Expiry *
+                    Purchase Date
                   </label>
                   <input
-                    name="warrantyExpiry"
+                    name="purchaseDate"
                     type="date"
-                    value={form.warrantyExpiry}
+                    value={form.purchaseDate}
                     onChange={handleFormChange}
                     style={inputStyle}
                   />
@@ -978,6 +841,7 @@ export default function Assets({ darkMode = false }) {
                 </button>
                 <button
                   type="submit"
+                  disabled={createAsset.isPending}
                   style={{
                     padding: PADDING.btn,
                     borderRadius: RADIUS.lg,
@@ -987,10 +851,11 @@ export default function Assets({ darkMode = false }) {
                     fontSize: FONT_SIZE.md,
                     fontFamily: FONT_FAMILY.base,
                     fontWeight: FONT_WEIGHT.semibold,
-                    cursor: "pointer",
+                    cursor: createAsset.isPending ? "not-allowed" : "pointer",
+                    opacity: createAsset.isPending ? 0.7 : 1,
                   }}
                 >
-                  Add Asset
+                  {createAsset.isPending ? "Adding..." : "Add Asset"}
                 </button>
               </div>
             </form>

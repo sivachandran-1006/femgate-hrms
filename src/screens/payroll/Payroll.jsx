@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchPayroll, createPayrollRecord, markPayrollPaid, deletePayrollRecord } from "../../api/payrollApi";
 import {
   Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid,
-  TextInput, Select, Progress, Modal, ActionIcon, Notification,
+  TextInput, Select, Progress, Modal, ActionIcon, Notification, Loader, Center,
 } from "@mantine/core";
 import {
   IconPlus, IconUsers, IconWallet, IconTrendingUp, IconClock,
@@ -16,25 +16,10 @@ import { COLORS }          from "../../theme/colors";
 import { getStatusBadge }  from "../../utils/helpers";
 import DataTable           from "../../components/ui/DataTable";
 import { useToast }        from "../../components/ui/Toast";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CHART_COLORS = [COLORS.primary, COLORS.success, COLORS.warning, COLORS.danger, COLORS.purple, COLORS.info];
-
-const MOCK_PAYROLL_DATA = [
-  { _id: "p001", employee: "Mani",       department: "IT",         designation: "Senior Developer",   employeeId: "MGT001", salary: 72000,  bonus: 5000,  deduction: 3000, netSalary: 74000,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p002", employee: "P Santhosh", department: "IT",         designation: "Software Engineer",  employeeId: "MGT002", salary: 68000,  bonus: 4000,  deduction: 2800, netSalary: 69200,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p003", employee: "C Santhosh", department: "IT",         designation: "Software Engineer",  employeeId: "MGT003", salary: 65000,  bonus: 3500,  deduction: 2500, netSalary: 66000,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p004", employee: "Suriya",     department: "IT",         designation: "Tech Lead",          employeeId: "MGT004", salary: 78000,  bonus: 6000,  deduction: 3500, netSalary: 80500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p005", employee: "Siva",       department: "Management", designation: "Project Manager",    employeeId: "MGT005", salary: 95000,  bonus: 10000, deduction: 5000, netSalary: 100000, month: "May",   year: "2026", status: "Pending" },
-  { _id: "p006", employee: "Aravinth",   department: "IT",         designation: "Software Engineer",  employeeId: "MGT006", salary: 62000,  bonus: 4000,  deduction: 2500, netSalary: 63500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p007", employee: "Safeer",     department: "Finance",    designation: "Finance Analyst",    employeeId: "MGT007", salary: 58000,  bonus: 2000,  deduction: 2000, netSalary: 58000,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p008", employee: "Sabari",     department: "IT",         designation: "QA Engineer",        employeeId: "MGT008", salary: 55000,  bonus: 2500,  deduction: 2000, netSalary: 55500,  month: "May",   year: "2026", status: "Paid"    },
-  { _id: "p009", employee: "Vignesh",    department: "IT",         designation: "Frontend Developer", employeeId: "MGT009", salary: 60000,  bonus: 3000,  deduction: 2200, netSalary: 60800,  month: "May",   year: "2026", status: "Pending" },
-  { _id: "p010", employee: "Mani",       department: "IT",         designation: "Senior Developer",   employeeId: "MGT001", salary: 72000,  bonus: 4000,  deduction: 3000, netSalary: 73000,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p011", employee: "Suriya",     department: "IT",         designation: "Tech Lead",          employeeId: "MGT004", salary: 78000,  bonus: 5000,  deduction: 3500, netSalary: 79500,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p012", employee: "Siva",       department: "Management", designation: "Project Manager",    employeeId: "MGT005", salary: 95000,  bonus: 9000,  deduction: 5000, netSalary: 99000,  month: "April", year: "2026", status: "Paid"    },
-  { _id: "p013", employee: "P Santhosh", department: "IT",         designation: "Software Engineer",  employeeId: "MGT002", salary: 68000,  bonus: 3000,  deduction: 2800, netSalary: 68200,  month: "March", year: "2026", status: "Paid"    },
-];
 
 // PayslipModal keeps inline styles intentionally for print-safe layout
 const computePayslip = (row) => {
@@ -174,23 +159,29 @@ const PayslipModal = ({ record, onClose }) => {
 const Payroll = () => {
   const { show } = useToast();
 
-  const [payroll, setPayroll]           = useState(MOCK_PAYROLL_DATA);
+  const [payroll, setPayroll]           = useState([]);
+  const [loading, setLoading]           = useState(true);
   const [searchTerm, setSearchTerm]     = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [monthFilter, setMonthFilter]   = useState("All");
   const [showModal, setShowModal]       = useState(false);
   const [activeTab, setActiveTab]       = useState("list");
   const [payslipRecord, setPayslipRecord] = useState(null);
+  const [busyId, setBusyId]             = useState(null);
 
   const rowsPerPage = 10;
 
-  const [fEmployee,  setFEmployee]  = useState("");
-  const [fDept,      setFDept]      = useState("");
+  const { data: employees = [] } = useFetchAllEmployees();
+
+  const [fEmployeeId, setFEmployeeId] = useState(null);
   const [fSalary,    setFSalary]    = useState("");
   const [fBonus,     setFBonus]     = useState("");
   const [fDeduction, setFDeduction] = useState("");
   const [fMonth,     setFMonth]     = useState(MONTHS[new Date().getMonth()]);
   const [fYear,      setFYear]      = useState(String(new Date().getFullYear()));
+  const [generating, setGenerating] = useState(false);
+
+  const selectedEmp = employees.find((e) => String(e.id) === fEmployeeId);
 
   const netSalary = Math.max(0, (Number(fSalary) || 0) + (Number(fBonus) || 0) - (Number(fDeduction) || 0));
 
@@ -198,46 +189,81 @@ const Payroll = () => {
     try {
       const res = await fetchPayroll();
       const records = res?.data ?? res ?? [];
-      if (records.length > 0) {
-        // Normalize API fields to match screen expectations
-        setPayroll(records.map(r => ({
-          ...r,
-          _id:        r.id,
-          employee:   r.employeeName   || r.employee?.name || r.employee || "",
-          department: r.departmentName || r.department     || "",
-        })));
-      }
-    } catch { /* keep mock data */ }
+      setPayroll(records.map(r => ({
+        ...r,
+        _id:        r.id,
+        employee:   r.employeeName   || r.employee?.name || "",
+        department: r.departmentName || r.employee?.department || "",
+        designation: r.employee?.designation || "",
+      })));
+    } catch {
+      show("Failed to load payroll records", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadPayroll(); }, []);
 
   const resetForm = () => {
-    setFEmployee(""); setFDept(""); setFSalary("");
+    setFEmployeeId(null); setFSalary("");
     setFBonus(""); setFDeduction(""); setFMonth(MONTHS[new Date().getMonth()]);
     setFYear(String(new Date().getFullYear()));
   };
 
+  // Auto-fill base salary from the selected employee's record
+  const handleSelectEmployee = (v) => {
+    setFEmployeeId(v);
+    const emp = employees.find((e) => String(e.id) === v);
+    if (emp?.salary) setFSalary(String(emp.salary));
+  };
+
   const generatePayroll = async () => {
-    if (!fEmployee.trim() || !fSalary) { show("Employee name and salary are required", "error"); return; }
+    if (!fEmployeeId || !fSalary) { show("Select an employee and enter salary", "error"); return; }
+    setGenerating(true);
     try {
-      await createPayrollRecord({ employee: fEmployee, department: fDept, salary: Number(fSalary), bonus: Number(fBonus) || 0, deduction: Number(fDeduction) || 0, netSalary, month: fMonth, year: fYear, status: "Pending" });
-      loadPayroll(); resetForm(); setShowModal(false);
-    } catch (e) { console.log(e); }
+      await createPayrollRecord({
+        employeeId: Number(fEmployeeId),
+        salary: Number(fSalary), bonus: Number(fBonus) || 0, deduction: Number(fDeduction) || 0,
+        netSalary, month: fMonth, year: fYear, status: "Pending",
+      });
+      await loadPayroll();
+      resetForm();
+      setShowModal(false);
+      show("Payroll generated", "success");
+    } catch (e) {
+      show(e?.response?.data?.message || "Failed to generate payroll", "error");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const markAsPaid = async (id) => {
     const rec = payroll.find((p) => p._id === id);
-    try { await markPayrollPaid(id); loadPayroll(); }
-    catch { setPayroll((prev) => prev.map((p) => p._id === id ? { ...p, status: "Paid" } : p)); }
-    show(`${rec?.employee || "Payroll"} marked as Paid`, "success");
+    setBusyId(id);
+    try {
+      await markPayrollPaid(id);
+      await loadPayroll();
+      show(`${rec?.employee || "Payroll"} marked as Paid`, "success");
+    } catch {
+      show("Failed to mark as paid", "error");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const deleteRecord = async (id) => {
     const rec = payroll.find((p) => p._id === id);
-    try { await deletePayrollRecord(id); loadPayroll(); }
-    catch { setPayroll((prev) => prev.filter((p) => p._id !== id)); }
-    show(`${rec?.employee || "Record"} payroll record deleted`, "error");
+    setBusyId(id);
+    try {
+      await deletePayrollRecord(id);
+      await loadPayroll();
+      show(`${rec?.employee || "Record"} payroll record deleted`, "error");
+    } catch {
+      show("Failed to delete record", "error");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const totalPayroll  = payroll.reduce((s, i) => s + (Number(i.netSalary) || 0), 0);
@@ -336,6 +362,9 @@ const Payroll = () => {
             </Stack>
           )}
 
+          {loading ? (
+            <Center py="xl"><Loader size="sm" /></Center>
+          ) : (
           <DataTable
             columns={[
               { key: "employee",   label: "Employee",   sortable: true, render: (val) => <Text fw={600}>{val}</Text> },
@@ -365,10 +394,10 @@ const Payroll = () => {
                     <Button size="xs" variant="light" leftSection={<IconFileText size={12} />} onClick={(e) => { e.stopPropagation(); setPayslipRecord(row); }}>
                       Payslip
                     </Button>
-                    <Button size="xs" color="green" disabled={row.status === "Paid"} onClick={(e) => { e.stopPropagation(); markAsPaid(row._id); }}>
+                    <Button size="xs" color="green" disabled={row.status === "Paid"} loading={busyId === row._id} onClick={(e) => { e.stopPropagation(); markAsPaid(row._id); }}>
                       Mark Paid
                     </Button>
-                    <ActionIcon variant="light" color="red" size="sm" onClick={(e) => { e.stopPropagation(); deleteRecord(row._id); }}>
+                    <ActionIcon variant="light" color="red" size="sm" loading={busyId === row._id} onClick={(e) => { e.stopPropagation(); deleteRecord(row._id); }}>
                       <IconX size={14} />
                     </ActionIcon>
                   </Group>
@@ -380,6 +409,7 @@ const Payroll = () => {
             emptyText={payroll.length === 0 ? 'No payroll records. Click "Generate Payroll" to add one.' : "No records match your filters."}
             rowKey="_id"
           />
+          )}
         </Paper>
       )}
 
@@ -433,16 +463,29 @@ const Payroll = () => {
       {/* ── GENERATE MODAL ── */}
       <Modal opened={showModal} onClose={() => { setShowModal(false); resetForm(); }} title="Generate Payroll" size="md">
         <Stack gap="md">
-          <TextInput label="Employee Name *" placeholder="Full name" value={fEmployee} onChange={(e) => setFEmployee(e.currentTarget.value)} />
+          <Select
+            label="Employee *"
+            placeholder={employees.length ? "Click to select employee" : "Loading employees..."}
+            value={fEmployeeId}
+            onChange={handleSelectEmployee}
+            data={employees.map((e) => ({ value: String(e.id), label: `${e.name} (${e.employeeId}) — ${e.department || ""}` }))}
+            maxDropdownHeight={280}
+            comboboxProps={{ withinPortal: true }}
+          />
+          {selectedEmp && (
+            <Paper withBorder p="sm" radius="md" bg="blue.0">
+              <Group justify="space-between">
+                <Text fz="sm" c="blue.8">{selectedEmp.department} · {selectedEmp.designation}</Text>
+                <Text fz="sm" fw={600} c="blue.8">Base: ₹{Number(selectedEmp.salary).toLocaleString("en-IN")}/mo</Text>
+              </Group>
+            </Paper>
+          )}
           <Group grow>
-            <TextInput label="Department" placeholder="e.g. IT" value={fDept} onChange={(e) => setFDept(e.currentTarget.value)} />
             <Select label="Month" value={fMonth} onChange={(v) => setFMonth(v)} data={MONTHS} />
-          </Group>
-          <Group grow>
-            <TextInput label="Base Salary (₹) *" type="number" placeholder="50000" value={fSalary} onChange={(e) => setFSalary(e.currentTarget.value)} />
             <TextInput label="Year" type="number" value={fYear} onChange={(e) => setFYear(e.currentTarget.value)} />
           </Group>
           <Group grow>
+            <TextInput label="Base Salary (₹) *" type="number" placeholder="50000" value={fSalary} onChange={(e) => setFSalary(e.currentTarget.value)} />
             <TextInput label="Bonus (₹)" type="number" placeholder="0" value={fBonus} onChange={(e) => setFBonus(e.currentTarget.value)} />
             <TextInput label="Deduction (₹)" type="number" placeholder="0" value={fDeduction} onChange={(e) => setFDeduction(e.currentTarget.value)} />
           </Group>
@@ -456,7 +499,7 @@ const Payroll = () => {
 
           <Group justify="flex-end" mt="sm">
             <Button variant="default" onClick={() => { setShowModal(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={generatePayroll}>Generate Payroll</Button>
+            <Button onClick={generatePayroll} loading={generating}>Generate Payroll</Button>
           </Group>
         </Stack>
       </Modal>

@@ -18,45 +18,7 @@ import { AppButton }      from "../../components/ui/AppButton";
 
 import { COLORS }               from "../../theme/colors";
 import { getAvatarColor, getStatusBadge } from "../../utils/helpers";
-
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const ratingDistribution = [
-  { rating: "1 Star", count: 2 },
-  { rating: "2 Stars", count: 5 },
-  { rating: "3 Stars", count: 14 },
-  { rating: "4 Stars", count: 28 },
-  { rating: "5 Stars", count: 11 },
-];
-
-const departmentPerformance = [
-  { department: "Engineering", avgRating: 4.3, employees: 18 },
-  { department: "Design",      avgRating: 4.1, employees: 7  },
-  { department: "Product",     avgRating: 3.9, employees: 5  },
-  { department: "Marketing",   avgRating: 4.0, employees: 8  },
-  { department: "HR",          avgRating: 4.5, employees: 4  },
-  { department: "Finance",     avgRating: 3.8, employees: 6  },
-];
-
-const goals = [
-  { id: 1, employee: "Mani",      goal: "Complete AWS Solutions Architect certification", targetDate: "2025-06-30", progress: 72,  status: "On Track"  },
-  { id: 2, employee: "Siva",      goal: "Reduce API response time by 40%",                targetDate: "2025-05-15", progress: 55,  status: "At Risk"   },
-  { id: 3, employee: "Santhosh",  goal: "Launch v2 of the mobile application",             targetDate: "2025-07-01", progress: 100, status: "Completed" },
-  { id: 4, employee: "Safeer",    goal: "Onboard 3 enterprise clients",                    targetDate: "2025-06-01", progress: 66,  status: "On Track"  },
-  { id: 5, employee: "Hari",      goal: "Implement automated test coverage to 85%",        targetDate: "2025-05-31", progress: 40,  status: "At Risk"   },
-  { id: 6, employee: "Suriya",    goal: "Design new design system components library",     targetDate: "2025-08-15", progress: 85,  status: "On Track"  },
-  { id: 7, employee: "Big Kundi", goal: "Reduce employee churn by 15%",                    targetDate: "2025-09-30", progress: 100, status: "Completed" },
-  { id: 8, employee: "Suganthan", goal: "Migrate legacy services to microservices",        targetDate: "2025-10-01", progress: 30,  status: "On Track"  },
-];
-
-const appraisals = [
-  { id: 1, employee: "Mani",     reviewer: "Siva",        period: "Q1 2025", selfRating: 4,    managerRating: 4,    status: "Reviewed"  },
-  { id: 2, employee: "Santhosh", reviewer: "Big Kundi",   period: "Q1 2025", selfRating: 5,    managerRating: 4,    status: "Submitted" },
-  { id: 3, employee: "Safeer",   reviewer: "Suganthan",   period: "Q1 2025", selfRating: 3,    managerRating: null, status: "Draft"     },
-  { id: 4, employee: "Hari",     reviewer: "Siva",        period: "Q1 2025", selfRating: 4,    managerRating: 3,    status: "Reviewed"  },
-  { id: 5, employee: "Suriya",   reviewer: "Small Kundi", period: "Q1 2025", selfRating: 4,    managerRating: 5,    status: "Reviewed"  },
-  { id: 6, employee: "Sabari",   reviewer: "Big Kundi",   period: "Q1 2025", selfRating: null, managerRating: null, status: "Draft"     },
-];
+import { usePerformance }       from "../../queries/useHr";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -94,6 +56,15 @@ const StarRating = ({ value }) => {
 
 const Performance = () => {
   const [activeTab, setActiveTab] = useState("overview");
+
+  const { data: perfData } = usePerformance();
+  const ratingDistribution    = perfData?.ratingDistribution    || [];
+  const departmentPerformance = perfData?.departmentPerformance || [];
+  const goals = (perfData?.goals || []).map((g) => ({
+    ...g,
+    targetDate: g.targetDate ? g.targetDate.split("T")[0] : "—",
+  }));
+  const appraisals = perfData?.appraisals || [];
 
   return (
     <>

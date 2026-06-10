@@ -20,32 +20,11 @@ import { AppInput }       from "../../components/ui/AppInput";
 
 import { COLORS }         from "../../theme/colors";
 import { getAvatarColor } from "../../utils/helpers";
+import { useToast }       from "../../components/ui/Toast";
+import {
+  useJobs, useCandidates, useCreateJob, useUpdateCandidateStatus,
+} from "../../queries/useHr";
 
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const MOCK_JOBS = [
-  { id: 1,  title: "Software Engineer",  department: "IT",         location: "Chennai", type: "Full-time", postedDate: "2026-05-01", applications: 12, status: "Open",   priority: "High"   },
-  { id: 2,  title: "HR Manager",         department: "HR",         location: "Remote",  type: "Full-time", postedDate: "2026-04-20", applications: 8,  status: "Open",   priority: "Medium" },
-  { id: 3,  title: "Finance Analyst",    department: "Finance",    location: "Chennai", type: "Full-time", postedDate: "2026-04-15", applications: 5,  status: "Closed", priority: "Low"    },
-  { id: 4,  title: "DevOps Engineer",    department: "IT",         location: "Hybrid",  type: "Full-time", postedDate: "2026-05-10", applications: 9,  status: "Open",   priority: "High"   },
-  { id: 5,  title: "UI/UX Designer",     department: "IT",         location: "Remote",  type: "Contract",  postedDate: "2026-05-12", applications: 7,  status: "Open",   priority: "Medium" },
-  { id: 6,  title: "Recruiter",          department: "HR",         location: "Chennai", type: "Full-time", postedDate: "2026-04-28", applications: 4,  status: "Closed", priority: "Low"    },
-  { id: 7,  title: "Product Manager",    department: "Management", location: "Hybrid",  type: "Full-time", postedDate: "2026-05-15", applications: 15, status: "Open",   priority: "High"   },
-  { id: 8,  title: "Backend Developer",  department: "IT",         location: "Chennai", type: "Full-time", postedDate: "2026-05-18", applications: 11, status: "Open",   priority: "High"   },
-];
-
-const MOCK_CANDIDATES = [
-  { id: 1,  name: "Aisha Patel",      initials: "AP", position: "Software Engineer", appliedDate: "2026-05-03", status: "Applied",   rating: 4, experience: "3 yrs" },
-  { id: 2,  name: "Marcus Johnson",   initials: "MJ", position: "HR Manager",        appliedDate: "2026-04-22", status: "Screening", rating: 4, experience: "6 yrs" },
-  { id: 3,  name: "Priya Nair",       initials: "PN", position: "Finance Analyst",   appliedDate: "2026-04-18", status: "Interview", rating: 5, experience: "4 yrs" },
-  { id: 4,  name: "Liam O'Brien",     initials: "LO", position: "DevOps Engineer",   appliedDate: "2026-05-12", status: "Selected",  rating: 5, experience: "5 yrs" },
-  { id: 5,  name: "Fatima Al-Hassan", initials: "FA", position: "UI/UX Designer",    appliedDate: "2026-05-14", status: "Applied",   rating: 3, experience: "2 yrs" },
-  { id: 6,  name: "Carlos Rivera",    initials: "CR", position: "Software Engineer", appliedDate: "2026-05-05", status: "Rejected",  rating: 2, experience: "1 yr"  },
-  { id: 7,  name: "Yuki Tanaka",      initials: "YT", position: "Recruiter",         appliedDate: "2026-04-30", status: "On Hold",   rating: 3, experience: "3 yrs" },
-  { id: 8,  name: "Daniela Ferreira", initials: "DF", position: "HR Manager",        appliedDate: "2026-04-25", status: "Screening", rating: 4, experience: "5 yrs" },
-  { id: 9,  name: "Arjun Mehta",      initials: "AM", position: "Product Manager",   appliedDate: "2026-05-16", status: "Interview", rating: 5, experience: "7 yrs" },
-  { id: 10, name: "Sofia Rossi",      initials: "SR", position: "Backend Developer", appliedDate: "2026-05-19", status: "Applied",   rating: 4, experience: "4 yrs" },
-];
 
 const PIPELINE_STAGES = [
   { key: "Applied",   label: "Applied",   color: "blue"   },
@@ -91,6 +70,48 @@ export default function Recruitment() {
   const [viewJob, setViewJob]             = useState(null);
   const [viewCandidate, setViewCandidate] = useState(null);
   const [showPostJob, setShowPostJob]     = useState(false);
+  const [jobForm, setJobForm]             = useState({ title: "", dept: "", loc: "", type: "Full-time" });
+
+  const { show } = useToast();
+  const { data: jobsRaw = [] }  = useJobs();
+  const { data: candsRaw = [] } = useCandidates();
+  const createJobMut  = useCreateJob();
+  const candStatusMut = useUpdateCandidateStatus();
+
+  const MOCK_JOBS = jobsRaw.map((j) => ({
+    ...j,
+    postedDate: (j.postedDate || "").split("T")[0],
+  }));
+  const MOCK_CANDIDATES = candsRaw.map((c) => ({
+    ...c,
+    initials:    c.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2),
+    appliedDate: (c.appliedDate || "").split("T")[0],
+  }));
+
+  const handlePostJob = async () => {
+    if (!jobForm.title.trim()) return show("Job title is required", "error");
+    try {
+      await createJobMut.mutateAsync({
+        title: jobForm.title, department: jobForm.dept,
+        location: jobForm.loc, type: jobForm.type || "Full-time",
+      });
+      show("Job posted", "success");
+      setJobForm({ title: "", dept: "", loc: "", type: "Full-time" });
+      setShowPostJob(false);
+    } catch {
+      show("Failed to post job", "error");
+    }
+  };
+
+  const handleCandidateStatus = async (id, status) => {
+    try {
+      await candStatusMut.mutateAsync({ id, status });
+      show(`Candidate moved to ${status}`, "success");
+      setViewCandidate(null);
+    } catch {
+      show("Failed to update candidate", "error");
+    }
+  };
 
   const openJobs       = MOCK_JOBS.filter((j) => j.status === "Open").length;
   const totalApps      = MOCK_JOBS.reduce((s, j) => s + j.applications, 0);
@@ -491,6 +512,24 @@ export default function Recruitment() {
                 <Text size="sm" fw={600} c="dimmed">Stage</Text>
                 <Badge color={STATUS_COLOR[viewCandidate.status] || "gray"} variant="light" radius="xl">{viewCandidate.status}</Badge>
               </Group>
+              {!["Selected", "Rejected"].includes(viewCandidate.status) && (() => {
+                const NEXT = { Applied: "Screening", Screening: "Interview", Interview: "Selected" };
+                const next = NEXT[viewCandidate.status];
+                return (
+                  <Group gap="xs" grow>
+                    {next && (
+                      <AppButton size="xs" color="green" loading={candStatusMut.isPending}
+                        onClick={() => handleCandidateStatus(viewCandidate.id, next)}>
+                        Move to {next}
+                      </AppButton>
+                    )}
+                    <AppButton size="xs" color="red" variant="light" loading={candStatusMut.isPending}
+                      onClick={() => handleCandidateStatus(viewCandidate.id, "Rejected")}>
+                      Reject
+                    </AppButton>
+                  </Group>
+                );
+              })()}
               <Group justify="flex-end" mt="xs">
                 <AppButton onClick={() => setViewCandidate(null)}>Close</AppButton>
               </Group>
@@ -510,15 +549,21 @@ export default function Recruitment() {
         <Stack gap="md">
           {[
             { label: "Job Title *",  key: "title", ph: "e.g. Software Engineer"   },
-            { label: "Department",   key: "dept",  ph: "e.g. IT"                  },
+            { label: "Department",   key: "dept",  ph: "e.g. Engineering"         },
             { label: "Location",     key: "loc",   ph: "e.g. Chennai / Remote"    },
             { label: "Job Type",     key: "type",  ph: "Full-time / Contract"     },
           ].map(({ label, key, ph }) => (
-            <AppInput key={key} label={label} placeholder={ph} />
+            <AppInput
+              key={key}
+              label={label}
+              placeholder={ph}
+              value={jobForm[key]}
+              onChange={(e) => setJobForm((f) => ({ ...f, [key]: e.target.value }))}
+            />
           ))}
           <Group justify="flex-end" gap="sm" mt="xs">
             <AppButton variant="default" onClick={() => setShowPostJob(false)}>Cancel</AppButton>
-            <AppButton onClick={() => setShowPostJob(false)}>Post Job</AppButton>
+            <AppButton onClick={handlePostJob} loading={createJobMut.isPending}>Post Job</AppButton>
           </Group>
         </Stack>
       </AppModal>

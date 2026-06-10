@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   UserMinus, Clock, CheckCircle, AlertCircle, ChevronRight,
   Check, X, FileText, Download, Printer, User, Briefcase,
@@ -10,28 +10,25 @@ import { COLORS }                              from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT }              from "../../theme/fonts";
 import { SPACING, GAP, PADDING }               from "../../theme/spacing";
 import { RADIUS, SHADOW }                      from "../../theme/sizes";
+import { useExits, useUpdateExit }             from "../../queries/useHr";
+import { useToast }                            from "../../components/ui/Toast";
 
-// ── Mock Data ─────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ACTIVE_EXITS = [
-  { id: 1, name: "Ramesh Kumar",  dept: "IT",        lwdDisplay: "30 Jun 2026", notice: "30 days", type: "Resignation",   stage: "Clearance In Progress" },
-  { id: 2, name: "Divya Nair",    dept: "HR",        lwdDisplay: "15 Jul 2026", notice: "60 days", type: "Resignation",   stage: "Notice Period"         },
-  { id: 3, name: "Karthik Raj",   dept: "Finance",   lwdDisplay: "31 Jul 2026", notice: "30 days", type: "Contract End",  stage: "Document Collection"   },
-  { id: 4, name: "Meena S",       dept: "Marketing", lwdDisplay: "20 Jun 2026", notice: "30 days", type: "Resignation",   stage: "Full & Final Pending"  },
-];
+const formatLWD = (iso) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
 
-const EXIT_REQUESTS = [
-  { id: 1, name: "Arun Menon",    dept: "Operations", submitDate: "20 May 2026", requestedLWD: "30 Jun 2026", reason: "Pursuing higher education opportunities abroad — accepted offer from university.",   status: "Pending" },
-  { id: 2, name: "Sneha Pillai",  dept: "IT",         submitDate: "25 May 2026", requestedLWD: "15 Jul 2026", reason: "Personal relocation due to family circumstances; cannot continue current role.",   status: "Pending" },
-];
+// ── Display templates ─────────────────────────────────────────────────────────
 
 const CLEARANCE_ITEMS = [
-  { id: 1, label: "IT Assets Return",    icon: Laptop,       owner: "IT Department",    dueDate: "25 Jun 2026", status: "Completed"   },
-  { id: 2, label: "Access Revocation",   icon: Shield,       owner: "IT / Security",    dueDate: "25 Jun 2026", status: "Completed"   },
-  { id: 3, label: "Library Books",       icon: BookOpen,     owner: "Admin",            dueDate: "28 Jun 2026", status: "Pending"     },
-  { id: 4, label: "Finance Clearance",   icon: CreditCard,   owner: "Finance Dept",     dueDate: "28 Jun 2026", status: "Pending"     },
-  { id: 5, label: "HR Documentation",    icon: FileText,     owner: "HR Department",    dueDate: "29 Jun 2026", status: "In Progress" },
-  { id: 6, label: "Exit Interview",      icon: MessageSquare,owner: "HR Department",    dueDate: "30 Jun 2026", status: "Pending"     },
+  { id: 1, label: "IT Assets Return",    icon: Laptop,       owner: "IT Department",    dueDate: "25 Jun 2026", status: "Completed",   checklistKey: "itAssets"  },
+  { id: 2, label: "Access Revocation",   icon: Shield,       owner: "IT / Security",    dueDate: "25 Jun 2026", status: "Completed"                              },
+  { id: 3, label: "Library Books",       icon: BookOpen,     owner: "Admin",            dueDate: "28 Jun 2026", status: "Pending",     checklistKey: "knowledge" },
+  { id: 4, label: "Finance Clearance",   icon: CreditCard,   owner: "Finance Dept",     dueDate: "28 Jun 2026", status: "Pending",     checklistKey: "finance"   },
+  { id: 5, label: "HR Documentation",    icon: FileText,     owner: "HR Department",    dueDate: "29 Jun 2026", status: "In Progress", checklistKey: "hrDocs"    },
+  { id: 6, label: "Exit Interview",      icon: MessageSquare,owner: "HR Department",    dueDate: "30 Jun 2026", status: "Pending"                                },
 ];
 
 const FNF_DETAILS = {
@@ -134,6 +131,76 @@ const ExitManagement = ({ darkMode = false }) => {
   const [activeTab, setActiveTab] = useState("active");
   const [remarks, setRemarks]     = useState({});
 
+  const { data: exits = [] } = useExits();
+  const updateExit           = useUpdateExit();
+  const { show }             = useToast();
+
+  const ACTIVE_EXITS = useMemo(
+    () =>
+      exits
+        .filter((e) => e.status === "Active")
+        .map((e) => ({
+          id: e.id,
+          name: e.name,
+          dept: e.dept,
+          lwdDisplay: formatLWD(e.lastWorkingDay),
+          notice: `${e.noticeDays} days`,
+          type: e.type,
+          stage: e.stage,
+          checklist: e.checklist,
+        })),
+    [exits],
+  );
+
+  const EXIT_REQUESTS = useMemo(
+    () =>
+      exits
+        .filter((e) => e.status === "Request")
+        .map((e) => ({
+          id: e.id,
+          name: e.name,
+          dept: e.dept,
+          submitDate: "—",
+          requestedLWD: formatLWD(e.lastWorkingDay),
+          reason: e.reason,
+          status: "Pending",
+        })),
+    [exits],
+  );
+
+  const completedCount = exits.filter((e) => e.status === "Completed").length;
+  const clearancePendingCount = ACTIVE_EXITS.filter(
+    (e) => e.checklist && Object.values(e.checklist).some((v) => !v),
+  ).length;
+
+  // Employee shown on Clearance / F&F tabs — first active exit in clearance, else first active
+  const clearanceExit =
+    ACTIVE_EXITS.find((e) => e.stage === "Clearance In Progress") || ACTIVE_EXITS[0];
+
+  const clearanceItems = CLEARANCE_ITEMS.map((item) =>
+    item.checklistKey && clearanceExit?.checklist
+      ? { ...item, status: clearanceExit.checklist[item.checklistKey] ? "Completed" : "Pending" }
+      : item,
+  );
+
+  const handleApprove = async (req) => {
+    try {
+      await updateExit.mutateAsync({ id: req.id, status: "Active", stage: "Notice Period" });
+      show(`Exit request for ${req.name} approved`, "success");
+    } catch {
+      show("Failed to approve exit request", "error");
+    }
+  };
+
+  const handleReject = async (req) => {
+    try {
+      await updateExit.mutateAsync({ id: req.id, status: "Completed", stage: "Rejected" });
+      show(`Exit request for ${req.name} rejected`, "success");
+    } catch {
+      show("Failed to reject exit request", "error");
+    }
+  };
+
   const TABS = [
     { key: "active",    label: "Active Exits"        },
     { key: "requests",  label: "Exit Requests"        },
@@ -142,10 +209,10 @@ const ExitManagement = ({ darkMode = false }) => {
   ];
 
   const STAT_CARDS = [
-    { label: "Total Exits This Year", value: 8,  icon: UserMinus,    color: COLORS.primary,  bg: COLORS.primaryMuted  },
-    { label: "In Progress",           value: 3,  icon: RefreshCw,    color: COLORS.warning,  bg: COLORS.warningLight  },
-    { label: "Clearance Pending",     value: 2,  icon: AlertCircle,  color: COLORS.orange,   bg: COLORS.orangeLight   },
-    { label: "Completed",             value: 5,  icon: CheckCircle,  color: COLORS.success,  bg: COLORS.successLight  },
+    { label: "Total Exits This Year", value: exits.length,          icon: UserMinus,    color: COLORS.primary,  bg: COLORS.primaryMuted  },
+    { label: "In Progress",           value: ACTIVE_EXITS.length,   icon: RefreshCw,    color: COLORS.warning,  bg: COLORS.warningLight  },
+    { label: "Clearance Pending",     value: clearancePendingCount, icon: AlertCircle,  color: COLORS.orange,   bg: COLORS.orangeLight   },
+    { label: "Completed",             value: completedCount,        icon: CheckCircle,  color: COLORS.success,  bg: COLORS.successLight  },
   ];
 
   // Shared table column header style
@@ -436,13 +503,13 @@ const ExitManagement = ({ darkMode = false }) => {
                             label="Approve"
                             color={COLORS.success}
                             bg={COLORS.successLight}
-                            onClick={() => {}}
+                            onClick={() => handleApprove(req)}
                           />
                           <ActionBtn
                             label="Reject"
                             color={COLORS.danger}
                             bg={COLORS.dangerMuted}
-                            onClick={() => {}}
+                            onClick={() => handleReject(req)}
                           />
                         </div>
                       </td>
@@ -469,17 +536,17 @@ const ExitManagement = ({ darkMode = false }) => {
             alignItems: "center",
             gap: GAP.md,
           }}>
-            <Avatar name="Ramesh Kumar" size={44} />
+            <Avatar name={clearanceExit?.name || "—"} size={44} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: FONT_WEIGHT.semibold, fontSize: FONT_SIZE.md, color: surface.text }}>
-                Ramesh Kumar
+                {clearanceExit?.name || "No active exit"}
               </div>
               <div style={{ fontSize: FONT_SIZE.xs, color: surface.subtext, marginTop: 2 }}>
-                IT Department &nbsp;·&nbsp; Last Working Day: 30 Jun 2026
+                {clearanceExit?.dept || "—"} Department &nbsp;·&nbsp; Last Working Day: {clearanceExit?.lwdDisplay || "—"}
               </div>
             </div>
             <div style={{ display: "flex", gap: GAP.xs }}>
-              <Badge label="Clearance In Progress" bg={COLORS.infoLight} text={COLORS.info} />
+              <Badge label={clearanceExit?.stage || "—"} bg={COLORS.infoLight} text={COLORS.info} />
             </div>
           </div>
 
@@ -496,7 +563,7 @@ const ExitManagement = ({ darkMode = false }) => {
                 Clearance Checklist
               </h2>
               <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.xs, color: surface.subtext }}>
-                {CLEARANCE_ITEMS.filter(i => i.status === "Completed").length} of {CLEARANCE_ITEMS.length} items completed
+                {clearanceItems.filter(i => i.status === "Completed").length} of {clearanceItems.length} items completed
               </p>
             </div>
 
@@ -510,7 +577,7 @@ const ExitManagement = ({ darkMode = false }) => {
               }}>
                 <div style={{
                   height: "100%",
-                  width: `${Math.round((CLEARANCE_ITEMS.filter(i => i.status === "Completed").length / CLEARANCE_ITEMS.length) * 100)}%`,
+                  width: `${Math.round((clearanceItems.filter(i => i.status === "Completed").length / clearanceItems.length) * 100)}%`,
                   background: COLORS.success,
                   borderRadius: RADIUS.full,
                   transition: "width 0.4s ease",
@@ -519,7 +586,7 @@ const ExitManagement = ({ darkMode = false }) => {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {CLEARANCE_ITEMS.map((item, idx) => {
+              {clearanceItems.map((item, idx) => {
                 const Icon = item.icon;
                 const sc = STATUS_COLORS[item.status] || { bg: COLORS.gray100, text: COLORS.gray600 };
                 const isCompleted = item.status === "Completed";

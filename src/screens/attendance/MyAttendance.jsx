@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 
 import { useAuth }              from "../../hooks/useAuth";
-import { useMyAttendance }      from "../../queries/useSelfService";
+import { useMyAttendance, useSelfCheckIn, useSelfCheckOut } from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 import { AppStatCard }          from "../../components/ui/AppStatCard";
@@ -50,6 +50,7 @@ const mapApiRecord = (r) => ({
   date:     (r.date || "").split("T")[0],
   checkIn:  fmtTime(r.checkIn),
   checkOut: fmtTime(r.checkOut),
+  hours:    r.hoursWorked ?? null,
   status:   r.status === "OnLeave" ? "Leave" : r.status,
 });
 
@@ -74,6 +75,8 @@ const MyAttendance = () => {
   const [confirmType, setConfirmType] = useState(null);
 
   const { data: apiRecords = [] } = useMyAttendance();
+  const checkInMut  = useSelfCheckIn();
+  const checkOutMut = useSelfCheckOut();
 
   useEffect(() => {
     if (apiRecords.length) {
@@ -92,34 +95,39 @@ const MyAttendance = () => {
 
   const isLate = () => new Date().getHours() >= 10;
 
-  const handleCheckIn = () => {
-    const time   = fmt12();
-    const late   = isLate();
-    setCheckInTime(time);
-    setCheckedIn(true);
+  const handleCheckIn = async () => {
+    const time = fmt12();
+    const late = isLate();
     setConfirmType(null);
-    setHistory((prev) => [
-      { _id: "today", date: TODAY, checkIn: time, checkOut: "", status: late ? "Late" : "Present" },
-      ...prev.filter((r) => r.date !== TODAY),
-    ]);
-    show(
-      late
-        ? 'Checked in at ' + time + ' — marked as Late'
-        : 'Checked in successfully at ' + time,
-      late ? "warning" : "success"
-    );
+    try {
+      await checkInMut.mutateAsync();
+      setCheckInTime(time);
+      setCheckedIn(true);
+      show(
+        late
+          ? 'Checked in at ' + time + ' — marked as Late'
+          : 'Checked in successfully at ' + time,
+        late ? "warning" : "success"
+      );
+    } catch (err) {
+      show(err?.response?.data?.message || "Failed to check in", "error");
+    }
   };
 
-  const handleCheckOut = () => {
+  const handleCheckOut = async () => {
     const time = fmt12();
-    setCheckOutTime(time);
-    setCheckedOut(true);
     setConfirmType(null);
-    setHistory((prev) =>
-      prev.map((r) => r.date === TODAY ? { ...r, checkOut: time } : r)
-    );
-    const hrs = calcHours(checkInTime, time);
-    show('Checked out at ' + time + (hrs ? ' · ' + hrs + ' worked' : ''), "success");
+    try {
+      const rec = await checkOutMut.mutateAsync();
+      setCheckOutTime(time);
+      setCheckedOut(true);
+      const hrs = rec?.hoursWorked != null
+        ? `${Math.floor(rec.hoursWorked)}h ${Math.round((rec.hoursWorked % 1) * 60)}m`
+        : calcHours(checkInTime, time);
+      show('Checked out at ' + time + (hrs ? ' · ' + hrs + ' worked' : ''), "success");
+    } catch (err) {
+      show(err?.response?.data?.message || "Failed to check out", "error");
+    }
   };
 
   const totalDays   = history.length;
@@ -128,14 +136,10 @@ const MyAttendance = () => {
   const absentDays  = history.filter((r) => r.status === "Absent").length;
   const attendPct   = totalDays > 0 ? Math.round(((presentDays + lateDays) / totalDays) * 100) : 0;
 
-  const chartData = history.slice(0, 10).reverse().map((r) => {
-    const hrs = calcHours(r.checkIn, r.checkOut);
-    const val = hrs ? parseFloat(hrs.replace("h", ".").replace("m","")) : 0;
-    return {
-      date:  new Date(r.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short" }),
-      hours: val > 0 ? parseFloat((Math.floor(val) + (val % 1) * 100 / 60).toFixed(1)) : 0,
-    };
-  });
+  const chartData = history.slice(0, 10).reverse().map((r) => ({
+    date:  new Date(r.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short" }),
+    hours: r.hours != null ? parseFloat(Number(r.hours).toFixed(1)) : 0,
+  }));
 
   const todayRecord = history.find((r) => r.date === TODAY);
   const hours = todayRecord ? calcHours(todayRecord.checkIn, todayRecord.checkOut) : null;
@@ -292,7 +296,13 @@ const MyAttendance = () => {
                   </Table.Td>
                   <Table.Td><Text fz="sm" c="dimmed" fw={r.date === TODAY ? 600 : 400}>{r.checkIn || "—"}</Text></Table.Td>
                   <Table.Td><Text fz="sm" c={r.date === TODAY && r.checkOut ? "red" : "dimmed"} fw={r.date === TODAY ? 600 : 400}>{r.checkOut || (r.date === TODAY && checkedIn ? "Working..." : "—")}</Text></Table.Td>
-                  <Table.Td><Text fz="sm" c="dimmed">{calcHours(r.checkIn, r.checkOut) || "—"}</Text></Table.Td>
+                  <Table.Td>
+                    <Text fz="sm" c="dimmed">
+                      {r.hours != null
+                        ? `${Math.floor(r.hours)}h ${Math.round((r.hours % 1) * 60)}m`
+                        : calcHours(r.checkIn, r.checkOut) || "—"}
+                    </Text>
+                  </Table.Td>
                   <Table.Td>
                     <Badge color={STATUS_STYLE[r.status] || "gray"} variant="light" size="sm">
                       {r.status}

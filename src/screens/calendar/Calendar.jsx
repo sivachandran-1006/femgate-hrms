@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useHolidays } from "../../queries/useHolidays";
+import { useOnboarding } from "../../queries/useOnboarding";
+import { fetchLeaves } from "../../api/leaveApi";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Star, Briefcase, Clock } from "lucide-react";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
@@ -15,44 +19,6 @@ const EVENT_COLORS = {
   team:    { dot: "#0d9488", bg: "#ccfbf1", text: "#0f766e", darkBg: "#042f2e", darkText: "#5eead4" },
 };
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-const EVENTS = [
-  // June 2026
-  { date: "2026-06-02", title: "Team Standup",            type: "team" },
-  { date: "2026-06-03", title: "Arjun Kumar Joining",     type: "join" },
-  { date: "2026-06-05", title: "Q2 Appraisal Starts",     type: "review" },
-  { date: "2026-06-05", title: "Priya Joining",           type: "join" },
-  { date: "2026-06-10", title: "Payroll Processing",      type: "payroll" },
-  { date: "2026-06-10", title: "Eid Al-Adha",             type: "holiday" },
-  { date: "2026-06-15", title: "New Payroll Policy",      type: "hr" },
-  { date: "2026-06-20", title: "Team Building Event",     type: "team" },
-  { date: "2026-06-25", title: "Monthly Review",          type: "review" },
-  { date: "2026-06-30", title: "Month End Close",         type: "payroll" },
-  // National / company holidays
-  { date: "2026-01-26", title: "Republic Day",            type: "holiday" },
-  { date: "2026-03-25", title: "Holi",                    type: "holiday" },
-  { date: "2026-04-14", title: "Ambedkar Jayanti",        type: "holiday" },
-  { date: "2026-08-15", title: "Independence Day",        type: "holiday" },
-  { date: "2026-10-02", title: "Gandhi Jayanti",          type: "holiday" },
-  { date: "2026-11-01", title: "Diwali",                  type: "holiday" },
-  { date: "2026-12-25", title: "Christmas",               type: "holiday" },
-];
-
-const HOLIDAY_TABLE = [
-  { date: "Jan 26", name: "Republic Day",        kind: "National" },
-  { date: "Mar 25", name: "Holi",                kind: "National" },
-  { date: "Apr 14", name: "Ambedkar Jayanti",    kind: "National" },
-  { date: "Jun 10", name: "Eid Al-Adha",         kind: "National" },
-  { date: "Aug 15", name: "Independence Day",    kind: "National" },
-  { date: "Oct 02", name: "Gandhi Jayanti",      kind: "National" },
-  { date: "Nov 01", name: "Diwali",              kind: "National" },
-  { date: "Dec 25", name: "Christmas",           kind: "National" },
-  { date: "Jun 05", name: "Q2 Appraisal Start",  kind: "Company" },
-  { date: "Jun 15", name: "New Payroll Policy",  kind: "Company" },
-  { date: "Jun 20", name: "Team Building Event", kind: "Company" },
-  { date: "Mar 08", name: "Women's Day Off",     kind: "Optional" },
-  { date: "Sep 05", name: "Teachers' Day",       kind: "Optional" },
-];
 
 const KIND_BADGE = {
   National: { bg: "#fee2e2", text: "#dc2626", darkBg: "#7f1d1d", darkText: "#fca5a5" },
@@ -71,8 +37,8 @@ function toDateKey(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function getEventsForDate(dateKey) {
-  return EVENTS.filter((e) => e.date === dateKey);
+function getEventsForDate(events, dateKey) {
+  return events.filter((e) => e.date === dateKey);
 }
 
 function getDaysInMonth(year, month) {
@@ -93,9 +59,9 @@ function countWorkingDays(year, month) {
   return count;
 }
 
-function upcomingEventsThisMonth(year, month) {
+function upcomingEventsThisMonth(events, year, month) {
   const prefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
-  return EVENTS.filter((e) => e.date.startsWith(prefix)).length;
+  return events.filter((e) => e.date.startsWith(prefix)).length;
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -230,6 +196,29 @@ function SidePanelEvent({ event, darkMode }) {
 
 // ── Main Calendar component ────────────────────────────────────────────────────
 export default function Calendar({ darkMode = false }) {
+  const { data: holidaysRaw = [] } = useHolidays();
+  const { data: onboardRaw = [] }  = useOnboarding();
+  const { data: leavesRaw = [] }   = useQuery({
+    queryKey: ["leaves"],
+    queryFn: () => fetchLeaves(),
+    select: (r) => r?.data ?? r ?? [],
+  });
+
+  const leaves = Array.isArray(leavesRaw) ? leavesRaw : [];
+
+  const EVENTS = [
+    ...holidaysRaw.map((h) => ({ date: (h.date || "").split("T")[0], title: h.name, type: "holiday" })),
+    ...onboardRaw.map((o) => ({ date: (o.joiningDate || "").split("T")[0], title: `${o.name} Joining`, type: "join" })),
+    ...leaves.filter((l) => l.status === "Approved").map((l) => ({
+      date: l.fromDate, title: `${l.employee || "My"} leave — ${l.leaveType}`, type: "hr",
+    })),
+  ];
+
+  const HOLIDAY_TABLE = holidaysRaw.map((h) => ({
+    date: new Date(h.date).toLocaleDateString("en-IN", { month: "short", day: "2-digit" }),
+    name: h.name,
+    kind: h.optional ? "Optional" : h.type === "Regional" ? "Company" : "National",
+  }));
   const today = new Date();
   const [viewYear, setViewYear] = useState(2026);
   const [viewMonth, setViewMonth] = useState(5); // June = 5 (0-indexed)
@@ -255,7 +244,7 @@ export default function Calendar({ darkMode = false }) {
   };
 
   const panelEvents = selectedDate
-    ? getEventsForDate(selectedDate)
+    ? getEventsForDate(EVENTS, selectedDate)
     : (() => {
         const prefix = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-`;
         return EVENTS.filter((e) => e.date.startsWith(prefix)).slice(0, 8);
@@ -266,7 +255,7 @@ export default function Calendar({ darkMode = false }) {
     : `Upcoming in ${MONTH_NAMES[viewMonth]}`;
 
   const totalHolidays = HOLIDAY_TABLE.length;
-  const upcomingCount = upcomingEventsThisMonth(viewYear, viewMonth);
+  const upcomingCount = upcomingEventsThisMonth(EVENTS, viewYear, viewMonth);
   const workingDays = countWorkingDays(viewYear, viewMonth);
 
   // Build calendar grid cells: null = empty, number = day
@@ -448,7 +437,7 @@ export default function Calendar({ darkMode = false }) {
               const dow = (firstDay + day - 1) % 7;
               const isWeekend = dow === 0 || dow === 6;
               const dateKey = toDateKey(viewYear, viewMonth, day);
-              const dayEvents = getEventsForDate(dateKey);
+              const dayEvents = getEventsForDate(EVENTS, dateKey);
               const isTodayCell = isToday(day);
               const isSelected = selectedDate === dateKey;
 

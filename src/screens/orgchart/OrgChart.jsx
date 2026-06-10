@@ -7,6 +7,8 @@ import { IconSearch, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+import { useDepartments } from "../../queries/useDepartments";
 
 // ─── Org Data ────────────────────────────────────────────────────────────────
 
@@ -279,15 +281,65 @@ function TreeNodeV2({ node, searchQuery, deptFilter, expandedNodes, onToggle }) 
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
+// Build the org tree from real employees + department heads
+const buildOrgTree = (employees, deptRows) => {
+  if (!employees.length) return null;
+
+  const toNode = (e) => ({
+    id:          `emp-${e.id}`,
+    name:        e.name,
+    designation: e.designation || "—",
+    department:  e.department  || "—",
+    email:       e.email,
+    phone:       e.phone || "",
+    joinDate:    e.joinDate ? e.joinDate.split("T")[0] : "",
+    children:    [],
+  });
+
+  const deptNames = [...new Set(employees.map((e) => e.department).filter(Boolean))];
+  const headNameByDept = Object.fromEntries((deptRows || []).map((d) => [d.name, d.headName]));
+
+  const deptSubtrees = deptNames.map((dept) => {
+    const members  = employees.filter((e) => e.department === dept);
+    const headName = headNameByDept[dept];
+    const head     = members.find((e) => e.name === headName) || members[0];
+    const node     = toNode(head);
+    node.children  = members.filter((e) => e.id !== head.id).map(toNode);
+    return node;
+  });
+
+  return {
+    id: "root",
+    name: "MGate Technologies",
+    designation: "Organisation",
+    department: "Management",
+    email: "admin@mgate.com",
+    phone: "",
+    joinDate: "",
+    children: deptSubtrees,
+  };
+};
+
 export default function OrgChart() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deptFilter, setDeptFilter]   = useState("All");
-  const [expandedNodes, setExpandedNodes] = useState(
-    () => new Set(flattenTree(ORG_DATA).map(n => n.id))
+  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: deptRows = [] }  = useDepartments();
+
+  const orgData = React.useMemo(
+    () => buildOrgTree(employees, deptRows) || ORG_DATA,
+    [employees, deptRows]
   );
 
-  const departments = getAllDepts(ORG_DATA);
-  const allNodeIds  = flattenTree(ORG_DATA).map(n => n.id);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deptFilter, setDeptFilter]   = useState("All");
+  const [expandedNodes, setExpandedNodes] = useState(() => new Set());
+
+  // Expand everything once real data arrives
+  useEffect(() => {
+    setExpandedNodes(new Set(flattenTree(orgData).map(n => n.id)));
+  }, [orgData]);
+
+  const departments = getAllDepts(orgData);
+  const allNodeIds  = flattenTree(orgData).map(n => n.id);
   const allExpanded = expandedNodes.size === allNodeIds.length;
 
   const handleToggle = (id) => {
@@ -349,7 +401,7 @@ export default function OrgChart() {
       <Paper radius="xl" withBorder p="xl" style={{ overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "center", minWidth: "max-content", paddingBottom: 24 }}>
           <TreeNodeV2
-            node={ORG_DATA}
+            node={orgData}
             searchQuery={searchQuery}
             deptFilter={deptFilter}
             expandedNodes={expandedNodes}
@@ -359,7 +411,7 @@ export default function OrgChart() {
       </Paper>
 
       <Text ta="center" size="xs" c="dimmed">
-        {flattenTree(ORG_DATA).length} employees across {Object.keys(DEPT_COLOR).length} departments
+        {flattenTree(orgData).length - 1} employees across {departments.length - 1} departments
       </Text>
     </Stack>
   );

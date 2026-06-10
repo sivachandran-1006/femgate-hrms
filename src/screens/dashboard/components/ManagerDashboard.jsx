@@ -7,7 +7,7 @@ import { AppTable } from "../../../components/ui/AppTable";
 import { getInitials } from "../../../utils/helpers";
 import { getAnnouncements, getUpcomingEvents, getDashboardSummary } from "../../../api/dashboardApi";
 
-const ANNOUNCE_COLORS = { info: "blue", hr: "green", finance: "violet" };
+const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 
 export const ManagerDashboard = ({ employees, leaves }) => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });

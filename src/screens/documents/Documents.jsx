@@ -16,27 +16,15 @@ import {
 } from "@tabler/icons-react";
 
 import { COLORS } from "../../theme/colors";
+import { useAllDocuments } from "../../queries/useHr";
+import { useDeleteDocument } from "../../queries/useSelfService";
+import { useToast } from "../../components/ui/Toast";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW } from "../../theme/sizes";
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
-const MOCK_DOCUMENTS = [
-  { id: 1,  employee: "Aravinth",  name: "Aadhaar Card",        category: "Identity",   uploadDate: "2024-01-10", expiryDate: "2034-01-10", status: "Verified"  },
-  { id: 2,  employee: "Aravinth",  name: "PAN Card",            category: "Identity",   uploadDate: "2024-01-12", expiryDate: "N/A",        status: "Verified"  },
-  { id: 3,  employee: "Aravinth",  name: "Resume",              category: "Employment", uploadDate: "2024-02-01", expiryDate: "N/A",        status: "Verified"  },
-  { id: 4,  employee: "Aravinth",  name: "Offer Letter",        category: "Employment", uploadDate: "2024-02-05", expiryDate: "N/A",        status: "Verified"  },
-  { id: 5,  employee: "Mani",      name: "Aadhaar Card",        category: "Identity",   uploadDate: "2024-03-08", expiryDate: "2034-03-08", status: "Verified"  },
-  { id: 6,  employee: "Mani",      name: "PAN Card",            category: "Identity",   uploadDate: "2024-03-09", expiryDate: "N/A",        status: "Pending"   },
-  { id: 7,  employee: "Mani",      name: "Experience Letter",   category: "Employment", uploadDate: "2024-03-15", expiryDate: "N/A",        status: "Verified"  },
-  { id: 8,  employee: "Safeer",    name: "Aadhaar Card",        category: "Identity",   uploadDate: "2024-04-02", expiryDate: "2034-04-02", status: "Verified"  },
-  { id: 9,  employee: "Safeer",    name: "Form 16",             category: "Financial",  uploadDate: "2024-04-10", expiryDate: "2025-03-31", status: "Verified"  },
-  { id: 10, employee: "Safeer",    name: "Bank Statement",      category: "Financial",  uploadDate: "2024-04-15", expiryDate: "2025-04-15", status: "Pending"   },
-  { id: 11, employee: "Siva",      name: "Aadhaar Card",        category: "Identity",   uploadDate: "2024-05-01", expiryDate: "2034-05-01", status: "Verified"  },
-  { id: 12, employee: "Siva",      name: "Appointment Letter",  category: "Employment", uploadDate: "2024-05-05", expiryDate: "N/A",        status: "Verified"  },
-  { id: 13, employee: "Siva",      name: "Relieving Letter",    category: "Employment", uploadDate: "2023-06-01", expiryDate: "2024-06-01", status: "Expired"   },
-];
 
 const EMPLOYEES = ["Aravinth", "Mani", "Safeer", "Siva"];
 const CATEGORIES = ["Identity", "Employment", "Financial", "Other"];
@@ -327,7 +315,20 @@ const Documents = ({ darkMode: dark = false }) => {
   const [categoryFilter,setCategoryFilter]= useState("All");
   const [statusFilter,  setStatusFilter]  = useState("All");
   const [showModal,     setShowModal]     = useState(false);
-  const [docs,          setDocs]          = useState(MOCK_DOCUMENTS);
+
+  const { show } = useToast();
+  const { data: docsRaw = [] } = useAllDocuments();
+  const deleteMut = useDeleteDocument();
+
+  const docs = docsRaw.map((d) => ({
+    id:         d.id,
+    employee:   d.employee?.name || "Company",
+    name:       d.name,
+    category:   d.category || "Other",
+    uploadDate: (d.createdAt || "").split("T")[0],
+    expiryDate: d.expiryDate ? d.expiryDate.split("T")[0] : "N/A",
+    status:     d.expiryDate && new Date(d.expiryDate) < new Date() ? "Expired" : "Verified",
+  }));
 
   // Derived stats
   const stats = useMemo(() => ({
@@ -350,7 +351,14 @@ const Documents = ({ darkMode: dark = false }) => {
     return matchSearch && matchCat && matchStatus;
   }), [docs, search, categoryFilter, statusFilter]);
 
-  const handleDelete = (id) => setDocs((prev) => prev.filter((d) => d.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await deleteMut.mutateAsync(id);
+      show("Document archived", "success");
+    } catch {
+      show("Failed to delete document", "error");
+    }
+  };
 
   // Styles
   const pageBg    = dark ? COLORS.dark.pageBg   : COLORS.backgroundLight;

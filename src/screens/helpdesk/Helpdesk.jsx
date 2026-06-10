@@ -17,24 +17,24 @@ import { COLORS }            from "../../theme/colors";
 import { getAvatarColor }    from "../../utils/helpers";
 import { useToast }          from "../../components/ui/Toast";
 import { usePermission }     from "../../hooks/usePermission";
+import { useAuth }           from "../../hooks/useAuth";
+import { useTickets, useRaiseTicket, useUpdateTicketStatus } from "../../queries/useTickets";
 import { AppModal }          from "../../components/ui/AppModal";
 import { AppInput }          from "../../components/ui/AppInput";
 import { AppButton }         from "../../components/ui/AppButton";
 
-const MOCK_TICKETS = [
-  { id: "TKT001", subject: "Laptop not booting",               category: "Hardware",            raisedBy: "Mani",        priority: "High",   status: "Open",        createdDate: "2026-05-30", description: "The laptop does not boot. Power button shows no response. Needs immediate hardware inspection." },
-  { id: "TKT002", subject: "VPN access required",              category: "Access Request",      raisedBy: "Hari",        priority: "Medium", status: "In Progress", createdDate: "2026-05-29", description: "Need VPN access to connect to the office network while working remotely." },
-  { id: "TKT003", subject: "Software installation - VS Code",  category: "Software",            raisedBy: "Santhosh",    priority: "Low",    status: "Resolved",    createdDate: "2026-05-28", description: "Request to install Visual Studio Code on my work laptop for development purposes." },
-  { id: "TKT004", subject: "Monitor display issue",            category: "Hardware",            raisedBy: "Suriya",      priority: "Medium", status: "Pending",     createdDate: "2026-05-28", description: "External monitor shows flickering and distorted colors after the recent OS update." },
-  { id: "TKT005", subject: "New employee setup for Arjun",     category: "New Employee Setup",  raisedBy: "Big Kundi",   priority: "High",   status: "In Progress", createdDate: "2026-05-27", description: "New employee Arjun Kumar joining on 2026-06-02. Requires laptop, email, software licenses." },
-  { id: "TKT006", subject: "Internet slow in Finance floor",   category: "Network",             raisedBy: "Safeer",      priority: "High",   status: "Open",        createdDate: "2026-05-27", description: "Finance department floor experiencing very slow internet speeds since yesterday morning." },
-  { id: "TKT007", subject: "Printer not working",              category: "Hardware",            raisedBy: "Small Kundi", priority: "Low",    status: "Resolved",    createdDate: "2026-05-25", description: "The shared printer on 3rd floor is not responding to print jobs. Paper jam reported." },
-  { id: "TKT008", subject: "Email password reset",             category: "Access Request",      raisedBy: "Suganthan",   priority: "Medium", status: "Closed",      createdDate: "2026-05-24", description: "Unable to log in to corporate email. Password reset required urgently." },
-  { id: "TKT009", subject: "Antivirus license renewal",        category: "Software",            raisedBy: "Aravinth",    priority: "Medium", status: "Pending",     createdDate: "2026-05-23", description: "Antivirus license expiring in 3 days. Needs renewal before expiry." },
-  { id: "TKT010", subject: "Zoom not connecting to audio",     category: "Software",            raisedBy: "Vignesh",     priority: "Low",    status: "Resolved",    createdDate: "2026-05-22", description: "Audio device not detected during Zoom calls. Tried reinstalling drivers, issue persists." },
-  { id: "TKT011", subject: "USB ports not working",            category: "Hardware",            raisedBy: "Sabari",      priority: "High",   status: "Open",        createdDate: "2026-05-21", description: "All USB ports on the desktop suddenly stopped working. Cannot connect mouse or external drives." },
-  { id: "TKT012", subject: "Office 365 license missing",       category: "Software",            raisedBy: "P Santhosh",  priority: "High",   status: "In Progress", createdDate: "2026-05-20", description: "Office 365 subscription expired. Unable to use Word, Excel, and Outlook for work tasks." },
-];
+// Map API ticket → UI shape ("InProgress" → "In Progress")
+const mapTicket = (t) => ({
+  dbId:        t.id,
+  id:          t.ticketId,
+  subject:     t.subject,
+  category:    t.category,
+  raisedBy:    t.raisedBy,
+  priority:    t.priority,
+  status:      t.status === "InProgress" ? "In Progress" : t.status,
+  createdDate: (t.createdAt || "").split("T")[0],
+  description: t.description,
+});
 
 const PRIORITY_COLORS = { High: "red", Medium: "yellow", Low: "blue" };
 const STATUS_COLORS   = { Open: "red", "In Progress": "yellow", Pending: "cyan", Resolved: "green", Closed: "gray" };
@@ -48,19 +48,29 @@ const STATUSES   = ["All", "Open", "In Progress", "Pending", "Resolved", "Closed
 const PRIORITIES = ["High", "Medium", "Low"];
 const MODAL_CATS = ["Hardware", "Software", "Network", "Access Request", "New Employee Setup"];
 
-const TREND_DATA = [
-  { day: "Mon", opened: 3, resolved: 2 }, { day: "Tue", opened: 5, resolved: 4 },
-  { day: "Wed", opened: 2, resolved: 3 }, { day: "Thu", opened: 4, resolved: 2 },
-  { day: "Fri", opened: 6, resolved: 5 }, { day: "Sat", opened: 1, resolved: 2 },
-];
+// Trend: tickets opened/resolved per day over the last 6 days
+const buildTrend = (tickets) =>
+  Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (5 - i));
+    const iso = d.toISOString().split("T")[0];
+    return {
+      day:      d.toLocaleDateString("en-IN", { weekday: "short" }),
+      opened:   tickets.filter((t) => t.createdDate === iso).length,
+      resolved: tickets.filter((t) => ["Resolved", "Closed"].includes(t.status) && t.createdDate <= iso).length ? tickets.filter((t) => t.createdDate === iso && ["Resolved", "Closed"].includes(t.status)).length : 0,
+    };
+  });
 
-const SLA_DATA = [
-  { category: "Hardware",           total: 5, resolved: 3, breached: 1 },
-  { category: "Software",           total: 4, resolved: 3, breached: 0 },
-  { category: "Network",            total: 1, resolved: 0, breached: 1 },
-  { category: "Access Request",     total: 2, resolved: 1, breached: 0 },
-  { category: "New Employee Setup", total: 1, resolved: 0, breached: 0 },
-];
+// SLA: per-category totals from real tickets
+const buildSla = (tickets) =>
+  MODAL_CATS.map((category) => {
+    const rows = tickets.filter((t) => t.category === category);
+    return {
+      category,
+      total:    rows.length,
+      resolved: rows.filter((t) => ["Resolved", "Closed"].includes(t.status)).length,
+      breached: rows.filter((t) => t.priority === "High" && ["Open", "Pending"].includes(t.status)).length,
+    };
+  }).filter((r) => r.total > 0);
 
 const initials = (name = "") => name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 const fmtDate  = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -70,8 +80,13 @@ const ROWS = 6;
 export default function Helpdesk() {
   const { show } = useToast();
   const can = usePermission();
+  const { user } = useAuth();
 
-  const [tickets, setTickets]           = useState(MOCK_TICKETS);
+  const { data: rawTickets = [] } = useTickets();
+  const raiseMut  = useRaiseTicket();
+  const statusMut = useUpdateTicketStatus();
+
+  const tickets = rawTickets.map(mapTicket);
   const [activeTab, setActiveTab]       = useState(can("helpdesk.view_all_tickets") ? "all" : "mine");
   const [searchQuery, setSearchQuery]   = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -109,20 +124,33 @@ export default function Helpdesk() {
     const matchCategory = categoryFilter === "All" || t.category === categoryFilter;
     const matchStatus   = statusFilter   === "All" || t.status   === statusFilter;
     const matchPriority = priorityFilter === "All" || t.priority === priorityFilter;
-    const matchTab      = activeTab === "all" || (activeTab === "mine" && t.raisedBy === "Mani");
+    const matchTab      = activeTab === "all" || (activeTab === "mine" && t.raisedBy === (user?.name || ""));
     return matchSearch && matchCategory && matchStatus && matchPriority && matchTab;
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS));
   const paginated  = filtered.slice((page - 1) * ROWS, page * ROWS);
 
-  const handleRaise = () => {
+  const handleRaise = async () => {
     if (!newTicket.subject.trim() || !newTicket.description.trim()) return;
-    const id = `TKT${String(tickets.length + 1).padStart(3, "0")}`;
-    setTickets([{ id, ...newTicket, raisedBy: "Mani", status: "Open", createdDate: new Date().toISOString().split("T")[0] }, ...tickets]);
-    show(`Ticket ${id} raised — IT team will respond shortly`, "success");
-    setNewTicket({ subject: "", category: "Hardware", priority: "Medium", description: "" });
-    setShowRaiseModal(false);
+    try {
+      const created = await raiseMut.mutateAsync(newTicket);
+      show(`Ticket ${created.ticketId} raised — IT team will respond shortly`, "success");
+      setNewTicket({ subject: "", category: "Hardware", priority: "Medium", description: "" });
+      setShowRaiseModal(false);
+    } catch {
+      show("Failed to raise ticket", "error");
+    }
+  };
+
+  const handleStatusChange = async (ticket, status) => {
+    try {
+      await statusMut.mutateAsync({ id: ticket.dbId, status });
+      show(`${ticket.id} → ${status}`, "success");
+      setViewTicket(null);
+    } catch {
+      show("Failed to update status", "error");
+    }
   };
 
   const clearFilters = () => { setCategoryFilter("All"); setStatusFilter("All"); setPriorityFilter("All"); setSearchQuery(""); setPage(1); };
@@ -287,7 +315,7 @@ export default function Helpdesk() {
               <Paper withBorder p="md" radius="lg">
                 <Text fw={600} mb="md">Ticket Trend — This Week</Text>
                 <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={TREND_DATA}>
+                  <AreaChart data={buildTrend(tickets)}>
                     <defs>
                       <linearGradient id="openGrad" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#ef4444" stopOpacity={0.15} />
@@ -380,7 +408,7 @@ export default function Helpdesk() {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {SLA_DATA.map((row) => {
+                {buildSla(tickets).map((row) => {
                   const pct = row.total > 0 ? Math.round(((row.total - row.breached) / row.total) * 100) : 100;
                   const barColor = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
                   const healthColor = pct >= 80 ? "green" : pct >= 50 ? "yellow" : "red";
@@ -497,7 +525,21 @@ export default function Helpdesk() {
               <Text size="xs" c="dimmed" fw={600} tt="uppercase" mb={4}>Description</Text>
               <Text size="sm" style={{ lineHeight: 1.7 }}>{viewTicket.description}</Text>
             </Paper>
-            <Group justify="flex-end">
+            <Group justify="space-between">
+              {can("helpdesk.manage_tickets") && !["Resolved", "Closed"].includes(viewTicket.status) ? (
+                <Group gap="xs">
+                  {viewTicket.status !== "In Progress" && (
+                    <Button size="xs" color="yellow" variant="light" loading={statusMut.isPending}
+                      onClick={() => handleStatusChange(viewTicket, "In Progress")}>
+                      Start Progress
+                    </Button>
+                  )}
+                  <Button size="xs" color="green" loading={statusMut.isPending}
+                    onClick={() => handleStatusChange(viewTicket, "Resolved")}>
+                    Mark Resolved
+                  </Button>
+                </Group>
+              ) : <span />}
               <Button onClick={() => setViewTicket(null)}>Close</Button>
             </Group>
           </Stack>

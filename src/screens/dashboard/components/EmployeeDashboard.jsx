@@ -23,7 +23,7 @@ export const EmployeeDashboard = ({ user }) => {
 
   const records      = attendData?.records || [];
   const payslip      = payslipData;
-  const balance      = balanceData?.balance || [];
+  const balance      = Array.isArray(balanceData) ? balanceData : balanceData?.balance || [];
   const leaves       = Array.isArray(leavesData) ? leavesData : [];
   const announcements = announceData?.announcements || [];
   const events       = eventsData?.events || [];
@@ -34,7 +34,7 @@ export const EmployeeDashboard = ({ user }) => {
   const presentDays = records.filter((r) => r.status === "Present" || r.status === "Late").length;
   const attendPct   = records.length > 0 ? Math.round((presentDays / records.length) * 100) : 0;
 
-  const ANNOUNCE_COLORS = { info: "blue", hr: "green", finance: "violet" };
+  const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 
   return (
     <>
@@ -103,18 +103,18 @@ export const EmployeeDashboard = ({ user }) => {
             {balance.length === 0 ? (
               <Text ta="center" c="dimmed" fz="sm" py="md">No leave balance data</Text>
             ) : balance.map((b) => {
-              const remaining = b.remaining ?? (b.quota - b.used);
-              const pct = b.quota > 0 ? Math.round((b.used / b.quota) * 100) : 0;
-              const colorMap = { Annual: "blue", Sick: "red", Casual: "yellow", Earned: "green" };
-              const color = colorMap[b.leaveType] || "blue";
+              const quota     = b.total ?? b.quota ?? 0;
+              const remaining = quota - (b.used || 0);
+              const pct       = quota > 0 ? Math.round(((b.used || 0) / quota) * 100) : 0;
+              const label     = b.label || b.leaveType;
               return (
-                <Box key={b.leaveType}>
+                <Box key={label}>
                   <Group justify="space-between" mb={4}>
-                    <Text fz="sm" fw={600}>{b.leaveType}</Text>
-                    <Text fz="xs" c="dimmed">{remaining}/{b.quota} days left</Text>
+                    <Text fz="sm" fw={600}>{label}</Text>
+                    <Text fz="xs" c="dimmed">{remaining}/{quota} days left</Text>
                   </Group>
-                  <Progress value={pct} color={color} size="md" radius="xl" />
-                  <Text fz="xs" c={color} fw={600} mt={4}>{b.used} days used</Text>
+                  <Progress value={pct} color={b.color || "blue"} size="md" radius="xl" />
+                  <Text fz="xs" c={b.color || "blue"} fw={600} mt={4}>{b.used || 0} days used</Text>
                 </Box>
               );
             })}

@@ -4,7 +4,7 @@ export const ROLE_ROUTES = {
   ADMIN:       ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations"],
   HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart"],
   MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts"],
-  FINANCE:     ["dashboard","payroll","analytics","documents"],
+  FINANCE:     ["dashboard","payroll","expense","analytics","documents"],
   IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar"],
   EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart"],
 };
@@ -99,6 +99,7 @@ export const ROLE_SIDEBAR = {
   FINANCE: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
     { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
+    { id: "expense",     label: "Expenses",    icon: "IconReceipt"           },
     { id: "documents",   label: "Documents",   icon: "IconFolder"            },
     { id: "analytics",   label: "Analytics",   icon: "IconChartBar"          },
   ],

@@ -11,7 +11,9 @@ import {
   getUpcomingEvents,
   getAttendanceSummary,
   getPayrollSummary,
+  getSystemHealth,
 } from "../../../api/dashboardApi";
+import { getOnboarding } from "../../../services/onboardingService";
 
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -27,14 +29,7 @@ const ChartTooltip = ({ active, payload, label }) => {
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 
-const SYSTEM_HEALTH = [
-  { label: "API Uptime",    value: 99.8, color: "green"  },
-  { label: "DB Health",     value: 97.2, color: "blue"   },
-  { label: "Storage Used",  value: 61,   color: "yellow" },
-  { label: "License Usage", value: 43,   color: "violet" },
-];
-
-const ANNOUNCE_COLORS = { info: "blue", hr: "green", finance: "violet" };
+const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 
 export const SuperAdminDashboard = () => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
@@ -43,6 +38,8 @@ export const SuperAdminDashboard = () => {
   const { data: eventsData }    = useQuery({ queryKey: ["dashboard-events"],    queryFn: getUpcomingEvents,    select: (r) => r?.data ?? r });
   const { data: attendData }    = useQuery({ queryKey: ["dashboard-attend"],    queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
   const { data: payrollData }   = useQuery({ queryKey: ["dashboard-payroll"],   queryFn: getPayrollSummary,    select: (r) => r?.data ?? r });
+  const { data: healthData }    = useQuery({ queryKey: ["dashboard-health"],    queryFn: getSystemHealth,      select: (r) => r?.data ?? r, refetchInterval: 30000 });
+  const { data: onboardData = [] } = useQuery({ queryKey: ["onboarding"],       queryFn: getOnboarding });
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
@@ -70,18 +67,28 @@ export const SuperAdminDashboard = () => {
   const announcements  = announceData?.announcements || [];
   const events         = eventsData?.events          || [];
 
+  const activeOnboardings = onboardData.filter((o) => o.status === "Active").length;
+  const upcomingJoiners   = onboardData.filter((o) => o.status === "Upcoming").length;
+
+  const systemHealth = healthData ? [
+    { label: "API Uptime",    sub: healthData.apiUptime?.label, value: healthData.apiUptime?.value ?? 0, color: "green"  },
+    { label: "DB Health",     sub: healthData.dbHealth?.label,  value: healthData.dbHealth?.value  ?? 0, color: "blue"   },
+    { label: "Storage Used",  sub: healthData.storage?.label,   value: healthData.storage?.value   ?? 0, color: "yellow" },
+    { label: "License Usage", sub: healthData.license?.label,   value: healthData.license?.value   ?? 0, color: "violet" },
+  ] : [];
+
   return (
     <>
       {/* ── Row 1: System-scope stat cards ── */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4, lg: 8 }} spacing="md" mb="md">
-        <AppStatCard icon={<IconBuilding size={18}/>}  label="Companies"       value={totalCompanies}                             sub="All tenants"               color="cyan"   trend="+1"  up />
-        <AppStatCard icon={<IconBuilding size={18}/>}  label="Branches"        value={1}                                          sub="Across all companies"      color="teal"   trend="+"   up />
-        <AppStatCard icon={<IconUsers size={18}/>}     label="Total Employees" value={total}                                      sub={`${deptCount} departments`} color="blue"  trend="+3"  up />
-        <AppStatCard icon={<IconUserCheck size={18}/>} label="Present Today"   value={present}                                    sub={`of ${total} active`}       color="green" trend="+2%" up />
-        <AppStatCard icon={<IconClock size={18}/>}     label="Pending Leaves"  value={pendingLeaves}                              sub="Awaiting action"            color="red"   trend=""     up={false} />
-        <AppStatCard icon={<IconWallet size={18}/>}    label="Payroll Cost"    value={`₹${(totalSalary/1000).toFixed(0)}k`}       sub="Monthly"                    color="violet" trend="+4%" up />
-        <AppStatCard icon={<IconBriefcase size={18}/>} label="Departments"     value={deptCount}                                  sub="Active units"               color="indigo" trend=""    up />
-        <AppStatCard icon={<IconTicket size={18}/>}    label="Active Staff"    value={active}                                     sub="On duty"                    color="orange" trend=""    up />
+        <AppStatCard icon={<IconBuilding size={18}/>}  label="Companies"       value={totalCompanies}                       sub="All tenants"                  color="cyan"   />
+        <AppStatCard icon={<IconBuilding size={18}/>}  label="Onboardings"     value={activeOnboardings}                    sub={`${upcomingJoiners} upcoming`} color="teal"  />
+        <AppStatCard icon={<IconUsers size={18}/>}     label="Total Employees" value={total}                                sub={`${deptCount} departments`}    color="blue"  />
+        <AppStatCard icon={<IconUserCheck size={18}/>} label="Present Today"   value={present}                              sub={`of ${total} active`}          color="green" />
+        <AppStatCard icon={<IconClock size={18}/>}     label="Pending Leaves"  value={pendingLeaves}                        sub="Awaiting action"               color="red"   />
+        <AppStatCard icon={<IconWallet size={18}/>}    label="Payroll Cost"    value={`₹${(totalSalary/1000).toFixed(0)}k`} sub="Monthly"                       color="violet"/>
+        <AppStatCard icon={<IconBriefcase size={18}/>} label="Departments"     value={deptCount}                            sub="Active units"                  color="indigo"/>
+        <AppStatCard icon={<IconTicket size={18}/>}    label="Active Staff"    value={active}                               sub="On duty"                       color="orange"/>
       </SimpleGrid>
 
       {/* ── Row 2: Growth + Attendance + System Health ── */}
@@ -120,12 +127,18 @@ export const SuperAdminDashboard = () => {
           </Group>
         </AppSection>
 
-        <AppSection title="System Health" sub="Live infrastructure metrics" noPadding>
+        <AppSection title="System Health" sub="Live infrastructure metrics — refreshes every 30s" noPadding>
           <Box p="md" pb="xs">
-            {SYSTEM_HEALTH.map(({ label, value, color }, i, arr) => (
+            {systemHealth.length === 0 && (
+              <Text ta="center" c="dimmed" fz="sm" py="md">Loading metrics...</Text>
+            )}
+            {systemHealth.map(({ label, sub, value, color }, i, arr) => (
               <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
                 <Group justify="space-between" mb={4}>
-                  <Text fz="sm" c="dimmed">{label}</Text>
+                  <Box>
+                    <Text fz="sm" c="dimmed">{label}</Text>
+                    {sub && <Text fz="xs" c="dimmed" style={{ opacity: 0.7 }}>{sub}</Text>}
+                  </Box>
                   <Text fz="sm" fw={700} c={color}>{value}%</Text>
                 </Group>
                 <Progress value={value} color={color} size="sm" radius="xl" />

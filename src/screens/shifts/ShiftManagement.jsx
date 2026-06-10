@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Sun, Sunset, Moon, Calendar, Users, RefreshCw,
   ChevronLeft, ChevronRight, Plus, X, Clock, Check, XCircle,
@@ -8,10 +8,11 @@ import { COLORS }                        from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
 import { SPACING, GAP, PADDING }          from "../../theme/spacing";
 import { RADIUS, SHADOW }                 from "../../theme/sizes";
+import { useShifts, useSetShift }         from "../../queries/useHr";
+import { useToast }                       from "../../components/ui/Toast";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const WEEK_DATES = ["Jun 2", "Jun 3", "Jun 4", "Jun 5", "Jun 6", "Jun 7", "Jun 8"];
 
 const SHIFT_TYPES = {
   Morning: { label: "Morning", bg: "#dbeafe", color: "#1d4ed8", darkBg: "#1e3a8a", darkColor: "#93c5fd" },
@@ -19,24 +20,6 @@ const SHIFT_TYPES = {
   Night:   { label: "Night",   bg: "#ede9fe", color: "#6d28d9", darkBg: "#3b0764", darkColor: "#c4b5fd" },
   Off:     { label: "Off",     bg: "#f1f5f9", color: "#475569", darkBg: "#1e293b", darkColor: "#94a3b8" },
   Leave:   { label: "Leave",   bg: "#fef9c3", color: "#a16207", darkBg: "#713f12", darkColor: "#fde047" },
-};
-
-const EMPLOYEES = [
-  "Mani", "P Santhosh", "C Santhosh", "Suriya", "Siva",
-  "Aravinth", "Safeer", "Sabari", "Vignesh",
-];
-
-// Mon–Sun roster for the week (index 0 = Mon Jun 2)
-const INITIAL_ROSTER = {
-  Mani:       ["Morning", "Morning", "Morning", "Morning", "Morning", "Off",   "Off"  ],
-  "P Santhosh": ["Morning", "Morning", "Evening", "Morning", "Morning", "Morning","Off"],
-  "C Santhosh": ["Evening", "Evening", "Evening", "Evening", "Evening", "Evening","Off"],
-  Suriya:     ["Morning", "Off",     "Morning", "Morning", "Morning", "Off",   "Off"  ],
-  Siva:       ["Morning", "Morning", "Morning", "Morning", "Morning", "Off",   "Off"  ],
-  Aravinth:   ["Evening", "Evening", "Morning", "Evening", "Evening", "Off",   "Off"  ],
-  Safeer:     ["Leave",   "Leave",   "Leave",   "Leave",   "Leave",   "Off",   "Off"  ],
-  Sabari:     ["Night",   "Night",   "Night",   "Night",   "Night",   "Night", "Off"  ],
-  Vignesh:    ["Night",   "Night",   "Night",   "Night",   "Night",   "Night", "Off"  ],
 };
 
 const SHIFT_DEFINITIONS = [
@@ -200,9 +183,9 @@ function StatCard({ card, darkMode }) {
 }
 
 // ── Assign Shift Modal ────────────────────────────────────────────────────────
-function AssignShiftModal({ darkMode, onClose, onSave }) {
+function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates = [] }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
-  const [employee, setEmployee] = useState(EMPLOYEES[0]);
+  const [employee, setEmployee] = useState(employees[0] || "");
   const [dayIndex, setDayIndex] = useState(0);
   const [shift, setShift] = useState("Morning");
 
@@ -276,7 +259,7 @@ function AssignShiftModal({ darkMode, onClose, onSave }) {
               Employee
             </label>
             <select value={employee} onChange={(e) => setEmployee(e.target.value)} style={inputStyle}>
-              {EMPLOYEES.map((emp) => (
+              {employees.map((emp) => (
                 <option key={emp} value={emp}>{emp}</option>
               ))}
             </select>
@@ -288,7 +271,7 @@ function AssignShiftModal({ darkMode, onClose, onSave }) {
             </label>
             <select value={dayIndex} onChange={(e) => setDayIndex(Number(e.target.value))} style={inputStyle}>
               {WEEK_DAYS.map((day, i) => (
-                <option key={day} value={i}>{day}, {WEEK_DATES[i]}</option>
+                <option key={day} value={i}>{day}, {weekDates[i]}</option>
               ))}
             </select>
           </div>
@@ -344,7 +327,7 @@ function AssignShiftModal({ darkMode, onClose, onSave }) {
 }
 
 // ── Shift Roster Tab ──────────────────────────────────────────────────────────
-function ShiftRosterTab({ darkMode, roster, onAssign }) {
+function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates = [] }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
   const [showModal, setShowModal] = useState(false);
 
@@ -428,13 +411,13 @@ function ShiftRosterTab({ darkMode, roster, onAssign }) {
               {WEEK_DAYS.map((day, i) => (
                 <th key={day} style={{ ...thStyle, minWidth: 96 }}>
                   <div style={{ fontWeight: FONT_WEIGHT.bold }}>{day}</div>
-                  <div style={{ fontWeight: FONT_WEIGHT.normal, fontSize: "0.65rem", marginTop: 2, opacity: 0.8 }}>{WEEK_DATES[i]}</div>
+                  <div style={{ fontWeight: FONT_WEIGHT.normal, fontSize: "0.65rem", marginTop: 2, opacity: 0.8 }}>{weekDates[i]}</div>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {EMPLOYEES.map((emp) => (
+            {employees.map((emp) => (
               <tr key={emp}>
                 {/* Employee name + avatar */}
                 <td
@@ -461,7 +444,7 @@ function ShiftRosterTab({ darkMode, roster, onAssign }) {
                     <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{emp}</span>
                   </div>
                 </td>
-                {roster[emp].map((shift, di) => (
+                {(roster[emp] || []).map((shift, di) => (
                   <td key={di} style={{ ...cellStyle, background: surface.cardBg }}>
                     <ShiftBadge type={shift} darkMode={darkMode} />
                   </td>
@@ -493,6 +476,8 @@ function ShiftRosterTab({ darkMode, roster, onAssign }) {
           darkMode={darkMode}
           onClose={() => setShowModal(false)}
           onSave={(emp, dayIndex, shift) => onAssign(emp, dayIndex, shift)}
+          employees={employees}
+          weekDates={weekDates}
         />
       )}
     </div>
@@ -697,17 +682,49 @@ const ShiftManagement = ({ darkMode = false }) => {
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
   const [activeTab, setActiveTab] = useState("roster");
-  const [roster, setRoster] = useState(INITIAL_ROSTER);
+  const [roster, setRoster] = useState({});
   const [swapRequests, setSwapRequests] = useState(SWAP_REQUESTS_INITIAL);
 
+  const { data: shiftsData } = useShifts();
+  const setShiftMutation = useSetShift();
+  const { show } = useToast();
+
+  // Sync roster from API data
+  useEffect(() => {
+    if (shiftsData?.roster) {
+      setRoster(Object.fromEntries(shiftsData.roster.map((r) => [r.employeeName, r.shifts])));
+    }
+  }, [shiftsData]);
+
+  const employees = useMemo(
+    () => (shiftsData?.roster ? shiftsData.roster.map((r) => r.employeeName) : []),
+    [shiftsData]
+  );
+
+  const weekDates = useMemo(() => {
+    if (!shiftsData?.weekStart) return [];
+    const start = new Date(`${shiftsData.weekStart}T00:00:00`);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    });
+  }, [shiftsData]);
+
   const handleAssignShift = (employee, dayIndex, shift) => {
+    // Optimistic local update
     setRoster((prev) => {
       const updated = { ...prev };
-      const row = [...updated[employee]];
+      const row = [...(updated[employee] || [])];
       row[dayIndex] = shift;
       updated[employee] = row;
       return updated;
     });
+    if (!shiftsData?.weekStart) return;
+    setShiftMutation
+      .mutateAsync({ employeeName: employee, weekStart: shiftsData.weekStart, dayIndex, shift })
+      .then(() => show(`Shift updated for ${employee}`, "success"))
+      .catch(() => show(`Failed to update shift for ${employee}`, "error"));
   };
 
   const handleUpdateSwapStatus = (id, status) => {
@@ -805,7 +822,13 @@ const ShiftManagement = ({ darkMode = false }) => {
 
       {/* Tab Content */}
       {activeTab === "roster" && (
-        <ShiftRosterTab darkMode={darkMode} roster={roster} onAssign={handleAssignShift} />
+        <ShiftRosterTab
+          darkMode={darkMode}
+          roster={roster}
+          onAssign={handleAssignShift}
+          employees={employees}
+          weekDates={weekDates}
+        />
       )}
       {activeTab === "definitions" && (
         <ShiftDefinitionsTab darkMode={darkMode} />

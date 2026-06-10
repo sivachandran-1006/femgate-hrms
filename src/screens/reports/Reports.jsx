@@ -11,12 +11,17 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 
+import { useQuery } from "@tanstack/react-query";
+import api from "../../api/axios";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+import { fetchLeaves } from "../../api/leaveApi";
+import { fetchPayroll } from "../../api/payrollApi";
+import { useAttendanceRecords } from "../../queries/useAttendance";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppSection }    from "../../components/ui/AppSection";
 import { useToast }      from "../../components/ui/Toast";
 
-const DEPT_LIST  = ["All Departments","Engineering","HR","Finance","Sales","Design","Marketing"];
 const DATE_RANGES = ["This Month","Last Month","Last 3 Months","This Year","Custom"];
 
 const STATUS_COLOR = {
@@ -26,104 +31,131 @@ const STATUS_COLOR = {
   "In Use": "blue", Available: "green", Maintenance: "yellow",
 };
 
-const EMP_ROWS = [
-  { id:"EMP-001", name:"John Employee",  dept:"Engineering", status:"Active",    joined:"2022-07-01", salary:"₹65,000" },
-  { id:"EMP-002", name:"Priya Sharma",   dept:"Design",      status:"Active",    joined:"2022-08-15", salary:"₹70,000" },
-  { id:"EMP-003", name:"Arjun Kumar",    dept:"Engineering", status:"Pending",   joined:"2026-05-01", salary:"₹60,000" },
-  { id:"EMP-004", name:"Safeer Ahmed",   dept:"Sales",       status:"Active",    joined:"2023-03-01", salary:"₹55,000" },
-  { id:"EMP-005", name:"Mani Raj",       dept:"Marketing",   status:"Suspended", joined:"2023-01-20", salary:"₹52,000" },
-  { id:"EMP-006", name:"Kavitha R",      dept:"HR",          status:"Active",    joined:"2023-11-01", salary:"₹68,000" },
-  { id:"EMP-007", name:"Rajan Patel",    dept:"Finance",     status:"Active",    joined:"2021-04-10", salary:"₹75,000" },
-  { id:"EMP-008", name:"Sneha Iyer",     dept:"Design",      status:"Active",    joined:"2024-01-15", salary:"₹62,000" },
-];
-
-const ATT_ROWS = [
-  { id:"EMP-001", name:"John Employee",  dept:"Engineering", present:22, absent:1, late:2, leave:1, pct:91.7 },
-  { id:"EMP-002", name:"Priya Sharma",   dept:"Design",      present:24, absent:0, late:1, leave:0, pct:100  },
-  { id:"EMP-003", name:"Arjun Kumar",    dept:"Engineering", present:18, absent:3, late:3, leave:0, pct:75   },
-  { id:"EMP-004", name:"Safeer Ahmed",   dept:"Sales",       present:23, absent:1, late:0, leave:2, pct:95.8 },
-  { id:"EMP-005", name:"Mani Raj",       dept:"Marketing",   present:14, absent:8, late:5, leave:4, pct:58.3 },
-  { id:"EMP-006", name:"Kavitha R",      dept:"HR",          present:25, absent:0, late:0, leave:1, pct:100  },
-];
-
-const LEAVE_ROWS = [
-  { id:"LV-045", emp:"Priya Sharma",  type:"Annual",  from:"2026-06-15", to:"2026-06-17", days:3, status:"Approved" },
-  { id:"LV-046", emp:"Arjun Kumar",   type:"Sick",    from:"2026-06-10", to:"2026-06-11", days:2, status:"Approved" },
-  { id:"LV-047", emp:"Safeer Ahmed",  type:"Casual",  from:"2026-06-20", to:"2026-06-20", days:1, status:"Pending"  },
-  { id:"LV-048", emp:"Mani Raj",      type:"Annual",  from:"2026-07-01", to:"2026-07-05", days:5, status:"Rejected" },
-  { id:"LV-049", emp:"Rajan Patel",   type:"Earned",  from:"2026-06-25", to:"2026-06-26", days:2, status:"Approved" },
-  { id:"LV-050", emp:"Sneha Iyer",    type:"Sick",    from:"2026-06-12", to:"2026-06-12", days:1, status:"Approved" },
-];
-
-const PAY_ROWS = [
-  { id:"PAY-001", emp:"John Employee",  dept:"Engineering", gross:"₹65,000", deductions:"₹8,450", net:"₹56,550", status:"Paid"    },
-  { id:"PAY-002", emp:"Priya Sharma",   dept:"Design",      gross:"₹70,000", deductions:"₹9,100", net:"₹60,900", status:"Paid"    },
-  { id:"PAY-003", emp:"Arjun Kumar",    dept:"Engineering", gross:"₹60,000", deductions:"₹7,800", net:"₹52,200", status:"Pending" },
-  { id:"PAY-004", emp:"Safeer Ahmed",   dept:"Sales",       gross:"₹55,000", deductions:"₹7,150", net:"₹47,850", status:"Paid"    },
-  { id:"PAY-005", emp:"Mani Raj",       dept:"Marketing",   gross:"₹52,000", deductions:"₹6,760", net:"₹45,240", status:"Hold"    },
-  { id:"PAY-006", emp:"Kavitha R",      dept:"HR",          gross:"₹68,000", deductions:"₹8,840", net:"₹59,160", status:"Paid"    },
-  { id:"PAY-007", emp:"Rajan Patel",    dept:"Finance",     gross:"₹75,000", deductions:"₹9,750", net:"₹65,250", status:"Paid"    },
-];
-
-const ASSET_ROWS = [
-  { id:"AST-001", name:"MacBook Pro 14\"", category:"Laptop",  assignedTo:"John Employee", dept:"Engineering", status:"In Use",      value:"₹1,20,000" },
-  { id:"AST-002", name:"iPhone 14",        category:"Phone",   assignedTo:"Priya Sharma",  dept:"Design",      status:"In Use",      value:"₹75,000"   },
-  { id:"AST-003", name:"Dell Monitor",     category:"Monitor", assignedTo:"Unassigned",    dept:"—",           status:"Available",   value:"₹18,000"   },
-  { id:"AST-004", name:"MacBook Air",      category:"Laptop",  assignedTo:"Arjun Kumar",   dept:"Engineering", status:"In Use",      value:"₹95,000"   },
-  { id:"AST-005", name:"HP Printer",       category:"Printer", assignedTo:"HR Dept",       dept:"HR",          status:"Maintenance", value:"₹22,000"   },
-  { id:"AST-006", name:"iPad Pro",         category:"Tablet",  assignedTo:"Safeer Ahmed",  dept:"Sales",       status:"In Use",      value:"₹80,000"   },
-];
-
 const CHART_COLORS = {
   employee: "#2563eb", attendance: "#16a34a", leave: "#f59e0b", payroll: "#7c3aed", assets: "#0ea5e9",
 };
 
-const CHART_DATA = {
-  employee:   [{ label:"Eng",  value:3 },{ label:"HR",  value:2 },{ label:"Fin", value:1 },{ label:"Sales",value:1 },{ label:"Des",value:1 }],
-  attendance: [{ label:"Mon",  value:11},{ label:"Tue", value:12},{ label:"Wed", value:10},{ label:"Thu",  value:11},{ label:"Fri",value:9  }],
-  leave:      [{ label:"Apr",  value:4 },{ label:"May", value:7 },{ label:"Jun", value:6 },{ label:"Jul",  value:3 }],
-  payroll:    [{ label:"Feb",  value:465},{ label:"Mar",value:472},{ label:"Apr", value:468},{ label:"May",  value:485}],
-  assets:     [{ label:"Laptop",value:2},{ label:"Phone",value:2},{ label:"Monitor",value:1},{ label:"Tablet",value:1}],
-};
 
-const SUMMARY = {
-  employee:   [
-    { label:"Total Employees", value:String(EMP_ROWS.length),                               color:"blue"   },
-    { label:"Active",          value:String(EMP_ROWS.filter(r=>r.status==="Active").length), color:"green"  },
-    { label:"Pending",         value:String(EMP_ROWS.filter(r=>r.status==="Pending").length),color:"yellow" },
-    { label:"Suspended",       value:String(EMP_ROWS.filter(r=>r.status==="Suspended").length),color:"red" },
-  ],
-  attendance: [
-    { label:"Avg Attendance",  value:"87.5%", color:"blue"   },
-    { label:"Total Present",   value:"126",   color:"green"  },
-    { label:"Absences",        value:"13",    color:"red"    },
-    { label:"Late Arrivals",   value:"11",    color:"yellow" },
-  ],
-  leave: [
-    { label:"Total Leaves", value:String(LEAVE_ROWS.length),                                  color:"blue"   },
-    { label:"Approved",     value:String(LEAVE_ROWS.filter(r=>r.status==="Approved").length),  color:"green"  },
-    { label:"Pending",      value:String(LEAVE_ROWS.filter(r=>r.status==="Pending").length),   color:"yellow" },
-    { label:"Rejected",     value:String(LEAVE_ROWS.filter(r=>r.status==="Rejected").length),  color:"red"    },
-  ],
-  payroll: [
-    { label:"Total Gross",  value:"₹4,45,000", color:"blue"   },
-    { label:"Total Net",    value:"₹3,87,200", color:"green"  },
-    { label:"Deductions",   value:"₹57,800",   color:"red"    },
-    { label:"Pending",      value:String(PAY_ROWS.filter(r=>r.status!=="Paid").length), color:"yellow" },
-  ],
-  assets: [
-    { label:"Total Assets", value:String(ASSET_ROWS.length),                                       color:"blue"   },
-    { label:"In Use",       value:String(ASSET_ROWS.filter(r=>r.status==="In Use").length),         color:"green"  },
-    { label:"Available",    value:String(ASSET_ROWS.filter(r=>r.status==="Available").length),      color:"cyan"   },
-    { label:"Maintenance",  value:String(ASSET_ROWS.filter(r=>r.status==="Maintenance").length),    color:"yellow" },
-  ],
-};
+const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function Reports() {
   const { show } = useToast();
   const [tab, setTab]     = useState("employee");
   const [dept, setDept]   = useState("All Departments");
   const [range, setRange] = useState("This Month");
+
+  // ── Live data ──
+  const { data: employees = [] }  = useFetchAllEmployees();
+  const { data: attendance = [] } = useAttendanceRecords();
+  const { data: leavesRaw = [] }  = useQuery({ queryKey: ["leaves"], queryFn: () => fetchLeaves(), select: (r) => r?.data ?? r ?? [] });
+  const { data: payrollRaw = [] } = useQuery({ queryKey: ["payroll"], queryFn: () => fetchPayroll(), select: (r) => r?.data ?? r ?? [] });
+  const { data: assetsRaw = [] }  = useQuery({ queryKey: ["assets"], queryFn: () => api.get("/assets").then((r) => r.data?.data ?? []) });
+
+  const leaves = Array.isArray(leavesRaw) ? leavesRaw : [];
+  const payrollRows = Array.isArray(payrollRaw) ? payrollRaw : [];
+
+  const DEPT_LIST = ["All Departments", ...new Set(employees.map((e) => e.department).filter(Boolean))];
+  const matchDept = (d) => dept === "All Departments" || d === dept;
+
+  const EMP_ROWS = employees.filter((e) => matchDept(e.department)).map((e) => ({
+    id: e.employeeId, name: e.name, dept: e.department || "—", status: e.status,
+    joined: e.joinDate ? e.joinDate.split("T")[0] : "—", salary: inr(e.salary),
+  }));
+
+  // Attendance aggregated per employee
+  const attAgg = {};
+  for (const r of attendance) {
+    const name = r.employee?.name; if (!name) continue;
+    const a = (attAgg[name] = attAgg[name] || { name, dept: r.employee?.department || "—", present: 0, absent: 0, late: 0, leave: 0 });
+    if (r.status === "Present") a.present++;
+    else if (r.status === "Late") a.late++;
+    else if (r.status === "Absent") a.absent++;
+    else if (r.status === "OnLeave") a.leave++;
+  }
+  const ATT_ROWS = Object.values(attAgg).filter((a) => matchDept(a.dept)).map((a, i) => {
+    const total = a.present + a.absent + a.late + a.leave;
+    return { id: `ATT-${i + 1}`, ...a, pct: total ? Math.round(((a.present + a.late) / total) * 1000) / 10 : 0 };
+  });
+
+  const LEAVE_ROWS = leaves.map((l) => ({
+    id: l.leaveId || `LV-${l.id}`, emp: l.employee || "—", type: (l.leaveType || "").replace(" Leave", ""),
+    from: l.fromDate, to: l.toDate, days: l.days, status: l.status,
+  }));
+
+  const PAY_ROWS = payrollRows.filter((p) => matchDept(p.departmentName)).map((p) => ({
+    id: p.payId, emp: p.employeeName || "—", dept: p.departmentName || "—",
+    gross: inr((p.salary || 0) + (p.bonus || 0)), deductions: inr(p.deduction),
+    net: inr(p.netSalary), status: p.status,
+  }));
+
+  const ASSET_STATUS = { InUse: "In Use", Available: "Available", Maintenance: "Maintenance", Disposed: "Disposed" };
+  const ASSET_ROWS = assetsRaw.map((a) => ({
+    id: a.assetId, name: a.name, category: a.category,
+    assignedTo: a.assignedTo?.name || "Unassigned", dept: "—",
+    status: ASSET_STATUS[a.status] || a.status, value: inr(a.purchaseValue),
+  }));
+
+  // Charts per tab
+  const countBy = (rows, key) => {
+    const m = {};
+    rows.forEach((r) => { const k = r[key] || "—"; m[k] = (m[k] || 0) + 1; });
+    return Object.entries(m).map(([label, value]) => ({ label: String(label).slice(0, 8), value }));
+  };
+  const leaveByMonth = {};
+  leaves.forEach((l) => {
+    const mo = l.fromDate ? new Date(l.fromDate).toLocaleDateString("en-IN", { month: "short" }) : "—";
+    leaveByMonth[mo] = (leaveByMonth[mo] || 0) + 1;
+  });
+  const payByMonth = {};
+  payrollRows.forEach((p) => { const k = p.month ? p.month.slice(0, 3) : "—"; payByMonth[k] = (payByMonth[k] || 0) + (p.netSalary || 0); });
+
+  const CHART_DATA = {
+    employee:   countBy(EMP_ROWS, "dept"),
+    attendance: ATT_ROWS.slice(0, 6).map((a) => ({ label: a.name.split(" ")[0], value: a.present })),
+    leave:      Object.entries(leaveByMonth).map(([label, value]) => ({ label, value })),
+    payroll:    Object.entries(payByMonth).map(([label, value]) => ({ label, value: Math.round(value / 1000) })),
+    assets:     countBy(ASSET_ROWS, "category"),
+  };
+
+  const totGross = payrollRows.reduce((s, p) => s + (p.salary || 0) + (p.bonus || 0), 0);
+  const totNet   = payrollRows.reduce((s, p) => s + (p.netSalary || 0), 0);
+  const totPresent = ATT_ROWS.reduce((s, a) => s + a.present, 0);
+  const totAbsent  = ATT_ROWS.reduce((s, a) => s + a.absent, 0);
+  const totLate    = ATT_ROWS.reduce((s, a) => s + a.late, 0);
+  const avgPct     = ATT_ROWS.length ? (ATT_ROWS.reduce((s, a) => s + a.pct, 0) / ATT_ROWS.length).toFixed(1) : 0;
+
+  const SUMMARY = {
+    employee: [
+      { label: "Total Employees", value: String(EMP_ROWS.length), color: "blue" },
+      { label: "Active",    value: String(EMP_ROWS.filter((r) => r.status === "Active").length),   color: "green" },
+      { label: "On Leave",  value: String(EMP_ROWS.filter((r) => r.status === "On Leave").length), color: "yellow" },
+      { label: "Inactive",  value: String(EMP_ROWS.filter((r) => r.status === "Inactive").length), color: "red" },
+    ],
+    attendance: [
+      { label: "Avg Attendance", value: `${avgPct}%`,        color: "blue" },
+      { label: "Total Present",  value: String(totPresent),  color: "green" },
+      { label: "Absences",       value: String(totAbsent),   color: "red" },
+      { label: "Late Arrivals",  value: String(totLate),     color: "yellow" },
+    ],
+    leave: [
+      { label: "Total Leaves", value: String(LEAVE_ROWS.length), color: "blue" },
+      { label: "Approved", value: String(LEAVE_ROWS.filter((r) => r.status === "Approved").length), color: "green" },
+      { label: "Pending",  value: String(LEAVE_ROWS.filter((r) => r.status === "Pending").length),  color: "yellow" },
+      { label: "Rejected", value: String(LEAVE_ROWS.filter((r) => r.status === "Rejected").length), color: "red" },
+    ],
+    payroll: [
+      { label: "Total Gross", value: inr(totGross),          color: "blue" },
+      { label: "Total Net",   value: inr(totNet),            color: "green" },
+      { label: "Deductions",  value: inr(totGross - totNet), color: "red" },
+      { label: "Pending", value: String(PAY_ROWS.filter((r) => r.status !== "Paid").length), color: "yellow" },
+    ],
+    assets: [
+      { label: "Total Assets", value: String(ASSET_ROWS.length), color: "blue" },
+      { label: "In Use",    value: String(ASSET_ROWS.filter((r) => r.status === "In Use").length),      color: "green" },
+      { label: "Available", value: String(ASSET_ROWS.filter((r) => r.status === "Available").length),   color: "cyan" },
+      { label: "Maintenance", value: String(ASSET_ROWS.filter((r) => r.status === "Maintenance").length), color: "yellow" },
+    ],
+  };
 
   const exportReport = (fmt) => show(`Exporting ${tab} report as ${fmt}…`, "success");
 
