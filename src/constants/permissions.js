@@ -1,6 +1,6 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports"],
+  SUPER_ADMIN: ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements"],
   ADMIN:       ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations"],
   HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart"],
   MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts"],
@@ -37,6 +37,9 @@ export const ROLE_SIDEBAR = {
     { id: "audit-logs",       label: "Audit Logs",        icon: "IconClipboardList"     },
     { id: "security",         label: "Security Center",   icon: "IconShield"            },
     { id: "integrations",     label: "Integrations",      icon: "IconPlug"              },
+    { id: "holiday-calendar",  label: "Holiday Calendar",  icon: "IconCalendarEvent"     },
+    { id: "expense",           label: "Expense Management",icon: "IconReceipt"           },
+    { id: "announcements",     label: "Announcements",     icon: "IconSpeakerphone"      },
     { id: "billing",           label: "Billing",           icon: "IconCreditCard"        },
     { id: "companies",         label: "Multi-Company",     icon: "IconBuildingFactory"   },
     { id: "company-settings",  label: "Company Settings",  icon: "IconBuildingCog"       },
