@@ -16,19 +16,26 @@ import { AppModal }       from "../../components/ui/AppModal";
 import { AppInput }       from "../../components/ui/AppInput";
 
 import { useToast }       from "../../components/ui/Toast";
+import { useMyAssets }    from "../../queries/useSelfService";
 import { COLORS }         from "../../theme/colors";
 
-const MY_ASSETS = [
-  { id: "AST-011", name: "Dell Laptop",      type: "Laptop",    serial: "DL-2024-0091", assignedDate: "2024-06-01", status: "Active",       condition: "Good"    },
-  { id: "AST-022", name: "USB-C Hub",        type: "Accessory", serial: "UC-2024-0043", assignedDate: "2024-06-01", status: "Active",       condition: "Good"    },
-  { id: "AST-033", name: "Wireless Mouse",   type: "Accessory", serial: "WM-2024-0078", assignedDate: "2024-06-01", status: "Active",       condition: "Good"    },
-  { id: "AST-044", name: "Mobile (OnePlus)", type: "Mobile",    serial: "OP-2024-0011", assignedDate: "2024-08-15", status: "Active",       condition: "Good"    },
-  { id: "AST-055", name: 'Monitor 24"',      type: "Monitor",   serial: "MN-2023-0055", assignedDate: "2024-06-01", status: "Under Repair", condition: "Damaged" },
-];
+const STATUS_MAP = { InUse: "Active", Maintenance: "Under Repair", Disposed: "Returned", Available: "Active" };
+
+const mapApiAsset = (a) => ({
+  id:           a.assetId,
+  name:         a.name,
+  type:         a.category,
+  serial:       a.serialNumber || "—",
+  assignedDate: a.assignedAt ? a.assignedAt.split("T")[0] : "—",
+  status:       STATUS_MAP[a.status] || a.status,
+  condition:    a.status === "Maintenance" ? "Damaged" : "Good",
+});
 
 const TYPE_ICON = {
   Laptop:    IconDeviceLaptop,
+  Phone:     IconDeviceDesktop,
   Mobile:    IconDeviceDesktop,
+  Keyboard:  IconMouse,
   Accessory: IconMouse,
   Monitor:   IconPackage,
 };
@@ -45,6 +52,9 @@ const MyAssets = () => {
   const [returnId,   setReturnId]   = useState(null);
   const [reportNote, setReportNote] = useState("");
   const [submitted,  setSubmitted]  = useState({});
+
+  const { data: assetsRaw = [] } = useMyAssets();
+  const MY_ASSETS = assetsRaw.map(mapApiAsset);
 
   const handleReport = (id) => {
     const name = MY_ASSETS.find((a) => a.id === id)?.name || "Asset";

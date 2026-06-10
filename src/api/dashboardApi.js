@@ -7,5 +7,5 @@ export const getUpcomingEvents    = () => api.get("/dashboard/events").then(r =>
 export const getAttendanceSummary = () => api.get("/dashboard/attendance").then(r => r.data);
 export const getPayrollSummary    = () => api.get("/dashboard/payroll").then(r => r.data);
 export const getLeaveBalance      = () => api.get("/leaves/balance").then(r => r.data);
-export const getMyAttendance      = () => api.get("/attendance/my").then(r => r.data);
-export const getMyPayslip         = () => api.get("/payroll/my/latest").then(r => r.data);
+export const getMyAttendance      = () => api.get("/dashboard/my-attendance").then(r => r.data);
+export const getMyPayslip         = () => api.get("/dashboard/my-payslip").then(r => r.data);

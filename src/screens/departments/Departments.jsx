@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Group, SimpleGrid, Text, Badge, ActionIcon,
-  Avatar, ScrollArea, Table, TextInput, Stack,
+  Avatar, ScrollArea, Table, TextInput, Stack, Loader, Alert, Box, Button,
 } from "@mantine/core";
 import {
-  Building2, Users, UserCheck, Layers, Plus, Edit2, Search,
-} from "lucide-react";
+  IconBuildingCommunity, IconUsers, IconUserCheck, IconStack2,
+  IconPlus, IconPencil, IconTrash, IconSearch, IconAlertCircle, IconAlertTriangle,
+} from "@tabler/icons-react";
 
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
 import { AppStatCard }    from "../../components/ui/AppStatCard";
@@ -14,16 +15,23 @@ import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { AppButton }      from "../../components/ui/AppButton";
 import { AppModal }       from "../../components/ui/AppModal";
 import { AppInput }       from "../../components/ui/AppInput";
+import { useToast }       from "../../components/ui/Toast";
+import {
+  useDepartments, useCreateDepartment, useUpdateDepartment, useDeleteDepartment,
+} from "../../queries/useDepartments";
 
-const DEPARTMENTS_INITIAL = [
-  { id: 1, name: "IT",         head: "Siva",   employees: 7, created: "01-Jan-2026", status: "Active" },
-  { id: 2, name: "HR",         head: "Mani",   employees: 1, created: "01-Jan-2026", status: "Active" },
-  { id: 3, name: "Finance",    head: "Safeer", employees: 1, created: "01-Jan-2026", status: "Active" },
-  { id: 4, name: "Management", head: "Siva",   employees: 1, created: "01-Jan-2026", status: "Active" },
-];
+const EMPTY_FORM = { name: "", headName: "", location: "" };
 
-const DeptModal = ({ open, onClose, onSave, editData }) => {
-  const [form, setForm] = useState(editData || { name: "", head: "", description: "" });
+const DeptModal = ({ open, onClose, onSave, editData, saving }) => {
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    if (open) {
+      setForm(editData
+        ? { name: editData.name || "", headName: editData.headName || "", location: editData.location || "" }
+        : EMPTY_FORM);
+    }
+  }, [open, editData]);
 
   if (!open) return null;
 
@@ -35,7 +43,7 @@ const DeptModal = ({ open, onClose, onSave, editData }) => {
       opened={open}
       onClose={onClose}
       title={editData ? "Edit Department" : "Add Department"}
-      icon={<Building2 size={16} color="#3b82f6" />}
+      icon={<IconBuildingCommunity size={16} color="#3b82f6" />}
       iconColor="#3b82f6"
     >
       <Stack gap="md">
@@ -48,25 +56,20 @@ const DeptModal = ({ open, onClose, onSave, editData }) => {
         <AppInput
           label="Department Head"
           placeholder="e.g. John Smith"
-          value={form.head}
-          onChange={handleChange("head")}
+          value={form.headName}
+          onChange={handleChange("headName")}
         />
         <AppInput
-          type="textarea"
-          label="Description"
-          placeholder="Brief description of this department..."
-          value={form.description}
-          onChange={handleChange("description")}
+          label="Location"
+          placeholder="e.g. Chennai HQ"
+          value={form.location}
+          onChange={handleChange("location")}
         />
         <Group justify="flex-end" gap="sm" mt="xs">
           <AppButton variant="default" onClick={onClose}>Cancel</AppButton>
           <AppButton
-            onClick={() => {
-              if (form.name.trim() && form.head.trim()) {
-                onSave(form);
-                onClose();
-              }
-            }}
+            loading={saving}
+            onClick={() => { if (form.name.trim()) onSave(form); }}
           >
             {editData ? "Save Changes" : "Add Department"}
           </AppButton>
@@ -77,45 +80,55 @@ const DeptModal = ({ open, onClose, onSave, editData }) => {
 };
 
 const Departments = () => {
-  const [departments, setDepartments] = useState(DEPARTMENTS_INITIAL);
-  const [searchTerm, setSearchTerm]   = useState("");
-  const [modalOpen, setModalOpen]     = useState(false);
-  const [editTarget, setEditTarget]   = useState(null);
+  const { showToast } = useToast();
+  const { data: departments = [], isLoading, isError } = useDepartments();
+
+  const createMut = useCreateDepartment();
+  const updateMut = useUpdateDepartment();
+  const deleteMut = useDeleteDepartment();
+
+  const [searchTerm, setSearchTerm]     = useState("");
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [editTarget, setEditTarget]     = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filtered = departments.filter(
     (d) =>
       d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.head.toLowerCase().includes(searchTerm.toLowerCase())
+      (d.headName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalEmployees = departments.reduce((s, d) => s + d.employees, 0);
-  const uniqueHeads    = new Set(departments.map((d) => d.head)).size;
-  const activeTeams    = departments.filter((d) => d.status === "Active").length;
+  const totalEmployees = departments.reduce((s, d) => s + (d.employeeCount || 0), 0);
+  const uniqueHeads    = new Set(departments.map((d) => d.headName).filter(Boolean)).size;
 
-  const handleAddSave = (form) => {
-    setDepartments((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: form.name,
-        head: form.head,
-        employees: 0,
-        created: new Date()
-          .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
-          .replace(/ /g, "-"),
-        status: "Active",
-      },
-    ]);
+  const handleSave = async (form) => {
+    try {
+      if (editTarget) {
+        await updateMut.mutateAsync({ id: editTarget.id, ...form });
+        showToast("Department updated", "success");
+      } else {
+        await createMut.mutateAsync(form);
+        showToast("Department added", "success");
+      }
+      setModalOpen(false);
+      setEditTarget(null);
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to save department", "error");
+    }
   };
 
-  const handleEditSave = (form) => {
-    setDepartments((prev) =>
-      prev.map((d) =>
-        d.id === editTarget.id ? { ...d, name: form.name, head: form.head } : d
-      )
-    );
-    setEditTarget(null);
+  const handleDelete = async () => {
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id);
+      showToast(`"${deleteTarget.name}" deleted`, "success");
+      setDeleteTarget(null);
+    } catch {
+      showToast("Failed to delete department", "error");
+    }
   };
+
+  const fmtDate = (d) =>
+    d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-") : "—";
 
   const rows = filtered.length === 0 ? (
     <Table.Tr>
@@ -129,36 +142,41 @@ const Departments = () => {
         <Table.Td>
           <Group gap="sm" wrap="nowrap">
             <Avatar size={32} radius="md" color="blue" variant="light">
-              <Building2 size={16} />
+              <IconBuildingCommunity size={16} />
             </Avatar>
             <Text size="sm" fw={600}>{dept.name}</Text>
           </Group>
         </Table.Td>
         <Table.Td>
-          <Text size="sm" c="dimmed">{dept.head}</Text>
+          <Text size="sm" c="dimmed">{dept.headName || "—"}</Text>
         </Table.Td>
         <Table.Td>
           <Group gap={6} wrap="nowrap">
-            <Users size={14} />
-            <Text size="sm" fw={500}>{dept.employees}</Text>
+            <IconUsers size={14} />
+            <Text size="sm" fw={500}>{dept.employeeCount || 0}</Text>
           </Group>
         </Table.Td>
         <Table.Td>
-          <Text size="sm" c="dimmed">{dept.created}</Text>
+          <Text size="sm" c="dimmed">{fmtDate(dept.createdAt)}</Text>
         </Table.Td>
         <Table.Td>
-          <Badge color="green" variant="light" radius="xl">{dept.status}</Badge>
+          <Badge color="green" variant="light" radius="xl">Active</Badge>
         </Table.Td>
         <Table.Td>
-          <ActionIcon
-            variant="light"
-            color="blue"
-            size="sm"
-            radius="md"
-            onClick={() => { setEditTarget(dept); setModalOpen(true); }}
-          >
-            <Edit2 size={13} />
-          </ActionIcon>
+          <Group gap="xs">
+            <ActionIcon
+              variant="light" color="blue" size="sm" radius="md" title="Edit"
+              onClick={() => { setEditTarget(dept); setModalOpen(true); }}
+            >
+              <IconPencil size={13} />
+            </ActionIcon>
+            <ActionIcon
+              variant="light" color="red" size="sm" radius="md" title="Delete"
+              onClick={() => setDeleteTarget(dept)}
+            >
+              <IconTrash size={13} />
+            </ActionIcon>
+          </Group>
         </Table.Td>
       </Table.Tr>
     ))
@@ -171,7 +189,7 @@ const Departments = () => {
         sub="Manage company departments and teams"
         action={
           <AppButton
-            leftSection={<Plus size={16} />}
+            leftSection={<IconPlus size={16} />}
             onClick={() => { setEditTarget(null); setModalOpen(true); }}
           >
             Add Department
@@ -181,27 +199,27 @@ const Departments = () => {
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mb="lg">
         <AppStatCard
-          icon={<Building2 size={22} />}
+          icon={<IconBuildingCommunity size={22} />}
           label="Total Departments"
           value={departments.length}
           color="blue"
         />
         <AppStatCard
-          icon={<Users size={22} />}
+          icon={<IconUsers size={22} />}
           label="Total Employees"
           value={totalEmployees}
           color="green"
         />
         <AppStatCard
-          icon={<UserCheck size={22} />}
+          icon={<IconUserCheck size={22} />}
           label="Department Heads"
           value={uniqueHeads}
           color="violet"
         />
         <AppStatCard
-          icon={<Layers size={22} />}
+          icon={<IconStack2 size={22} />}
           label="Active Teams"
-          value={activeTeams}
+          value={departments.length}
           color="blue"
         />
       </SimpleGrid>
@@ -209,7 +227,7 @@ const Departments = () => {
       <AppSection mb="md" p="md">
         <TextInput
           placeholder="Search departments..."
-          leftSection={<Search size={16} />}
+          leftSection={<IconSearch size={16} />}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ maxWidth: 340 }}
@@ -218,41 +236,67 @@ const Departments = () => {
         />
       </AppSection>
 
-      <AppSection
-        noPadding
-        title="All Departments"
-        sub={`${filtered.length} ${filtered.length === 1 ? "result" : "results"}`}
-      >
-        <ScrollArea>
-          <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead>
-              <Table.Tr>
-                {["Department", "Head", "Employees", "Created", "Status", "Actions"].map((col) => (
-                  <Table.Th key={col}>
-                    <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.04em" }}>
-                      {col}
-                    </Text>
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>{rows}</Table.Tbody>
-          </Table>
-        </ScrollArea>
-      </AppSection>
+      {isLoading && <Box ta="center" py="xl"><Loader size="sm" /></Box>}
+
+      {isError && (
+        <Alert icon={<IconAlertCircle size={16}/>} color="red" mb="md">
+          Failed to load departments. Make sure the backend is running and you are logged in.
+        </Alert>
+      )}
+
+      {!isLoading && !isError && (
+        <AppSection
+          noPadding
+          title="All Departments"
+          sub={`${filtered.length} ${filtered.length === 1 ? "result" : "results"}`}
+        >
+          <ScrollArea>
+            <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md">
+              <Table.Thead>
+                <Table.Tr>
+                  {["Department", "Head", "Employees", "Created", "Status", "Actions"].map((col) => (
+                    <Table.Th key={col}>
+                      <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.04em" }}>
+                        {col}
+                      </Text>
+                    </Table.Th>
+                  ))}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>{rows}</Table.Tbody>
+            </Table>
+          </ScrollArea>
+        </AppSection>
+      )}
 
       <DeptModal
-        open={modalOpen && !editTarget}
-        onClose={() => setModalOpen(false)}
-        onSave={handleAddSave}
-        editData={null}
-      />
-      <DeptModal
-        open={modalOpen && !!editTarget}
+        open={modalOpen}
         onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        onSave={handleEditSave}
+        onSave={handleSave}
         editData={editTarget}
+        saving={createMut.isPending || updateMut.isPending}
       />
+
+      {/* Delete confirm */}
+      <AppModal
+        opened={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Department"
+        icon={<IconAlertTriangle size={16} color="#ef4444" />}
+        iconColor="#ef4444"
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to delete{" "}
+            <Text span fw={700}>{deleteTarget?.name}</Text>?
+            Employees in this department will not be removed.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button color="red" onClick={handleDelete} loading={deleteMut.isPending}>Yes, Delete</Button>
+          </Group>
+        </Stack>
+      </AppModal>
     </>
   );
 };

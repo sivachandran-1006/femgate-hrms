@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   IconUser, IconMail, IconPhone, IconMapPin, IconEdit,
   IconCheck, IconX, IconCamera, IconShieldCheck,
@@ -15,6 +15,7 @@ import { AppButton }      from "../../components/ui/AppButton";
 import { AppInput }       from "../../components/ui/AppInput";
 
 import { useAuth }        from "../../hooks/useAuth";
+import { useMyProfile, useUpdateMyProfile } from "../../queries/useSelfService";
 import { useToast }       from "../../components/ui/Toast";
 import { COLORS }         from "../../theme/colors";
 
@@ -71,38 +72,60 @@ const MyProfile = () => {
   const { user } = useAuth();
   const { show } = useToast();
 
+  const { data: me }    = useMyProfile();
+  const updateMut       = useUpdateMyProfile();
+
   const [editing, setEditing] = useState(false);
   const [saved,   setSaved]   = useState(false);
   const [form, setForm] = useState({
-    mobile:        "+91 98765 43210",
+    mobile:        "",
     emergency:     "+91 98765 00000",
-    address:       "12, Gandhi Nagar, Chennai - 600001",
+    address:       "",
     bloodGroup:    "B+",
-    dob:           "1996-03-15",
+    dob:           "",
     maritalStatus: "Single",
     pan:           "ABCDE1234F",
     aadhaar:       "XXXX XXXX 1234",
     bank:          "HDFC Bank — AC: XXXX1234",
   });
 
+  // Sync API data into the form once loaded
+  useEffect(() => {
+    if (me) {
+      setForm((f) => ({
+        ...f,
+        mobile:  me.phone || "",
+        address: [me.address, me.city, me.state].filter(Boolean).join(", "),
+        dob:     me.dob ? me.dob.split("T")[0] : "",
+      }));
+    }
+  }, [me]);
+
   const emp = {
-    employeeId:    "MGT-EMP-009",
-    name:          user?.name  || "John Employee",
-    email:         user?.email || "employee@mgatesystems.com",
-    department:    "IT",
-    designation:   "Software Engineer",
+    employeeId:    me?.employeeId || "—",
+    name:          me?.name        || user?.name  || "Employee",
+    email:         me?.email       || user?.email || "",
+    department:    me?.department  || "—",
+    designation:   me?.designation || "—",
     manager:       "Siva",
-    joinDate:      "01 Jun 2024",
+    joinDate:      me?.joinDate
+      ? new Date(me.joinDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      : "—",
     completionPct: 78,
   };
 
   const change = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSave = () => {
-    setSaved(true);
-    setEditing(false);
-    setTimeout(() => setSaved(false), 2500);
-    show("Profile updated successfully", "success");
+  const handleSave = async () => {
+    try {
+      await updateMut.mutateAsync({ phone: form.mobile, address: form.address });
+      setSaved(true);
+      setEditing(false);
+      setTimeout(() => setSaved(false), 2500);
+      show("Profile updated successfully", "success");
+    } catch {
+      show("Failed to update profile", "error");
+    }
   };
 
   const headerAction = (

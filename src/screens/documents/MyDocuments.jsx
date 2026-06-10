@@ -4,6 +4,7 @@ import {
   IconTrash, IconFile, IconX, IconChevronDown, IconShieldCheck,
 } from "@tabler/icons-react";
 import { useAuth }              from "../../hooks/useAuth";
+import { useMyDocuments, useCreateDocument, useDeleteDocument } from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
 import { Stack, Group }        from "@mantine/core";
 import { AppModal }  from "../../components/ui/AppModal";
@@ -14,16 +15,14 @@ import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW }       from "../../theme/sizes";
 
-const MY_DOCS = [
-  { id:1, name:"Aadhaar Card",          category:"Identity",     uploadDate:"2024-06-10", status:"Verified",  size:"1.2 MB" },
-  { id:2, name:"PAN Card",              category:"Identity",     uploadDate:"2024-06-10", status:"Verified",  size:"0.8 MB" },
-  { id:3, name:"10th Marksheet",        category:"Education",    uploadDate:"2024-06-11", status:"Verified",  size:"2.1 MB" },
-  { id:4, name:"12th Marksheet",        category:"Education",    uploadDate:"2024-06-11", status:"Verified",  size:"1.9 MB" },
-  { id:5, name:"Degree Certificate",    category:"Education",    uploadDate:"2024-06-12", status:"Verified",  size:"3.4 MB" },
-  { id:6, name:"Previous Offer Letter", category:"Employment",   uploadDate:"2024-06-15", status:"Pending",   size:"0.5 MB" },
-  { id:7, name:"Bank Passbook",         category:"Financial",    uploadDate:"2024-06-15", status:"Verified",  size:"1.1 MB" },
-  { id:8, name:"Passport",              category:"Identity",     uploadDate:"2024-06-20", status:"Expired",   size:"2.3 MB" },
-];
+const mapApiDoc = (d) => ({
+  id:         d.id,
+  name:       d.name,
+  category:   d.category || "Other",
+  uploadDate: (d.createdAt || "").split("T")[0],
+  status:     d.expiryDate && new Date(d.expiryDate) < new Date() ? "Expired" : "Verified",
+  size:       d.fileSize || "—",
+});
 
 const CATEGORIES = ["All","Identity","Education","Employment","Financial","Other"];
 
@@ -45,26 +44,43 @@ const MyDocuments = ({ darkMode: dark = false }) => {
   const { user }  = useAuth();
   const { show }  = useToast();
   const surface   = dark ? COLORS.dark : COLORS.light;
-  const [docs,    setDocs]    = useState(MY_DOCS);
   const [catFilter,setCatFilter] = useState("All");
   const [showUpload,setShowUpload] = useState(false);
   const [fileName, setFileName]   = useState("No file chosen");
   const [form, setForm] = useState({ name:"", category:"Identity" });
 
+  const { data: docsRaw = [] } = useMyDocuments();
+  const createMut = useCreateDocument();
+  const deleteMut = useDeleteDocument();
+
+  const docs = docsRaw.map(mapApiDoc);
   const filtered = docs.filter((d)=>catFilter==="All"||d.category===catFilter);
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!form.name.trim()) return;
-    setDocs((prev)=>[{ id:Date.now(), name:form.name, category:form.category, uploadDate:new Date().toISOString().slice(0,10), status:"Pending", size:"—" }, ...prev]);
-    show(`"${form.name}" uploaded — pending verification`, "success");
-    setForm({ name:"", category:"Identity" });
-    setFileName("No file chosen");
-    setShowUpload(false);
+    try {
+      await createMut.mutateAsync({
+        name:     form.name,
+        category: form.category,
+        fileUrl:  `/files/${form.name.toLowerCase().replace(/\s+/g, "-")}`,
+        fileSize: fileName !== "No file chosen" ? fileName : null,
+      });
+      show(`"${form.name}" uploaded`, "success");
+      setForm({ name:"", category:"Identity" });
+      setFileName("No file chosen");
+      setShowUpload(false);
+    } catch {
+      show("Failed to upload document", "error");
+    }
   };
 
-  const handleDelete = (doc) => {
-    setDocs((p) => p.filter((d) => d.id !== doc.id));
-    show(`"${doc.name}" deleted`, "error");
+  const handleDelete = async (doc) => {
+    try {
+      await deleteMut.mutateAsync(doc.id);
+      show(`"${doc.name}" deleted`, "error");
+    } catch {
+      show("Failed to delete document", "error");
+    }
   };
 
   const Card = ({ children, style={} }) => (

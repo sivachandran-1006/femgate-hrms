@@ -37,6 +37,9 @@ import {
   IconReportAnalytics,
   IconBell,
   IconBuildingCog,
+  IconCalendarEvent,
+  IconReceipt,
+  IconSpeakerphone,
 } from "@tabler/icons-react";
 import {
   ROLE_SIDEBAR,
@@ -78,6 +81,9 @@ const ICON_MAP = {
   IconReportAnalytics,
   IconBell,
   IconBuildingCog,
+  IconCalendarEvent,
+  IconReceipt,
+  IconSpeakerphone,
 };
 
 const Sidebar = ({

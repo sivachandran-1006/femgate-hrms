@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 
 import { useAuth }              from "../../hooks/useAuth";
+import { useMyAttendance }      from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 import { AppStatCard }          from "../../components/ui/AppStatCard";
@@ -41,26 +42,16 @@ const calcHours = (checkIn, checkOut) => {
   } catch { return null; }
 };
 
-const buildHistory = () => {
-  const rows = [];
-  const statuses = ["Present","Present","Present","Present","Late","Present","Present","Absent","Present","Present",
-                    "Present","Late","Present","Present","Present","Leave","Present","Present","Present","Present"];
-  let idx = 0;
-  for (let i = 19; i >= 1; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const day = d.getDay();
-    if (day === 0 || day === 6) continue;
-    const iso = d.toISOString().split("T")[0];
-    const st  = statuses[idx % statuses.length];
-    idx++;
-    let checkIn = "", checkOut = "";
-    if (st === "Present") { checkIn = "09:05 AM"; checkOut = "06:10 PM"; }
-    if (st === "Late")    { checkIn = "10:25 AM"; checkOut = "07:15 PM"; }
-    rows.push({ _id: 'my' + i, date: iso, checkIn, checkOut, status: st });
-  }
-  return rows;
-};
+const fmtTime = (dt) =>
+  dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "";
+
+const mapApiRecord = (r) => ({
+  _id:      r.id,
+  date:     (r.date || "").split("T")[0],
+  checkIn:  fmtTime(r.checkIn),
+  checkOut: fmtTime(r.checkOut),
+  status:   r.status === "OnLeave" ? "Leave" : r.status,
+});
 
 const STATUS_STYLE = {
   Present: "green",
@@ -78,9 +69,21 @@ const MyAttendance = () => {
   const [checkInTime,  setCheckInTime]  = useState("");
   const [checkOutTime, setCheckOutTime] = useState("");
   const [currentTime,  setCurrentTime]  = useState(fmt12());
-  const [history, setHistory] = useState(buildHistory);
+  const [history, setHistory] = useState([]);
 
   const [confirmType, setConfirmType] = useState(null);
+
+  const { data: apiRecords = [] } = useMyAttendance();
+
+  useEffect(() => {
+    if (apiRecords.length) {
+      const mapped = apiRecords.map(mapApiRecord);
+      setHistory(mapped);
+      const today = mapped.find((r) => r.date === TODAY);
+      if (today?.checkIn)  { setCheckedIn(true);  setCheckInTime(today.checkIn);   }
+      if (today?.checkOut) { setCheckedOut(true); setCheckOutTime(today.checkOut); }
+    }
+  }, [apiRecords]);
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(fmt12()), 1000);

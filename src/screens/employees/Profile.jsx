@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   IconUser, IconBriefcase, IconCalendarOff, IconClock,
   IconCurrencyRupee, IconFile, IconDeviceLaptop,
@@ -648,29 +649,35 @@ const AssetsTab = ({ dark }) => {
 
 const Profile = ({ darkMode: dark = false, employeeId }) => {
   const [activeTab, setActiveTab] = useState("Personal");
+  const { id: routeId } = useParams();
 
   const { data: employees = [], isLoading } = useFetchAllEmployees();
 
-  // Pick the employee: by id prop, or first from query, or fall back to mock
+  // Pick the employee from the route param (/employees/:id) or the prop
+  const targetId = employeeId ?? (routeId ? Number(routeId) : undefined);
+
   let employee = MOCK_EMPLOYEE;
   if (employees.length > 0) {
-    const found = employeeId
-      ? employees.find((e) => e._id === employeeId || e.id === employeeId)
+    const found = targetId
+      ? employees.find((e) => e.id === targetId || e._id === targetId)
       : employees[0];
     if (found) {
       employee = {
         ...MOCK_EMPLOYEE,
-        _id:         found._id         || MOCK_EMPLOYEE._id,
+        _id:         found.id          || MOCK_EMPLOYEE._id,
         name:        found.name        || MOCK_EMPLOYEE.name,
         email:       found.email       || MOCK_EMPLOYEE.email,
         phone:       found.phone       || MOCK_EMPLOYEE.phone,
         department:  found.department  || MOCK_EMPLOYEE.department,
         designation: found.designation || MOCK_EMPLOYEE.designation,
         role:        found.role        || MOCK_EMPLOYEE.role,
-        joinDate:    found.joinDate    || found.joiningDate || MOCK_EMPLOYEE.joinDate,
+        joinDate:    found.joinDate
+          ? new Date(found.joinDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+          : MOCK_EMPLOYEE.joinDate,
         status:      found.status      || MOCK_EMPLOYEE.status,
         salary:      found.salary      || MOCK_EMPLOYEE.salary,
-        employeeId:  found.employeeId  || found._id || MOCK_EMPLOYEE.employeeId,
+        address:     [found.address, found.city, found.state].filter(Boolean).join(", ") || MOCK_EMPLOYEE.address,
+        employeeId:  found.employeeId  || MOCK_EMPLOYEE.employeeId,
       };
     }
   }

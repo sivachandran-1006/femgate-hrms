@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { fetchAttendance, createAttendanceRecord, checkOutAttendance } from "../../api/attendanceApi";
-import { Search, Plus, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
-import { 
-  Group, Stack, Text, Badge, TextInput, Select, SimpleGrid, Tabs, Progress, Box, Table
+import { useState } from "react";
+import {
+  IconSearch, IconPlus, IconClock, IconCircleCheck, IconCircleX, IconUserCheck, IconAlertCircle,
+} from "@tabler/icons-react";
+import {
+  Group, Stack, Text, Badge, TextInput, Select, SimpleGrid, Tabs, Progress, Box, Table, Loader, Alert,
 } from "@mantine/core";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -16,43 +17,51 @@ import { AppSection }     from "../../components/ui/AppSection";
 import { getInitials }    from "../../utils/helpers";
 import { useToast }       from "../../components/ui/Toast";
 
+import { useAttendanceRecords, useMarkAttendance, useCheckOut } from "../../queries/useAttendance";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+
 const TODAY = new Date().toISOString().split("T")[0];
 const FMT_DATE = (d) => new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-const calcHours = (checkIn, checkOut) => {
-  if (!checkIn || !checkOut) return "—";
-  try {
-    const s = new Date('1970-01-01 ' + checkIn);
-    const e = new Date('1970-01-01 ' + checkOut);
-    const diff = e - s;
-    if (diff <= 0) return "—";
-    return Math.floor(diff / 3600000) + "h " + Math.floor((diff % 3600000) / 60000) + "m";
-  } catch { return "—"; }
+const fmtTime = (dt) =>
+  dt ? new Date(dt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }) : "";
+
+const fmtHours = (h) => {
+  if (!h && h !== 0) return "—";
+  const whole = Math.floor(h);
+  const mins  = Math.round((h - whole) * 60);
+  return `${whole}h ${mins}m`;
 };
 
-const MOCK_ATTENDANCE = [
-  // Today
-  { _id: "a01", employee: "Mani",       department: "IT",         date: TODAY,        checkIn: "09:05 AM", checkOut: "06:10 PM", status: "Present" },
-  { _id: "a02", employee: "P Santhosh", department: "IT",         date: TODAY,        checkIn: "09:15 AM", checkOut: "06:00 PM", status: "Present" },
-  { _id: "a03", employee: "C Santhosh", department: "IT",         date: TODAY,        checkIn: "09:30 AM", checkOut: "",         status: "Present" },
-  { _id: "a04", employee: "Suriya",     department: "IT",         date: TODAY,        checkIn: "10:20 AM", checkOut: "07:15 PM", status: "Late"    },
-  { _id: "a05", employee: "Siva",       department: "Management", date: TODAY,        checkIn: "08:50 AM", checkOut: "05:55 PM", status: "Present" },
-  { _id: "a06", employee: "Aravinth",   department: "IT",         date: TODAY,        checkIn: "09:10 AM", checkOut: "",         status: "Present" },
-  { _id: "a07", employee: "Safeer",     department: "Finance",    date: TODAY,        checkIn: "",         checkOut: "",         status: "Leave"   },
-  { _id: "a08", employee: "Sabari",     department: "IT",         date: TODAY,        checkIn: "09:08 AM", checkOut: "06:05 PM", status: "Present" },
-  { _id: "a09", employee: "Vignesh",    department: "IT",         date: TODAY,        checkIn: "",         checkOut: "",         status: "Absent"  },
-  // 2026-05-29
-  { _id: "a10", employee: "Mani",       department: "IT",         date: "2026-05-29", checkIn: "09:02 AM", checkOut: "06:00 PM", status: "Present" },
-  { _id: "a11", employee: "P Santhosh", department: "IT",         date: "2026-05-29", checkIn: "09:50 AM", checkOut: "06:45 PM", status: "Late"    },
-  { _id: "a12", employee: "C Santhosh", department: "IT",         date: "2026-05-29", checkIn: "09:05 AM", checkOut: "06:10 PM", status: "Present" },
-];
+const mapRecord = (r) => ({
+  _id:        r.id,
+  employee:   r.employee?.name || "—",
+  department: r.employee?.department || "—",
+  date:       (r.date || "").split("T")[0],
+  checkIn:    fmtTime(r.checkIn),
+  checkOut:   fmtTime(r.checkOut),
+  hours:      r.hoursWorked,
+  status:     r.status === "OnLeave" ? "Leave" : r.status,
+});
 
-const DEPARTMENTS = ["All", "IT", "HR", "Finance", "Management"];
+const STATUS_COLORS = {
+  Present: "green",
+  Late:    "yellow",
+  Absent:  "red",
+  Leave:   "blue",
+  HalfDay: "grape",
+};
 
 const Attendance = () => {
   const { show } = useToast();
 
-  const [attendance, setAttendance]     = useState(MOCK_ATTENDANCE);
+  const { data: rawRecords = [], isLoading, isError } = useAttendanceRecords();
+  const { data: employees = [] } = useFetchAllEmployees();
+  const markMut     = useMarkAttendance();
+  const checkOutMut = useCheckOut();
+
+  const attendance = rawRecords.map(mapRecord);
+
   const [searchTerm, setSearchTerm]     = useState("");
   const [deptFilter, setDeptFilter]     = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -60,17 +69,10 @@ const Attendance = () => {
   const [showModal, setShowModal]       = useState(false);
   const [activeTab, setActiveTab]       = useState("records");
 
-  const [fName, setFName]     = useState("");
-  const [fDept, setFDept]     = useState("IT");
-  const [fStatus, setFStatus] = useState("Present");
+  const [fEmployeeId, setFEmployeeId] = useState(null);
+  const [fStatus, setFStatus]         = useState("Present");
 
-  const loadAttendance = async () => {
-    try {
-      const data = await fetchAttendance();
-      if (data && data.length > 0) setAttendance(data);
-    } catch { /* keep mock */ }
-  };
-  useEffect(() => { loadAttendance(); }, []);
+  const departments = ["All", ...new Set(attendance.map((a) => a.department).filter((d) => d !== "—"))];
 
   const todayRecords = attendance.filter(a => a.date === TODAY);
   const todayPresent = todayRecords.filter(a => a.status === "Present").length;
@@ -100,40 +102,33 @@ const Attendance = () => {
     };
   });
 
-  const deptSummary = ["IT","HR","Finance","Management"].map(dept => ({
+  const deptSummary = departments.filter(d => d !== "All").map(dept => ({
     dept,
     present: todayRecords.filter(a => a.department === dept && (a.status === "Present" || a.status === "Late")).length,
     total:   todayRecords.filter(a => a.department === dept).length,
   }));
 
-  const handleCheckIn = async () => {
-    if (!fName.trim()) { show("Employee name is required", "error"); return; }
-    const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const handleMarkAttendance = async () => {
+    if (!fEmployeeId) { show("Select an employee", "error"); return; }
     const isLate = new Date().getHours() >= 10;
-    const newRecord = {
-      _id: `a${Date.now()}`, employee: fName, department: fDept,
-      date: TODAY, checkIn: now, checkOut: "",
-      status: fStatus === "Present" && isLate ? "Late" : fStatus,
-    };
-    try { await createAttendanceRecord({ ...newRecord, status: newRecord.status }); } catch {}
-    setAttendance(prev => [newRecord, ...prev]);
-    setFName(""); setFDept("IT"); setFStatus("Present");
-    setShowModal(false);
-    show("Checked in successfully", "success");
+    const status = fStatus === "Present" && isLate ? "Late" : fStatus;
+    try {
+      await markMut.mutateAsync({ employeeId: Number(fEmployeeId), date: TODAY, status });
+      setFEmployeeId(null); setFStatus("Present");
+      setShowModal(false);
+      show("Attendance marked", "success");
+    } catch (err) {
+      show(err?.response?.data?.message || "Failed to mark attendance", "error");
+    }
   };
 
   const handleCheckOut = async (id) => {
-    const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    try { await checkOutAttendance(id, { checkOut: now }); } catch {}
-    setAttendance(prev => prev.map(a => a._id === id ? { ...a, checkOut: now } : a));
-    show("Checked out successfully", "success");
-  };
-
-  const STATUS_COLORS = {
-    Present: "green",
-    Late: "yellow",
-    Absent: "red",
-    Leave: "blue",
+    try {
+      await checkOutMut.mutateAsync(id);
+      show("Checked out successfully", "success");
+    } catch {
+      show("Failed to check out", "error");
+    }
   };
 
   return (
@@ -142,19 +137,28 @@ const Attendance = () => {
         title="Attendance"
         sub={`${FMT_DATE(TODAY)} · ${todayRecords.length} records today`}
         action={
-          <AppButton leftSection={<Plus size={16} />} onClick={() => setShowModal(true)}>
+          <AppButton leftSection={<IconPlus size={16} />} onClick={() => setShowModal(true)}>
             Mark Attendance
           </AppButton>
         }
       />
 
       <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md" mb="xl">
-        <AppStatCard icon={<CheckCircle size={22}/>} label="Present Today" value={todayPresent} color="green" />
-        <AppStatCard icon={<Clock size={22}/>}       label="Late Arrivals" value={todayLate}    color="yellow" />
-        <AppStatCard icon={<XCircle size={22}/>}     label="Absent Today"  value={todayAbsent}  color="red" />
-        <AppStatCard icon={<UserCheck size={22}/>}   label="On Leave"      value={todayLeave}   color="blue" />
+        <AppStatCard icon={<IconCircleCheck size={22}/>} label="Present Today" value={todayPresent} color="green" />
+        <AppStatCard icon={<IconClock size={22}/>}       label="Late Arrivals" value={todayLate}    color="yellow" />
+        <AppStatCard icon={<IconCircleX size={22}/>}     label="Absent Today"  value={todayAbsent}  color="red" />
+        <AppStatCard icon={<IconUserCheck size={22}/>}   label="On Leave"      value={todayLeave}   color="blue" />
       </SimpleGrid>
 
+      {isLoading && <Box ta="center" py="xl"><Loader size="sm" /></Box>}
+
+      {isError && (
+        <Alert icon={<IconAlertCircle size={16}/>} color="red" mb="md">
+          Failed to load attendance. Make sure the backend is running and you are logged in.
+        </Alert>
+      )}
+
+      {!isLoading && !isError && (
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List mb="md">
           <Tabs.Tab value="records">Records</Tabs.Tab>
@@ -166,7 +170,7 @@ const Attendance = () => {
             <Group p="md" pb="sm" gap="sm" wrap="nowrap" style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
               <TextInput
                 placeholder="Search employee…"
-                leftSection={<Search size={15} />}
+                leftSection={<IconSearch size={15} />}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ flex: 1, minWidth: 180 }}
@@ -182,7 +186,7 @@ const Attendance = () => {
                 size="sm" radius="md"
                 value={deptFilter}
                 onChange={v => setDeptFilter(v || "All")}
-                data={DEPARTMENTS.map(d => ({ value: d, label: d === "All" ? "All Departments" : d }))}
+                data={departments.map(d => ({ value: d, label: d === "All" ? "All Departments" : d }))}
                 style={{ minWidth: 150 }}
               />
               <Select
@@ -214,7 +218,7 @@ const Attendance = () => {
                   <Table.Td><Text fz="sm" c="dimmed">{FMT_DATE(item.date)}</Text></Table.Td>
                   <Table.Td><Text fz="sm" fw={500}>{item.checkIn || "—"}</Text></Table.Td>
                   <Table.Td><Text fz="sm" fw={500}>{item.checkOut || "—"}</Text></Table.Td>
-                  <Table.Td><Text fz="sm" fw={600}>{calcHours(item.checkIn, item.checkOut)}</Text></Table.Td>
+                  <Table.Td><Text fz="sm" fw={600}>{fmtHours(item.hours)}</Text></Table.Td>
                   <Table.Td>
                     <Badge color={STATUS_COLORS[item.status] || "gray"} variant="light" size="sm">
                       {item.status}
@@ -222,7 +226,13 @@ const Attendance = () => {
                   </Table.Td>
                   <Table.Td>
                     {item.date === TODAY && !item.checkOut && item.checkIn ? (
-                      <AppButton size="xs" color="red" onClick={() => handleCheckOut(item._id)}>
+                      <AppButton
+                        size="xs"
+                        color="red"
+                        loading={checkOutMut.isPending && checkOutMut.variables === item._id}
+                        disabled={checkOutMut.isPending && checkOutMut.variables !== item._id}
+                        onClick={() => handleCheckOut(item._id)}
+                      >
                         Check Out
                       </AppButton>
                     ) : item.checkOut ? (
@@ -264,6 +274,7 @@ const Attendance = () => {
 
             <Stack gap="md">
               <AppSection title="Department Attendance Today">
+                {deptSummary.length === 0 && <Text fz="sm" c="dimmed">No records today</Text>}
                 {deptSummary.map((d, i) => {
                   const pct = d.total > 0 ? Math.round((d.present / d.total) * 100) : 0;
                   return (
@@ -299,14 +310,19 @@ const Attendance = () => {
           </SimpleGrid>
         </Tabs.Panel>
       </Tabs>
+      )}
 
-      <AppModal opened={showModal} onClose={() => setShowModal(false)} title="Mark Attendance" icon={<CheckCircle size={20} />} iconColor="#10b981" size="sm">
+      <AppModal opened={showModal} onClose={() => setShowModal(false)} title="Mark Attendance" icon={<IconCircleCheck size={20} />} iconColor="#10b981" size="sm">
         <Stack gap="md">
-          <AppInput label="Employee Name *" placeholder="Full name" value={fName} onChange={(e) => setFName(e.target.value)} />
-          <Group grow>
-            <Select label="Department" value={fDept} onChange={setFDept} data={["IT","HR","Finance","Management"]} />
-            <Select label="Status" value={fStatus} onChange={setFStatus} data={["Present","Absent","Leave","Late"]} />
-          </Group>
+          <Select
+            label="Employee *"
+            placeholder="Select employee"
+            searchable
+            value={fEmployeeId}
+            onChange={setFEmployeeId}
+            data={employees.map((e) => ({ value: String(e.id), label: `${e.name} (${e.employeeId})` }))}
+          />
+          <Select label="Status" value={fStatus} onChange={setFStatus} data={["Present","Absent","Leave","Late"]} />
           <Box p="sm" style={{ background: "var(--mantine-color-green-0)", border: "1px solid var(--mantine-color-green-2)", borderRadius: "var(--mantine-radius-md)" }}>
             <Text fz="sm" c="green" fw={500}>
               Check-in time: {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
@@ -317,7 +333,7 @@ const Attendance = () => {
           </Box>
           <Group justify="flex-end" mt="xs">
             <AppButton variant="default" onClick={() => setShowModal(false)}>Cancel</AppButton>
-            <AppButton color="green" onClick={handleCheckIn}>Mark Check In</AppButton>
+            <AppButton color="green" loading={markMut.isPending} onClick={handleMarkAttendance}>Mark Check In</AppButton>
           </Group>
         </Stack>
       </AppModal>

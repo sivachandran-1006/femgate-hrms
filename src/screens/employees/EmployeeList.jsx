@@ -1,24 +1,35 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   IconSearch, IconFileSpreadsheet, IconPlus,
   IconPencil, IconTrash, IconUsers, IconUserCheck,
   IconUserMinus, IconUserPlus, IconBriefcase,
-  IconChevronUp, IconChevronDown,
+  IconChevronUp, IconChevronDown, IconEye, IconAlertTriangle,
 } from "@tabler/icons-react";
 import {
   Group, SimpleGrid, TextInput, Select, Avatar,
   Text, Paper, ScrollArea, Table, ActionIcon,
-  Pagination, Badge,
+  Pagination, Badge, Modal, NumberInput, Button, Stack, Box,
 } from "@mantine/core";
 
-import { useFetchAllEmployees } from "../../queries/useEmployees";
+import {
+  useFetchAllEmployees, useCreateEmployee,
+  useUpdateEmployee, useDeleteEmployee,
+} from "../../queries/useEmployees";
 import { AppButton }            from "../../components/ui/AppButton";
 import { AppLoader }            from "../../components/ui/AppLoader";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 import { AppStatCard }          from "../../components/ui/AppStatCard";
 import { AppEmptyState }        from "../../components/ui/AppEmptyState";
+import { useToast }             from "../../components/ui/Toast";
 
 import { getAvatarColor, getInitials } from "../../utils/helpers";
+
+const DEPARTMENTS  = ["Engineering","HR","Finance","Marketing","Management","IT"];
+const EMPTY_FORM = {
+  name: "", email: "", phone: "", designation: "",
+  department: "Engineering", salary: "", joinDate: "", status: "Active",
+};
 
 // ── Dept / status badge maps ────────────────────────────────────────────────
 
@@ -31,9 +42,9 @@ const DEPT_COLOR = {
 };
 
 const STATUS_COLOR = {
-  Present: "green",
-  Leave:   "yellow",
-  Absent:  "red",
+  Active:    "green",
+  "On Leave": "yellow",
+  Inactive:  "red",
 };
 
 const ROWS_PER_PAGE = 8;
@@ -41,6 +52,9 @@ const ROWS_PER_PAGE = 8;
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const EmployeeList = () => {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+
   const [searchTerm,   setSearchTerm]   = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [deptFilter,   setDeptFilter]   = useState("All");
@@ -48,7 +62,64 @@ const EmployeeList = () => {
   const [sortKey,      setSortKey]      = useState("name");
   const [sortDir,      setSortDir]      = useState("asc");
 
+  const [modalOpen,    setModalOpen]    = useState(false);
+  const [editTarget,   setEditTarget]   = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [form,         setForm]         = useState(EMPTY_FORM);
+
   const { data: employees = [], isLoading, isError } = useFetchAllEmployees();
+  const createMut = useCreateEmployee();
+  const updateMut = useUpdateEmployee();
+  const deleteMut = useDeleteEmployee();
+
+  const openAdd = () => {
+    setForm(EMPTY_FORM);
+    setEditTarget(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (emp) => {
+    setForm({
+      name:        emp.name        || "",
+      email:       emp.email       || "",
+      phone:       emp.phone       || "",
+      designation: emp.designation || "",
+      department:  emp.department  || "Engineering",
+      salary:      emp.salary      || "",
+      joinDate:    emp.joinDate ? emp.joinDate.split("T")[0] : "",
+      status:      emp.status      || "Active",
+    });
+    setEditTarget(emp.id);
+    setModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name || !form.email || !form.joinDate) {
+      return showToast("Name, email and join date are required", "error");
+    }
+    try {
+      if (editTarget) {
+        await updateMut.mutateAsync({ id: editTarget, ...form, salary: Number(form.salary) || 0 });
+        showToast("Employee updated", "success");
+      } else {
+        await createMut.mutateAsync({ ...form, salary: Number(form.salary) || 0 });
+        showToast("Employee added", "success");
+      }
+      setModalOpen(false);
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to save employee", "error");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteMut.mutateAsync(deleteTarget.id);
+      showToast(`"${deleteTarget.name}" deleted`, "success");
+      setDeleteTarget(null);
+    } catch {
+      showToast("Failed to delete employee", "error");
+    }
+  };
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -81,9 +152,9 @@ const EmployeeList = () => {
   const totalPages   = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const paginated    = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE);
   const totalCount   = employees.length;
-  const presentCount = employees.filter((e) => e.status === "Present").length;
-  const leaveCount   = employees.filter((e) => e.status === "Leave").length;
-  const newJoiners   = employees.filter((e) => (e.joiningDate || "").startsWith("2024")).length;
+  const presentCount = employees.filter((e) => e.status === "Active").length;
+  const leaveCount   = employees.filter((e) => e.status === "On Leave").length;
+  const newJoiners   = employees.filter((e) => (e.joinDate || "").toString().startsWith("2024") || (e.joinDate || "").toString().startsWith("2025") || (e.joinDate || "").toString().startsWith("2026")).length;
   const deptCount    = new Set(employees.map((e) => e.department)).size;
 
   const SortIcon = ({ col }) => {
@@ -114,6 +185,7 @@ const EmployeeList = () => {
             <AppButton
               leftSection={<IconPlus size={15} />}
               size="sm"
+              onClick={openAdd}
             >
               Add Employee
             </AppButton>
@@ -159,7 +231,7 @@ const EmployeeList = () => {
             radius="md"
             value={statusFilter}
             onChange={(v) => { setStatusFilter(v || "All"); setCurrentPage(1); }}
-            data={["All","Present","Leave","Absent"].map((s) => ({ value: s, label: s === "All" ? "All Status" : s }))}
+            data={["All","Active","On Leave","Inactive"].map((s) => ({ value: s, label: s === "All" ? "All Status" : s }))}
             style={{ minWidth: 130 }}
           />
           <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
@@ -214,7 +286,7 @@ const EmployeeList = () => {
               ) : paginated.map((emp) => {
                 const av = getAvatarColor(emp.name);
                 return (
-                  <Table.Tr key={emp._id}>
+                  <Table.Tr key={emp.id}>
 
                     {/* Employee */}
                     <Table.Td>
@@ -269,16 +341,24 @@ const EmployeeList = () => {
 
                     {/* Joined */}
                     <Table.Td>
-                      <Text size="sm" c="dimmed">{emp.joinDate}</Text>
+                      <Text size="sm" c="dimmed">
+                        {emp.joinDate ? new Date(emp.joinDate).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" }) : "—"}
+                      </Text>
                     </Table.Td>
 
                     {/* Actions */}
                     <Table.Td>
                       <Group gap="xs">
-                        <ActionIcon variant="light" color="blue" size="sm" radius="md">
+                        <ActionIcon variant="light" color="gray" size="sm" radius="md" title="View"
+                          onClick={() => navigate(`/employees/${emp.id}`)}>
+                          <IconEye size={13} />
+                        </ActionIcon>
+                        <ActionIcon variant="light" color="blue" size="sm" radius="md" title="Edit"
+                          onClick={() => openEdit(emp)}>
                           <IconPencil size={13} />
                         </ActionIcon>
-                        <ActionIcon variant="light" color="red" size="sm" radius="md">
+                        <ActionIcon variant="light" color="red" size="sm" radius="md" title="Delete"
+                          onClick={() => setDeleteTarget(emp)}>
                           <IconTrash size={13} />
                         </ActionIcon>
                       </Group>
@@ -308,6 +388,80 @@ const EmployeeList = () => {
           </Group>
         )}
       </Paper>
+
+      {/* ── Add / Edit Modal ── */}
+      <Modal
+        opened={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editTarget ? "Edit Employee" : "Add Employee"}
+        size="md"
+      >
+        <Stack gap="sm">
+          <SimpleGrid cols={2} spacing="sm">
+            <TextInput label="Full Name" placeholder="e.g. Priya Lakshmi" required
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+            <TextInput label="Email" placeholder="name@mgate.com" required type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            <TextInput label="Phone" placeholder="98765 00000"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+            <TextInput label="Designation" placeholder="e.g. Backend Developer"
+              value={form.designation}
+              onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))} />
+            <Select label="Department" data={DEPARTMENTS}
+              value={form.department}
+              onChange={(v) => setForm((f) => ({ ...f, department: v }))} />
+            <NumberInput label="Salary (₹/month)" min={0} prefix="₹" thousandSeparator=","
+              value={form.salary}
+              onChange={(v) => setForm((f) => ({ ...f, salary: v }))} />
+            <TextInput type="date" label="Join Date" required
+              value={form.joinDate}
+              onChange={(e) => setForm((f) => ({ ...f, joinDate: e.target.value }))} />
+            <Select label="Status" data={["Active","On Leave","Inactive"]}
+              value={form.status}
+              onChange={(v) => setForm((f) => ({ ...f, status: v }))} />
+          </SimpleGrid>
+          <Group justify="flex-end" mt="sm" gap="sm">
+            <Button variant="default" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} loading={createMut.isPending || updateMut.isPending}>
+              {editTarget ? "Update Employee" : "Add Employee"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* ── Delete Confirm Modal ── */}
+      <Modal
+        opened={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Employee"
+        size="sm"
+      >
+        <Stack gap="md" align="center" ta="center">
+          <Box
+            w={56} h={56}
+            style={{
+              borderRadius: "50%", background: "var(--mantine-color-red-0)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <IconAlertTriangle size={26} color="var(--mantine-color-red-6)" />
+          </Box>
+          <Text fz="sm">
+            Are you sure you want to delete{" "}
+            <Text span fw={700}>{deleteTarget?.name}</Text>?
+            This will permanently remove their record.
+          </Text>
+          <Group grow w="100%">
+            <Button variant="default" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button color="red" onClick={handleDelete} loading={deleteMut.isPending}>
+              Yes, Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </>
   );
 };

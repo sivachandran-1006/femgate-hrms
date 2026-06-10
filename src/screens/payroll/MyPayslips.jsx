@@ -4,19 +4,11 @@ import {
   IconX, IconPrinter, IconChevronDown,
 } from "@tabler/icons-react";
 import { useAuth }              from "../../hooks/useAuth";
+import { useMyPayslips, useMyProfile } from "../../queries/useSelfService";
 import { COLORS }               from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW }       from "../../theme/sizes";
-
-const MY_PAYSLIPS = [
-  { _id:"ps001", month:"May",   year:"2026", salary:60000, bonus:3000, deduction:2200, net:60800, status:"Paid",   paidOn:"31 May 2026"  },
-  { _id:"ps002", month:"April", year:"2026", salary:60000, bonus:2000, deduction:2200, net:59800, status:"Paid",   paidOn:"30 Apr 2026"  },
-  { _id:"ps003", month:"March", year:"2026", salary:60000, bonus:1500, deduction:2200, net:59300, status:"Paid",   paidOn:"31 Mar 2026"  },
-  { _id:"ps004", month:"February","year":"2026",salary:60000,bonus:0, deduction:2200, net:57800, status:"Paid",   paidOn:"28 Feb 2026"  },
-  { _id:"ps005", month:"January","year":"2026",salary:60000,bonus:2500,deduction:2200,net:60300, status:"Paid",   paidOn:"31 Jan 2026"  },
-  { _id:"ps006", month:"June",  year:"2026", salary:60000, bonus:3000, deduction:2200, net:60800, status:"Pending",paidOn:"—"            },
-];
 
 const computeBreakdown = (slip) => {
   const basic     = Math.round(slip.salary * 0.5);
@@ -36,8 +28,26 @@ const MyPayslips = ({ darkMode: dark = false }) => {
   const surface = dark ? COLORS.dark : COLORS.light;
   const [viewSlip, setViewSlip] = useState(null);
 
-  const totalPaid = MY_PAYSLIPS.filter((s)=>s.status==="Paid").reduce((a,s)=>a+s.net,0);
-  const avgNet    = Math.round(MY_PAYSLIPS.filter((s)=>s.status==="Paid").reduce((a,s)=>a+s.net,0)/MY_PAYSLIPS.filter((s)=>s.status==="Paid").length);
+  const { data: slipsRaw = [] } = useMyPayslips();
+  const { data: me }            = useMyProfile();
+
+  const MY_PAYSLIPS = slipsRaw.map((s) => ({
+    _id:       s.id,
+    month:     s.month,
+    year:      s.year,
+    salary:    s.salary,
+    bonus:     s.bonus || 0,
+    deduction: s.deduction || 0,
+    net:       s.netSalary,
+    status:    s.status,
+    paidOn:    s.paidAt
+      ? new Date(s.paidAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      : "—",
+  }));
+
+  const paidSlips = MY_PAYSLIPS.filter((s)=>s.status==="Paid");
+  const totalPaid = paidSlips.reduce((a,s)=>a+s.net,0);
+  const avgNet    = paidSlips.length ? Math.round(totalPaid / paidSlips.length) : 0;
 
   const Card = ({ children, style={} }) => (
     <div style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], border:`1px solid ${surface.border}`, boxShadow:SHADOW.sm, ...style }}>
@@ -150,7 +160,7 @@ const MyPayslips = ({ darkMode: dark = false }) => {
                 </div>
                 <div>
                   <p style={{ margin:0,fontSize:FONT_SIZE.md,fontWeight:FONT_WEIGHT.bold,color:surface.text }}>Payslip — {viewSlip.month} {viewSlip.year}</p>
-                  <p style={{ margin:0,fontSize:FONT_SIZE.xs,color:surface.subtext }}>{user?.name || "John Employee"} · MGT-EMP-009</p>
+                  <p style={{ margin:0,fontSize:FONT_SIZE.xs,color:surface.subtext }}>{user?.name || "Employee"} · {me?.employeeId || ""}</p>
                 </div>
               </div>
               <div style={{ display:"flex",gap:GAP.xs }}>

@@ -3,7 +3,7 @@ import {
   IconUsers, IconCircleCheck, IconClock, IconCircleX, IconSearch, IconPlus, IconEye, IconCheck, IconX,
 } from "@tabler/icons-react";
 import {
-  Group, Stack, Text, Badge, ActionIcon, Avatar, TextInput, Select, SimpleGrid,
+  Group, Stack, Text, Badge, ActionIcon, Avatar, TextInput, Select, MultiSelect, SimpleGrid,
   Tooltip, Progress, Box, Paper, Table, Loader, Center,
 } from "@mantine/core";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +20,7 @@ import { usePermission } from "../../hooks/usePermission";
 import {
   fetchLeaves, applyLeave, updateLeaveStatus, fetchLeaveBalance,
 } from "../../api/leaveApi";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 const LEAVE_TYPE_COLORS = {
   "Sick Leave":   "red",
@@ -45,7 +46,15 @@ const Leave = () => {
   const [typeFilter, setType]       = useState("All");
   const [viewLeave, setViewLeave]   = useState(null);
   const [showApply, setShowApply]   = useState(false);
-  const [form, setForm] = useState({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "" });
+  const [form, setForm] = useState({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "", employeeId: null, notify: [] });
+
+  const { data: employees = [] } = useFetchAllEmployees();
+
+  // Tag options: @All + every employee (team leads, HR, managers, everyone)
+  const TAG_OPTIONS = [
+    "@All",
+    ...employees.map((e) => `@${e.name}`),
+  ];
 
   // ── Queries ──────────────────────────────────────────────────────────────────
 
@@ -72,7 +81,7 @@ const Leave = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leaves"] });
       queryClient.invalidateQueries({ queryKey: ["leave-balance"] });
-      setForm({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "" });
+      setForm({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "", employeeId: null, notify: [] });
       setShowApply(false);
       show("Leave request submitted successfully", "success");
     },
@@ -265,6 +274,16 @@ const Leave = () => {
                 <Text fz="sm">{viewLeave.reason || "—"}</Text>
               </Paper>
             </Box>
+            {viewLeave.notify?.length > 0 && (
+              <Box>
+                <Text fz="sm" c="dimmed" mb={4}>Tagged / Notified</Text>
+                <Group gap={6}>
+                  {viewLeave.notify.map((t) => (
+                    <Badge key={t} color="blue" variant="light" size="sm">{t}</Badge>
+                  ))}
+                </Group>
+              </Box>
+            )}
             {viewLeave.status === "Pending" && (canApprove || canReject) && (
               <Group grow mt="md">
                 {canReject  && (
@@ -288,6 +307,16 @@ const Leave = () => {
       {/* Apply Leave Modal */}
       <AppModal opened={showApply} onClose={() => setShowApply(false)} title="Apply Leave" icon={<IconPlus size={20} />} iconColor="#10b981" size="md">
         <Stack gap="md">
+          {!isEmployee && (
+            <Select
+              label="Employee *"
+              placeholder="Select employee"
+              searchable
+              value={form.employeeId}
+              onChange={(v) => setForm({ ...form, employeeId: v })}
+              data={employees.map((e) => ({ value: String(e.id), label: `${e.name} (${e.employeeId})` }))}
+            />
+          )}
           <Select label="Leave Type" value={form.leaveType} onChange={(v) => setForm({ ...form, leaveType: v })}
             data={["Sick Leave", "Casual Leave", "Annual Leave", "Earned Leave"]} />
           <SimpleGrid cols={2}>
@@ -296,10 +325,27 @@ const Leave = () => {
           </SimpleGrid>
           <AppInput label="Reason" placeholder="Briefly explain the reason for your leave..."
             value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+          <MultiSelect
+            label="Tag / Notify"
+            placeholder="@All, @Team Leader, @HR, @Manager..."
+            searchable
+            value={form.notify}
+            onChange={(v) => setForm({ ...form, notify: v })}
+            data={TAG_OPTIONS}
+            description="Tag people who should be notified about this leave"
+          />
           <Group justify="flex-end" mt="md">
             <AppButton variant="default" onClick={() => setShowApply(false)}>Cancel</AppButton>
             <AppButton loading={applyMutation.isPending}
-              onClick={() => { if (form.fromDate && form.toDate) applyMutation.mutate({ ...form, employeeName: user?.name || "" }); }}>
+              onClick={() => {
+                if (!form.fromDate || !form.toDate) return show("Select from and to dates", "error");
+                if (!isEmployee && !form.employeeId) return show("Select an employee", "error");
+                applyMutation.mutate({
+                  ...form,
+                  employeeId: form.employeeId ? Number(form.employeeId) : undefined,
+                  employeeName: user?.name || "",
+                });
+              }}>
               Submit Request
             </AppButton>
           </Group>

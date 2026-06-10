@@ -35,6 +35,9 @@ import Documents      from "./screens/documents/Documents";
 import ExitManagement from "./screens/exit/ExitManagement";
 import ShiftManagement from "./screens/shifts/ShiftManagement";
 import OrgChart       from "./screens/orgchart/OrgChart";
+import HolidayCalendar   from "./screens/holiday/HolidayCalendar";
+import ExpenseManagement from "./screens/expense/ExpenseManagement";
+import Announcements     from "./screens/announcements/Announcements";
 
 // Super Admin screens
 import RolesPermissions from "./screens/roles/RolesPermissions";
@@ -453,6 +456,21 @@ export default function App() {
           <Route path="/reports" element={
             <RoleGuard routeId="reports" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><Reports darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/holiday-calendar" element={
+            <RoleGuard routeId="holiday-calendar" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><HolidayCalendar darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/expense" element={
+            <RoleGuard routeId="expense" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ExpenseManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/announcements" element={
+            <RoleGuard routeId="announcements" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Announcements darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 

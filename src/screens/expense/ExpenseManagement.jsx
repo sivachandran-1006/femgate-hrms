@@ -1,40 +1,45 @@
 import { useState } from "react";
-import { SimpleGrid, Box, Group, Text, Badge, Button, TextInput, Select, Modal, Table, ActionIcon, Tabs, Textarea, NumberInput } from "@mantine/core";
-import { IconPlus, IconSearch, IconEye, IconCheck, IconX, IconWallet, IconReceipt, IconCar } from "@tabler/icons-react";
+import {
+  SimpleGrid, Box, Group, Text, Badge, Button, TextInput, Select,
+  Modal, Table, ActionIcon, Tabs, Textarea, NumberInput, Loader, Alert,
+} from "@mantine/core";
+import {
+  IconPlus, IconSearch, IconEye, IconCheck, IconX,
+  IconWallet, IconReceipt, IconAlertCircle,
+} from "@tabler/icons-react";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { AppSection } from "../../components/ui/AppSection";
-import { AppStatCard } from "../../components/ui/AppStatCard";
-import { useToast } from "../../components/ui/Toast";
+import { AppSection }    from "../../components/ui/AppSection";
+import { AppStatCard }   from "../../components/ui/AppStatCard";
+import { useToast }      from "../../components/ui/Toast";
+import {
+  useExpenses, useCreateExpense, useApproveExpense, useRejectExpense,
+} from "../../queries/useExpenses";
 
 const CATEGORIES = ["Travel","Food","Accommodation","Equipment","Software","Training","Medical","Other"];
 const STATUS_COLOR = { Approved: "green", Pending: "yellow", Rejected: "red" };
 const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 const EMPTY_FORM = { employee: "", category: "Travel", amount: "", date: "", desc: "" };
 
-const INIT_EXPENSES = [
-  { id: 1, employee: "Safeer Ahmed",  category: "Travel",        amount: 3500, date: "2026-05-28", desc: "Client visit - Chennai to Bangalore",      status: "Approved", receipt: true  },
-  { id: 2, employee: "Suriya Kumar",  category: "Food",          amount: 850,  date: "2026-05-30", desc: "Team lunch - design workshop",              status: "Pending",  receipt: true  },
-  { id: 3, employee: "Aravinth Raja", category: "Software",      amount: 5000, date: "2026-06-01", desc: "VS Code plugin license renewal",            status: "Pending",  receipt: false },
-  { id: 4, employee: "Santhosh C",    category: "Equipment",     amount: 2200, date: "2026-06-02", desc: "USB hub and keyboard for WFH",              status: "Approved", receipt: true  },
-  { id: 5, employee: "Mani Bharathi", category: "Training",      amount: 7500, date: "2026-06-03", desc: "SHRM online course enrollment",             status: "Rejected", receipt: true  },
-  { id: 6, employee: "Santhosh P",    category: "Travel",        amount: 1800, date: "2026-06-04", desc: "Outstation meeting - cab reimbursement",    status: "Pending",  receipt: true  },
-  { id: 7, employee: "Vignesh M",     category: "Accommodation", amount: 4200, date: "2026-06-05", desc: "Hotel stay for marketing conference",        status: "Pending",  receipt: true  },
-  { id: 8, employee: "Priya Lakshmi", category: "Other",         amount: 620,  date: "2026-06-06", desc: "Office supplies - stationery",              status: "Approved", receipt: false },
-];
-
 export default function ExpenseManagement() {
-  const [expenses, setExpenses]   = useState(INIT_EXPENSES);
+  const { showToast } = useToast();
+  const { data: expenses = [], isLoading, isError } = useExpenses();
+
+  const createMut  = useCreateExpense();
+  const approveMut = useApproveExpense();
+  const rejectMut  = useRejectExpense();
+
   const [tab, setTab]             = useState("all");
   const [search, setSearch]       = useState("");
   const [filterCat, setFilterCat] = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModal, setViewModal] = useState(null);
   const [form, setForm]           = useState(EMPTY_FORM);
-  const { showToast }             = useToast();
 
   const tabFiltered = tab === "all" ? expenses : expenses.filter((e) => e.status.toLowerCase() === tab);
   const filtered = tabFiltered.filter((e) => {
-    const matchQ = !search || e.employee.toLowerCase().includes(search.toLowerCase()) || e.desc.toLowerCase().includes(search.toLowerCase());
+    const matchQ = !search ||
+      e.employee.toLowerCase().includes(search.toLowerCase()) ||
+      (e.desc || "").toLowerCase().includes(search.toLowerCase());
     const matchC = filterCat === "All" || e.category === filterCat;
     return matchQ && matchC;
   });
@@ -44,23 +49,36 @@ export default function ExpenseManagement() {
   const approvedAmt = expenses.filter((e) => e.status === "Approved").reduce((s, e) => s + e.amount, 0);
   const pendingCnt  = expenses.filter((e) => e.status === "Pending").length;
 
-  const handleApprove = (id) => {
-    setExpenses((prev) => prev.map((e) => e.id === id ? { ...e, status: "Approved" } : e));
-    showToast("Expense approved", "success");
-    setViewModal(null);
-  };
-  const handleReject = (id) => {
-    setExpenses((prev) => prev.map((e) => e.id === id ? { ...e, status: "Rejected" } : e));
-    showToast("Expense rejected", "error");
-    setViewModal(null);
+  const handleApprove = async (id) => {
+    try {
+      await approveMut.mutateAsync(id);
+      showToast("Expense approved", "success");
+      setViewModal(null);
+    } catch {
+      showToast("Failed to approve", "error");
+    }
   };
 
-  const handleSubmit = () => {
+  const handleReject = async (id) => {
+    try {
+      await rejectMut.mutateAsync(id);
+      showToast("Expense rejected", "error");
+      setViewModal(null);
+    } catch {
+      showToast("Failed to reject", "error");
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!form.employee || !form.amount || !form.date) return showToast("Fill all required fields", "error");
-    setExpenses((prev) => [...prev, { ...form, id: Date.now(), status: "Pending", receipt: false, amount: Number(form.amount) }]);
-    showToast("Expense claim submitted", "success");
-    setModalOpen(false);
-    setForm(EMPTY_FORM);
+    try {
+      await createMut.mutateAsync({ ...form, amount: Number(form.amount) });
+      showToast("Expense claim submitted", "success");
+      setModalOpen(false);
+      setForm(EMPTY_FORM);
+    } catch {
+      showToast("Failed to submit claim", "error");
+    }
   };
 
   return (
@@ -72,10 +90,10 @@ export default function ExpenseManagement() {
       />
 
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md" mb="md">
-        <AppStatCard icon={<IconWallet size={18}/>}  label="Total Claims"    value={expenses.length} sub="All time"        color="blue"   />
-        <AppStatCard icon={<IconReceipt size={18}/>} label="Pending"         value={pendingCnt}      sub={fmt(pendingAmt)} color="yellow" />
-        <AppStatCard icon={<IconCheck size={18}/>}   label="Approved Amount" value={fmt(approvedAmt)}sub="This month"      color="green"  />
-        <AppStatCard icon={<IconWallet size={18}/>}  label="Total Value"     value={fmt(totalAmt)}   sub="All claims"      color="violet" />
+        <AppStatCard icon={<IconWallet size={18}/>}  label="Total Claims"    value={expenses.length}  sub="All time"        color="blue"   />
+        <AppStatCard icon={<IconReceipt size={18}/>} label="Pending"         value={pendingCnt}       sub={fmt(pendingAmt)} color="yellow" />
+        <AppStatCard icon={<IconCheck size={18}/>}   label="Approved Amount" value={fmt(approvedAmt)} sub="This month"      color="green"  />
+        <AppStatCard icon={<IconWallet size={18}/>}  label="Total Value"     value={fmt(totalAmt)}    sub="All claims"      color="violet" />
       </SimpleGrid>
 
       <Group mb="md" gap="sm">
@@ -95,46 +113,63 @@ export default function ExpenseManagement() {
         </Tabs.List>
       </Tabs>
 
-      <AppSection title="Expense Claims" sub={`${filtered.length} records`} noPadding>
-        <Box style={{ overflowX: "auto" }}>
-          <Table striped highlightOnHover withTableBorder={false} fz="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Employee</Table.Th>
-                <Table.Th>Category</Table.Th>
-                <Table.Th>Amount</Table.Th>
-                <Table.Th>Date</Table.Th>
-                <Table.Th>Description</Table.Th>
-                <Table.Th>Receipt</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {filtered.map((e) => (
-                <Table.Tr key={e.id}>
-                  <Table.Td><Text fw={500}>{e.employee}</Text></Table.Td>
-                  <Table.Td><Text fz="sm" c="dimmed">{e.category}</Text></Table.Td>
-                  <Table.Td><Text fw={600}>{fmt(e.amount)}</Text></Table.Td>
-                  <Table.Td><Text c="dimmed">{new Date(e.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}</Text></Table.Td>
-                  <Table.Td><Text fz="sm" c="dimmed" style={{ maxWidth: 200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.desc}</Text></Table.Td>
-                  <Table.Td><Badge color={e.receipt ? "green" : "gray"} variant="light" size="xs">{e.receipt ? "Attached" : "Missing"}</Badge></Table.Td>
-                  <Table.Td><Badge color={STATUS_COLOR[e.status] || "gray"} variant="light" size="sm">{e.status}</Badge></Table.Td>
-                  <Table.Td>
-                    <Group gap={4} wrap="nowrap">
-                      <ActionIcon size="sm" variant="subtle" color="blue" onClick={() => setViewModal(e)}><IconEye size={14}/></ActionIcon>
-                      {e.status === "Pending" && <>
-                        <ActionIcon size="sm" variant="subtle" color="green" onClick={() => handleApprove(e.id)}><IconCheck size={14}/></ActionIcon>
-                        <ActionIcon size="sm" variant="subtle" color="red"   onClick={() => handleReject(e.id)}><IconX size={14}/></ActionIcon>
-                      </>}
-                    </Group>
-                  </Table.Td>
+      {isLoading && <Box ta="center" py="xl"><Loader size="sm" /></Box>}
+
+      {isError && (
+        <Alert icon={<IconAlertCircle size={16}/>} color="red" mb="md">
+          Failed to load expenses. Make sure the backend is running and you are logged in.
+        </Alert>
+      )}
+
+      {!isLoading && !isError && (
+        <AppSection title="Expense Claims" sub={`${filtered.length} records`} noPadding>
+          <Box style={{ overflowX: "auto" }}>
+            <Table striped highlightOnHover withTableBorder={false} fz="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Employee</Table.Th>
+                  <Table.Th>Category</Table.Th>
+                  <Table.Th>Amount</Table.Th>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Description</Table.Th>
+                  <Table.Th>Receipt</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>Actions</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </Box>
-      </AppSection>
+              </Table.Thead>
+              <Table.Tbody>
+                {filtered.length === 0 && (
+                  <Table.Tr>
+                    <Table.Td colSpan={8}>
+                      <Text ta="center" c="dimmed" py="lg">No expense claims found</Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+                {filtered.map((e) => (
+                  <Table.Tr key={e.id}>
+                    <Table.Td><Text fw={500}>{e.employee}</Text></Table.Td>
+                    <Table.Td><Text fz="sm" c="dimmed">{e.category}</Text></Table.Td>
+                    <Table.Td><Text fw={600}>{fmt(e.amount)}</Text></Table.Td>
+                    <Table.Td><Text c="dimmed">{new Date(e.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}</Text></Table.Td>
+                    <Table.Td><Text fz="sm" c="dimmed" style={{ maxWidth: 200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.desc}</Text></Table.Td>
+                    <Table.Td><Badge color={e.receipt ? "green" : "gray"} variant="light" size="xs">{e.receipt ? "Attached" : "Missing"}</Badge></Table.Td>
+                    <Table.Td><Badge color={STATUS_COLOR[e.status] || "gray"} variant="light" size="sm">{e.status}</Badge></Table.Td>
+                    <Table.Td>
+                      <Group gap={4} wrap="nowrap">
+                        <ActionIcon size="sm" variant="subtle" color="blue" onClick={() => setViewModal(e)}><IconEye size={14}/></ActionIcon>
+                        {e.status === "Pending" && <>
+                          <ActionIcon size="sm" variant="subtle" color="green" loading={approveMut.isPending && approveMut.variables === e.id} onClick={() => handleApprove(e.id)}><IconCheck size={14}/></ActionIcon>
+                          <ActionIcon size="sm" variant="subtle" color="red"   loading={rejectMut.isPending && rejectMut.variables === e.id}  onClick={() => handleReject(e.id)}><IconX size={14}/></ActionIcon>
+                        </>}
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Box>
+        </AppSection>
+      )}
 
       {/* New Claim Modal */}
       <Modal opened={modalOpen} onClose={() => setModalOpen(false)} title="Submit Expense Claim" size="md">
@@ -151,7 +186,7 @@ export default function ExpenseManagement() {
             onChange={(e) => setForm((f) => ({ ...f, desc: e.target.value }))} minRows={2} />
           <Group justify="flex-end" mt="sm" gap="sm">
             <Button variant="default" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSubmit}>Submit Claim</Button>
+            <Button onClick={handleSubmit} loading={createMut.isPending}>Submit Claim</Button>
           </Group>
         </Box>
       </Modal>
@@ -165,7 +200,7 @@ export default function ExpenseManagement() {
               ["Category",    viewModal.category],
               ["Amount",      fmt(viewModal.amount)],
               ["Date",        new Date(viewModal.date).toLocaleDateString("en-IN")],
-              ["Description", viewModal.desc],
+              ["Description", viewModal.desc || "—"],
               ["Receipt",     viewModal.receipt ? "Attached" : "Not attached"],
               ["Status",      viewModal.status],
             ].map(([label, value]) => (
@@ -176,8 +211,8 @@ export default function ExpenseManagement() {
             ))}
             {viewModal.status === "Pending" && (
               <Group mt="md" gap="sm">
-                <Button color="green" flex={1} onClick={() => handleApprove(viewModal.id)}>Approve</Button>
-                <Button color="red"   flex={1} onClick={() => handleReject(viewModal.id)}>Reject</Button>
+                <Button color="green" flex={1} loading={approveMut.isPending} onClick={() => handleApprove(viewModal.id)}>Approve</Button>
+                <Button color="red"   flex={1} loading={rejectMut.isPending}  onClick={() => handleReject(viewModal.id)}>Reject</Button>
               </Group>
             )}
           </Box>
