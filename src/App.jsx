@@ -47,6 +47,9 @@ import MultiCompany         from "./screens/superadmin/MultiCompany";
 import CompanySettings      from "./screens/superadmin/CompanySettings";
 import NotificationCenter   from "./screens/superadmin/NotificationCenter";
 import Reports              from "./screens/reports/Reports";
+import HolidayCalendar     from "./screens/holiday/HolidayCalendar";
+import ExpenseManagement   from "./screens/expense/ExpenseManagement";
+import Announcements       from "./screens/announcements/Announcements";
 
 // Employee Self-Service screens
 import MyProfile      from "./screens/employees/MyProfile";
@@ -453,6 +456,21 @@ export default function App() {
           <Route path="/reports" element={
             <RoleGuard routeId="reports" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><Reports darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/holiday-calendar" element={
+            <RoleGuard routeId="holiday-calendar" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><HolidayCalendar darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/expense" element={
+            <RoleGuard routeId="expense" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ExpenseManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/announcements" element={
+            <RoleGuard routeId="announcements" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Announcements darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 
