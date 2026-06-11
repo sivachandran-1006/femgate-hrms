@@ -376,6 +376,7 @@ const Documents = ({ darkMode: dark = false }) => {
   const handleDelete = async (id) => {
     try {
       await deleteMut.mutateAsync(id);
+      qc.invalidateQueries({ queryKey: ["documents", "all"] });
       show("Document archived", "success");
     } catch {
       show("Failed to delete document", "error");
@@ -541,7 +542,13 @@ const Documents = ({ darkMode: dark = false }) => {
       </div>
 
       {/* Upload Modal */}
-      {showModal && <UploadModal dark={dark} onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <UploadModal
+          dark={dark}
+          onClose={() => setShowModal(false)}
+          onUploaded={() => qc.invalidateQueries({ queryKey: ["documents", "all"] })}
+        />
+      )}
     </div>
   );
 };
