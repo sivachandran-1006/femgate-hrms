@@ -40,6 +40,7 @@ import {
   IconCalendarEvent,
   IconReceipt,
   IconSpeakerphone,
+  IconUserCheck,
 } from "@tabler/icons-react";
 import {
   ROLE_SIDEBAR,
@@ -84,6 +85,7 @@ const ICON_MAP = {
   IconCalendarEvent,
   IconReceipt,
   IconSpeakerphone,
+  IconUserCheck,
 };
 
 const Sidebar = ({

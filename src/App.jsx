@@ -476,6 +476,14 @@ export default function App() {
 
           {/* ── Employee Self-Service routes ── */}
           <Route
+            path="/my-attendance"
+            element={
+              <RoleGuard routeId="my-attendance" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyAttendance darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
             path="/my-profile"
             element={
               <RoleGuard routeId="my-profile" userRole={userRole}>

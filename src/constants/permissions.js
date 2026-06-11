@@ -1,11 +1,11 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements"],
-  ADMIN:       ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations"],
-  HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart"],
-  MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts"],
-  FINANCE:     ["dashboard","payroll","expense","analytics","documents"],
-  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar"],
+  SUPER_ADMIN: ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance"],
+  ADMIN:       ["dashboard","employees","departments","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance"],
+  HR:          ["dashboard","employees","departments","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance"],
+  MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance"],
+  FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance"],
+  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance"],
   EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart"],
 };
 
@@ -17,6 +17,7 @@ export const ROLE_SIDEBAR = {
     { id: "departments",      label: "Departments",       icon: "IconBuildingCommunity" },
     { id: "orgchart",         label: "Org Chart",         icon: "IconHierarchy"         },
     { id: "attendance",       label: "Attendance",        icon: "IconClock"             },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "shifts",           label: "Shifts",            icon: "IconRotateClockwise"   },
     { id: "leave",            label: "Leave",             icon: "IconCalendarOff"       },
     { id: "calendar",         label: "Calendar",          icon: "IconCalendar"          },
@@ -51,6 +52,7 @@ export const ROLE_SIDEBAR = {
     { id: "departments", label: "Departments", icon: "IconBuildingCommunity" },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
     { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "shifts",      label: "Shifts",      icon: "IconRotateClockwise"   },
     { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
     { id: "calendar",    label: "Calendar",    icon: "IconCalendar"          },
@@ -74,6 +76,7 @@ export const ROLE_SIDEBAR = {
     { id: "departments", label: "Departments", icon: "IconBuildingCommunity" },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
     { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "shifts",      label: "Shifts",      icon: "IconRotateClockwise"   },
     { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
     { id: "calendar",    label: "Calendar",    icon: "IconCalendar"          },
@@ -90,6 +93,7 @@ export const ROLE_SIDEBAR = {
     { id: "employees",   label: "My Team",     icon: "IconUsers"             },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
     { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "shifts",      label: "Shifts",      icon: "IconRotateClockwise"   },
     { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
     { id: "calendar",    label: "Calendar",    icon: "IconCalendar"          },
@@ -98,6 +102,7 @@ export const ROLE_SIDEBAR = {
   ],
   FINANCE: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
     { id: "expense",     label: "Expenses",    icon: "IconReceipt"           },
     { id: "documents",   label: "Documents",   icon: "IconFolder"            },
@@ -105,6 +110,7 @@ export const ROLE_SIDEBAR = {
   ],
   IT_ADMIN: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "assets",      label: "Assets",      icon: "IconPackage"           },
     { id: "helpdesk",    label: "Helpdesk",    icon: "IconLifebuoy"          },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },

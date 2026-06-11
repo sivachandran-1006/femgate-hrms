@@ -539,7 +539,7 @@ const Onboarding = () => {
             placeholder="Select department"
             value={form.department || null}
             onChange={(v) => setForm({ ...form, department: v })}
-            data={deptList.map((d) => d.name)}
+            data={[...new Set(deptList.map((d) => d.name))]}
           />
           <AppInput
             label="Role / Designation"
@@ -558,7 +558,7 @@ const Onboarding = () => {
             placeholder="Select mentor"
             value={form.mentor || null}
             onChange={(v) => setForm({ ...form, mentor: v })}
-            data={employees.map((e) => e.name)}
+            data={[...new Set(employees.map((e) => e.name))]}
           />
           <Group justify="flex-end" gap="sm" mt="xs">
             <AppButton variant="default" onClick={() => setShowModal(false)}>Cancel</AppButton>

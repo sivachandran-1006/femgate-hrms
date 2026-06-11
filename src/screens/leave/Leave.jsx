@@ -51,10 +51,7 @@ const Leave = () => {
   const { data: employees = [] } = useFetchAllEmployees();
 
   // Tag options: @All + every employee (team leads, HR, managers, everyone)
-  const TAG_OPTIONS = [
-    "@All",
-    ...employees.map((e) => `@${e.name}`),
-  ];
+  const TAG_OPTIONS = [...new Set(["@All", ...employees.map((e) => `@${e.name}`)])];
 
   // ── Queries ──────────────────────────────────────────────────────────────────
 

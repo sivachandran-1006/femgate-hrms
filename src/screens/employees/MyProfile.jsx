@@ -6,7 +6,7 @@ import {
 } from "@tabler/icons-react";
 import {
   Group, Stack, Text, Badge, Avatar, Paper, Box,
-  Progress, SimpleGrid, ThemeIcon,
+  Progress, SimpleGrid, ThemeIcon, Select,
 } from "@mantine/core";
 
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
@@ -21,18 +21,29 @@ import { COLORS }         from "../../theme/colors";
 
 // ── Field component ───────────────────────────────────────────────────────────
 
-const FIELD = ({ label, value, icon: Icon, editable, editKey, form, onChange, readOnly }) => {
+const FIELD = ({ label, value, icon: Icon, editable, editKey, form, onChange, readOnly, type = "text", options }) => {
   return (
     <Stack gap={4}>
       <Text size="xs" fw={600} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.05em" }}>
         {label}
       </Text>
       {editable && !readOnly ? (
-        <AppInput
-          value={form[editKey] ?? value}
-          onChange={(e) => onChange(editKey, e.target.value)}
-          size="sm"
-        />
+        options ? (
+          <Select
+            value={form[editKey] ?? value ?? null}
+            onChange={(v) => onChange(editKey, v)}
+            data={options}
+            size="sm"
+            comboboxProps={{ withinPortal: true }}
+          />
+        ) : (
+          <AppInput
+            type={type}
+            value={form[editKey] ?? value}
+            onChange={(e) => onChange(editKey, e.target.value)}
+            size="sm"
+          />
+        )
       ) : (
         <Group
           gap="sm"
@@ -94,9 +105,15 @@ const MyProfile = () => {
     if (me) {
       setForm((f) => ({
         ...f,
-        mobile:  me.phone || "",
-        address: [me.address, me.city, me.state].filter(Boolean).join(", "),
-        dob:     me.dob ? me.dob.split("T")[0] : "",
+        mobile:        me.phone || "",
+        address:       [me.address, me.city, me.state].filter(Boolean).join(", "),
+        dob:           me.dob ? me.dob.split("T")[0] : "",
+        emergency:     me.emergencyContact || f.emergency,
+        bloodGroup:    me.bloodGroup       || f.bloodGroup,
+        maritalStatus: me.maritalStatus    || f.maritalStatus,
+        pan:           me.pan              || f.pan,
+        aadhaar:       me.aadhaar          || f.aadhaar,
+        bank:          me.bankDetails      || f.bank,
       }));
     }
   }, [me]);
@@ -118,7 +135,17 @@ const MyProfile = () => {
 
   const handleSave = async () => {
     try {
-      await updateMut.mutateAsync({ phone: form.mobile, address: form.address });
+      await updateMut.mutateAsync({
+        phone:            form.mobile,
+        address:          form.address,
+        dob:              form.dob || null,
+        emergencyContact: form.emergency,
+        bloodGroup:       form.bloodGroup,
+        maritalStatus:    form.maritalStatus,
+        pan:              form.pan,
+        aadhaar:          form.aadhaar,
+        bankDetails:      form.bank,
+      });
       setSaved(true);
       setEditing(false);
       setTimeout(() => setSaved(false), 2500);
@@ -233,9 +260,9 @@ const MyProfile = () => {
               <FIELD label="Full Name"       value={emp.name}           icon={IconUser}      editable={false} readOnly={true}    form={form} onChange={change} editKey="name"        />
               <FIELD label="Email Address"   value={emp.email}          icon={IconMail}      editable={false} readOnly={true}    form={form} onChange={change} editKey="email"       />
               <FIELD label="Mobile Number"   value={form.mobile}        icon={IconPhone}     editable={editing} readOnly={false} form={form} onChange={change} editKey="mobile"      />
-              <FIELD label="Date of Birth"   value={form.dob}           icon={IconCalendar}  editable={editing} readOnly={false} form={form} onChange={change} editKey="dob"         />
-              <FIELD label="Blood Group"     value={form.bloodGroup}    icon={IconDroplet}   editable={editing} readOnly={false} form={form} onChange={change} editKey="bloodGroup"  />
-              <FIELD label="Marital Status"  value={form.maritalStatus} icon={IconHeart}     editable={editing} readOnly={false} form={form} onChange={change} editKey="maritalStatus" />
+              <FIELD label="Date of Birth"   value={form.dob}           icon={IconCalendar}  editable={editing} readOnly={false} form={form} onChange={change} editKey="dob"         type="date" />
+              <FIELD label="Blood Group"     value={form.bloodGroup}    icon={IconDroplet}   editable={editing} readOnly={false} form={form} onChange={change} editKey="bloodGroup"  options={["A+","A-","B+","B-","O+","O-","AB+","AB-"]} />
+              <FIELD label="Marital Status"  value={form.maritalStatus} icon={IconHeart}     editable={editing} readOnly={false} form={form} onChange={change} editKey="maritalStatus" options={["Single","Married","Divorced","Widowed"]} />
               <Box style={{ gridColumn: "1 / -1" }}>
                 <FIELD label="Address" value={form.address} icon={IconMapPin} editable={editing} readOnly={false} form={form} onChange={change} editKey="address" />
               </Box>
