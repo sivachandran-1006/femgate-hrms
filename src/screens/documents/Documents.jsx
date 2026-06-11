@@ -11,7 +11,6 @@ import {
   IconTrash,
   IconX,
   IconUpload,
-  IconChevronDown,
   IconFile,
 } from "@tabler/icons-react";
 
@@ -19,14 +18,13 @@ import { COLORS } from "../../theme/colors";
 import { useAllDocuments } from "../../queries/useHr";
 import { useDeleteDocument } from "../../queries/useSelfService";
 import { useToast } from "../../components/ui/Toast";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import api from "../../api/axios";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW } from "../../theme/sizes";
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-
-const EMPLOYEES = ["Aravinth", "Mani", "Safeer", "Siva"];
 const CATEGORIES = ["Identity", "Employment", "Financial", "Other"];
 
 // ─── Style Helpers ───────────────────────────────────────────────────────────
@@ -146,26 +144,46 @@ const SelectInput = ({ value, onChange, options, dark }) => (
 
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
 
-const UploadModal = ({ onClose, dark }) => {
-  const [form, setForm] = useState({ employee: EMPLOYEES[0], name: "", category: CATEGORIES[0], file: null });
+const UploadModal = ({ onClose, dark, onUploaded }) => {
+  const { data: employees = [] } = useFetchAllEmployees();
+  const [form, setForm] = useState({ employeeId: "", name: "", category: CATEGORIES[0] });
   const [fileName, setFileName] = useState("No file chosen");
+  const [saving, setSaving] = useState(false);
+  const { show } = useToast();
 
   const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
-  const handleFile = (e) => {
-    const f = e.target.files?.[0];
-    if (f) setFileName(f.name);
+  const handleUpload = async () => {
+    if (!form.name.trim()) return show("Enter document name", "error");
+    if (!form.employeeId)  return show("Select an employee", "error");
+    setSaving(true);
+    try {
+      await api.post("/documents", {
+        name:       form.name,
+        category:   form.category,
+        fileUrl:    `/files/${form.name.toLowerCase().replace(/\s+/g, "-")}`,
+        fileSize:   fileName !== "No file chosen" ? fileName : null,
+        employeeId: Number(form.employeeId),
+      });
+      show(`"${form.name}" uploaded`, "success");
+      onUploaded();
+      onClose();
+    } catch {
+      show("Failed to upload document", "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const overlayStyle = {
-    position:        "fixed",
-    inset:           0,
-    background:      "rgba(15,23,42,0.55)",
-    zIndex:          200,
-    display:         "flex",
-    alignItems:      "center",
-    justifyContent:  "center",
-    padding:         SPACING.md,
+    position:       "fixed",
+    inset:          0,
+    background:     "rgba(15,23,42,0.55)",
+    zIndex:         200,
+    display:        "flex",
+    alignItems:     "center",
+    justifyContent: "center",
+    padding:        SPACING.md,
   };
 
   const modalStyle = {
@@ -179,13 +197,13 @@ const UploadModal = ({ onClose, dark }) => {
   };
 
   const labelStyle = {
-    display:      "block",
-    fontSize:     FONT_SIZE.xs,
-    fontWeight:   FONT_WEIGHT.semibold,
-    color:        dark ? COLORS.dark.subtext : COLORS.textMutedLight,
-    marginBottom: 6,
-    textTransform:"uppercase",
-    letterSpacing:"0.05em",
+    display:       "block",
+    fontSize:      FONT_SIZE.xs,
+    fontWeight:    FONT_WEIGHT.semibold,
+    color:         dark ? COLORS.dark.subtext : COLORS.textMutedLight,
+    marginBottom:  6,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   };
 
   const inputStyle = {
@@ -223,15 +241,18 @@ const UploadModal = ({ onClose, dark }) => {
         <div style={{ display: "flex", flexDirection: "column", gap: GAP.md }}>
           {/* Employee */}
           <div>
-            <label style={labelStyle}>Employee</label>
-            <select value={form.employee} onChange={(e) => set("employee", e.target.value)} style={inputStyle}>
-              {EMPLOYEES.map((e) => <option key={e}>{e}</option>)}
+            <label style={labelStyle}>Employee *</label>
+            <select value={form.employeeId} onChange={(e) => set("employeeId", e.target.value)} style={inputStyle}>
+              <option value="">Select employee…</option>
+              {employees.map((e) => (
+                <option key={e.id} value={e.id}>{e.name} ({e.employeeId})</option>
+              ))}
             </select>
           </div>
 
           {/* Document Name */}
           <div>
-            <label style={labelStyle}>Document Name</label>
+            <label style={labelStyle}>Document Name *</label>
             <input
               type="text"
               placeholder="e.g. Aadhaar Card"
@@ -267,7 +288,7 @@ const UploadModal = ({ onClose, dark }) => {
               </div>
               <span style={{ fontSize: FONT_SIZE.sm, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight, flex: 1 }}>{fileName}</span>
               <span style={{ fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.primary, background: COLORS.primaryMuted, padding: "4px 10px", borderRadius: RADIUS.full }}>Browse</span>
-              <input type="file" onChange={handleFile} style={{ display: "none" }} />
+              <input type="file" onChange={(e) => setFileName(e.target.files?.[0]?.name || "No file chosen")} style={{ display: "none" }} />
             </label>
           </div>
         </div>
@@ -286,21 +307,21 @@ const UploadModal = ({ onClose, dark }) => {
           }}>
             Cancel
           </button>
-          <button onClick={onClose} style={{
+          <button onClick={handleUpload} disabled={saving} style={{
             padding:      "9px 20px",
             borderRadius: RADIUS.lg,
             border:       "none",
-            background:   COLORS.primary,
+            background:   saving ? COLORS.gray400 : COLORS.primary,
             color:        COLORS.white,
             fontSize:     FONT_SIZE.sm,
             fontWeight:   FONT_WEIGHT.semibold,
-            cursor:       "pointer",
+            cursor:       saving ? "not-allowed" : "pointer",
             display:      "flex",
             alignItems:   "center",
             gap:          6,
           }}>
             <IconUpload size={15} stroke={2} />
-            Upload
+            {saving ? "Uploading…" : "Upload"}
           </button>
         </div>
       </div>
@@ -317,6 +338,7 @@ const Documents = ({ darkMode: dark = false }) => {
   const [showModal,     setShowModal]     = useState(false);
 
   const { show } = useToast();
+  const qc = useQueryClient();
   const { data: docsRaw = [] } = useAllDocuments();
   const deleteMut = useDeleteDocument();
 
