@@ -1,13 +1,14 @@
 import { useState } from "react";
 import {
   SimpleGrid, Box, Group, Text, Badge, Button, TextInput, Select,
-  Modal, Textarea, ActionIcon, Tabs, Avatar, Loader, Alert,
+  Modal, Textarea, ActionIcon, Tabs, Avatar, Loader, Alert, Paper, Stack,
 } from "@mantine/core";
 import {
   IconPlus, IconSearch, IconEdit, IconTrash, IconSend, IconBell,
-  IconBuildingCommunity, IconUsers, IconAlertCircle,
+  IconBuildingCommunity, IconUsers, IconAlertCircle, IconCheck,
 } from "@tabler/icons-react";
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
+import { usePermission }  from "../../hooks/usePermission";
 import { AppSection }     from "../../components/ui/AppSection";
 import { AppStatCard }    from "../../components/ui/AppStatCard";
 import { useToast }       from "../../components/ui/Toast";
@@ -32,6 +33,8 @@ const TARGET_ICON = {
 export default function Announcements() {
   const { user }                    = useAuth();
   const { showToast }               = useToast();
+  const can                         = usePermission();
+  const isAdmin                     = can("announcements.create");
   const { data: items = [], isLoading, isError } = useAnnouncements();
 
   const createMut  = useCreateAnnouncement();
@@ -102,6 +105,62 @@ export default function Announcements() {
   const high      = items.filter((a) => a.priority === "High" && a.published).length;
 
   const isSaving = createMut.isPending || updateMut.isPending;
+
+  // ── Employee read-only view ───────────────────────────────────────────────
+  const [acknowledged, setAcknowledged] = useState({});
+  const publishedItems = items.filter((a) => a.published);
+
+  if (!isAdmin) {
+    return (
+      <Box>
+        <AppPageHeader title="Announcements" sub="Company-wide notices and updates" />
+        {isLoading && <Box ta="center" py="xl"><Loader size="sm" /></Box>}
+        {isError   && <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">Failed to load announcements.</Alert>}
+        {!isLoading && !isError && (
+          <Stack gap="md">
+            {publishedItems.length === 0 && (
+              <Paper withBorder p="xl" radius="xl" ta="center">
+                <IconBell size={32} color="#94a3b8" stroke={1.5} />
+                <Text c="dimmed" mt="sm">No announcements at this time</Text>
+              </Paper>
+            )}
+            {publishedItems.map((a) => (
+              <Paper key={a.id} withBorder p="lg" radius="xl" shadow="xs">
+                <Group justify="space-between" wrap="wrap" gap="sm" mb={8}>
+                  <Group gap="sm" wrap="nowrap">
+                    <Avatar size="sm" radius="xl" color="blue">{(a.author || "?").slice(0, 2).toUpperCase()}</Avatar>
+                    <Box>
+                      <Text fw={700} fz="sm">{a.title}</Text>
+                      <Group gap={6}>
+                        <Text fz="xs" c="dimmed">{a.author}</Text>
+                        <Text fz="xs" c="dimmed">·</Text>
+                        <Text fz="xs" c="dimmed">{new Date(a.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</Text>
+                      </Group>
+                    </Box>
+                  </Group>
+                  <Group gap={6}>
+                    <Badge color={PRIORITY_COLOR[a.priority] || "gray"} variant="light" size="sm">{a.priority}</Badge>
+                    <Group gap={4}><Box c="dimmed">{TARGET_ICON[a.target]}</Box><Text fz="xs" c="dimmed">{a.target}</Text></Group>
+                  </Group>
+                </Group>
+                <Text fz="sm" c="dimmed" style={{ lineHeight: 1.6 }}>{a.body}</Text>
+                <Group mt="md" justify="flex-end">
+                  {acknowledged[a.id] ? (
+                    <Badge color="green" variant="light" leftSection={<IconCheck size={12} />}>Acknowledged</Badge>
+                  ) : (
+                    <Button size="xs" variant="light" color="green" leftSection={<IconCheck size={13} />}
+                      onClick={() => setAcknowledged((p) => ({ ...p, [a.id]: true }))}>
+                      Acknowledge
+                    </Button>
+                  )}
+                </Group>
+              </Paper>
+            ))}
+          </Stack>
+        )}
+      </Box>
+    );
+  }
 
   return (
     <Box>

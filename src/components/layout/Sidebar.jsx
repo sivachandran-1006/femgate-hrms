@@ -42,11 +42,7 @@ import {
   IconSpeakerphone,
   IconUserCheck,
 } from "@tabler/icons-react";
-import {
-  ROLE_SIDEBAR,
-  ROLE_LABELS,
-  ROLE_COLORS,
-} from "../../constants/permissions";
+import { ROLE_SIDEBAR } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { RADIUS } from "../../theme/sizes";
@@ -90,7 +86,6 @@ const ICON_MAP = {
 
 const Sidebar = ({
   onLogout,
-  user,
   userRole,
   onCloseMobile,
   collapsed,
@@ -101,8 +96,6 @@ const Sidebar = ({
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
-  const roleLabel = ROLE_LABELS[userRole] || userRole;
-  const roleColor = ROLE_COLORS[userRole] || { bg: "#f1f5f9", text: "#475569" };
 
   const surface = dark
     ? {
@@ -135,113 +128,60 @@ const Sidebar = ({
         overflow: "hidden",
       }}
     >
-      {/* ── User Profile row + collapse toggle ── */}
+      {/* ── Brand + collapse toggle ── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: collapsed ? "center" : "space-between",
-          padding: collapsed ? "13px 0" : "12px 10px 12px 14px",
+          padding: collapsed ? "14px 0" : "0 10px 0 16px",
+          height: 60,
           borderBottom: `1px solid ${surface.border}`,
           flexShrink: 0,
-          gap: 8,
         }}
       >
-        {/* Avatar + name/role */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            minWidth: 0,
-            flex: collapsed ? "none" : 1,
-          }}
-        >
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: RADIUS.full,
-              background: COLORS.primaryMuted,
-              color: COLORS.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: FONT_SIZE.xs,
-              fontWeight: FONT_WEIGHT.bold,
-              flexShrink: 0,
-              border: `2px solid ${COLORS.primaryLight}`,
-            }}
-          >
-            {user?.avatar || user?.name?.slice(0, 2).toUpperCase()}
-          </div>
-
-          {!collapsed && (
-            <div style={{ minWidth: 0 }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: FONT_SIZE.sm,
-                  fontWeight: FONT_WEIGHT.semibold,
-                  color: surface.text,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: 140,
-                }}
-              >
-                {user?.name}
-              </p>
-              <span
-                style={{
-                  display: "inline-block",
-                  fontSize: "0.62rem",
-                  fontWeight: FONT_WEIGHT.semibold,
-                  padding: "2px 8px",
-                  borderRadius: RADIUS.full,
-                  background: roleColor.bg,
-                  color: roleColor.text,
-                  marginTop: 3,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {roleLabel}
-              </span>
+        {!collapsed && (
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+              background: "linear-gradient(135deg,#3b82f6,#6366f1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 900, color: "#fff",
+            }}>
+              MG
             </div>
-          )}
-        </div>
-
-        {/* ✕ / ☰ toggle button */}
-        {onToggleCollapse && (
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: surface.text, letterSpacing: "-0.3px", lineHeight: 1.1 }}>MGate</div>
+              <div style={{ fontSize: 9, color: surface.subtext, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>HRMS</div>
+            </div>
+          </div>
+        )}
+        {collapsed && (
+          <div style={{
+            width: 30, height: 30, borderRadius: 8,
+            background: "linear-gradient(135deg,#3b82f6,#6366f1)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 12, fontWeight: 900, color: "#fff",
+          }}>
+            MG
+          </div>
+        )}
+        {onToggleCollapse && !collapsed && (
           <button
             onClick={onToggleCollapse}
-            title={collapsed ? "Open sidebar" : "Close sidebar"}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: RADIUS.md,
-              border: `1px solid ${surface.border}`,
-              background: "transparent",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              flexShrink: 0,
-              transition: "background 0.15s",
-              padding: 0,
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = surface.hover)
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
+            style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${surface.border}`, background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0, flexShrink: 0 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = surface.hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
-            {collapsed ? (
-              <IconMenu2 size={16} stroke={2} color={surface.subtext} />
-            ) : (
-              <IconX size={16} stroke={2.5} color={surface.subtext} />
-            )}
+            <IconX size={14} stroke={2} color={surface.subtext} />
+          </button>
+        )}
+        {onToggleCollapse && collapsed && (
+          <button
+            onClick={onToggleCollapse}
+            style={{ position: "absolute", bottom: 80, right: -10, width: 20, height: 20, borderRadius: "50%", border: `1px solid ${surface.border}`, background: surface.bg, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10 }}
+          >
+            <IconMenu2 size={11} stroke={2} color={surface.subtext} />
           </button>
         )}
       </div>

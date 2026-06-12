@@ -6,7 +6,7 @@ export const ROLE_ROUTES = {
   MANAGER:     ["dashboard","employees","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance"],
   FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance"],
   IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance"],
-  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","settings"],
 };
 
 // ── Sidebar nav items per role ────────────────────────────────────────────────
@@ -126,8 +126,11 @@ export const ROLE_SIDEBAR = {
     { id: "my-assets",    label: "My Assets",     icon: "IconPackage"         },
     { id: "helpdesk",     label: "Helpdesk",      icon: "IconLifebuoy"        },
     { id: "orgchart",     label: "Org Chart",     icon: "IconHierarchy"       },
-    { id: "calendar",     label: "Calendar",      icon: "IconCalendar"        },
-    { id: "lms",          label: "Learning",      icon: "IconBook"            },
+    { id: "calendar",       label: "Calendar",       icon: "IconCalendar"        },
+    { id: "lms",            label: "Learning",       icon: "IconBook"            },
+    { id: "announcements",  label: "Announcements",  icon: "IconSpeakerphone"    },
+    { id: "notifications",  label: "Notifications",  icon: "IconBell"            },
+    { id: "settings",       label: "Settings",       icon: "IconSettings"        },
   ],
 };
 
@@ -228,6 +231,11 @@ export const PERMISSIONS = {
   "helpdesk.resolve_tickets":         ["IT_ADMIN","ADMIN","SUPER_ADMIN"],
   "helpdesk.view_analytics":          ["IT_ADMIN","ADMIN","SUPER_ADMIN","MANAGER"],
   "helpdesk.view_sla":                ["IT_ADMIN","ADMIN","SUPER_ADMIN"],
+
+  // ── Announcements ──
+  "announcements.view":               ["SUPER_ADMIN","ADMIN","HR","MANAGER","FINANCE","IT_ADMIN","EMPLOYEE"],
+  "announcements.create":             ["SUPER_ADMIN","ADMIN","HR"],
+  "announcements.delete":             ["SUPER_ADMIN","ADMIN"],
 
   // ── Analytics ──
   "analytics.view_team":              ["MANAGER","HR","ADMIN","SUPER_ADMIN","IT_ADMIN","FINANCE"],
