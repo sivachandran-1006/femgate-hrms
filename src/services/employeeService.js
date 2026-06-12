@@ -1,103 +1,26 @@
-import axios from "axios";
+import api from "../api/axios";
 
-const API =
-  "http://localhost:5000";
-
-const getToken = () => {
-
-  return localStorage.getItem(
-    "token"
-  );
-
+export const getAllEmployees = async () => {
+  const res = await api.get("/employees");
+  return res.data?.data ?? res.data ?? [];
 };
 
-export const fetchEmployeesAPI =
-  async () => {
-
-    const response =
-      await axios.get(
-
-        `${API}/employees`,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
+export const getEmployee = async (id) => {
+  const res = await api.get(`/employees/${id}`);
+  return res.data?.data ?? res.data ?? {};
 };
 
-export const addEmployeeAPI =
-  async (employeeData) => {
-
-    const response =
-      await axios.post(
-
-        `${API}/employees`,
-
-        employeeData,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
+export const createEmployee = async (payload) => {
+  const res = await api.post("/employees", payload);
+  return res.data?.data ?? res.data;
 };
 
-export const updateEmployeeAPI =
-  async (
-    id,
-    employeeData
-  ) => {
-
-    const response =
-      await axios.put(
-
-        `${API}/employees/${id}`,
-
-        employeeData,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
+export const updateEmployee = async (id, payload) => {
+  const res = await api.put(`/employees/${id}`, payload);
+  return res.data?.data ?? res.data;
 };
 
-export const deleteEmployeeAPI =
-  async (id) => {
-
-    const response =
-      await axios.delete(
-
-        `${API}/employees/${id}`,
-
-        {
-          headers: {
-            authorization:
-              getToken(),
-          },
-        }
-
-      );
-
-    return response.data;
-
+export const deleteEmployee = async (id) => {
+  const res = await api.delete(`/employees/${id}`);
+  return res.data?.data ?? res.data;
 };

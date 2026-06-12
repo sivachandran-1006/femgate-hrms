@@ -1,0 +1,632 @@
+// MGate HRMS — Prisma Schema
+// Database: PostgreSQL
+// Generated from API_CONTRACT.md
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  HR
+  MANAGER
+  FINANCE
+  IT_ADMIN
+  EMPLOYEE
+}
+
+enum UserStatus {
+  Active
+  Suspended
+  Pending
+}
+
+enum CompanyStatus {
+  Active
+  Trial
+  Suspended
+}
+
+enum BillingPlan {
+  Starter
+  Pro
+  Enterprise
+}
+
+enum InvoiceStatus {
+  Paid
+  Pending
+  Failed
+}
+
+enum LogModule {
+  Security
+  System
+  UserActions
+}
+
+enum LogSeverity {
+  Critical
+  Warning
+  Info
+}
+
+enum NotificationSeverity {
+  critical
+  warning
+  info
+}
+
+enum NotificationCategory {
+  HR
+  Payroll
+  Security
+  System
+  Assets
+  Leave
+  Document
+}
+
+enum IntegrationCategory {
+  Communication
+  HR
+  Productivity
+  Security
+}
+
+enum LeaveStatus {
+  Pending
+  Approved
+  Rejected
+  Cancelled
+}
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Late
+  HalfDay
+  OnLeave
+}
+
+enum AssetStatus {
+  Available
+  InUse
+  Maintenance
+  Disposed
+}
+
+enum PayrollStatus {
+  Pending
+  Paid
+  Hold
+}
+
+enum TicketStatus {
+  Open
+  InProgress
+  Pending
+  Resolved
+  Closed
+}
+
+enum TicketPriority {
+  Low
+  Medium
+  High
+}
+
+// ─── Company / Tenant ─────────────────────────────────────────────────────────
+
+model Company {
+  id           Int           @id @default(autoincrement())
+  name         String
+  legalName    String?
+  gstin        String?
+  pan          String?
+  cin          String?
+  email        String
+  phone        String?
+  website      String?
+  address      String?
+  city         String?
+  state        String?
+  pincode      String?
+  country      String        @default("India")
+  industry     String?
+  employeeSize String?       // e.g. "50-200"
+  founded      String?
+  timezone     String        @default("Asia/Kolkata")
+  currency     String        @default("INR")
+  dateFormat   String        @default("DD/MM/YYYY")
+  fiscalYear   String        @default("April - March")
+
+  // Branding
+  primaryColor String        @default("#2563eb")
+  accentColor  String        @default("#7c3aed")
+  logoUrl      String?
+  faviconUrl   String?
+  emailHeader  String        @default("MGate HRMS")
+  tagline      String?
+  footerText   String?
+
+  // Billing
+  plan         BillingPlan   @default(Starter)
+  status       CompanyStatus @default(Trial)
+  monthlyCost  Int           @default(8000)
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relations
+  users              User[]
+  employees          Employee[]
+  departments        Department[]
+  leaves             Leave[]
+  attendances        Attendance[]
+  assets             Asset[]
+  payrolls           Payroll[]
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+  emailTemplates     EmailTemplate[]
+  notifSettings      NotificationSetting[]
+  integrations       Integration[]
+  invoices           Invoice[]
+  securitySettings   SecuritySettings?
+  ipWhitelist        IpWhitelist[]
+
+  @@map("companies")
+}
+
+// ─── User (Auth / RBAC) ───────────────────────────────────────────────────────
+
+model User {
+  id          Int        @id @default(autoincrement())
+  name        String
+  email       String     @unique
+  password    String
+  role        Role       @default(EMPLOYEE)
+  status      UserStatus @default(Active)
+  dept        String?
+  phone       String?
+  joined      DateTime   @default(now())
+  lastLogin   DateTime?
+
+  companyId   Int
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  employeeId  Int?       @unique
+  employee    Employee?  @relation(fields: [employeeId], references: [id])
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  auditLogs        AuditLog[]
+  sessions         Session[]
+  passwordResets   PasswordReset[]
+  activityLogs     UserActivity[]
+
+  @@map("users")
+}
+
+model Session {
+  id          String     @id @default(cuid())
+  userId      Int
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip          String?
+  device      String?
+  location    String?
+  loginAt     DateTime   @default(now())
+  lastActive  DateTime   @default(now())
+  expiresAt   DateTime
+
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("password_resets")
+}
+
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@map("user_activities")
+}
+
+// ─── Employee ─────────────────────────────────────────────────────────────────
+
+model Employee {
+  id             Int        @id @default(autoincrement())
+  employeeId     String     // MGT001
+  name           String
+  email          String
+  phone          String?
+  designation    String?
+  department     String?
+  reportingTo    Int?       // self-ref manager id
+  gender         String?
+  dob            DateTime?
+  joinDate       DateTime
+  exitDate       DateTime?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  salary         Float      @default(0)
+  status         String     @default("Active") // Active, Inactive, On Leave
+
+  companyId      Int
+  company        Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  // Relations
+  user           User?
+  leaves         Leave[]
+  attendances    Attendance[]
+  assets         Asset[]
+  payrolls       Payroll[]
+  documents      Document[]
+
+  @@unique([companyId, employeeId])
+  @@map("employees")
+}
+
+// ─── Department ───────────────────────────────────────────────────────────────
+
+model Department {
+  id          Int      @id @default(autoincrement())
+  name        String
+  headName    String?
+  headEmail   String?
+  employeeCount Int    @default(0)
+  budget      Float?
+  location    String?
+
+  companyId   Int
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@map("departments")
+}
+
+// ─── Leave ────────────────────────────────────────────────────────────────────
+
+model Leave {
+  id          Int         @id @default(autoincrement())
+  leaveId     String      // LV-045
+  employeeId  Int
+  employee    Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type        String      // Annual, Sick, Casual, Earned
+  fromDate    DateTime
+  toDate      DateTime
+  days        Int
+  reason      String?
+  status      LeaveStatus @default(Pending)
+  reviewedBy  String?
+  reviewNote  String?
+  reviewedAt  DateTime?
+
+  companyId   Int
+  company     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("leaves")
+}
+
+// ─── Attendance ───────────────────────────────────────────────────────────────
+
+model Attendance {
+  id          Int              @id @default(autoincrement())
+  employeeId  Int
+  employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date        DateTime         @db.Date
+  checkIn     DateTime?
+  checkOut    DateTime?
+  hoursWorked Float?
+  status      AttendanceStatus @default(Present)
+  note        String?
+
+  companyId   Int
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime         @default(now())
+
+  @@unique([companyId, employeeId, date])
+  @@map("attendances")
+}
+
+// ─── Asset ────────────────────────────────────────────────────────────────────
+
+model Asset {
+  id           Int         @id @default(autoincrement())
+  assetId      String      // AST-001
+  name         String
+  category     String      // Laptop, Phone, Monitor, etc.
+  serialNumber String?
+  purchaseDate DateTime?
+  purchaseValue Float?
+  status       AssetStatus @default(Available)
+
+  assignedToId Int?
+  assignedTo   Employee?   @relation(fields: [assignedToId], references: [id])
+  assignedAt   DateTime?
+
+  companyId    Int
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([companyId, assetId])
+  @@map("assets")
+}
+
+// ─── Payroll ──────────────────────────────────────────────────────────────────
+
+model Payroll {
+  id          Int           @id @default(autoincrement())
+  payId       String        // PAY-001
+  employeeId  Int
+  employee    Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month       String        // "May"
+  year        String        // "2026"
+  salary      Float
+  bonus       Float         @default(0)
+  deduction   Float         @default(0)
+  netSalary   Float
+  status      PayrollStatus @default(Pending)
+  paidAt      DateTime?
+
+  companyId   Int
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([companyId, employeeId, month, year])
+  @@map("payrolls")
+}
+
+// ─── Document ─────────────────────────────────────────────────────────────────
+
+model Document {
+  id           Int      @id @default(autoincrement())
+  name         String
+  category     String?  // Contract, ID Proof, Certificate, etc.
+  fileUrl      String
+  fileSize     String?
+  mimeType     String?
+  expiryDate   DateTime?
+  isArchived   Boolean  @default(false)
+
+  employeeId   Int?
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+
+  companyId    Int
+  uploadedById Int?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("documents")
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        Int         @id @default(autoincrement())
+  actor     String      // email of the user who did the action
+  action    String
+  module    LogModule
+  ip        String?
+  sev       LogSeverity @default(Info)
+  detail    Json?       // flexible extra data
+
+  userId    Int?
+  user      User?       @relation(fields: [userId], references: [id])
+
+  companyId Int
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime    @default(now())
+
+  @@index([companyId, module])
+  @@index([companyId, sev])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        Int                  @id @default(autoincrement())
+  category  NotificationCategory
+  title     String
+  body      String
+  severity  NotificationSeverity @default(info)
+  read      Boolean              @default(false)
+  readAt    DateTime?
+
+  userId    Int?                 // null = broadcast to all in company
+  companyId Int
+  company   Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime             @default(now())
+
+  @@index([companyId, read])
+  @@map("notifications")
+}
+
+// ─── Security Settings ────────────────────────────────────────────────────────
+
+model SecuritySettings {
+  id                   Int      @id @default(autoincrement())
+  mfaEnabled           Boolean  @default(false)
+  passwordMinLength    Int      @default(10)
+  complexityUppercase  Boolean  @default(true)
+  complexityLowercase  Boolean  @default(true)
+  complexityNumbers    Boolean  @default(true)
+  complexitySymbols    Boolean  @default(false)
+  loginAttemptLimit    Int      @default(5)
+  sessionTimeout       Int      @default(30)  // minutes
+  singleSession        Boolean  @default(false)
+  rememberDevice       Int      @default(14)  // days
+  whitelistEnabled     Boolean  @default(false)
+  logRetention         Int      @default(90)  // days
+  autoExport           Boolean  @default(false)
+  siemIntegration      Boolean  @default(false)
+
+  companyId            Int      @unique
+  company              Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  updatedAt            DateTime @updatedAt
+
+  @@map("security_settings")
+}
+
+model IpWhitelist {
+  id        Int     @id @default(autoincrement())
+  ip        String  // e.g. "10.0.1.0/24"
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, ip])
+  @@map("ip_whitelist")
+}
+
+// ─── Email Templates ──────────────────────────────────────────────────────────
+
+model EmailTemplate {
+  id        String   @id  // "welcome", "leave_approval", etc.
+  label     String
+  subject   String
+  body      String   @db.Text
+  companyId Int
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, id])
+  @@map("email_templates")
+}
+
+// ─── Notification Settings ────────────────────────────────────────────────────
+
+model NotificationSetting {
+  id        String  @id  // "leave_apply", "payroll_run", etc.
+  label     String
+  channel   String  // "In-App + Email", "In-App", "Email"
+  trigger   String
+  active    Boolean @default(true)
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, id])
+  @@map("notification_settings")
+}
+
+// ─── Integration ──────────────────────────────────────────────────────────────
+
+model Integration {
+  id          String              @id  // "slack", "sap", "zoom", etc.
+  name        String
+  category    IntegrationCategory
+  description String?
+  iconUrl     String?
+  connected   Boolean             @default(false)
+  apiKey      String?             // encrypted at rest
+  config      Json?               // flexible extra config
+  lastSync    DateTime?
+  error       String?
+
+  companyId   Int
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, id])
+  @@map("integrations")
+}
+
+// ─── Billing ──────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id          String        @id  // "INV-2026-005"
+  date        DateTime
+  amount      Float
+  currency    String        @default("INR")
+  status      InvoiceStatus @default(Pending)
+  plan        BillingPlan
+  downloadUrl String?
+
+  companyId   Int
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime      @default(now())
+
+  @@map("invoices")
+}
+
+model PaymentMethod {
+  id          Int      @id @default(autoincrement())
+  type        String   // "card", "upi", "netbanking"
+  cardLast4   String?
+  cardBrand   String?
+  expiry      String?
+  holderName  String?
+  isDefault   Boolean  @default(false)
+  companyId   Int
+
+  createdAt   DateTime @default(now())
+
+  @@map("payment_methods")
+}
+
+// ─── Helpdesk ─────────────────────────────────────────────────────────────────
+
+model Ticket {
+  id          Int           @id @default(autoincrement())
+  ticketId    String        // "TKT001"
+  subject     String
+  description String        @db.Text
+  category    String        // Hardware, Software, Network, etc.
+  priority    TicketPriority @default(Medium)
+  status      TicketStatus  @default(Open)
+  raisedBy    String
+  assignedTo  String?
+  resolvedAt  DateTime?
+
+  companyId   Int
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("tickets")
+}

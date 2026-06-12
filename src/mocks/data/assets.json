@@ -1,0 +1,14 @@
+{
+  "assets": [
+    { "id": "AST001", "name": "Dell Laptop XPS 15", "type": "Laptop", "assignedTo": "Mani", "department": "IT", "status": "Assigned", "warrantyExpiry": "2026-12-31" },
+    { "id": "AST002", "name": "HP Desktop", "type": "Desktop", "assignedTo": "Siva", "department": "Management", "status": "Assigned", "warrantyExpiry": "2025-08-15" },
+    { "id": "AST003", "name": "iPhone 14", "type": "Mobile", "assignedTo": "Big Kundi", "department": "HR", "status": "Assigned", "warrantyExpiry": "2027-01-20" },
+    { "id": "AST004", "name": "LG Monitor 27\"", "type": "Monitor", "assignedTo": "Santhosh", "department": "IT", "status": "Assigned", "warrantyExpiry": "2028-06-30" },
+    { "id": "AST005", "name": "MacBook Pro M3", "type": "Laptop", "assignedTo": "Hari", "department": "IT", "status": "Assigned", "warrantyExpiry": "2027-09-10" },
+    { "id": "AST006", "name": "Dell Laptop G15", "type": "Laptop", "assignedTo": "—", "department": "IT", "status": "Available", "warrantyExpiry": "2027-03-15" },
+    { "id": "AST007", "name": "Adobe Creative Cloud", "type": "License", "assignedTo": "Suriya", "department": "IT", "status": "Assigned", "warrantyExpiry": "2026-07-01" },
+    { "id": "AST008", "name": "Samsung Monitor", "type": "Monitor", "assignedTo": "—", "department": "HR", "status": "Available", "warrantyExpiry": "2028-01-01" },
+    { "id": "AST009", "name": "Lenovo ThinkPad", "type": "Laptop", "assignedTo": "Safeer", "department": "Finance", "status": "Assigned", "warrantyExpiry": "2026-08-20" },
+    { "id": "AST010", "name": "Microsoft Office 365", "type": "License", "assignedTo": "Suganthan", "department": "Management", "status": "Assigned", "warrantyExpiry": "2026-06-30" }
+  ]
+}

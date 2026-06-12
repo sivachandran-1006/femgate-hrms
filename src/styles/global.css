@@ -1,0 +1,58 @@
+@import './variables.css';
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide scrollbars globally where applied */
+.scroll-hidden::-webkit-scrollbar { display: none; }
+.scroll-hidden { scrollbar-width: none; ms-overflow-style: none; }
+
+/* Remove default list styles */
+ul, ol { list-style: none; }
+
+/* Remove default button styles */
+button { cursor: pointer; font-family: inherit; }
+
+/* Remove default input styles */
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Force white app background everywhere ── */
+body,
+#root,
+.mantine-AppShell-root,
+.mantine-AppShell-main,
+[data-mantine-color-scheme] {
+  background-color: #ffffff !important;
+}
+
+/* Mantine overrides — kill gray body color */
+:root {
+  --mantine-color-body: #ffffff;
+}
+[data-mantine-color-scheme="light"] {
+  --mantine-color-body: #ffffff;
+}
