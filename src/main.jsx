@@ -14,8 +14,10 @@ import { theme } from "./theme/mantineTheme.js";
 import { enableMockMode } from "./config/MockConfig.js";
 import { loadMockData } from "./mocks/mockLoader.js";
 
-// Enable mock mode by default for now
-enableMockMode(loadMockData);
+// Only enable mock mode in local development when no API URL is set
+if (!import.meta.env.VITE_API_URL) {
+  enableMockMode(loadMockData);
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
