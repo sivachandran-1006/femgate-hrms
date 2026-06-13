@@ -21,7 +21,7 @@ const fmt = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
 const EMPTY_FORM = { employee: "", category: "Travel", amount: "", date: "", desc: "" };
 
 export default function ExpenseManagement() {
-  const { showToast } = useToast();
+  const { show: showToast } = useToast();
   const { data: expenses = [], isLoading, isError } = useExpenses();
 
   const createMut  = useCreateExpense();

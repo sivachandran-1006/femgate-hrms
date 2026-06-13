@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Box, Text, Group, SimpleGrid, Modal, TextInput, Select, NumberInput } from "@mantine/core";
 import { IconBriefcase, IconPlus, IconEdit, IconTrash, IconChevronUp } from "@tabler/icons-react";
 import { fetchDesignations, createDesignation, updateDesignation, deleteDesignation } from "../../api/designationApi";
+import { useToast } from "../../components/ui/Toast";
 
 const MOCK = [
   { id: 1, name: "CEO",            level: 9, status: "Active", department: null },
@@ -27,6 +28,7 @@ const levelColor = (l) => {
 
 export default function Designations({ darkMode }) {
   const qc = useQueryClient();
+  const { show } = useToast();
   const [open, setOpen]       = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm]       = useState({ name: "", level: 1, status: "Active" });
@@ -41,12 +43,14 @@ export default function Designations({ darkMode }) {
 
   const saveMut = useMutation({
     mutationFn: (d) => editing ? updateDesignation(editing.id, d) : createDesignation(d),
-    onSuccess: () => { qc.invalidateQueries(["designations"]); setOpen(false); },
+    onSuccess: () => { qc.invalidateQueries(["designations"]); setOpen(false); show(editing ? "Designation updated successfully" : "Designation created successfully", "success"); },
+    onError: () => show("Failed to save designation", "error"),
   });
 
   const delMut = useMutation({
     mutationFn: (id) => deleteDesignation(id),
-    onSuccess: () => { qc.invalidateQueries(["designations"]); setDeleteId(null); },
+    onSuccess: () => { qc.invalidateQueries(["designations"]); setDeleteId(null); show("Designation deleted", "success"); },
+    onError: () => show("Failed to delete designation", "error"),
   });
 
   const openAdd  = () => { setEditing(null); setForm({ name: "", level: 1, status: "Active" }); setOpen(true); };

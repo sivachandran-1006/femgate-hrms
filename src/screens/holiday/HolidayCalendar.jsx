@@ -22,7 +22,7 @@ const EMPTY = { name: "", date: "", type: "National", scope: "Company", optional
 const toInputDate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 
 export default function HolidayCalendar() {
-  const { showToast } = useToast();
+  const { show: showToast } = useToast();
   const { data: holidays = [], isLoading, isError } = useHolidays();
 
   const createMut = useCreateHoliday();

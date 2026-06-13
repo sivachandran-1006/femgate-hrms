@@ -54,7 +54,7 @@ const ROWS_PER_PAGE = 8;
 
 const EmployeeList = () => {
   const navigate = useNavigate();
-  const { showToast } = useToast();
+  const { show: showToast } = useToast();
 
   const [searchTerm,   setSearchTerm]   = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

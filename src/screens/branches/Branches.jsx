@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Box, Text, Group, Badge, Modal, TextInput, Select, SimpleGrid } from "@mantine/core";
 import { IconBuilding, IconPlus, IconEdit, IconTrash, IconMapPin } from "@tabler/icons-react";
 import { fetchBranches, createBranch, updateBranch, deleteBranch } from "../../api/branchApi";
+import { useToast } from "../../components/ui/Toast";
 
 const MOCK = [
   { id: 1, name: "Chennai", code: "CHN", location: "Tamil Nadu", status: "Active" },
@@ -16,6 +17,7 @@ const statusBg    = (s) => s === "Active" ? "#f0fdf4" : "#f1f5f9";
 
 export default function Branches({ darkMode }) {
   const qc = useQueryClient();
+  const { show } = useToast();
   const [open, setOpen]     = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm]     = useState({ name: "", code: "", location: "", status: "Active" });
@@ -30,12 +32,14 @@ export default function Branches({ darkMode }) {
 
   const saveMut = useMutation({
     mutationFn: (d) => editing ? updateBranch(editing.id, d) : createBranch(d),
-    onSuccess: () => { qc.invalidateQueries(["branches"]); setOpen(false); },
+    onSuccess: () => { qc.invalidateQueries(["branches"]); setOpen(false); show(editing ? "Branch updated successfully" : "Branch created successfully", "success"); },
+    onError: () => show("Failed to save branch", "error"),
   });
 
   const delMut = useMutation({
     mutationFn: (id) => deleteBranch(id),
-    onSuccess: () => { qc.invalidateQueries(["branches"]); setDeleteId(null); },
+    onSuccess: () => { qc.invalidateQueries(["branches"]); setDeleteId(null); show("Branch deleted", "success"); },
+    onError: () => show("Failed to delete branch", "error"),
   });
 
   const openAdd = () => { setEditing(null); setForm({ name: "", code: "", location: "", status: "Active" }); setOpen(true); };
