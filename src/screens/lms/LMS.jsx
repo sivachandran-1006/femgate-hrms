@@ -1,14 +1,25 @@
 import { useState } from "react";
 import {
-  BookOpen, Award, Play, CheckCircle, Clock, Users,
-  Star, TrendingUp, Target, Search,
-  ChevronRight, BarChart2, X,
-} from "lucide-react";
+  IconBook as BookOpen,
+  IconAward as Award,
+  IconPlayerPlay as Play,
+  IconCircleCheck as CheckCircle,
+  IconClock as Clock,
+  IconUsers as Users,
+  IconStar as Star,
+  IconTrendingUp as TrendingUp,
+  IconTarget as Target,
+  IconSearch as Search,
+  IconChevronRight as ChevronRight,
+  IconChartBar as BarChart2,
+  IconX as X,
+} from "@tabler/icons-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts";
 
+import { useToast } from "../../components/ui/Toast";
 import { COLORS }                              from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
@@ -97,6 +108,7 @@ const avatarFor = (name) => AVT_COLORS[name.charCodeAt(0) % AVT_COLORS.length];
 
 const LMS = ({ darkMode = false }) => {
   const surface = darkMode ? COLORS.dark : COLORS.light;
+  const { show } = useToast();
 
   const [activeTab, setActiveTab]   = useState("courses");
   const [search, setSearch]         = useState("");
@@ -272,7 +284,7 @@ const LMS = ({ darkMode = false }) => {
 
                     {/* CTA Button */}
                     <button
-                      onClick={(e) => { e.stopPropagation(); }}
+                      onClick={(e) => { e.stopPropagation(); show(course.isEnrolled ? (course.progress===100 ? "Course already completed!" : "Continuing course...") : "Enrolled successfully!", course.isEnrolled && course.progress===100 ? "info" : "success"); }}
                       style={{
                         marginTop: "auto", width: "100%",
                         padding: `${GAP.sm + 2}px 0`,

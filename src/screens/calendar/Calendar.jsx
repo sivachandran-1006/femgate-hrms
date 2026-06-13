@@ -3,7 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useHolidays } from "../../queries/useHolidays";
 import { useOnboarding } from "../../queries/useOnboarding";
 import { fetchLeaves } from "../../api/leaveApi";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Star, Briefcase, Clock } from "lucide-react";
+import {
+  IconChevronLeft as ChevronLeft,
+  IconChevronRight as ChevronRight,
+  IconCalendar as CalendarIcon,
+  IconStar as Star,
+  IconBriefcase as Briefcase,
+  IconClock as Clock,
+} from "@tabler/icons-react";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, GAP } from "../../theme/spacing";

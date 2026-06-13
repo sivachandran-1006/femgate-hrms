@@ -1,15 +1,15 @@
 import { useState } from "react";
 import {
-  Laptop,
-  Monitor,
-  Smartphone,
-  Server,
-  Package,
-  AlertTriangle,
-  Search,
-  Plus,
-  X,
-} from "lucide-react";
+  IconDeviceLaptop as Laptop,
+  IconDeviceDesktop as Monitor,
+  IconDeviceMobile as Smartphone,
+  IconDatabase as Server,
+  IconPackage as Package,
+  IconAlertTriangle as AlertTriangle,
+  IconSearch as Search,
+  IconPlus as Plus,
+  IconX as X,
+} from "@tabler/icons-react";
 
 // ── Theme token imports (NO hardcoded values) ─────────────────────────────
 import { COLORS }                                                        from "../../theme/colors";

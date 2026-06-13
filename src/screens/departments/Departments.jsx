@@ -80,7 +80,7 @@ const DeptModal = ({ open, onClose, onSave, editData, saving }) => {
 };
 
 const Departments = () => {
-  const { showToast } = useToast();
+  const { show: showToast } = useToast();
   const { data: departments = [], isLoading, isError } = useDepartments();
 
   const createMut = useCreateDepartment();

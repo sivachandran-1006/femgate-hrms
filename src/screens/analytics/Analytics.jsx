@@ -5,10 +5,20 @@ import {
   ResponsiveContainer, FunnelChart, Funnel, LabelList,
 } from "recharts";
 import {
-  TrendingUp, TrendingDown, Users, Wallet, Calendar,
-  Award, Target, UserMinus, UserPlus, BarChart2,
-  Star, Briefcase, Clock,
-} from "lucide-react";
+  IconTrendingUp as TrendingUp,
+  IconTrendingDown as TrendingDown,
+  IconUsers as Users,
+  IconWallet as Wallet,
+  IconCalendar as Calendar,
+  IconAward as Award,
+  IconTarget as Target,
+  IconUserMinus as UserMinus,
+  IconUserPlus as UserPlus,
+  IconChartBar as BarChart2,
+  IconStar as Star,
+  IconBriefcase as Briefcase,
+  IconClock as Clock,
+} from "@tabler/icons-react";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useFetchAllLeaves }    from "../../queries/useLeaves";
 import { useCandidates, useExits } from "../../queries/useHr";

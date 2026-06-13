@@ -1,9 +1,19 @@
 import { useState } from "react";
 import {
-  Briefcase, Users, CalendarCheck, CheckCircle,
-  Search, Eye, Plus, X, MapPin, Clock, TrendingUp, Star,
-  ArrowUpRight,
-} from "lucide-react";
+  IconBriefcase as Briefcase,
+  IconUsers as Users,
+  IconCalendarCheck as CalendarCheck,
+  IconCircleCheck as CheckCircle,
+  IconSearch as Search,
+  IconEye as Eye,
+  IconPlus as Plus,
+  IconX as X,
+  IconMapPin as MapPin,
+  IconClock as Clock,
+  IconTrendingUp as TrendingUp,
+  IconStar as Star,
+  IconArrowUpRight as ArrowUpRight,
+} from "@tabler/icons-react";
 import {
   Group, SimpleGrid, Stack, Text, Badge, Avatar,
   ScrollArea, Table, Progress, Tabs, Paper, Box,
