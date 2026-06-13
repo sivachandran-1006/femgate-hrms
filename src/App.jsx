@@ -38,8 +38,11 @@ import OrgChart       from "./screens/orgchart/OrgChart";
 import HolidayCalendar   from "./screens/holiday/HolidayCalendar";
 import ExpenseManagement from "./screens/expense/ExpenseManagement";
 import Announcements     from "./screens/announcements/Announcements";
-import Branches         from "./screens/branches/Branches";
-import Designations     from "./screens/designations/Designations";
+import Branches           from "./screens/branches/Branches";
+import Designations       from "./screens/designations/Designations";
+import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
+import MyTeam             from "./screens/myteam/MyTeam";
+import SelfOnboarding     from "./screens/onboarding-self/SelfOnboarding";
 
 // Super Admin screens
 import RolesPermissions from "./screens/roles/RolesPermissions";
@@ -483,6 +486,23 @@ export default function App() {
           <Route path="/announcements" element={
             <RoleGuard routeId="announcements" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><Announcements darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+
+          {/* ── New feature routes ── */}
+          <Route path="/approvals" element={
+            <RoleGuard routeId="approvals" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ApprovalDashboard darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/my-team" element={
+            <RoleGuard routeId="my-team" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><MyTeam darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/self-onboarding" element={
+            <RoleGuard routeId="self-onboarding" userRole={userRole}>
+              <SelfOnboarding darkMode={dark} />
             </RoleGuard>
           } />
 

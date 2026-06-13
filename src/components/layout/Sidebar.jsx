@@ -42,6 +42,8 @@ import {
   IconSpeakerphone,
   IconUserCheck,
   IconBuilding,
+  IconCircleCheck,
+  IconUsersGroup,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
@@ -84,6 +86,8 @@ const ICON_MAP = {
   IconSpeakerphone,
   IconUserCheck,
   IconBuilding,
+  IconCircleCheck,
+  IconUsersGroup,
 };
 
 const Sidebar = ({
