@@ -9,8 +9,9 @@ import {
 import {
   Group, SimpleGrid, TextInput, Select, Avatar,
   Text, Paper, ScrollArea, Table, ActionIcon,
-  Pagination, Badge, Modal, NumberInput, Button, Stack, Box,
+  Pagination, Badge, Modal, Button, Stack, Box,
 } from "@mantine/core";
+import EmployeeModal from "./EmployeeModal";
 
 import {
   useFetchAllEmployees, useCreateEmployee,
@@ -85,40 +86,32 @@ const EmployeeList = () => {
   };
 
   const openEdit = (emp) => {
-    setForm({
-      name:        emp.name        || "",
-      email:       emp.email       || "",
-      phone:       emp.phone       || "",
-      designation: emp.designation || "",
-      department:  emp.department  || "Engineering",
-      salary:      emp.salary      || "",
-      joinDate:    emp.joinDate ? emp.joinDate.split("T")[0] : "",
-      status:      emp.status      || "Active",
-    });
     setEditTarget(emp.id);
     setModalOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.name || !form.email || !form.joinDate) {
-      return showToast("Name, email and join date are required", "error");
-    }
+  const handleSave = async (payload) => {
     try {
       if (editTarget) {
-        await updateMut.mutateAsync({ id: editTarget, ...form, salary: Number(form.salary) || 0 });
+        await updateMut.mutateAsync({ id: editTarget, ...payload });
         showToast("Employee updated", "success");
       } else {
-        const created = await createMut.mutateAsync({ ...form, salary: Number(form.salary) || 0 });
-        showToast(
-          created?.loginCreated
-            ? `Employee added — login: ${form.email} / ${created.defaultPassword}`
-            : "Employee added",
-          "success"
-        );
+        await createMut.mutateAsync(payload);
+        showToast("Employee added", "success");
       }
       setModalOpen(false);
     } catch (err) {
       showToast(err?.response?.data?.message || "Failed to save employee", "error");
+    }
+  };
+
+  const handleSaveAndInvite = async (payload) => {
+    try {
+      await createMut.mutateAsync({ ...payload, sendInvite: true });
+      showToast(`Employee created — invite sent to ${payload.email}`, "success");
+      setModalOpen(false);
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Failed to create employee", "error");
     }
   };
 
@@ -400,48 +393,15 @@ const EmployeeList = () => {
         )}
       </Paper>
 
-      {/* ── Add / Edit Modal ── */}
-      <Modal
+      {/* ── Add / Edit Modal (Wizard) ── */}
+      <EmployeeModal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editTarget ? "Edit Employee" : "Add Employee"}
-        size="md"
-      >
-        <Stack gap="sm">
-          <SimpleGrid cols={2} spacing="sm">
-            <TextInput label="Full Name" placeholder="e.g. Priya Lakshmi" required
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
-            <TextInput label="Email" placeholder="name@mgate.com" required type="email"
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-            <TextInput label="Phone" placeholder="98765 00000"
-              value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
-            <TextInput label="Designation" placeholder="e.g. Backend Developer"
-              value={form.designation}
-              onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))} />
-            <Select label="Department" data={DEPARTMENTS}
-              value={form.department}
-              onChange={(v) => setForm((f) => ({ ...f, department: v }))} />
-            <NumberInput label="Salary (₹/month)" min={0} prefix="₹" thousandSeparator=","
-              value={form.salary}
-              onChange={(v) => setForm((f) => ({ ...f, salary: v }))} />
-            <TextInput type="date" label="Join Date" required
-              value={form.joinDate}
-              onChange={(e) => setForm((f) => ({ ...f, joinDate: e.target.value }))} />
-            <Select label="Status" data={["Active","On Leave","Inactive"]}
-              value={form.status}
-              onChange={(v) => setForm((f) => ({ ...f, status: v }))} />
-          </SimpleGrid>
-          <Group justify="flex-end" mt="sm" gap="sm">
-            <Button variant="default" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} loading={createMut.isPending || updateMut.isPending}>
-              {editTarget ? "Update Employee" : "Add Employee"}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+        editingEmployee={editTarget ? employees.find(e => e.id === editTarget) : null}
+        employees={employees}
+        onSave={handleSave}
+        onSaveAndInvite={handleSaveAndInvite}
+      />
 
       {/* ── Delete Confirm Modal ── */}
       <Modal
