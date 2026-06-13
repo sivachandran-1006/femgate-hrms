@@ -3,9 +3,15 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import {
-  Target, Star, ClipboardList, CheckCircle, Clock,
-  PlayCircle, TrendingUp, User,
-} from "lucide-react";
+  IconTarget as Target,
+  IconStar as Star,
+  IconClipboardList as ClipboardList,
+  IconCircleCheck as CheckCircle,
+  IconClock as Clock,
+  IconPlayerPlayFilled as PlayCircle,
+  IconTrendingUp as TrendingUp,
+  IconUser as User,
+} from "@tabler/icons-react";
 import {
   Group, SimpleGrid, Stack, Text, Badge, Avatar,
   ScrollArea, Table, Progress, Tabs,

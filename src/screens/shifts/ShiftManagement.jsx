@@ -1,8 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Sun, Sunset, Moon, Calendar, Users, RefreshCw,
-  ChevronLeft, ChevronRight, Plus, X, Clock, Check, XCircle,
-} from "lucide-react";
+  IconSun as Sun,
+  IconSunrise as Sunset,
+  IconMoon as Moon,
+  IconCalendar as Calendar,
+  IconUsers as Users,
+  IconRefresh as RefreshCw,
+  IconChevronLeft as ChevronLeft,
+  IconChevronRight as ChevronRight,
+  IconPlus as Plus,
+  IconX as X,
+  IconClock as Clock,
+  IconCheck as Check,
+  IconCircleX as XCircle,
+} from "@tabler/icons-react";
 
 import { COLORS }                        from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";

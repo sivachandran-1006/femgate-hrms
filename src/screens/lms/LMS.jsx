@@ -1,9 +1,19 @@
 import { useState } from "react";
 import {
-  BookOpen, Award, Play, CheckCircle, Clock, Users,
-  Star, TrendingUp, Target, Search,
-  ChevronRight, BarChart2, X,
-} from "lucide-react";
+  IconBook as BookOpen,
+  IconAward as Award,
+  IconPlayerPlay as Play,
+  IconCircleCheck as CheckCircle,
+  IconClock as Clock,
+  IconUsers as Users,
+  IconStar as Star,
+  IconTrendingUp as TrendingUp,
+  IconTarget as Target,
+  IconSearch as Search,
+  IconChevronRight as ChevronRight,
+  IconChartBar as BarChart2,
+  IconX as X,
+} from "@tabler/icons-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,

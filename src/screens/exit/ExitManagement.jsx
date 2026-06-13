@@ -1,10 +1,27 @@
 import { useMemo, useState } from "react";
 import {
-  UserMinus, Clock, CheckCircle, AlertCircle, ChevronRight,
-  Check, X, FileText, Download, Printer, User, Briefcase,
-  Calendar, ClipboardList, DollarSign, Shield, Laptop,
-  BookOpen, CreditCard, MessageSquare, RefreshCw,
-} from "lucide-react";
+  IconUserMinus as UserMinus,
+  IconClock as Clock,
+  IconCircleCheck as CheckCircle,
+  IconAlertCircle as AlertCircle,
+  IconChevronRight as ChevronRight,
+  IconCheck as Check,
+  IconX as X,
+  IconFileText as FileText,
+  IconDownload as Download,
+  IconPrinter as Printer,
+  IconUser as User,
+  IconBriefcase as Briefcase,
+  IconCalendar as Calendar,
+  IconClipboardList as ClipboardList,
+  IconCurrencyDollar as DollarSign,
+  IconShield as Shield,
+  IconDeviceLaptop as Laptop,
+  IconBook as BookOpen,
+  IconCreditCard as CreditCard,
+  IconMessage as MessageSquare,
+  IconRefresh as RefreshCw,
+} from "@tabler/icons-react";
 
 import { COLORS }                              from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT }              from "../../theme/fonts";
