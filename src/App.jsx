@@ -38,6 +38,8 @@ import OrgChart       from "./screens/orgchart/OrgChart";
 import HolidayCalendar   from "./screens/holiday/HolidayCalendar";
 import ExpenseManagement from "./screens/expense/ExpenseManagement";
 import Announcements     from "./screens/announcements/Announcements";
+import Branches         from "./screens/branches/Branches";
+import Designations     from "./screens/designations/Designations";
 
 // Super Admin screens
 import RolesPermissions from "./screens/roles/RolesPermissions";
@@ -466,6 +468,16 @@ export default function App() {
           <Route path="/expense" element={
             <RoleGuard routeId="expense" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><ExpenseManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/branches" element={
+            <RoleGuard routeId="branches" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Branches darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/designations" element={
+            <RoleGuard routeId="designations" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Designations darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/announcements" element={
