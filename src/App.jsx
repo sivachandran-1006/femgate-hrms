@@ -69,30 +69,10 @@ import { usePermission } from "./hooks/usePermission";
 import { ROLE_ROUTES } from "./constants/permissions";
 import logo from "./assets/images/logo.jpeg";
 
-// Access Denied page
-const AccessDenied = () => (
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: "60vh",
-      gap: 16,
-    }}
-  >
-    <span style={{ fontSize: 48 }}>🚫</span>
-    <h2 style={{ margin: 0 }}>Access Denied</h2>
-    <p style={{ color: "#64748b", margin: 0 }}>
-      You don&apos;t have permission to view this page.
-    </p>
-  </div>
-);
-
 // Helper: wrap a screen with role-based access check
 const RoleGuard = ({ routeId, userRole, children }) => {
   const allowed = userRole ? (ROLE_ROUTES[userRole] || []) : [];
-  if (!allowed.includes(routeId)) return <AccessDenied />;
+  if (!allowed.includes(routeId)) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -291,9 +271,11 @@ export default function App() {
           <Route
             path="/payroll"
             element={
-              <RoleGuard routeId="payroll" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Payroll darkMode={dark} /></ScreenWrapper>
-              </RoleGuard>
+              userRole === "EMPLOYEE"
+                ? <Navigate to="/my-payslips" replace />
+                : <RoleGuard routeId="payroll" userRole={userRole}>
+                    <ScreenWrapper darkMode={dark}><Payroll darkMode={dark} /></ScreenWrapper>
+                  </RoleGuard>
             }
           />
           <Route
