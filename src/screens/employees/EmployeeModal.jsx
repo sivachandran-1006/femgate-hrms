@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { Modal, TextInput, Select, Group, Box, Text, Stepper, SimpleGrid, Badge } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
-import "@mantine/dates/styles.css";
+import { Modal, TextInput, Select, Group, Box, Text, SimpleGrid } from "@mantine/core";
 import {
-  IconUser, IconBriefcase, IconMail, IconPhone, IconCalendar,
-  IconBuilding, IconCheck, IconSend, IconDeviceFloppy,
+  IconUser, IconMail, IconPhone,
+  IconCheck, IconSend, IconDeviceFloppy,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBranches } from "../../api/branchApi";
@@ -47,7 +45,7 @@ const EmployeeModal = ({
     designationId:  editingEmployee.designationId || "",
     branchId:       editingEmployee.branchId || "",
     reportingTo:    editingEmployee.reportingTo || "",
-    joinDate:       editingEmployee.joinDate ? new Date(editingEmployee.joinDate) : null,
+    joinDate:       editingEmployee.joinDate ? editingEmployee.joinDate.split("T")[0] : "",
     employmentType: editingEmployee.employmentType || "Full-time",
     role:           editingEmployee.user?.role || "EMPLOYEE",
     salary:         editingEmployee.salary || "",
@@ -55,7 +53,7 @@ const EmployeeModal = ({
   } : {
     firstName: "", lastName: "", email: "", phone: "",
     department: "", designation: "", designationId: "",
-    branchId: "", reportingTo: "", joinDate: null,
+    branchId: "", reportingTo: "", joinDate: "",
     employmentType: "Full-time", role: "EMPLOYEE", salary: "", status: "Active",
   });
 
@@ -83,7 +81,7 @@ const EmployeeModal = ({
     designationId:  form.designationId ? parseInt(form.designationId) : null,
     branchId:       form.branchId ? parseInt(form.branchId) : null,
     reportingTo:    form.reportingTo ? parseInt(form.reportingTo) : null,
-    joinDate:       form.joinDate?.toISOString() || new Date().toISOString(),
+    joinDate:       form.joinDate ? new Date(form.joinDate).toISOString() : new Date().toISOString(),
     employmentType: form.employmentType,
     salary:         parseFloat(form.salary) || 0,
     status:         form.status,
@@ -186,9 +184,8 @@ const EmployeeModal = ({
               data={EMP_TYPES} styles={field(darkMode)} />
           </SimpleGrid>
           <SimpleGrid cols={2} spacing="sm">
-            <DateInput label="Joining Date" placeholder="Pick date" required
-              value={form.joinDate} onChange={v => set("joinDate", v)}
-              leftSection={<IconCalendar size={15} stroke={1.8} />}
+            <TextInput type="date" label="Joining Date" required
+              value={form.joinDate} onChange={e => set("joinDate", e.target.value)}
               styles={field(darkMode)} />
             <TextInput label="Salary (₹)" placeholder="50000"
               value={form.salary} onChange={e => set("salary", e.target.value)}
@@ -215,7 +212,7 @@ const EmployeeModal = ({
               ["Designation",     form.designation || "—"],
               ["Branch",          branches.find(b => String(b.id) === String(form.branchId))?.name || "—"],
               ["Employment Type", form.employmentType],
-              ["Joining Date",    form.joinDate?.toLocaleDateString("en-IN") || "—"],
+              ["Joining Date",    form.joinDate ? new Date(form.joinDate).toLocaleDateString("en-IN") : "—"],
               ["Role",            form.role],
               ["Salary",          form.salary ? `₹${Number(form.salary).toLocaleString("en-IN")}` : "—"],
             ].map(([k, v]) => (
