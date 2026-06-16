@@ -19,6 +19,7 @@ import Dashboard      from "./screens/dashboard/Dashboard";
 import EmployeeList   from "./screens/employees/EmployeeList";
 import Profile        from "./screens/employees/Profile";
 import Departments    from "./screens/departments/Departments";
+import DepartmentProfile from "./screens/departments/DepartmentProfile";
 import Attendance     from "./screens/attendance/Attendance";
 import Leave          from "./screens/leave/Leave";
 import Payroll        from "./screens/payroll/Payroll";
@@ -244,6 +245,14 @@ export default function App() {
             element={
               <RoleGuard routeId="departments" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><Departments darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/departments/:id"
+            element={
+              <RoleGuard routeId="departments" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><DepartmentProfile darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
