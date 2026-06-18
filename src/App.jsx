@@ -20,6 +20,8 @@ import EmployeeList   from "./screens/employees/EmployeeList";
 import Profile        from "./screens/employees/Profile";
 import Departments    from "./screens/departments/Departments";
 import DepartmentProfile from "./screens/departments/DepartmentProfile";
+import BranchProfile     from "./screens/branches/BranchProfile";
+import DesignationProfile from "./screens/designations/DesignationProfile";
 import Attendance     from "./screens/attendance/Attendance";
 import Leave          from "./screens/leave/Leave";
 import Payroll        from "./screens/payroll/Payroll";
@@ -469,9 +471,19 @@ export default function App() {
               <ScreenWrapper darkMode={dark}><Branches darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
+          <Route path="/branches/:id" element={
+            <RoleGuard routeId="branches" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><BranchProfile darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
           <Route path="/designations" element={
             <RoleGuard routeId="designations" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><Designations darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/designations/:id" element={
+            <RoleGuard routeId="designations" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><DesignationProfile darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/announcements" element={

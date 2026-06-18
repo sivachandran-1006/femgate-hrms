@@ -3,7 +3,7 @@ export const ROLE_ROUTES = {
   SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team"],
   ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team"],
   HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team"],
-  MANAGER:     ["dashboard","employees","departments","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals"],
+  MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals"],
   FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals"],
   IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals"],
   EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","settings","self-onboarding"],
@@ -169,6 +169,18 @@ export const PERMISSIONS = {
   "departments.create":               ["SUPER_ADMIN","ADMIN","HR"],
   "departments.edit":                 ["SUPER_ADMIN","ADMIN","HR"],
   "departments.delete":               ["SUPER_ADMIN","ADMIN"],
+
+  // ── Branches ──  (HR & Manager = view only)
+  "branches.view":                    ["SUPER_ADMIN","ADMIN","HR","MANAGER"],
+  "branches.create":                  ["SUPER_ADMIN","ADMIN"],
+  "branches.edit":                    ["SUPER_ADMIN","ADMIN"],
+  "branches.delete":                  ["SUPER_ADMIN","ADMIN"],
+
+  // ── Designations ──  (Admin & HR create/edit/view; Manager view only)
+  "designations.view":                ["SUPER_ADMIN","ADMIN","HR","MANAGER"],
+  "designations.create":              ["SUPER_ADMIN","ADMIN","HR"],
+  "designations.edit":                ["SUPER_ADMIN","ADMIN","HR"],
+  "designations.delete":              ["SUPER_ADMIN","ADMIN"],
 
   // ── Attendance ──
   "attendance.view_own":              ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","IT_ADMIN","FINANCE"],

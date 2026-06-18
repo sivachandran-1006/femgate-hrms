@@ -9,7 +9,8 @@ import {
   IconChevronDown,
 } from "@tabler/icons-react";
 
-import { useFetchAllEmployees }                        from "../../queries/useEmployees";
+import { IconChartBar, IconHistory }                   from "@tabler/icons-react";
+import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, useEmpPerformance, useEmpActivity } from "../../queries/useEmployees";
 import { AppLoader }                                   from "../../components/ui/AppLoader";
 import { COLORS, STATUS_BADGE }                        from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
@@ -86,13 +87,15 @@ const MOCK_ASSETS = [
 ];
 
 const TABS = [
-  { key: "Personal",   icon: IconUser          },
-  { key: "Job",        icon: IconBriefcase     },
-  { key: "Leave",      icon: IconCalendarOff   },
-  { key: "Attendance", icon: IconClock         },
-  { key: "Payroll",    icon: IconCurrencyRupee },
-  { key: "Documents",  icon: IconFile          },
-  { key: "Assets",     icon: IconDeviceLaptop  },
+  { key: "Personal",    icon: IconUser          },
+  { key: "Job",         icon: IconBriefcase     },
+  { key: "Leave",       icon: IconCalendarOff   },
+  { key: "Attendance",  icon: IconClock         },
+  { key: "Payroll",     icon: IconCurrencyRupee },
+  { key: "Performance", icon: IconChartBar      },
+  { key: "Documents",   icon: IconFile          },
+  { key: "Assets",      icon: IconDeviceLaptop  },
+  { key: "Activity",    icon: IconHistory       },
 ];
 
 const DEPT_COLORS = {
@@ -332,20 +335,26 @@ const JobTab = ({ emp, dark }) => {
   );
 };
 
-const LeaveTab = ({ dark }) => {
-  const text    = dark ? COLORS.dark.text    : COLORS.textLight;
-  const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
+const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+const LeaveTab = ({ dark, empId }) => {
   const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
   const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
 
-  const approved = MOCK_LEAVE_HISTORY.filter((l) => l.status === "Approved").length;
-  const pending  = MOCK_LEAVE_HISTORY.filter((l) => l.status === "Pending").length;
-  const rejected = MOCK_LEAVE_HISTORY.filter((l) => l.status === "Rejected").length;
-  const totalDays = MOCK_LEAVE_HISTORY.filter((l) => l.status === "Approved").reduce((s, l) => s + l.days, 0);
+  const { data } = useEmpLeave(empId);
+  const apiLeaves = data?.leaves;
+  // real data when present, else mock fallback (never breaks)
+  const rows = apiLeaves && apiLeaves.length
+    ? apiLeaves.map((l) => ({ id: l.id, type: l.type, from: fmtD(l.fromDate), to: fmtD(l.toDate), days: l.days, status: l.status }))
+    : MOCK_LEAVE_HISTORY;
+  const sum = data?.summary;
+  const approved  = sum ? sum.approved : rows.filter((l) => l.status === "Approved").length;
+  const pending   = sum ? sum.pending  : rows.filter((l) => l.status === "Pending").length;
+  const rejected  = sum ? sum.rejected : rows.filter((l) => l.status === "Rejected").length;
+  const totalDays = sum ? sum.daysUsed : rows.filter((l) => l.status === "Approved").reduce((s, l) => s + l.days, 0);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-      {/* Summary cards */}
       <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Approved"  value={approved}  color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Pending"   value={pending}   color={COLORS.primary} bg={COLORS.primaryLight} />
@@ -364,7 +373,7 @@ const LeaveTab = ({ dark }) => {
           </tr>
         </thead>
         <tbody>
-          {MOCK_LEAVE_HISTORY.map((row) => (
+          {rows.map((row) => (
             <tr
               key={row.id}
               style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
@@ -384,14 +393,26 @@ const LeaveTab = ({ dark }) => {
   );
 };
 
-const AttendanceTab = ({ dark }) => {
+const AttendanceTab = ({ dark, empId }) => {
   const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
   const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
 
-  const present = MOCK_ATTENDANCE.filter((a) => a.status === "Present").length;
-  const absent  = MOCK_ATTENDANCE.filter((a) => a.status === "Absent").length;
-  const leave   = MOCK_ATTENDANCE.filter((a) => a.status === "Leave").length;
-  const total   = MOCK_ATTENDANCE.length;
+  const { data } = useEmpAttendance(empId);
+  const apiRecords = data?.records;
+  const rows = apiRecords && apiRecords.length
+    ? apiRecords.map((r) => ({
+        date: fmtD(r.date),
+        checkIn:  r.checkIn  ? new Date(r.checkIn).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "--",
+        checkOut: r.checkOut ? new Date(r.checkOut).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "--",
+        hours: r.hoursWorked ? `${r.hoursWorked}h` : "--",
+        status: r.status,
+      }))
+    : MOCK_ATTENDANCE;
+  const s = data?.summary;
+  const present = s ? s.present : rows.filter((a) => a.status === "Present").length;
+  const absent  = s ? s.absent  : rows.filter((a) => a.status === "Absent").length;
+  const leave   = s ? s.late    : rows.filter((a) => a.status === "Leave").length;
+  const total   = rows.length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
@@ -399,7 +420,7 @@ const AttendanceTab = ({ dark }) => {
       <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Present"      value={present} color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Absent"       value={absent}  color={COLORS.danger}  bg={COLORS.dangerMuted}  />
-        <MiniStatCard dark={dark} label="Leave"        value={leave}   color={COLORS.warning} bg={COLORS.warningLight} />
+        <MiniStatCard dark={dark} label={s ? "Late" : "Leave"} value={leave} color={COLORS.warning} bg={COLORS.warningLight} />
         <MiniStatCard dark={dark} label="Total Days"   value={total}   color={COLORS.info}    bg={COLORS.infoLight}    />
       </div>
 
@@ -414,7 +435,7 @@ const AttendanceTab = ({ dark }) => {
           </tr>
         </thead>
         <tbody>
-          {MOCK_ATTENDANCE.map((row, i) => (
+          {rows.map((row, i) => (
             <tr
               key={i}
               style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
@@ -434,20 +455,29 @@ const AttendanceTab = ({ dark }) => {
   );
 };
 
-const PayrollTab = ({ emp, dark }) => {
+const PayrollTab = ({ emp, dark, empId }) => {
   const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
   const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
   const text     = dark ? COLORS.dark.text     : COLORS.textLight;
   const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
 
-  const totalNet  = MOCK_PAYROLL.reduce((s, r) => s + r.net, 0);
-  const avgNet    = Math.round(totalNet / MOCK_PAYROLL.length);
+  const { data } = useEmpPayroll(empId);
+  const apiPay = data?.payrolls;
+  const PAYROLL = apiPay && apiPay.length
+    ? apiPay.map((p) => ({
+        month: `${p.month} ${p.year}`, basic: p.salary, allowances: p.bonus || 0,
+        deductions: p.deduction || 0, net: p.netSalary,
+      }))
+    : MOCK_PAYROLL;
+
+  const totalNet  = PAYROLL.reduce((s, r) => s + r.net, 0);
+  const avgNet    = Math.round(totalNet / (PAYROLL.length || 1));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
       {/* Payroll summary */}
       <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
-        <MiniStatCard dark={dark} label="Months Paid"    value={MOCK_PAYROLL.length} color={COLORS.primary} bg={COLORS.primaryLight} />
+        <MiniStatCard dark={dark} label="Months Paid"    value={PAYROLL.length} color={COLORS.primary} bg={COLORS.primaryLight} />
         <MiniStatCard dark={dark} label="Avg Net / Mo"   value={`₹${Math.round(avgNet/1000)}K`}  color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Total YTD"      value={`₹${Math.round(totalNet/1000)}K`} color={COLORS.warning} bg={COLORS.warningLight} />
       </div>
@@ -464,7 +494,7 @@ const PayrollTab = ({ emp, dark }) => {
           </tr>
         </thead>
         <tbody>
-          {MOCK_PAYROLL.map((row, i) => (
+          {PAYROLL.map((row, i) => (
             <tr
               key={i}
               style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
@@ -646,6 +676,87 @@ const AssetsTab = ({ dark }) => {
 };
 
 // ─── Main Profile Component ───────────────────────────────────────────────────
+
+const PerformanceTab = ({ dark, empId }) => {
+  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
+  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
+  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
+  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
+
+  const { data } = useEmpPerformance(empId);
+  const goals = data?.goals || [];
+
+  if (!goals.length) {
+    return (
+      <div style={{ textAlign: "center", padding: SPACING[8], color: subtext, fontFamily: FONT_FAMILY.base }}>
+        <IconChartBar size={36} color={subtext} style={{ opacity: 0.5 }} />
+        <p style={{ margin: `${GAP.sm}px 0 0`, fontSize: FONT_SIZE.sm }}>No performance goals or reviews yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <TableWrapper dark={dark}>
+      <thead>
+        <tr>
+          <Th dark={dark}>Goal / KPI</Th>
+          <Th dark={dark}>Target</Th>
+          <Th dark={dark}>Progress</Th>
+          <Th dark={dark}>Rating</Th>
+          <Th dark={dark}>Status</Th>
+        </tr>
+      </thead>
+      <tbody>
+        {goals.map((g, i) => (
+          <tr key={g.id || i}
+            style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
+            <Td dark={dark} bold>{g.title || g.goal || g.name || "—"}</Td>
+            <Td dark={dark} muted>{g.target || g.targetDate || "—"}</Td>
+            <Td dark={dark}>{g.progress != null ? `${g.progress}%` : "—"}</Td>
+            <Td dark={dark}>{g.rating != null ? `${g.rating}/5` : "—"}</Td>
+            <td style={{ padding: PADDING.tableCell }}><Badge label={g.status || "Active"} dark={dark} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </TableWrapper>
+  );
+};
+
+const ActivityTab = ({ dark, empId }) => {
+  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
+  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
+  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
+
+  const { data: logs = [] } = useEmpActivity(empId);
+
+  if (!logs.length) {
+    return (
+      <div style={{ textAlign: "center", padding: SPACING[8], color: subtext, fontFamily: FONT_FAMILY.base }}>
+        <IconHistory size={36} color={subtext} style={{ opacity: 0.5 }} />
+        <p style={{ margin: `${GAP.sm}px 0 0`, fontSize: FONT_SIZE.sm }}>No activity history yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {logs.map((l, i) => (
+        <div key={l.id || i} style={{ display: "flex", gap: GAP.md, padding: `${SPACING[3]}px 0`, borderBottom: i < logs.length - 1 ? `1px solid ${border}` : "none" }}>
+          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.primary, marginTop: 6, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>{l.action}</p>
+            {l.details && <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base }}>{l.details}</p>}
+          </div>
+          <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base, whiteSpace: "nowrap" }}>
+            {l.actorName ? `${l.actorName} · ` : ""}{l.createdAt ? new Date(l.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const Profile = ({ darkMode: dark = false, employeeId }) => {
   const [activeTab, setActiveTab] = useState("Personal");
@@ -850,13 +961,15 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
               {activeTab} Information
             </p>
 
-            {activeTab === "Personal"   && <PersonalTab   emp={employee}    dark={dark} />}
-            {activeTab === "Job"        && <JobTab         emp={employee}    dark={dark} />}
-            {activeTab === "Leave"      && <LeaveTab                         dark={dark} />}
-            {activeTab === "Attendance" && <AttendanceTab                    dark={dark} />}
-            {activeTab === "Payroll"    && <PayrollTab     emp={employee}    dark={dark} />}
-            {activeTab === "Documents"  && <DocumentsTab                     dark={dark} />}
-            {activeTab === "Assets"     && <AssetsTab                        dark={dark} />}
+            {activeTab === "Personal"    && <PersonalTab    emp={employee} dark={dark} />}
+            {activeTab === "Job"         && <JobTab         emp={employee} dark={dark} />}
+            {activeTab === "Leave"       && <LeaveTab       empId={targetId} dark={dark} />}
+            {activeTab === "Attendance"  && <AttendanceTab  empId={targetId} dark={dark} />}
+            {activeTab === "Payroll"     && <PayrollTab     emp={employee} empId={targetId} dark={dark} />}
+            {activeTab === "Performance" && <PerformanceTab empId={targetId} dark={dark} />}
+            {activeTab === "Documents"   && <DocumentsTab   dark={dark} />}
+            {activeTab === "Assets"      && <AssetsTab      dark={dark} />}
+            {activeTab === "Activity"    && <ActivityTab    empId={targetId} dark={dark} />}
           </div>
         </div>
       </div>
