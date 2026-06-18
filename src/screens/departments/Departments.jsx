@@ -19,6 +19,7 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
+import { usePermission } from "../../hooks/usePermission";
 import { fetchBranches } from "../../api/branchApi";
 import { exportDepartments } from "../../services/departmentService";
 import {
@@ -134,12 +135,17 @@ const DeptModal = ({ open, onClose, onSave, editData, saving, branches, heads })
 const Departments = () => {
   const navigate = useNavigate();
   const { show: showToast } = useToast();
+  const can = usePermission();
+  const canCreate = can("departments.create");
+  const canEdit   = can("departments.edit");
+  const canDelete = can("departments.delete");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchBy, setSearchBy]     = useState("name");
   const [statusF, setStatusF]       = useState("All");
   const [branchF, setBranchF]       = useState("All");
   const [headF, setHeadF]           = useState("All");
+  const [dateF, setDateF]           = useState("All");
   const [page, setPage]             = useState(1);
 
   const [modalOpen, setModalOpen]     = useState(false);
@@ -163,6 +169,18 @@ const Departments = () => {
     [departments]
   );
 
+  const matchesDate = (createdAt) => {
+    if (dateF === "All" || !createdAt) return true;
+    const now = new Date();
+    const d = new Date(createdAt);
+    const days = (now - d) / (1000 * 60 * 60 * 24);
+    if (dateF === "Today")     return d.toDateString() === now.toDateString();
+    if (dateF === "Last 7")    return days <= 7;
+    if (dateF === "Last 30")   return days <= 30;
+    if (dateF === "This Year") return d.getFullYear() === now.getFullYear();
+    return true;
+  };
+
   const filtered = useMemo(() => departments.filter((d) => {
     const q = searchTerm.toLowerCase();
     const field = searchBy === "code" ? (d.code || "") : searchBy === "head" ? (d.headName || "") : d.name;
@@ -170,12 +188,12 @@ const Departments = () => {
     const matchStatus = statusF === "All" || d.status === statusF;
     const matchBranch = branchF === "All" || String(d.branchId) === branchF;
     const matchHead   = headF === "All" || d.headName === headF;
-    return matchSearch && matchStatus && matchBranch && matchHead;
-  }), [departments, searchTerm, searchBy, statusF, branchF, headF]);
+    return matchSearch && matchStatus && matchBranch && matchHead && matchesDate(d.createdAt);
+  }), [departments, searchTerm, searchBy, statusF, branchF, headF, dateF]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  useEffect(() => { setPage(1); }, [searchTerm, searchBy, statusF, branchF, headF]);
+  useEffect(() => { setPage(1); }, [searchTerm, searchBy, statusF, branchF, headF, dateF]);
 
   const totalEmployees = departments.reduce((s, d) => s + (d.employeeCount || 0), 0);
   const uniqueHeads    = new Set(departments.map((d) => d.headName).filter(Boolean)).size;
@@ -288,13 +306,19 @@ const Departments = () => {
           <Group gap="xs" wrap="nowrap">
             <ActionIcon variant="light" color="gray" size="sm" radius="md" title="View"
               onClick={() => navigate(`/departments/${dept.id}`)}><IconEye size={13} /></ActionIcon>
-            <ActionIcon variant="light" color="blue" size="sm" radius="md" title="Edit"
-              onClick={() => { setEditTarget(dept); setModalOpen(true); }}><IconPencil size={13} /></ActionIcon>
-            <ActionIcon variant="light" color="orange" size="sm" radius="md"
-              title={dept.status === "Active" ? "Disable" : "Enable"}
-              onClick={() => handleDisable(dept)}><IconBan size={13} /></ActionIcon>
-            <ActionIcon variant="light" color="red" size="sm" radius="md" title="Delete"
-              onClick={() => setDeleteTarget(dept)}><IconTrash size={13} /></ActionIcon>
+            {canEdit && (
+              <ActionIcon variant="light" color="blue" size="sm" radius="md" title="Edit"
+                onClick={() => { setEditTarget(dept); setModalOpen(true); }}><IconPencil size={13} /></ActionIcon>
+            )}
+            {canEdit && (
+              <ActionIcon variant="light" color="orange" size="sm" radius="md"
+                title={dept.status === "Active" ? "Disable" : "Enable"}
+                onClick={() => handleDisable(dept)}><IconBan size={13} /></ActionIcon>
+            )}
+            {canDelete && (
+              <ActionIcon variant="light" color="red" size="sm" radius="md" title="Delete"
+                onClick={() => setDeleteTarget(dept)}><IconTrash size={13} /></ActionIcon>
+            )}
           </Group>
         </Table.Td>
       </Table.Tr>
@@ -309,8 +333,10 @@ const Departments = () => {
         action={
           <Group gap="sm">
             <input ref={fileRef} type="file" accept=".csv" hidden onChange={handleImport} />
-            <AppButton variant="default" leftSection={<IconUpload size={16} />}
-              loading={importMut.isPending} onClick={() => fileRef.current?.click()}>Import</AppButton>
+            {canCreate && (
+              <AppButton variant="default" leftSection={<IconUpload size={16} />}
+                loading={importMut.isPending} onClick={() => fileRef.current?.click()}>Import</AppButton>
+            )}
             <Menu position="bottom-end" withinPortal>
               <Menu.Target>
                 <AppButton variant="default" leftSection={<IconFileExport size={16} />}>Export</AppButton>
@@ -321,8 +347,10 @@ const Departments = () => {
                 <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => handleExport("pdf")}>PDF</Menu.Item>
               </Menu.Dropdown>
             </Menu>
-            <AppButton leftSection={<IconPlus size={16} />}
-              onClick={() => { setEditTarget(null); setModalOpen(true); }}>Add Department</AppButton>
+            {canCreate && (
+              <AppButton leftSection={<IconPlus size={16} />}
+                onClick={() => { setEditTarget(null); setModalOpen(true); }}>Add Department</AppButton>
+            )}
           </Group>
         }
       />
@@ -345,6 +373,8 @@ const Departments = () => {
           <Select label="Branch" data={["All", ...branches.map((b) => ({ value: String(b.id), label: b.name }))]}
             value={branchF} onChange={setBranchF} size="sm" radius="md" w={150} />
           <Select label="Head" data={headOptions} value={headF} onChange={setHeadF} size="sm" radius="md" w={150} />
+          <Select label="Created" data={["All", "Today", "Last 7", "Last 30", "This Year"]}
+            value={dateF} onChange={setDateF} size="sm" radius="md" w={130} />
         </Group>
       </AppSection>
 
