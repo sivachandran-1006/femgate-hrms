@@ -48,7 +48,8 @@ import MyTeam             from "./screens/myteam/MyTeam";
 import SelfOnboarding     from "./screens/onboarding-self/SelfOnboarding";
 
 // Super Admin screens
-import RolesPermissions from "./screens/roles/RolesPermissions";
+import RoleManagement from "./screens/roles/RoleManagement";
+import RoleProfile     from "./screens/roles/RoleProfile";
 import UserManagement  from "./screens/superadmin/UserManagement";
 import AuditLogs       from "./screens/superadmin/AuditLogs";
 import SecurityCenter  from "./screens/superadmin/SecurityCenter";
@@ -407,7 +408,15 @@ export default function App() {
             path="/roles-permissions"
             element={
               <RoleGuard routeId="roles-permissions" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><RolesPermissions darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><RoleManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/roles-permissions/:id"
+            element={
+              <RoleGuard routeId="roles-permissions" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><RoleProfile darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />

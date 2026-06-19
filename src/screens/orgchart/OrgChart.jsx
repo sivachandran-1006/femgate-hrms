@@ -1,418 +1,332 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Stack, Group, Text, Paper, Badge, Button, TextInput, Select,
-  Avatar, Popover,
+  Stack, Group, Text, Paper, Badge, Button, TextInput, Select, Avatar,
+  SimpleGrid, SegmentedControl, ActionIcon, Menu, ScrollArea, Table, Loader, Box, Tabs,
 } from "@mantine/core";
-import { IconSearch, IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import {
+  BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
+import {
+  IconSearch, IconChevronDown, IconChevronRight, IconPlus, IconMinus,
+  IconArrowsMaximize, IconArrowsMinimize, IconZoomIn, IconZoomOut, IconPrinter,
+  IconFileExport, IconUsers, IconBuildingCommunity, IconBuilding, IconUserStar,
+  IconUser, IconHierarchy, IconChartBar, IconAlertTriangle, IconEye, IconUsersGroup,
+} from "@tabler/icons-react";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
+import { AppStatCard }   from "../../components/ui/AppStatCard";
+import { AppSection }    from "../../components/ui/AppSection";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useDepartments } from "../../queries/useDepartments";
+import { fetchBranches } from "../../api/branchApi";
+import { useQuery } from "@tanstack/react-query";
+import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
 
-// ─── Org Data ────────────────────────────────────────────────────────────────
+const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
+const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
 
-const ORG_DATA = {
-  id: "ceo",
-  name: "Siva",
-  designation: "CEO",
-  department: "Management",
-  email: "siva@company.com",
-  phone: "+91 98765 00001",
-  joinDate: "2018-01-15",
-  children: [
-    {
-      id: "hr-dir",
-      name: "Big Kundi",
-      designation: "HR Director",
-      department: "HR",
-      email: "bigkundi@company.com",
-      phone: "+91 98765 00002",
-      joinDate: "2019-03-10",
-      children: [
-        { id: "hr-exec",  name: "Suriya",    designation: "HR Executive",   department: "HR", email: "suriya@company.com",   phone: "+91 98765 00005", joinDate: "2021-06-01", children: [] },
-        { id: "hr-coord", name: "P Santhosh",designation: "HR Coordinator", department: "HR", email: "psanthosh@company.com",phone: "+91 98765 00006", joinDate: "2022-01-20", children: [] },
-      ],
-    },
-    {
-      id: "eng-mgr",
-      name: "Mani",
-      designation: "Engineering Manager",
-      department: "IT",
-      email: "mani@company.com",
-      phone: "+91 98765 00003",
-      joinDate: "2019-06-15",
-      children: [
-        {
-          id: "tech-lead",
-          name: "Suriya",
-          designation: "Tech Lead",
-          department: "IT",
-          email: "suriya2@company.com",
-          phone: "+91 98765 00007",
-          joinDate: "2020-02-10",
-          children: [
-            { id: "dev1", name: "C Santhosh", designation: "Software Engineer",  department: "IT", email: "csanthosh@company.com", phone: "+91 98765 00009", joinDate: "2021-08-01", children: [] },
-            { id: "dev2", name: "Aravinth",   designation: "Software Engineer",  department: "IT", email: "aravinth@company.com",  phone: "+91 98765 00010", joinDate: "2022-03-15", children: [] },
-            { id: "dev3", name: "Vignesh",    designation: "Frontend Developer", department: "IT", email: "vignesh@company.com",   phone: "+91 98765 00011", joinDate: "2022-07-01", children: [] },
-          ],
-        },
-        { id: "qa1", name: "Sabari", designation: "QA Engineer", department: "IT", email: "sabari@company.com", phone: "+91 98765 00012", joinDate: "2021-11-01", children: [] },
-      ],
-    },
-    {
-      id: "fin-mgr",
-      name: "Safeer",
-      designation: "Finance Manager",
-      department: "Finance",
-      email: "safeer@company.com",
-      phone: "+91 98765 00004",
-      joinDate: "2020-01-20",
-      children: [
-        { id: "fin1", name: "Suganthan", designation: "Finance Analyst", department: "Finance", email: "suganthan@company.com", phone: "+91 98765 00013", joinDate: "2021-04-10", children: [] },
-      ],
-    },
-  ],
-};
+const flatten = (nodes, out = []) => { nodes.forEach((n) => { out.push(n); flatten(n.children || [], out); }); return out; };
 
-// ─── Dept colors ─────────────────────────────────────────────────────────────
-
-const DEPT_COLOR = {
-  Management: "violet",
-  HR:         "cyan",
-  IT:         "blue",
-  Finance:    "green",
-};
-
-const getDeptColor = (dept) => DEPT_COLOR[dept] || "gray";
-
-// ─── Flatten tree ─────────────────────────────────────────────────────────────
-
-const flattenTree = (node, result = []) => {
-  result.push(node);
-  (node.children || []).forEach(c => flattenTree(c, result));
-  return result;
-};
-
-const getAllDepts = (node) => {
-  const all = flattenTree(node).map(n => n.department);
-  return ["All", ...Array.from(new Set(all))];
-};
-
-// ─── ConnectedChildren — measures DOM to draw exact horizontal bar ────────────
-
-function ConnectedChildren({ children }) {
-  const containerRef = useRef(null);
-  const [bar, setBar] = useState({ left: 0, width: 0 });
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const els = Array.from(containerRef.current.children).filter(el => el.dataset.connector !== "bar");
-    if (els.length < 2) return;
-    const parentRect = containerRef.current.getBoundingClientRect();
-    const firstCenter = els[0].getBoundingClientRect().left + els[0].getBoundingClientRect().width / 2 - parentRect.left;
-    const lastCenter  = els[els.length - 1].getBoundingClientRect().left + els[els.length - 1].getBoundingClientRect().width / 2 - parentRect.left;
-    setBar({ left: firstCenter, width: lastCenter - firstCenter });
-  }, [children]);
-
+// ─── Node card ────────────────────────────────────────────────────────────────
+function NodeCard({ node, onToggle, expanded, hasChildren, onView, onTeam, compact }) {
+  const av = getAvatarColor(node.name);
   return (
-    <div ref={containerRef} style={{ display: "flex", flexDirection: "row", gap: 24, alignItems: "flex-start", position: "relative" }}>
-      {React.Children.count(children) > 1 && (
-        <div data-connector="bar" style={{ position: "absolute", top: 0, left: bar.left, width: bar.width, height: 2, background: "var(--mantine-color-gray-3)", zIndex: 0 }} />
-      )}
-      {children}
-    </div>
+    <Paper withBorder radius="lg" p={compact ? "sm" : "md"} shadow="xs"
+      style={{ minWidth: 220, maxWidth: 240, position: "relative" }}>
+      <Group gap="sm" wrap="nowrap" align="flex-start">
+        <Avatar size={compact ? 36 : 44} radius="xl" color={av.color} style={{ background: av.bg, color: av.color }}>
+          {getInitials(node.name)}
+        </Avatar>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <Text size="sm" fw={700} truncate>{node.name}</Text>
+          <Text size="xs" c="dimmed" truncate>{node.designation || "—"}</Text>
+          <Group gap={6} mt={4}>
+            <Badge size="xs" variant="light" radius="sm">{node.department || "—"}</Badge>
+            <Badge size="xs" variant="light" color={STATUS_COLOR[node.status] || "gray"} radius="sm">{node.status}</Badge>
+          </Group>
+          <Text size="xs" c="dimmed" mt={4}>{node.employeeId} · {node.directReports || 0} reports</Text>
+        </div>
+      </Group>
+      <Group gap={4} mt="xs" justify="space-between">
+        <Group gap={4}>
+          <ActionIcon size="sm" variant="subtle" title="View Profile" onClick={() => onView(node)}><IconEye size={13} /></ActionIcon>
+          <ActionIcon size="sm" variant="subtle" title="View Team" onClick={() => onTeam(node)}><IconUsersGroup size={13} /></ActionIcon>
+        </Group>
+        {hasChildren && (
+          <ActionIcon size="sm" variant="light" title={expanded ? "Collapse" : "Expand"} onClick={() => onToggle(node.id)}>
+            {expanded ? <IconMinus size={13} /> : <IconPlus size={13} />}
+          </ActionIcon>
+        )}
+      </Group>
+    </Paper>
   );
 }
 
-// ─── NodeCard ─────────────────────────────────────────────────────────────────
-
-function NodeCard({ node, searchQuery, deptFilter, isExpanded, onToggle }) {
-  const av       = getAvatarColor(node.name);
-  const initials = getInitials(node.name);
-  const color    = getDeptColor(node.department);
-
-  const allNodes = flattenTree(node);
-  const matchesSearch = !searchQuery || allNodes.some(n =>
-    n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    n.department.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const selfMatch = !searchQuery ||
-    node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    node.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    node.department.toLowerCase().includes(searchQuery.toLowerCase());
-
-  const dimmed = deptFilter !== "All" && node.department !== deptFilter;
-
-  if (!matchesSearch) return null;
-
-  const popoverContent = (
-    <Stack gap={4} p={4} style={{ minWidth: 200 }}>
-      <Text size="sm" fw={700}>{node.name}</Text>
-      <Badge color={color} variant="light" size="xs" w="fit-content">{node.department}</Badge>
-      <Group justify="space-between" gap="xs">
-        <Text size="xs" c="dimmed">Email</Text>
-        <Text size="xs">{node.email}</Text>
-      </Group>
-      <Group justify="space-between" gap="xs">
-        <Text size="xs" c="dimmed">Phone</Text>
-        <Text size="xs">{node.phone}</Text>
-      </Group>
-      <Group justify="space-between" gap="xs">
-        <Text size="xs" c="dimmed">Joined</Text>
-        <Text size="xs">{new Date(node.joinDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</Text>
-      </Group>
-      <Group justify="space-between" gap="xs">
-        <Text size="xs" c="dimmed">Direct Reports</Text>
-        <Badge color="blue" variant="light" size="xs">{(node.children || []).length}</Badge>
-      </Group>
-    </Stack>
-  );
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative", opacity: dimmed ? 0.35 : 1 }}>
-      <Popover width={240} position="bottom" withArrow shadow="md">
-        <Popover.Target>
-          <Paper
-            p="md"
-            radius="xl"
-            withBorder
-            style={{
-              minWidth: 160, maxWidth: 190, textAlign: "center", cursor: "pointer",
-              userSelect: "none",
-              border: selfMatch && searchQuery ? "1.5px solid var(--mantine-color-blue-5)" : undefined,
-              boxShadow: selfMatch && searchQuery ? "0 0 0 3px var(--mantine-color-blue-1)" : undefined,
-            }}
-          >
-            <Avatar
-              size={44}
-              radius="xl"
-              mx="auto"
-              mb={8}
-              style={{ background: av.bg, color: av.color }}
-            >
-              <Text size="xs" fw={700}>{initials}</Text>
-            </Avatar>
-            <Text size="sm" fw={600} lh={1.3} mb={2}>{node.name}</Text>
-            <Text size="xs" c="dimmed" lh={1.3} mb={8}>{node.designation}</Text>
-            <Badge color={color} variant="light" size="xs">{node.department}</Badge>
-
-            {(node.children || []).length > 0 && (
-              <div
-                onClick={e => { e.stopPropagation(); onToggle(node.id); }}
-                style={{
-                  position: "absolute", bottom: -11, left: "50%", transform: "translateX(-50%)",
-                  width: 22, height: 22, borderRadius: "50%",
-                  background: "var(--mantine-color-blue-6)", color: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", zIndex: 10, boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
-                }}
-              >
-                {isExpanded
-                  ? <IconChevronUp size={12} strokeWidth={3} />
-                  : <IconChevronDown size={12} strokeWidth={3} />}
-              </div>
-            )}
-          </Paper>
-        </Popover.Target>
-        <Popover.Dropdown>{popoverContent}</Popover.Dropdown>
-      </Popover>
-    </div>
-  );
-}
-
-// ─── TreeNodeV2 ───────────────────────────────────────────────────────────────
-
-function TreeNodeV2({ node, searchQuery, deptFilter, expandedNodes, onToggle }) {
+// ─── Recursive tree node (vertical, indented) ─────────────────────────────────
+function TreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0 }) {
   const hasChildren = (node.children || []).length > 0;
-  const isExpanded  = expandedNodes.has(node.id);
-
-  const visibleChildren = (node.children || []).filter(child => {
-    const all = flattenTree(child);
-    return !searchQuery || all.some(n =>
-      n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      n.department.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const card = (
-    <NodeCard
-      node={node}
-      searchQuery={searchQuery}
-      deptFilter={deptFilter}
-      isExpanded={isExpanded}
-      onToggle={onToggle}
-    />
-  );
-
-  if (!card) return null;
-
+  const expanded = expandedSet.has(node.id);
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {card}
-
-      {hasChildren && isExpanded && visibleChildren.length > 0 && (
-        <>
-          {/* Vertical stem */}
-          <div style={{ width: 2, height: 28, background: "var(--mantine-color-gray-3)", marginTop: 12, flexShrink: 0 }} />
-
-          <ConnectedChildren>
-            {visibleChildren.map(child => (
-              <div key={child.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                {/* Drop line */}
-                <div style={{ width: 2, height: 28, background: "var(--mantine-color-gray-3)", flexShrink: 0 }} />
-                <TreeNodeV2
-                  node={child}
-                  searchQuery={searchQuery}
-                  deptFilter={deptFilter}
-                  expandedNodes={expandedNodes}
-                  onToggle={onToggle}
-                />
-              </div>
-            ))}
-          </ConnectedChildren>
-        </>
+    <div style={{ marginLeft: depth ? 28 : 0, position: "relative" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+        {hasChildren ? (
+          <ActionIcon size="sm" variant="subtle" onClick={() => onToggle(node.id)}>
+            {expanded ? <IconChevronDown size={15} /> : <IconChevronRight size={15} />}
+          </ActionIcon>
+        ) : <span style={{ width: 28 }} />}
+        <NodeCard node={node} expanded={expanded} hasChildren={hasChildren} onToggle={onToggle} onView={onView} onTeam={onTeam} compact />
+      </div>
+      {hasChildren && expanded && (
+        <div style={{ borderLeft: "1px dashed var(--mantine-color-gray-4)", marginLeft: 14 }}>
+          {node.children.map((c) => (
+            <TreeNode key={c.id} node={c} expandedSet={expandedSet} onToggle={onToggle} onView={onView} onTeam={onTeam} depth={depth + 1} />
+          ))}
+        </div>
       )}
     </div>
   );
 }
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
-// Build the org tree from real employees + department heads
-const buildOrgTree = (employees, deptRows) => {
-  if (!employees.length) return null;
-
-  const toNode = (e) => ({
-    id:          `emp-${e.id}`,
-    name:        e.name,
-    designation: e.designation || "—",
-    department:  e.department  || "—",
-    email:       e.email,
-    phone:       e.phone || "",
-    joinDate:    e.joinDate ? e.joinDate.split("T")[0] : "",
-    children:    [],
-  });
-
-  const deptNames = [...new Set(employees.map((e) => e.department).filter(Boolean))];
-  const headNameByDept = Object.fromEntries((deptRows || []).map((d) => [d.name, d.headName]));
-
-  const deptSubtrees = deptNames.map((dept) => {
-    const members  = employees.filter((e) => e.department === dept);
-    const headName = headNameByDept[dept];
-    const head     = members.find((e) => e.name === headName) || members[0];
-    const node     = toNode(head);
-    node.children  = members.filter((e) => e.id !== head.id).map(toNode);
-    return node;
-  });
-
-  return {
-    id: "root",
-    name: "MGate Technologies",
-    designation: "Organisation",
-    department: "Management",
-    email: "admin@mgate.com",
-    phone: "",
-    joinDate: "",
-    children: deptSubtrees,
-  };
-};
 
 export default function OrgChart() {
-  const { data: employees = [] } = useFetchAllEmployees();
-  const { data: deptRows = [] }  = useDepartments();
+  const navigate = useNavigate();
+  const { data: treeData, isLoading } = useOrgTree();
+  const { data: analytics } = useOrgAnalytics();
+  const { data: vacant } = useOrgVacant();
+  const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
+  const branches = branchesRes || [];
 
-  const orgData = React.useMemo(
-    () => buildOrgTree(employees, deptRows) || ORG_DATA,
-    [employees, deptRows]
-  );
+  const tree = treeData?.tree || [];
+  const flat = treeData?.flat || [];
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deptFilter, setDeptFilter]   = useState("All");
-  const [expandedNodes, setExpandedNodes] = useState(() => new Set());
+  const [viewMode, setViewMode] = useState("tree");      // tree | card | hierarchy
+  const [search, setSearch]     = useState("");
+  const [searchBy, setSearchBy] = useState("name");
+  const [branchF, setBranchF]   = useState("All");
+  const [deptF, setDeptF]       = useState("All");
+  const [statusF, setStatusF]   = useState("All");
+  const [zoom, setZoom]         = useState(1);
+  const [expandedSet, setExpandedSet] = useState(new Set());
+  const printRef = useRef(null);
 
-  // Expand everything once real data arrives
-  useEffect(() => {
-    setExpandedNodes(new Set(flattenTree(orgData).map(n => n.id)));
-  }, [orgData]);
+  // expand all once data arrives
+  useEffect(() => { if (flat.length) setExpandedSet(new Set(flat.map((n) => n.id))); }, [treeData]); // eslint-disable-line
 
-  const departments = getAllDepts(orgData);
-  const allNodeIds  = flattenTree(orgData).map(n => n.id);
-  const allExpanded = expandedNodes.size === allNodeIds.length;
+  const departments = useMemo(() => ["All", ...new Set(flat.map((e) => e.department).filter(Boolean))], [flat]);
 
-  const handleToggle = (id) => {
-    setExpandedNodes(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const allIds = flat.map((n) => n.id);
+  const allExpanded = expandedSet.size >= allIds.length && allIds.length > 0;
+  const toggle = (id) => setExpandedSet((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const expandAll = () => setExpandedSet(new Set(allIds));
+  const collapseAll = () => setExpandedSet(new Set());
+
+  const onView = (node) => navigate(`/employees/${node.id}`);
+  const onTeam = (node) => { setViewMode("card"); setSearch(node.name); setSearchBy("name"); };
+
+  // search/filter predicate for flat lists (card & hierarchy views)
+  const matches = (e) => {
+    const q = search.toLowerCase();
+    const field = searchBy === "id" ? (e.employeeId || "")
+      : searchBy === "designation" ? (e.designation || "")
+      : searchBy === "department" ? (e.department || "") : e.name;
+    const branchName = branches.find((b) => b.id === e.branchId)?.name;
+    return (!q || field.toLowerCase().includes(q))
+      && (branchF === "All" || String(e.branchId) === branchF)
+      && (deptF === "All" || e.department === deptF)
+      && (statusF === "All" || e.status === statusF);
   };
+  const filteredFlat = flat.filter(matches);
 
-  const handleExpandAll = () => {
-    setExpandedNodes(allExpanded ? new Set() : new Set(allNodeIds));
+  // ─── render ───
+  if (isLoading) return <Box ta="center" py="xl"><Loader /></Box>;
+
+  const handlePrint = () => window.print();
+  const handleExport = (fmt) => {
+    if (fmt === "excel" || fmt === "csv") {
+      const rows = flat.map((e) => ({ EmployeeID: e.employeeId, Name: e.name, Designation: e.designation || "", Department: e.department || "", Manager: flat.find((m) => m.id === e.reportingTo)?.name || "", DirectReports: e.directReports || 0, Status: e.status }));
+      const header = Object.keys(rows[0] || { EmployeeID: "", Name: "" });
+      const csv = [header.join(","), ...rows.map((r) => header.map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
+      const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+      const a = document.createElement("a"); a.href = url; a.download = "org-chart.csv"; a.click(); URL.revokeObjectURL(url);
+    } else {
+      handlePrint();   // PDF / PNG → browser print dialog (Save as PDF)
+    }
   };
 
   return (
-    <Stack gap="lg">
+    <>
       <AppPageHeader
-        title="Organisation Chart"
-        sub="Visual hierarchy of the company structure"
+        title="Organization Chart"
+        sub="Visual hierarchy of the company"
         action={
           <Group gap="sm">
-            <TextInput
-              placeholder="Search name or role…"
-              leftSection={<IconSearch size={14} />}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              size="sm"
-              w={200}
-            />
-            <Select
-              data={departments}
-              value={deptFilter}
-              onChange={v => setDeptFilter(v)}
-              size="sm"
-              w={160}
-            />
-            <Button size="sm" variant="light" onClick={handleExpandAll}>
-              {allExpanded ? "Collapse All" : "Expand All"}
-            </Button>
+            <Button.Group>
+              <Button variant="default" size="sm" onClick={expandAll} leftSection={<IconArrowsMaximize size={15} />}>Expand</Button>
+              <Button variant="default" size="sm" onClick={collapseAll} leftSection={<IconArrowsMinimize size={15} />}>Collapse</Button>
+            </Button.Group>
+            <Menu position="bottom-end" withinPortal>
+              <Menu.Target><Button variant="default" size="sm" leftSection={<IconFileExport size={15} />}>Export</Button></Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item onClick={() => handleExport("pdf")}>PDF</Menu.Item>
+                <Menu.Item onClick={() => handleExport("png")}>PNG</Menu.Item>
+                <Menu.Item onClick={() => handleExport("excel")}>Excel</Menu.Item>
+                <Menu.Item onClick={handlePrint}>Print Layout</Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+            <ActionIcon variant="default" size="lg" onClick={handlePrint} title="Print"><IconPrinter size={16} /></ActionIcon>
           </Group>
         }
       />
 
-      {/* Legend */}
-      <Paper p="sm" radius="lg" withBorder>
-        <Group gap="md" wrap="wrap">
-          <Text size="xs" c="dimmed" fw={500}>Departments:</Text>
-          {Object.entries(DEPT_COLOR).map(([dept, color]) => (
-            <Group key={dept} gap={6}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: `var(--mantine-color-${color}-5)` }} />
-              <Text size="xs" c="dimmed">{dept}</Text>
+      <Tabs defaultValue="chart" keepMounted={false}>
+        <Tabs.List mb="md">
+          <Tabs.Tab value="chart"     leftSection={<IconHierarchy size={15} />}>Chart</Tabs.Tab>
+          <Tabs.Tab value="analytics" leftSection={<IconChartBar size={15} />}>Analytics</Tabs.Tab>
+          <Tabs.Tab value="vacant"    leftSection={<IconAlertTriangle size={15} />}>Vacant Positions</Tabs.Tab>
+        </Tabs.List>
+
+        {/* ── CHART ── */}
+        <Tabs.Panel value="chart">
+          <AppSection mb="md" p="md">
+            <Group gap="sm" wrap="wrap" align="flex-end">
+              <SegmentedControl size="sm"
+                data={[{ value: "tree", label: "Tree" }, { value: "card", label: "Card" }, { value: "hierarchy", label: "Hierarchy" }]}
+                value={viewMode} onChange={setViewMode} />
+              <Select label="Search by" w={140} size="sm" value={searchBy} onChange={setSearchBy}
+                data={[{ value: "name", label: "Name" }, { value: "id", label: "Employee ID" }, { value: "designation", label: "Designation" }, { value: "department", label: "Department" }]} />
+              <TextInput label="Search" placeholder="Search employee…" leftSection={<IconSearch size={15} />}
+                value={search} onChange={(e) => setSearch(e.target.value)} size="sm" style={{ flex: 1, minWidth: 160 }} />
+              <Select label="Branch" w={140} size="sm" data={["All", ...branches.map((b) => ({ value: String(b.id), label: b.name }))]} value={branchF} onChange={setBranchF} />
+              <Select label="Department" w={150} size="sm" data={departments} value={deptF} onChange={setDeptF} />
+              <Select label="Status" w={130} size="sm" data={["All", "Active", "Probation", "Notice Period", "Resigned", "Terminated", "Inactive"]} value={statusF} onChange={setStatusF} />
+              <Group gap={4}>
+                <ActionIcon variant="default" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))} title="Zoom out"><IconZoomOut size={16} /></ActionIcon>
+                <Text size="xs" w={36} ta="center">{Math.round(zoom * 100)}%</Text>
+                <ActionIcon variant="default" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(2)))} title="Zoom in"><IconZoomIn size={16} /></ActionIcon>
+              </Group>
             </Group>
-          ))}
-          <Text size="xs" c="dimmed" ml="auto">Click any card for details · Click ▲/▼ to expand/collapse</Text>
-        </Group>
-      </Paper>
+          </AppSection>
 
-      {/* Chart area */}
-      <Paper radius="xl" withBorder p="xl" style={{ overflowX: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "center", minWidth: "max-content", paddingBottom: 24 }}>
-          <TreeNodeV2
-            node={orgData}
-            searchQuery={searchQuery}
-            deptFilter={deptFilter}
-            expandedNodes={expandedNodes}
-            onToggle={handleToggle}
-          />
-        </div>
-      </Paper>
+          {flat.length === 0 ? (
+            <AppEmptyState message="Organization structure not configured." />
+          ) : (
+            <AppSection p="md">
+              <ScrollArea>
+                <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content" }}>
+                  {viewMode === "tree" && tree.map((root) => (
+                    <TreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
+                  ))}
 
-      <Text ta="center" size="xs" c="dimmed">
-        {flattenTree(orgData).length - 1} employees across {departments.length - 1} departments
-      </Text>
-    </Stack>
+                  {viewMode === "card" && (
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
+                      {filteredFlat.map((e) => (
+                        <NodeCard key={e.id} node={e} hasChildren={false} onView={onView} onTeam={onTeam} onToggle={() => {}} />
+                      ))}
+                    </SimpleGrid>
+                  )}
+
+                  {viewMode === "hierarchy" && (
+                    <Table striped highlightOnHover>
+                      <Table.Thead><Table.Tr>{["Employee", "Designation", "Department", "Reports To", "Direct Reports", "Status"].map((c) => <Table.Th key={c}>{c}</Table.Th>)}</Table.Tr></Table.Thead>
+                      <Table.Tbody>
+                        {filteredFlat.map((e) => (
+                          <Table.Tr key={e.id} style={{ cursor: "pointer" }} onClick={() => onView(e)}>
+                            <Table.Td><Group gap="sm" wrap="nowrap"><Avatar size={28} radius="xl">{getInitials(e.name)}</Avatar><Text size="sm" fw={600}>{e.name}</Text></Group></Table.Td>
+                            <Table.Td><Text size="sm" c="dimmed">{e.designation || "—"}</Text></Table.Td>
+                            <Table.Td><Text size="sm" c="dimmed">{e.department || "—"}</Text></Table.Td>
+                            <Table.Td><Text size="sm" c="dimmed">{flat.find((m) => m.id === e.reportingTo)?.name || "—"}</Text></Table.Td>
+                            <Table.Td><Badge variant="light" radius="sm">{e.directReports || 0}</Badge></Table.Td>
+                            <Table.Td><Badge variant="light" color={STATUS_COLOR[e.status] || "gray"} radius="sm">{e.status}</Badge></Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  )}
+                </div>
+              </ScrollArea>
+            </AppSection>
+          )}
+        </Tabs.Panel>
+
+        {/* ── ANALYTICS ── */}
+        <Tabs.Panel value="analytics">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} mb="lg">
+            <AppStatCard icon={<IconUsers size={22} />} label="Total Employees" value={analytics?.cards?.totalEmployees ?? 0} color="blue" />
+            <AppStatCard icon={<IconBuildingCommunity size={22} />} label="Departments" value={analytics?.cards?.totalDepartments ?? 0} color="violet" />
+            <AppStatCard icon={<IconBuilding size={22} />} label="Branches" value={analytics?.cards?.totalBranches ?? 0} color="teal" />
+            <AppStatCard icon={<IconUserStar size={22} />} label="Managers" value={analytics?.cards?.totalManagers ?? 0} color="orange" />
+            <AppStatCard icon={<IconUser size={22} />} label="Individual Contributors" value={analytics?.cards?.totalIndividualContributors ?? 0} color="green" />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, lg: 2 }}>
+            <AppSection title="Headcount by Department">
+              {analytics?.headcountByDepartment?.length ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics.headcountByDepartment}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={60} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} /><Tooltip />
+                    <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <AppEmptyState message="No data" py={60} />}
+            </AppSection>
+            <AppSection title="Headcount by Branch">
+              {analytics?.headcountByBranch?.length ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={analytics.headcountByBranch} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                      {analytics.headcountByBranch.map((_, i) => <Cell key={i} fill={PIE[i % PIE.length]} />)}
+                    </Pie>
+                    <Tooltip /><Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : <AppEmptyState message="No data" py={60} />}
+            </AppSection>
+          </SimpleGrid>
+          <AppSection title="Hierarchy Distribution (by Level)" mt="md">
+            {analytics?.hierarchyDistribution?.length ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={analytics.hierarchyDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="level" tickFormatter={(l) => `L${l}`} tick={{ fontSize: 12 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 12 }} /><Tooltip labelFormatter={(l) => `Level ${l}`} />
+                  <Bar dataKey="value" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <AppEmptyState message="No data" py={60} />}
+          </AppSection>
+        </Tabs.Panel>
+
+        {/* ── VACANT ── */}
+        <Tabs.Panel value="vacant">
+          <SimpleGrid cols={{ base: 1, md: 3 }}>
+            <AppSection title="Open Designations" sub={`${vacant?.openDesignations?.length || 0} vacant`}>
+              <Stack gap="xs">
+                {(vacant?.openDesignations || []).map((d) => (
+                  <Group key={d.id} justify="space-between"><Text size="sm">{d.name}</Text><Badge variant="light" radius="sm">L{d.level}</Badge></Group>
+                ))}
+                {!vacant?.openDesignations?.length && <Text size="sm" c="dimmed">None</Text>}
+              </Stack>
+            </AppSection>
+            <AppSection title="Unassigned Reporting" sub={`${vacant?.unassignedReporting?.length || 0} without manager`}>
+              <Stack gap="xs">
+                {(vacant?.unassignedReporting || []).map((e) => (
+                  <Group key={e.id} justify="space-between"><Text size="sm">{e.name}</Text><Text size="xs" c="dimmed">{e.designation || "—"}</Text></Group>
+                ))}
+                {!vacant?.unassignedReporting?.length && <Text size="sm" c="dimmed">None</Text>}
+              </Stack>
+            </AppSection>
+            <AppSection title="Vacant Department Heads" sub={`${vacant?.vacantDeptHeads?.length || 0} without head`}>
+              <Stack gap="xs">
+                {(vacant?.vacantDeptHeads || []).map((d) => (
+                  <Group key={d.id} justify="space-between"><Text size="sm">{d.name}</Text><Badge variant="light" color="orange" radius="sm">No head</Badge></Group>
+                ))}
+                {!vacant?.vacantDeptHeads?.length && <Text size="sm" c="dimmed">None</Text>}
+              </Stack>
+            </AppSection>
+          </SimpleGrid>
+        </Tabs.Panel>
+      </Tabs>
+    </>
   );
 }
