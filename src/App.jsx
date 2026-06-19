@@ -23,18 +23,21 @@ import DepartmentProfile from "./screens/departments/DepartmentProfile";
 import BranchProfile     from "./screens/branches/BranchProfile";
 import DesignationProfile from "./screens/designations/DesignationProfile";
 import Attendance     from "./screens/attendance/Attendance";
-import Leave          from "./screens/leave/Leave";
-import Payroll        from "./screens/payroll/Payroll";
+import LeaveManagement from "./screens/leave/LeaveManagement";
+import PayrollManagement from "./screens/payroll/PayrollManagement";
 import Recruitment    from "./screens/recruitment/Recruitment";
 import Onboarding     from "./screens/onboarding/Onboarding";
-import Performance    from "./screens/performance/Performance";
-import Assets         from "./screens/assets/Assets";
-import Helpdesk       from "./screens/helpdesk/Helpdesk";
+import PerformanceManagement from "./screens/performance/PerformanceManagement";
+import AssetManagement from "./screens/assets/AssetManagement";
+import AssetProfile     from "./screens/assets/AssetProfile";
+import HelpdeskManagement from "./screens/helpdesk/HelpdeskManagement";
+import TicketDetail        from "./screens/helpdesk/TicketDetail";
 import LMS            from "./screens/lms/LMS";
 import Analytics      from "./screens/analytics/Analytics";
-import Settings       from "./screens/settings/Settings";
+import SystemSettings from "./screens/settings/SystemSettings";
 import Calendar       from "./screens/calendar/Calendar";
-import Documents      from "./screens/documents/Documents";
+import DocumentManagement from "./screens/documents/DocumentManagement";
+import DocumentProfile     from "./screens/documents/DocumentProfile";
 import ExitManagement from "./screens/exit/ExitManagement";
 import ShiftManagement from "./screens/shifts/ShiftManagement";
 import OrgChart       from "./screens/orgchart/OrgChart";
@@ -58,7 +61,7 @@ import Billing         from "./screens/superadmin/Billing";
 import MultiCompany         from "./screens/superadmin/MultiCompany";
 import CompanySettings      from "./screens/superadmin/CompanySettings";
 import NotificationCenter   from "./screens/superadmin/NotificationCenter";
-import Reports              from "./screens/reports/Reports";
+import ReportsCenter        from "./screens/reports/ReportsCenter";
 
 // Employee Self-Service screens
 import MyProfile      from "./screens/employees/MyProfile";
@@ -276,7 +279,7 @@ export default function App() {
             path="/leave"
             element={
               <RoleGuard routeId="leave" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Leave darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><LeaveManagement darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -286,7 +289,7 @@ export default function App() {
               userRole === "EMPLOYEE"
                 ? <Navigate to="/my-payslips" replace />
                 : <RoleGuard routeId="payroll" userRole={userRole}>
-                    <ScreenWrapper darkMode={dark}><Payroll darkMode={dark} /></ScreenWrapper>
+                    <ScreenWrapper darkMode={dark}><PayrollManagement darkMode={dark} /></ScreenWrapper>
                   </RoleGuard>
             }
           />
@@ -310,7 +313,7 @@ export default function App() {
             path="/performance"
             element={
               <RoleGuard routeId="performance" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Performance darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><PerformanceManagement darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -318,7 +321,15 @@ export default function App() {
             path="/assets"
             element={
               <RoleGuard routeId="assets" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Assets darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><AssetManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/assets/:id"
+            element={
+              <RoleGuard routeId="assets" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><AssetProfile darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -326,7 +337,15 @@ export default function App() {
             path="/helpdesk"
             element={
               <RoleGuard routeId="helpdesk" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Helpdesk darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><HelpdeskManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/helpdesk/:id"
+            element={
+              <RoleGuard routeId="helpdesk" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><TicketDetail darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -350,7 +369,7 @@ export default function App() {
             path="/settings"
             element={
               <RoleGuard routeId="settings" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Settings darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><SystemSettings darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -374,7 +393,15 @@ export default function App() {
             path="/documents"
             element={
               <RoleGuard routeId="documents" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Documents darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><DocumentManagement darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/documents/:id"
+            element={
+              <RoleGuard routeId="documents" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><DocumentProfile darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -462,7 +489,7 @@ export default function App() {
           } />
           <Route path="/reports" element={
             <RoleGuard routeId="reports" userRole={userRole}>
-              <ScreenWrapper darkMode={dark}><Reports darkMode={dark} /></ScreenWrapper>
+              <ScreenWrapper darkMode={dark}><ReportsCenter darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/holiday-calendar" element={

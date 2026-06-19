@@ -156,7 +156,7 @@ const PayslipModal = ({ record, onClose }) => {
   );
 };
 
-const Payroll = () => {
+const Payroll = ({ embedded = false } = {}) => {
   const { show } = useToast();
 
   const [payroll, setPayroll]           = useState([]);
@@ -300,8 +300,8 @@ const Payroll = () => {
     <Stack gap="lg">
       <Group justify="space-between">
         <div>
-          <Title order={3}>Payroll</Title>
-          <Text size="sm" c="dimmed">Manage employee compensation and payments</Text>
+          {!embedded && <Title order={3}>Payroll</Title>}
+          {!embedded && <Text size="sm" c="dimmed">Manage employee compensation and payments</Text>}
         </div>
         <Group gap="sm">
           <Button variant={activeTab === "list" ? "filled" : "default"} size="sm" onClick={() => setActiveTab("list")}>List</Button>

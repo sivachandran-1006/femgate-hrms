@@ -31,7 +31,7 @@ const LEAVE_TYPE_COLORS = {
 
 const STATUS_COLORS = { Approved: "green", Pending: "yellow", Rejected: "red" };
 
-const Leave = () => {
+const Leave = ({ embedded = false } = {}) => {
   const { user } = useAuth();
   const { show } = useToast();
   const queryClient = useQueryClient();
@@ -112,15 +112,22 @@ const Leave = () => {
 
   return (
     <Box>
-      <AppPageHeader
-        title={isEmployee ? "My Leave" : "Leave Management"}
-        sub={isEmployee ? "Apply and track your leave requests" : "Track and manage employee leave requests"}
-        action={
-          <AppButton leftSection={<IconPlus size={16} />} onClick={() => setShowApply(true)}>
-            Apply Leave
-          </AppButton>
-        }
-      />
+      {!embedded && (
+        <AppPageHeader
+          title={isEmployee ? "My Leave" : "Leave Management"}
+          sub={isEmployee ? "Apply and track your leave requests" : "Track and manage employee leave requests"}
+          action={
+            <AppButton leftSection={<IconPlus size={16} />} onClick={() => setShowApply(true)}>
+              Apply Leave
+            </AppButton>
+          }
+        />
+      )}
+      {embedded && (
+        <Group justify="flex-end" mb="md">
+          <AppButton leftSection={<IconPlus size={16} />} onClick={() => setShowApply(true)}>Apply Leave</AppButton>
+        </Group>
+      )}
 
       <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md" mb="md">
         <AppStatCard icon={<IconUsers size={22} />}       label="Total Requests" value={total}    color="blue" />
