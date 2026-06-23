@@ -26,13 +26,13 @@ import Attendance     from "./screens/attendance/Attendance";
 import LeaveManagement from "./screens/leave/LeaveManagement";
 import PayrollManagement from "./screens/payroll/PayrollManagement";
 import Recruitment    from "./screens/recruitment/Recruitment";
-import Onboarding     from "./screens/onboarding/Onboarding";
+import OnboardingManagement from "./screens/onboarding/OnboardingManagement";
 import PerformanceManagement from "./screens/performance/PerformanceManagement";
 import AssetManagement from "./screens/assets/AssetManagement";
 import AssetProfile     from "./screens/assets/AssetProfile";
 import HelpdeskManagement from "./screens/helpdesk/HelpdeskManagement";
 import TicketDetail        from "./screens/helpdesk/TicketDetail";
-import LMS            from "./screens/lms/LMS";
+import LmsManagement  from "./screens/lms/LmsManagement";
 import Analytics      from "./screens/analytics/Analytics";
 import SystemSettings from "./screens/settings/SystemSettings";
 import Calendar       from "./screens/calendar/Calendar";
@@ -305,7 +305,7 @@ export default function App() {
             path="/onboarding"
             element={
               <RoleGuard routeId="onboarding" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><Onboarding darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}><OnboardingManagement /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -353,7 +353,7 @@ export default function App() {
             path="/lms"
             element={
               <RoleGuard routeId="lms" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><LMS darkMode={dark} /></ScreenWrapper>
+                <LmsManagement />
               </RoleGuard>
             }
           />
