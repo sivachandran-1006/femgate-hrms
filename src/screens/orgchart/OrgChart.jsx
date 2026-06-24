@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Group, Text, Button, ActionIcon, Menu, ScrollArea, Loader, Box, Tabs,
+  Group, Text, Button, ActionIcon, Menu, ScrollArea, Loader, Box, Tabs, SimpleGrid, Paper, Badge, Avatar,
 } from "@mantine/core";
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
