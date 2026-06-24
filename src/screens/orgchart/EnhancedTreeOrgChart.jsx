@@ -158,7 +158,7 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
   const connectorWidth = 2;
 
   return (
-    <div style={{ position: "relative", paddingLeft: depth > 0 ? 60 : 0, marginBottom: 32 }}>
+    <div style={{ position: "relative", paddingLeft: depth > 0 ? 80 : 0, marginBottom: 60, paddingTop: depth > 0 ? 20 : 0 }}>
       {/* Vertical connector from parent - clean Mantine style */}
       {showConnector && depth > 0 && (
         <>
@@ -166,15 +166,15 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
           <svg
             style={{
               position: "absolute",
-              left: -30,
-              top: -20,
-              width: 30,
+              left: -40,
+              top: -30,
+              width: 40,
               height: 60,
               overflow: "visible",
             }}
           >
             <path
-              d={`M 28 0 L 28 ${isLast ? 30 : 100} L 0 30 Q 0 30 0 45`}
+              d={`M 38 0 L 38 ${isLast ? 30 : 100} L 0 30 Q 0 30 0 50`}
               stroke={connectorColor}
               strokeWidth={connectorWidth}
               fill="none"
@@ -188,10 +188,10 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
             <div
               style={{
                 position: "absolute",
-                left: -30,
+                left: -40,
                 top: 30,
                 width: connectorWidth,
-                height: "calc(100% + 20px)",
+                height: "calc(100% + 30px)",
                 background: connectorColor,
               }}
             />
@@ -199,8 +199,8 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
         </>
       )}
 
-      {/* Node Card */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 20, position: "relative", zIndex: 1 }}>
+      {/* Node Card - centered and prominent */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 30, position: "relative", zIndex: 1 }}>
         <EnhancedNodeCard
           node={node}
           onView={onView}

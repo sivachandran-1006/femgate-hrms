@@ -219,7 +219,7 @@ export default function OrgChart() {
           ) : (
             <AppSection p="md">
               <ScrollArea>
-                <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content" }}>
+                <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content", padding: "40px 60px", background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)" }}>
                   {tree.map((root) => (
                     <EnhancedTreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
                   ))}
