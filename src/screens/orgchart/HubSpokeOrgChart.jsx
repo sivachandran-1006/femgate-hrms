@@ -9,53 +9,88 @@ import { useOrgTree } from "../../queries/useOrgChart";
 
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
 
-// Hub node (center)
+// Hub node (center) - Enhanced
 function HubNode({ node, onClick }) {
   const av = getAvatarColor(node.name);
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}>
+      {/* Outer glow */}
+      <circle cx="0" cy="0" r="70" fill="none" stroke="#2563eb" strokeWidth="1" opacity="0.2" />
+      <circle cx="0" cy="0" r="60" fill="none" stroke="#2563eb" strokeWidth="1" opacity="0.15" />
+
+      {/* Main circle */}
       <circle cx="0" cy="0" r="55" fill="white" stroke="#2563eb" strokeWidth="3" />
-      <circle cx="0" cy="0" r="50" fill="#dbeafe" opacity="0.3" />
-      <text x="0" y="-10" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#1e293b">{getInitials(node.name)}</text>
-      <text x="0" y="10" textAnchor="middle" fontSize="11" fill="#64748b">{node.designation}</text>
+      <circle cx="0" cy="0" r="50" fill="url(#ceoGradient)" opacity="0.4" />
+
+      {/* Icon background */}
+      <circle cx="0" cy="0" r="45" fill="#dbeafe" opacity="0.2" />
+
+      {/* Text */}
+      <text x="0" y="-8" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#1e40af">{getInitials(node.name)}</text>
+      <text x="0" y="6" textAnchor="middle" fontSize="10" fill="#1e40af" fontWeight="600">{node.designation?.substring(0, 15)}</text>
+      <text x="0" y="18" textAnchor="middle" fontSize="8" fill="#64748b" fontStyle="italic">CEO</text>
     </g>
   );
 }
 
-// Spoke node (around the circle)
+// Spoke node (around the circle) - Enhanced
 function SpokeNode({ x, y, node, onClick }) {
   const av = getAvatarColor(node.name);
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}>
-      {/* Line from center to node */}
-      <line x1="0" y1="0" x2={x * 0.6} y2={y * 0.6} stroke="#cbd5e1" strokeWidth="2" />
+      {/* Line from center to node - gradient effect */}
+      <defs>
+        <linearGradient id={`line-${node.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.8" />
+        </linearGradient>
+      </defs>
+      <line x1="0" y1="0" x2={x * 0.6} y2={y * 0.6} stroke={`url(#line-${node.id})`} strokeWidth="2.5" />
+
+      {/* Outer ring */}
+      <circle cx={x} cy={y} r="48" fill="none" stroke="#a78bfa" strokeWidth="1" opacity="0.2" />
 
       {/* Node circle */}
-      <circle cx={x} cy={y} r="40" fill="white" stroke="#8b5cf6" strokeWidth="2" />
-      <circle cx={x} cy={y} r="36" fill="#ede9fe" opacity="0.3" />
+      <circle cx={x} cy={y} r="40" fill="white" stroke="#8b5cf6" strokeWidth="2.5" />
+      <circle cx={x} cy={y} r="36" fill="#ede9fe" opacity="0.2" />
 
       {/* Avatar and text */}
-      <text x={x} y={y - 8} textAnchor="middle" fontSize="13" fontWeight="bold" fill="#1e293b">{getInitials(node.name)}</text>
-      <text x={x} y={y + 8} textAnchor="middle" fontSize="9" fill="#64748b">{node.designation?.substring(0, 12) || "Staff"}</text>
+      <text x={x} y={y - 8} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#5b21b6">{getInitials(node.name)}</text>
+      <text x={x} y={y + 8} textAnchor="middle" fontSize="9" fill="#6b21a8" fontWeight="500">{node.designation?.substring(0, 12) || "Staff"}</text>
     </g>
   );
 }
 
-// Sub-spoke nodes (second level, smaller)
+// Sub-spoke nodes (second level, smaller) - Enhanced
 function SubSpokeNode({ x, y, parentX, parentY, node, onClick }) {
   const av = getAvatarColor(node.name);
   return (
     <g onClick={onClick} style={{ cursor: "pointer" }}>
-      {/* Line from parent spoke to sub-spoke */}
-      <line x1={parentX} y1={parentY} x2={x * 0.8} y2={y * 0.8} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4" />
+      {/* Line from parent spoke to sub-spoke - dashed with gradient */}
+      <defs>
+        <linearGradient id={`subline-${node.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d8b4fe" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+      <line
+        x1={parentX}
+        y1={parentY}
+        x2={x * 0.8}
+        y2={y * 0.8}
+        stroke={`url(#subline-${node.id})`}
+        strokeWidth="1.5"
+        strokeDasharray="5,3"
+      />
 
-      {/* Node circle (smaller) */}
-      <circle cx={x} cy={y} r="28" fill="white" stroke="#a78bfa" strokeWidth="1.5" />
-      <circle cx={x} cy={y} r="25" fill="#f3e8ff" opacity="0.2" />
+      {/* Node circle (smaller) with gradient */}
+      <circle cx={x} cy={y} r="32" fill="none" stroke="#d8b4fe" strokeWidth="1" opacity="0.3" />
+      <circle cx={x} cy={y} r="28" fill="white" stroke="#c084fc" strokeWidth="1.5" />
+      <circle cx={x} cy={y} r="25" fill="#faf5ff" opacity="0.3" />
 
       {/* Avatar and text */}
-      <text x={x} y={y - 4} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#1e293b">{getInitials(node.name)}</text>
-      <text x={x} y={y + 6} textAnchor="middle" fontSize="7" fill="#94a3b8">{node.designation?.substring(0, 8) || "Staff"}</text>
+      <text x={x} y={y - 4} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#7c3aed">{getInitials(node.name)}</text>
+      <text x={x} y={y + 6} textAnchor="middle" fontSize="7" fill="#a78bfa">{node.designation?.substring(0, 8) || "Staff"}</text>
     </g>
   );
 }
@@ -139,6 +174,17 @@ export default function HubSpokeOrgChart() {
               transition: "transform 0.15s",
             }}
           >
+            {/* SVG Definitions for gradients */}
+            <defs>
+              <linearGradient id="ceoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#dbeafe" stopOpacity="1" />
+                <stop offset="100%" stopColor="#bfdbfe" stopOpacity="0.8" />
+              </linearGradient>
+              <filter id="shadow">
+                <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.15" />
+              </filter>
+            </defs>
+
             {/* CEO Hub */}
             <g transform={`translate(${centerX}, ${centerY})`}>
               <HubNode node={ceo} onClick={() => setSelectedNode(ceo)} />

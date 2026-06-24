@@ -23,6 +23,7 @@ import { fetchBranches } from "../../api/branchApi";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
 import HubSpokeOrgChart from "./HubSpokeOrgChart";
+import { EnhancedTreeNode } from "./EnhancedTreeOrgChart";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
@@ -261,7 +262,7 @@ export default function OrgChart() {
               <ScrollArea>
                 <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content" }}>
                   {viewMode === "tree" && tree.map((root) => (
-                    <TreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
+                    <EnhancedTreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
                   ))}
 
                   {viewMode === "card" && (
