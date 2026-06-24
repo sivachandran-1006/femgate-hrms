@@ -25,6 +25,7 @@ import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgC
 import HubSpokeOrgChart from "./HubSpokeOrgChart";
 import { EnhancedTreeNode } from "./EnhancedTreeOrgChart";
 import BoxLineOrgChart from "./BoxLineOrgChart";
+import ModernPremiumOrgChart from "./ModernPremiumOrgChart";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
@@ -235,6 +236,7 @@ export default function OrgChart() {
             <Group gap="sm" wrap="wrap" align="flex-end">
               <SegmentedControl size="sm"
                 data={[
+                  { value: "modern", label: "Modern" },
                   { value: "boxline", label: "Box & Line" },
                   { value: "tree", label: "Tree" },
                   { value: "card", label: "Card" },
@@ -263,6 +265,8 @@ export default function OrgChart() {
             <AppSection p="md">
               <ScrollArea>
                 <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content" }}>
+                  {viewMode === "modern" && <ModernPremiumOrgChart />}
+
                   {viewMode === "boxline" && <BoxLineOrgChart />}
 
                   {viewMode === "tree" && tree.map((root) => (
