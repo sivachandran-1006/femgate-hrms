@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Stack, Group, Text, Title, Paper, Badge, Button, Tabs,
-  SimpleGrid, Progress, Table, ActionIcon, Loader, Center,
+  SimpleGrid, Progress, Table, ActionIcon, Loader, Center, Modal, Select,
 } from "@mantine/core";
 import {
   IconDownload, IconCreditCard, IconCheck, IconPlus, IconTrendingUp,
@@ -28,8 +28,12 @@ const PLAN_FEATURES = [
   "Dedicated account manager",
 ];
 
+const PLAN_OPTIONS = ["Starter", "Pro", "Enterprise"];
+
 export default function Billing() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const toast = useToast();
   const queryClient = useQueryClient();
 
@@ -55,14 +59,29 @@ export default function Billing() {
 
   const upgradeMutation = useMutation({
     mutationFn: upgradePlan,
-    onSuccess: () => {
+    onSuccess: (_, planName) => {
       queryClient.invalidateQueries({ queryKey: ["billing-plan"] });
-      toast.show("Plan upgraded successfully", "success");
+      setShowUpgrade(false);
+      setSelectedPlan(null);
+      toast.show(`Plan changed to ${planName}`, "success");
     },
     onError: () => {
       toast.show("Failed to upgrade plan. Please try again.", "error");
     },
   });
+
+  const openUpgrade = () => {
+    setSelectedPlan(plan.plan || "Enterprise");
+    setShowUpgrade(true);
+  };
+
+  const handleUpgrade = () => {
+    if (!selectedPlan) {
+      toast.show("Please select a plan", "error");
+      return;
+    }
+    upgradeMutation.mutate(selectedPlan);
+  };
 
   const plan     = planData?.data    || {};
   const invoices = invoicesData?.data?.invoices || [];
@@ -177,7 +196,7 @@ export default function Billing() {
         <Button
           leftSection={<IconTrendingUp size={16} />}
           loading={upgradeMutation.isPending}
-          onClick={() => upgradeMutation.mutate(plan.plan || "Enterprise")}
+          onClick={openUpgrade}
         >
           Upgrade Plan
         </Button>
@@ -245,8 +264,8 @@ export default function Billing() {
               </Stack>
               <Stack gap="sm">
                 <Text fw={600}>Plan Actions</Text>
-                <Button fullWidth justify="left" onClick={() => toast.show("Upgrade options coming soon", "info")}>
-                  Upgrade to Custom Enterprise
+                <Button fullWidth justify="left" onClick={openUpgrade}>
+                  Change Plan
                 </Button>
                 <Button fullWidth justify="left" variant="default" onClick={() => toast.show("Downgrade confirmation required", "warning")}>
                   Downgrade Plan
@@ -365,6 +384,32 @@ export default function Billing() {
           </Tabs.Panel>
         </Tabs>
       </Paper>
+
+      {/* ── Change Plan Modal ── */}
+      <Modal opened={showUpgrade} onClose={() => setShowUpgrade(false)} title="Change Subscription Plan" size="sm">
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Current plan: <Text span fw={600}>{plan.plan || "Enterprise"}</Text>. Select a new plan below.
+          </Text>
+          <Select
+            label="Plan"
+            data={PLAN_OPTIONS}
+            value={selectedPlan}
+            onChange={setSelectedPlan}
+            allowDeselect={false}
+          />
+          <Group justify="flex-end" mt="sm">
+            <Button variant="default" onClick={() => setShowUpgrade(false)}>Cancel</Button>
+            <Button
+              onClick={handleUpgrade}
+              loading={upgradeMutation.isPending}
+              disabled={selectedPlan === plan.plan}
+            >
+              Confirm Change
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

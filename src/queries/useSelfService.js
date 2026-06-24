@@ -4,6 +4,7 @@ import {
   getMyPayslips, getMyDocuments, getMyAssets,
   createDocument, deleteDocument, selfCheckIn, selfCheckOut,
 } from "../services/selfService";
+import { addMaintenance, returnAsset } from "../api/assetApi";
 
 export const useMyProfile = () =>
   useQuery({ queryKey: ["me", "profile"], queryFn: getMyProfile });
@@ -65,3 +66,23 @@ export const useDeleteDocument = () => {
 
 export const useMyAssets = () =>
   useQuery({ queryKey: ["me", "assets"], queryFn: getMyAssets });
+
+// Report an issue → logs a maintenance record + flags the asset for repair
+export const useReportAssetIssue = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, description }) =>
+      addMaintenance(id, { type: "Issue Reported", description, status: "Pending", setUnderRepair: true }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me", "assets"] }),
+  });
+};
+
+// Request return → marks the assignment returned (pending IT pickup)
+export const useRequestAssetReturn = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, remarks }) =>
+      returnAsset(id, { remarks: remarks || "Return requested by employee", accept: false }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me", "assets"] }),
+  });
+};

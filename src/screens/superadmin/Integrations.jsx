@@ -12,8 +12,11 @@ import {
   getIntegrations,
   connectIntegration,
   disconnectIntegration,
+  requestIntegration,
 } from "../../api/integrationsApi";
 import { useToast } from "../../components/ui/Toast";
+
+const EMPTY_REQUEST = { name: "", category: "Productivity", reason: "" };
 
 const ICON_COLORS = {
   microsoft365: "#0078d4", google_workspace: "#4285f4", slack: "#4a154b",
@@ -30,6 +33,7 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [reqForm, setReqForm] = useState(EMPTY_REQUEST);
 
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -73,8 +77,28 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
     },
   });
 
+  // ── Request new integration mutation ────────────────────────────────────────
+  const requestMutation = useMutation({
+    mutationFn: (data) => requestIntegration(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["integrations"] });
+      setShowAddModal(false);
+      setReqForm(EMPTY_REQUEST);
+      toast?.show("Integration request submitted", "success");
+    },
+    onError: () => toast?.show("Failed to submit request. Please try again.", "error"),
+  });
+
   const handleConnect = (intg) => connectMutation.mutate(intg);
   const handleDisconnect = (intg) => disconnectMutation.mutate(intg);
+
+  const handleRequest = () => {
+    if (!reqForm.name.trim()) {
+      toast?.show("Integration name is required", "error");
+      return;
+    }
+    requestMutation.mutate(reqForm);
+  };
 
   // ── Filter ──────────────────────────────────────────────────────────────────
   const filtered = integrations.filter((i) => {
@@ -240,21 +264,29 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
           <Text size="sm" c="dimmed">
             Submit a request for an integration not listed here. Our team will evaluate and add it to the catalogue.
           </Text>
-          <TextInput label="Integration Name *" placeholder="e.g. Salesforce CRM" />
+          <TextInput
+            label="Integration Name *"
+            placeholder="e.g. Salesforce CRM"
+            value={reqForm.name}
+            onChange={(e) => setReqForm({ ...reqForm, name: e.currentTarget.value })}
+          />
           <Select
             label="Category"
             data={CATEGORIES.filter((c) => c !== "All")}
-            defaultValue="Productivity"
+            value={reqForm.category}
+            onChange={(v) => setReqForm({ ...reqForm, category: v })}
           />
           <Textarea
             label="Reason / Use Case"
             placeholder="Describe why this integration is needed..."
             minRows={3}
             autosize
+            value={reqForm.reason}
+            onChange={(e) => setReqForm({ ...reqForm, reason: e.currentTarget.value })}
           />
           <Group justify="flex-end" mt="sm">
             <Button variant="default" onClick={() => setShowAddModal(false)}>Cancel</Button>
-            <Button onClick={() => { setShowAddModal(false); toast?.show("Integration request submitted", "success"); }}>
+            <Button onClick={handleRequest} loading={requestMutation.isPending}>
               Submit Request
             </Button>
           </Group>

@@ -22,6 +22,7 @@ import {
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard } from "../../components/ui/AppStatCard";
 import { useToast } from "../../components/ui/Toast";
+import { isValidEmail } from "../../utils/validators";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -179,6 +180,14 @@ export default function UserManagement() {
   const handleAdd = () => {
     if (!newUser.name || !newUser.email || !newUser.password) {
       toast.show("Fill all required fields", "error");
+      return;
+    }
+    if (!isValidEmail(newUser.email)) {
+      toast.show("Enter a valid email address", "error");
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast.show("Password must be at least 6 characters", "error");
       return;
     }
     if (newUser.password !== newUser.confirmPassword) {

@@ -4,7 +4,6 @@ import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconChartLine,
 import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateOnboarding, useChecklists, useTasks, useOffboardingDashboard, useOffboardings, useCreateOffboarding, useUpdateOffboarding, useCreateClearance, useUpdateAssetReturn, useCreateExitInterview, useCreateSettlement } from "../../queries/useOnboarding";
 import { useToast } from "../../components/ui/Toast";
 import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
 
 const ONBOARD_STATUSES = ["Pending", "In Progress", "Completed", "Delayed", "Cancelled"];
 const OFFBOARD_STATUSES = ["Pending", "In Progress", "Approved", "Completed"];
@@ -642,7 +641,7 @@ export default function OnboardingManagement() {
   const [tab, setTab] = useState("onboarding-dashboard");
 
   return (
-    <ScreenWrapper>
+    <Box>
       <Group justify="space-between" mb="md">
         <Box>
           <Text fw={700} size="lg">Onboarding & Offboarding</Text>
@@ -675,6 +674,6 @@ export default function OnboardingManagement() {
         <Tabs.Panel value="interview"><ExitInterviewTab /></Tabs.Panel>
         <Tabs.Panel value="settlement"><SettlementTab /></Tabs.Panel>
       </Tabs>
-    </ScreenWrapper>
+    </Box>
   );
 }

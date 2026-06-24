@@ -1,12 +1,12 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications"],
   ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team"],
   HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team"],
   MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals"],
   FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals"],
   IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals"],
-  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","settings","self-onboarding"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance"],
 };
 
 // ── Sidebar nav items per role ────────────────────────────────────────────────
@@ -36,6 +36,8 @@ export const ROLE_SIDEBAR = {
     { id: "lms",              label: "Learning",          icon: "IconBook"              },
     { id: "analytics",        label: "Analytics",         icon: "IconChartBar"          },
     { id: "reports",          label: "Reports",           icon: "IconReportAnalytics"   },
+    { id: "workflows",        label: "Workflows",         icon: "IconSitemap"           },
+    { id: "communications",   label: "Communications",    icon: "IconMessage"           },
     { id: "notifications",    label: "Notifications",     icon: "IconBell"              },
     { id: "user-management",  label: "User Management",   icon: "IconUserCog"           },
     { id: "roles-permissions",label: "Roles & Perms",     icon: "IconShieldLock"        },
@@ -136,6 +138,8 @@ export const ROLE_SIDEBAR = {
     { id: "attendance",   label: "My Attendance", icon: "IconClock"           },
     { id: "leave",        label: "My Leave",      icon: "IconCalendarOff"     },
     { id: "my-payslips",  label: "My Payslips",   icon: "IconCurrencyRupee"   },
+    { id: "expense",      label: "My Expenses",   icon: "IconReceipt"         },
+    { id: "performance",  label: "My Performance",icon: "IconTarget"          },
     { id: "my-documents", label: "My Documents",  icon: "IconFolder"          },
     { id: "my-assets",    label: "My Assets",     icon: "IconPackage"         },
     { id: "helpdesk",     label: "Helpdesk",      icon: "IconLifebuoy"        },
@@ -144,7 +148,6 @@ export const ROLE_SIDEBAR = {
     { id: "lms",            label: "Learning",       icon: "IconBook"            },
     { id: "announcements",  label: "Announcements",  icon: "IconSpeakerphone"    },
     { id: "notifications",  label: "Notifications",  icon: "IconBell"            },
-    { id: "settings",       label: "Settings",       icon: "IconSettings"        },
     { id: "self-onboarding", label: "My Onboarding", icon: "IconUserCheck"       },
   ],
 };

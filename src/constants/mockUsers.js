@@ -16,6 +16,10 @@ export const MOCK_USERS = [
   { email: "finance@mgate.com",        password: "Admin@123", role: "FINANCE", name: "Anjali Gupta",  avatar: "AG" },
   { email: "finance.arun@mgate.com",   password: "Admin@123", role: "FINANCE", name: "Arun Desai",    avatar: "AD" },
 
+  // IT_ADMIN
+  { email: "itadmin@mgate.com",       password: "Admin@123", role: "IT_ADMIN", name: "Karthik Rao",    avatar: "KR" },
+  { email: "it.suresh@mgate.com",     password: "Admin@123", role: "IT_ADMIN", name: "Suresh Menon",   avatar: "SM" },
+
   // MANAGER
   { email: "manager@mgate.com",       password: "Admin@123", role: "MANAGER", name: "Sanjay Malhotra", avatar: "SM" },
   { email: "manager.amit@mgate.com",  password: "Admin@123", role: "MANAGER", name: "Amit Patel",      avatar: "AP" },

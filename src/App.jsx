@@ -28,9 +28,11 @@ import PayrollManagement from "./screens/payroll/PayrollManagement";
 import Recruitment    from "./screens/recruitment/Recruitment";
 import OnboardingManagement from "./screens/onboarding/OnboardingManagement";
 import PerformanceManagement from "./screens/performance/PerformanceManagement";
+import Performance           from "./screens/performance/Performance";
 import AssetManagement from "./screens/assets/AssetManagement";
 import AssetProfile     from "./screens/assets/AssetProfile";
 import HelpdeskManagement from "./screens/helpdesk/HelpdeskManagement";
+import Helpdesk           from "./screens/helpdesk/Helpdesk";
 import TicketDetail        from "./screens/helpdesk/TicketDetail";
 import LmsManagement  from "./screens/lms/LmsManagement";
 import Analytics      from "./screens/analytics/Analytics";
@@ -315,7 +317,12 @@ export default function App() {
             path="/performance"
             element={
               <RoleGuard routeId="performance" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><PerformanceManagement darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}>
+                  {can("performance.view_team")
+                    ? <PerformanceManagement darkMode={dark} />
+                    : <Performance darkMode={dark} />
+                  }
+                </ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -339,7 +346,12 @@ export default function App() {
             path="/helpdesk"
             element={
               <RoleGuard routeId="helpdesk" userRole={userRole}>
-                <ScreenWrapper darkMode={dark}><HelpdeskManagement darkMode={dark} /></ScreenWrapper>
+                <ScreenWrapper darkMode={dark}>
+                  {can("helpdesk.manage_tickets")
+                    ? <HelpdeskManagement darkMode={dark} />
+                    : <Helpdesk darkMode={dark} />
+                  }
+                </ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -355,7 +367,7 @@ export default function App() {
             path="/lms"
             element={
               <RoleGuard routeId="lms" userRole={userRole}>
-                <LmsManagement />
+                <ScreenWrapper darkMode={dark}><LmsManagement /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -501,7 +513,9 @@ export default function App() {
           } />
           <Route path="/expense" element={
             <RoleGuard routeId="expense" userRole={userRole}>
-              <ScreenWrapper darkMode={dark}><ExpenseManagement darkMode={dark} /></ScreenWrapper>
+              <ScreenWrapper darkMode={dark}>
+                <ExpenseManagement darkMode={dark} employeeView={!["SUPER_ADMIN","ADMIN","FINANCE"].includes(userRole)} />
+              </ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/communications" element={
@@ -553,7 +567,7 @@ export default function App() {
           } />
           <Route path="/self-onboarding" element={
             <RoleGuard routeId="self-onboarding" userRole={userRole}>
-              <SelfOnboarding darkMode={dark} />
+              <ScreenWrapper darkMode={dark}><SelfOnboarding darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 

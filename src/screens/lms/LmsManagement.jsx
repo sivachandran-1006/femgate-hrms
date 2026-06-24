@@ -18,7 +18,6 @@ import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertif
   useCreateAssessment, useUpdateAssessment, useDeleteAssessment } from "../../queries/useLms";
 import { useToast } from "../../components/ui/Toast";
 import { exportLms } from "../../api/lmsApi";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
 const CATEGORY_OPTIONS = ["Technical", "Soft Skills", "Compliance", "Leadership", "Other"];
@@ -745,7 +744,7 @@ export default function LmsManagement() {
   const [tab, setTab] = useState("dashboard");
 
   return (
-    <ScreenWrapper>
+    <Box>
       <Group justify="space-between" mb="md">
         <Group gap="xs">
           <IconSchool size={24} color="var(--mantine-color-blue-6)" />
@@ -775,6 +774,6 @@ export default function LmsManagement() {
         <Tabs.Panel value="analytics">    <AnalyticsTab /></Tabs.Panel>
         <Tabs.Panel value="audit">        <AuditTab /></Tabs.Panel>
       </Tabs>
-    </ScreenWrapper>
+    </Box>
   );
 }

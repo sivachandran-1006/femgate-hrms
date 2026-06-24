@@ -6,6 +6,8 @@ import {
   IconBuildingBank, IconFileText, IconShieldCheck, IconUserCircle,
 } from "@tabler/icons-react";
 import { fetchMyEmployee, updateMyProfile } from "../../api/approvalsApi";
+import { useCreateDocument } from "../../queries/useSelfService";
+import { useToast } from "../../components/ui/Toast";
 
 const STEPS = [
   { id: "personal",   label: "Personal Info",     icon: IconUser,          pct: 20 },
@@ -37,11 +39,38 @@ export default function SelfOnboarding({ darkMode }) {
   const [emergency, setEmergency] = useState({ name: "", relationship: "", phone: "", address: "" });
   const [bank, setBank] = useState({ bankName: "", accountHolder: "", accountNumber: "", ifsc: "", upi: "" });
   const [govt, setGovt] = useState({ pan: "", aadhaar: "", passport: "", uan: "", esi: "", drivingLicense: "" });
+  const [uploadedDocs, setUploadedDocs] = useState({});   // { docName: { fileName } }
+  const [uploadingDoc, setUploadingDoc] = useState(null);
+
+  const { show } = useToast();
+  const createDoc = useCreateDocument();
 
   const saveMut = useMutation({
     mutationFn: (data) => updateMyProfile(data),
     onSuccess: () => { qc.invalidateQueries(["my-employee"]); setSaved(true); setTimeout(() => setSaved(false), 3000); },
   });
+
+  const handleDocUpload = async (docName, file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { show("File exceeds 5MB limit", "error"); return; }
+    setUploadingDoc(docName);
+    try {
+      await createDoc.mutateAsync({
+        name: `${docName} — ${emp?.name || "Me"}`,
+        category: "Onboarding",
+        docType: docName,
+        fileUrl: `/files/onboarding/${docName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+        fileSize: file.size,
+        mimeType: file.type,
+      });
+      setUploadedDocs((p) => ({ ...p, [docName]: { fileName: file.name } }));
+      show(`${docName} uploaded`, "success");
+    } catch (e) {
+      show(e?.response?.data?.message || `Failed to upload ${docName}`, "error");
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
 
   const completion = emp?.profileCompletion || 0;
 
@@ -212,25 +241,37 @@ export default function SelfOnboarding({ darkMode }) {
                 "Offer Letter","Relieving Letter",
               ].map((doc) => (
                 <Group key={doc} justify="space-between" align="center"
-                  style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${border}`, marginBottom: 8 }}>
+                  style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${uploadedDocs[doc] ? "#86efac" : border}`, marginBottom: 8, background: uploadedDocs[doc] ? "#f0fdf4" : "transparent" }}>
                   <Group gap={10}>
-                    <IconFileText size={16} color={sub} stroke={1.8} />
-                    <Text fz="sm" c={text} fw={500}>{doc}</Text>
+                    <IconFileText size={16} color={uploadedDocs[doc] ? "#16a34a" : sub} stroke={1.8} />
+                    <Box>
+                      <Text fz="sm" c={text} fw={500}>{doc}</Text>
+                      {uploadedDocs[doc] && <Text fz="xs" c="#16a34a">{uploadedDocs[doc].fileName}</Text>}
+                    </Box>
                   </Group>
-                  <label style={{
-                    padding: "6px 14px", borderRadius: 8, border: `1px solid ${border}`,
-                    background: "transparent", color: sub, fontSize: 12, fontWeight: 600,
-                    cursor: "pointer",
-                  }}>
-                    Upload
-                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} />
-                  </label>
+                  {uploadedDocs[doc] ? (
+                    <Group gap={6}>
+                      <IconCheck size={14} color="#16a34a" stroke={2.5} />
+                      <Text fz="xs" fw={600} c="#16a34a">Uploaded</Text>
+                    </Group>
+                  ) : (
+                    <label style={{
+                      padding: "6px 14px", borderRadius: 8, border: `1px solid ${border}`,
+                      background: "transparent", color: sub, fontSize: 12, fontWeight: 600,
+                      cursor: uploadingDoc === doc ? "wait" : "pointer", opacity: uploadingDoc === doc ? 0.6 : 1,
+                    }}>
+                      {uploadingDoc === doc ? "Uploading…" : "Upload"}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }}
+                        disabled={uploadingDoc === doc}
+                        onChange={(e) => handleDocUpload(doc, e.target.files?.[0])} />
+                    </label>
+                  )}
                 </Group>
               ))}
-              <Box style={{ background: "#fef3c7", borderRadius: 10, padding: "10px 14px", border: "1px solid #fde68a", marginTop: 16 }}>
+              <Box style={{ background: "#eff6ff", borderRadius: 10, padding: "10px 14px", border: "1px solid #bfdbfe", marginTop: 16 }}>
                 <Group gap={8}>
-                  <IconAlertCircle size={14} color="#d97706" stroke={2} />
-                  <Text fz="xs" c="#92400e">Document upload to cloud storage coming soon. Please submit physical copies to HR.</Text>
+                  <IconAlertCircle size={14} color="#2563eb" stroke={2} />
+                  <Text fz="xs" c="#1d4ed8">Uploaded documents are sent to HR for verification. Max 5MB each (PDF, JPG, PNG).</Text>
                 </Group>
               </Box>
             </Box>

@@ -16,7 +16,7 @@ import { AppModal }       from "../../components/ui/AppModal";
 import { AppInput }       from "../../components/ui/AppInput";
 
 import { useToast }       from "../../components/ui/Toast";
-import { useMyAssets }    from "../../queries/useSelfService";
+import { useMyAssets, useReportAssetIssue, useRequestAssetReturn } from "../../queries/useSelfService";
 import { COLORS }         from "../../theme/colors";
 
 const STATUS_MAP = { InUse: "Active", Maintenance: "Under Repair", Disposed: "Returned", Available: "Active" };
@@ -56,19 +56,32 @@ const MyAssets = () => {
   const { data: assetsRaw = [] } = useMyAssets();
   const MY_ASSETS = assetsRaw.map(mapApiAsset);
 
-  const handleReport = (id) => {
+  const reportMut = useReportAssetIssue();
+  const returnMut = useRequestAssetReturn();
+
+  const handleReport = async (id) => {
     const name = MY_ASSETS.find((a) => a.id === id)?.name || "Asset";
-    setSubmitted((p) => ({ ...p, [id]: "reported" }));
-    setReportId(null);
-    setReportNote("");
-    show(`Issue reported for "${name}" — IT team notified`, "warning");
+    try {
+      await reportMut.mutateAsync({ id, description: reportNote });
+      setSubmitted((p) => ({ ...p, [id]: "reported" }));
+      setReportId(null);
+      setReportNote("");
+      show(`Issue reported for "${name}" — IT team notified`, "warning");
+    } catch (e) {
+      show(e?.response?.data?.message || "Failed to report issue", "error");
+    }
   };
 
-  const handleReturn = (id) => {
+  const handleReturn = async (id) => {
     const name = MY_ASSETS.find((a) => a.id === id)?.name || "Asset";
-    setSubmitted((p) => ({ ...p, [id]: "return-requested" }));
-    setReturnId(null);
-    show(`Return request submitted for "${name}"`, "info");
+    try {
+      await returnMut.mutateAsync({ id });
+      setSubmitted((p) => ({ ...p, [id]: "return-requested" }));
+      setReturnId(null);
+      show(`Return request submitted for "${name}"`, "info");
+    } catch (e) {
+      show(e?.response?.data?.message || "Failed to submit return request", "error");
+    }
   };
 
   return (
@@ -189,7 +202,7 @@ const MyAssets = () => {
           />
           <Group justify="flex-end" gap="sm">
             <AppButton variant="default" onClick={() => setReportId(null)}>Cancel</AppButton>
-            <AppButton color="yellow" onClick={() => handleReport(reportId)}>Submit Report</AppButton>
+            <AppButton color="yellow" loading={reportMut.isPending} onClick={() => handleReport(reportId)}>Submit Report</AppButton>
           </Group>
         </Stack>
       </AppModal>
@@ -210,7 +223,7 @@ const MyAssets = () => {
           </Text>
           <Group justify="flex-end" gap="sm">
             <AppButton variant="default" onClick={() => setReturnId(null)}>Cancel</AppButton>
-            <AppButton onClick={() => handleReturn(returnId)}>Confirm Return</AppButton>
+            <AppButton loading={returnMut.isPending} onClick={() => handleReturn(returnId)}>Confirm Return</AppButton>
           </Group>
         </Stack>
       </AppModal>

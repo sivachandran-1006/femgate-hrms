@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   SimpleGrid, Box, Group, Text, Badge, Button, TextInput, Select,
   Modal, Table, ActionIcon, Loader, Alert,
@@ -35,16 +35,16 @@ export default function HolidayCalendar() {
   const [editTarget, setEditTarget] = useState(null);
   const [form, setForm]             = useState(EMPTY);
 
-  const filtered = holidays.filter((h) => {
+  const filtered = useMemo(() => holidays.filter((h) => {
     const matchQ = !search || h.name.toLowerCase().includes(search.toLowerCase());
     const matchT = filterType === "All" || h.type === filterType;
     return matchQ && matchT;
-  });
+  }), [holidays, search, filterType]);
 
-  const byMonth = MONTHS.map((mon, idx) => ({
+  const byMonth = useMemo(() => MONTHS.map((mon, idx) => ({
     mon,
     items: filtered.filter((h) => new Date(h.date).getMonth() === idx),
-  })).filter((m) => m.items.length > 0);
+  })).filter((m) => m.items.length > 0), [filtered]);
 
   const openAdd  = () => { setForm(EMPTY); setEditTarget(null); setModalOpen(true); };
   const openEdit = (h) => {

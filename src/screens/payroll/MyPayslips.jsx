@@ -57,6 +57,52 @@ const MyPayslips = ({ darkMode: dark = false }) => {
 
   const bd = viewSlip ? computeBreakdown(viewSlip) : null;
 
+  // ── Build a clean, self-contained payslip document for print / download ──
+  const buildPayslipHTML = (slip) => {
+    const b = computeBreakdown(slip);
+    const fmt = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+    const row = (label, val) => `<tr><td style="padding:6px 0;color:#475569">${label}</td><td style="padding:6px 0;text-align:right;font-weight:600">${fmt(val)}</td></tr>`;
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Payslip ${slip.month} ${slip.year}</title>
+      <style>body{font-family:system-ui,-apple-system,sans-serif;color:#0f172a;max-width:640px;margin:24px auto;padding:0 16px}
+      h1{font-size:20px;margin:0}h2{font-size:13px;color:#64748b;margin:2px 0 20px;font-weight:500}
+      table{width:100%;border-collapse:collapse;font-size:13px}
+      .sec{font-weight:700;border-bottom:2px solid #e2e8f0;padding-bottom:4px;margin:18px 0 6px}
+      .net{margin-top:18px;padding:14px;background:#eff6ff;border-radius:10px;display:flex;justify-content:space-between;align-items:center}
+      .net b{font-size:20px;color:#1d4ed8}</style></head><body>
+      <h1>MGate HRMS — Payslip</h1>
+      <h2>${slip.month} ${slip.year}</h2>
+      <table><tr><td style="color:#475569">Employee</td><td style="text-align:right;font-weight:600">${user?.name || "Employee"}</td></tr>
+      <tr><td style="color:#475569">Employee ID</td><td style="text-align:right;font-weight:600">${me?.employeeId || "—"}</td></tr>
+      <tr><td style="color:#475569">Department</td><td style="text-align:right;font-weight:600">${me?.department || "—"}</td></tr>
+      <tr><td style="color:#475569">Paid On</td><td style="text-align:right;font-weight:600">${slip.paidOn}</td></tr></table>
+      <div class="sec">Earnings</div>
+      <table>${row("Basic", b.basic)}${row("HRA", b.hra)}${row("Transport", b.transport)}${row("Special Allowance", b.special)}${slip.bonus ? row("Bonus", slip.bonus) : ""}${row("Gross", b.gross)}</table>
+      <div class="sec">Deductions</div>
+      <table>${row("Provident Fund", b.pf)}${row("Professional Tax", b.profTax)}${row("TDS", b.tds)}${row("Total Deductions", b.totalDed)}</table>
+      <div class="net"><span style="font-weight:700">Net Pay</span><b>${fmt(b.net)}</b></div>
+      </body></html>`;
+  };
+
+  const printPayslip = (slip) => {
+    const w = window.open("", "_blank", "width=720,height=900");
+    if (!w) return;
+    w.document.write(buildPayslipHTML(slip));
+    w.document.close();
+    w.focus();
+    w.onload = () => { w.print(); };
+    setTimeout(() => { try { w.print(); } catch { /* already triggered */ } }, 300);
+  };
+
+  const downloadPayslip = (slip) => {
+    const blob = new Blob([buildPayslipHTML(slip)], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Payslip-${slip.month}-${slip.year}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ fontFamily:FONT_FAMILY.base }}>
 
@@ -133,7 +179,7 @@ const MyPayslips = ({ darkMode: dark = false }) => {
                           <IconEye size={14}/>
                         </button>
                         {isPaid && (
-                          <button title="Download" style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
+                          <button title="Download" onClick={()=>downloadPayslip(slip)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
                             <IconDownload size={14}/>
                           </button>
                         )}
@@ -164,10 +210,10 @@ const MyPayslips = ({ darkMode: dark = false }) => {
                 </div>
               </div>
               <div style={{ display:"flex",gap:GAP.xs }}>
-                <button title="Print" style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:surface.subtext }}>
+                <button title="Print" onClick={()=>printPayslip(viewSlip)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:surface.subtext }}>
                   <IconPrinter size={15}/>
                 </button>
-                <button title="Download" style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
+                <button title="Download" onClick={()=>downloadPayslip(viewSlip)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
                   <IconDownload size={15}/>
                 </button>
                 <button onClick={()=>setViewSlip(null)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:surface.subtext }}>

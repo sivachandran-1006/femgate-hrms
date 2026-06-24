@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   SimpleGrid, Box, Group, Text, Badge, Button, TextInput, Select,
   Modal, Textarea, ActionIcon, Tabs, Avatar, Loader, Alert, Paper, Stack,
@@ -48,16 +48,18 @@ export default function Announcements() {
   const [editTarget, setEditTarget] = useState(null);
   const [form, setForm]           = useState(EMPTY_FORM);
 
-  const tabFiltered =
-    tab === "published" ? items.filter((a) => a.published)
-    : tab === "draft"   ? items.filter((a) => !a.published)
-    : items;
+  const filtered = useMemo(() => {
+    const tabFiltered =
+      tab === "published" ? items.filter((a) => a.published)
+      : tab === "draft"   ? items.filter((a) => !a.published)
+      : items;
 
-  const filtered = tabFiltered.filter((a) =>
-    !search ||
-    a.title.toLowerCase().includes(search.toLowerCase()) ||
-    a.body.toLowerCase().includes(search.toLowerCase())
-  );
+    return tabFiltered.filter((a) =>
+      !search ||
+      a.title.toLowerCase().includes(search.toLowerCase()) ||
+      a.body.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [items, tab, search]);
 
   const openAdd  = () => { setForm(EMPTY_FORM); setEditTarget(null); setModalOpen(true); };
   const openEdit = (a) => {

@@ -14,3 +14,6 @@ export const getIntegrationStatus = (id) => api.get(`/superadmin/integrations/${
 
 // POST /superadmin/integrations/:id/test  — test connection
 export const testIntegration = (id) => api.post(`/superadmin/integrations/${id}/test`).then(r => r.data);
+
+// POST /superadmin/integrations/request  — request a new integration for the catalogue
+export const requestIntegration = (data) => api.post("/superadmin/integrations/request", data).then(r => r.data);

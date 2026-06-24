@@ -44,6 +44,8 @@ import {
   IconBuilding,
   IconCircleCheck,
   IconUsersGroup,
+  IconSitemap,
+  IconMessage,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
@@ -88,6 +90,8 @@ const ICON_MAP = {
   IconBuilding,
   IconCircleCheck,
   IconUsersGroup,
+  IconSitemap,
+  IconMessage,
 };
 
 const Sidebar = ({

@@ -4,7 +4,6 @@ import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, Ico
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
 import { useWorkflowDashboard, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useApprovalInbox, useApproveRequest, useRejectRequest, useEscalateRequest, useWorkflowAnalytics } from "../../queries/useWorkflow";
 import { useToast } from "../../components/ui/Toast";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
 
 const MODULES = ["Leave", "Attendance", "Expense", "Asset", "Recruitment", "Onboarding", "Payroll", "Document"];
 const WORKFLOW_TYPES = ["Leave Workflow", "Attendance Workflow", "Expense Workflow", "Asset Workflow", "Recruitment Workflow", "Onboarding Workflow", "Payroll Workflow", "Document Approval Workflow", "Custom Workflow"];
@@ -326,7 +325,7 @@ export default function WorkflowEngine() {
   const [tab, setTab] = useState("dashboard");
 
   return (
-    <ScreenWrapper>
+    <Box>
       <Group justify="space-between" mb="md">
         <Box>
           <Text fw={700} size="lg">Workflow & Approval Engine</Text>
@@ -345,6 +344,6 @@ export default function WorkflowEngine() {
         <Tabs.Panel value="workflows"><WorkflowsTab /></Tabs.Panel>
         <Tabs.Panel value="inbox"><ApprovalInboxTab /></Tabs.Panel>
       </Tabs>
-    </ScreenWrapper>
+    </Box>
   );
 }

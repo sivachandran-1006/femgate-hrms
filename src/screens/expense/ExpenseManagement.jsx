@@ -16,7 +16,6 @@ import {
 } from "../../queries/useExpense";
 import { useToast } from "../../components/ui/Toast";
 import { exportExpensesCSV } from "../../api/expenseApi";
-import ScreenWrapper from "../../components/layout/ScreenWrapper";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2"];
 const CATEGORIES = ["Travel", "Food", "Accommodation", "Fuel", "Internet", "Mobile", "Training", "Office Supplies", "Client Meeting", "Medical", "Other"];
@@ -101,10 +100,13 @@ function ExpenseListTab() {
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   const { data: result = {}, isLoading } = useExpenses({ search, status, category, page, limit });
   const deleteExp = useDeleteExpense();
-  const { push } = window.history;
+
+  const openNew = () => { setEditId(null); setFormOpen(true); };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this expense?")) return;
@@ -140,7 +142,7 @@ function ExpenseListTab() {
         </Group>
         <Group>
           <Button variant="default" leftSection={<IconDownload size={14} />} size="sm" onClick={handleExport}>Export</Button>
-          <Button leftSection={<IconPlus size={14} />} size="sm">New Expense</Button>
+          <Button leftSection={<IconPlus size={14} />} size="sm" onClick={openNew}>New Expense</Button>
         </Group>
       </Group>
 
@@ -173,7 +175,7 @@ function ExpenseListTab() {
                 <Table.Td>
                   <Group gap={4}>
                     <Tooltip label="View"><ActionIcon size="sm" variant="subtle"><IconEye size={14} /></ActionIcon></Tooltip>
-                    {e.status === "Draft" && <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={14} /></ActionIcon></Tooltip>}
+                    {e.status === "Draft" && <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => { setEditId(e.id); setFormOpen(true); }}><IconPencil size={14} /></ActionIcon></Tooltip>}
                     {e.status === "Draft" && <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDelete(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>}
                   </Group>
                 </Table.Td>
@@ -191,6 +193,8 @@ function ExpenseListTab() {
           <Button variant="default" size="sm" onClick={() => setPage(page + 1)} disabled={(page * limit) >= (result.total || 0)}>Next</Button>
         </Group>
       </Group>
+
+      <ExpenseFormModal opened={formOpen} onClose={() => setFormOpen(false)} expenseId={editId} />
     </Stack>
   );
 }
@@ -480,37 +484,39 @@ function ReimbursementsTab() {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function ExpenseManagement() {
-  const [tab, setTab] = useState("dashboard");
+export default function ExpenseManagement({ employeeView = false }) {
+  const [tab, setTab] = useState(employeeView ? "expenses" : "dashboard");
   const [modalOpened, setModalOpened] = useState(false);
   const [editId, setEditId] = useState(null);
 
   return (
-    <ScreenWrapper>
+    <Box>
       <Group justify="space-between" mb="md">
         <Group gap="xs">
           <Box>
-            <Text fw={700} size="lg">Expense & Reimbursement</Text>
-            <Text size="xs" c="dimmed">Track claims, approvals, and reimbursements</Text>
+            <Text fw={700} size="lg">{employeeView ? "My Expenses" : "Expense & Reimbursement"}</Text>
+            <Text size="xs" c="dimmed">
+              {employeeView ? "Submit and track your expense claims" : "Track claims, approvals, and reimbursements"}
+            </Text>
           </Box>
         </Group>
       </Group>
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">
-          <Tabs.Tab value="dashboard" leftSection={<IconChartLine size={14} />}>Dashboard</Tabs.Tab>
+          {!employeeView && <Tabs.Tab value="dashboard" leftSection={<IconChartLine size={14} />}>Dashboard</Tabs.Tab>}
           <Tabs.Tab value="expenses" leftSection={<IconFileText size={14} />}>My Claims</Tabs.Tab>
-          <Tabs.Tab value="approvals" leftSection={<IconCheck size={14} />}>Approvals</Tabs.Tab>
-          <Tabs.Tab value="reimburse" leftSection={<IconCreditCard size={14} />}>Reimbursements</Tabs.Tab>
+          {!employeeView && <Tabs.Tab value="approvals" leftSection={<IconCheck size={14} />}>Approvals</Tabs.Tab>}
+          {!employeeView && <Tabs.Tab value="reimburse" leftSection={<IconCreditCard size={14} />}>Reimbursements</Tabs.Tab>}
         </Tabs.List>
 
-        <Tabs.Panel value="dashboard"><DashboardTab /></Tabs.Panel>
+        {!employeeView && <Tabs.Panel value="dashboard"><DashboardTab /></Tabs.Panel>}
         <Tabs.Panel value="expenses"><ExpenseListTab /></Tabs.Panel>
-        <Tabs.Panel value="approvals"><ApprovalsTab /></Tabs.Panel>
-        <Tabs.Panel value="reimburse"><ReimbursementsTab /></Tabs.Panel>
+        {!employeeView && <Tabs.Panel value="approvals"><ApprovalsTab /></Tabs.Panel>}
+        {!employeeView && <Tabs.Panel value="reimburse"><ReimbursementsTab /></Tabs.Panel>}
       </Tabs>
 
       <ExpenseFormModal opened={modalOpened} onClose={() => setModalOpened(false)} expenseId={editId} />
-    </ScreenWrapper>
+    </Box>
   );
 }

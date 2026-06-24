@@ -7,6 +7,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { fetchBranches } from "../../api/branchApi";
 import { fetchDesignations } from "../../api/designationApi";
+import { isValidEmail, isValidPhone, isPositiveNumber } from "../../utils/validators";
 
 const ROLES = ["EMPLOYEE", "HR", "ADMIN", "FINANCE", "IT_ADMIN", "SUPER_ADMIN"];
 const EMP_TYPES = ["Full-time", "Part-time", "Contract", "Intern"];
@@ -93,8 +94,16 @@ const EmployeeModal = ({
 
   const steps = ["Basic Info", "Job Details", "Review"];
 
-  const isStep0Valid = form.firstName && form.email;
-  const isStep1Valid = form.department && form.joinDate;
+  // ── Inline field-level format validation ──
+  const emailError = form.email && !isValidEmail(form.email)
+    ? "Enter a valid email address" : null;
+  const phoneError = form.phone && !isValidPhone(form.phone)
+    ? "Enter a valid 10-digit mobile number" : null;
+  const salaryError = form.salary && !isPositiveNumber(form.salary)
+    ? "Enter a valid amount" : null;
+
+  const isStep0Valid = form.firstName && form.email && !emailError && !phoneError;
+  const isStep1Valid = form.department && form.joinDate && !salaryError;
 
   return (
     <Modal
@@ -145,10 +154,12 @@ const EmployeeModal = ({
           </SimpleGrid>
           <TextInput label="Official Email" placeholder="ravi@company.com" required
             value={form.email} onChange={e => set("email", e.target.value)}
+            error={emailError}
             leftSection={<IconMail size={15} stroke={1.8} />}
             styles={field(darkMode)} />
-          <TextInput label="Mobile Number" placeholder="+91 9876543210"
+          <TextInput label="Mobile Number" placeholder="9876543210"
             value={form.phone} onChange={e => set("phone", e.target.value)}
+            error={phoneError}
             leftSection={<IconPhone size={15} stroke={1.8} />}
             styles={field(darkMode)} />
           <Select label="Role" value={form.role} onChange={v => set("role", v)}
@@ -189,6 +200,7 @@ const EmployeeModal = ({
               styles={field(darkMode)} />
             <TextInput label="Salary (₹)" placeholder="50000"
               value={form.salary} onChange={e => set("salary", e.target.value)}
+              error={salaryError}
               styles={field(darkMode)} />
           </SimpleGrid>
           <Select label="Reporting Manager" placeholder="Select manager"

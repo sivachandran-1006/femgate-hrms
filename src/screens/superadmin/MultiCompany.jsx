@@ -3,9 +3,9 @@ import {
   Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid, Modal,
   TextInput, Select, ActionIcon, Avatar, Center, Loader,
 } from "@mantine/core";
-import { IconSearch, IconPlus, IconEye, IconPencil, IconUserOff, IconBuilding } from "@tabler/icons-react";
+import { IconSearch, IconPlus, IconEye, IconPencil, IconUserOff, IconBuilding, IconTrash } from "@tabler/icons-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCompanies, createCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
+import { getCompanies, createCompany, updateCompany, deleteCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
 import { useToast } from "../../components/ui/Toast";
 
 const PLAN_COLORS  = { Enterprise: "yellow", Pro: "blue", Starter: "violet" };
@@ -23,6 +23,9 @@ export default function MultiCompany() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCo, setNewCo]             = useState(EMPTY_FORM);
+  const [editTarget, setEditTarget]   = useState(null);   // company being edited
+  const [editForm, setEditForm]       = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // company pending delete
 
   const toast       = useToast();
   const queryClient = useQueryClient();
@@ -70,6 +73,28 @@ export default function MultiCompany() {
     onError: () => toast.show("Failed to update company status.", "error"),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateCompany(id, data),
+    onSuccess: (_, { data }) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      setEditTarget(null);
+      setEditForm(null);
+      toast.show(`"${data.name}" updated successfully`, "success");
+    },
+    onError: () => toast.show("Failed to update company. Please try again.", "error"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteCompany(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      const name = deleteTarget?.name ?? "Company";
+      setDeleteTarget(null);
+      toast.show(`"${name}" deleted`, "error");
+    },
+    onError: () => toast.show("Failed to delete company.", "error"),
+  });
+
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleAddCompany = () => {
     if (!newCo.name || !newCo.adminEmail || !newCo.adminPassword || !newCo.city) {
@@ -91,6 +116,25 @@ export default function MultiCompany() {
   const handleSuspend = (co) => {
     const next = co.status === "Suspended" ? "Active" : "Suspended";
     statusMutation.mutate({ id: co.id, status: next, name: co.name });
+  };
+
+  const openEdit = (co) => {
+    setEditTarget(co);
+    setEditForm({
+      name:     co.name || "",
+      industry: co.industry || "Technology",
+      plan:     co.plan || "Pro",
+      city:     co.city || "",
+      country:  co.country || "India",
+    });
+  };
+
+  const handleUpdateCompany = () => {
+    if (!editForm.name || !editForm.city) {
+      toast.show("Please fill all required fields", "error");
+      return;
+    }
+    updateMutation.mutate({ id: editTarget.id, data: editForm });
   };
 
   // ── UI ────────────────────────────────────────────────────────────────────
@@ -198,7 +242,7 @@ export default function MultiCompany() {
                       <ActionIcon variant="default" size="sm" title="View" onClick={() => toast.show(`Viewing ${co.name} dashboard...`, "info")}>
                         <IconEye size={13} />
                       </ActionIcon>
-                      <ActionIcon variant="default" size="sm" title="Edit" onClick={() => toast.show(`Editing ${co.name}...`, "info")}>
+                      <ActionIcon variant="default" size="sm" title="Edit" onClick={() => openEdit(co)}>
                         <IconPencil size={13} />
                       </ActionIcon>
                       <ActionIcon
@@ -210,6 +254,15 @@ export default function MultiCompany() {
                         onClick={() => handleSuspend(co)}
                       >
                         <IconUserOff size={13} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="light"
+                        color="red"
+                        size="sm"
+                        title="Delete"
+                        onClick={() => setDeleteTarget(co)}
+                      >
+                        <IconTrash size={13} />
                       </ActionIcon>
                     </Group>
                   </Group>
@@ -286,6 +339,66 @@ export default function MultiCompany() {
           <Group justify="flex-end" mt="sm">
             <Button variant="default" onClick={() => setShowAddModal(false)}>Cancel</Button>
             <Button onClick={handleAddCompany} loading={createMutation.isPending}>Create Company</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* ── Edit Company Modal ── */}
+      <Modal opened={!!editTarget} onClose={() => setEditTarget(null)} title={`Edit ${editTarget?.name || "Company"}`} size="md">
+        {editForm && (
+          <Stack gap="md">
+            <TextInput
+              label="Company Name *"
+              placeholder="Enter company name"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.currentTarget.value })}
+            />
+            <Select
+              label="Industry"
+              value={editForm.industry}
+              onChange={(v) => setEditForm({ ...editForm, industry: v })}
+              data={INDUSTRIES}
+            />
+            <Select
+              label="Plan"
+              value={editForm.plan}
+              onChange={(v) => setEditForm({ ...editForm, plan: v })}
+              data={PLANS}
+            />
+            <Group grow>
+              <TextInput
+                label="City *"
+                placeholder="City"
+                value={editForm.city}
+                onChange={(e) => setEditForm({ ...editForm, city: e.currentTarget.value })}
+              />
+              <TextInput
+                label="Country"
+                placeholder="Country"
+                value={editForm.country}
+                onChange={(e) => setEditForm({ ...editForm, country: e.currentTarget.value })}
+              />
+            </Group>
+            <Group justify="flex-end" mt="sm">
+              <Button variant="default" onClick={() => setEditTarget(null)}>Cancel</Button>
+              <Button onClick={handleUpdateCompany} loading={updateMutation.isPending}>Save Changes</Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
+
+      {/* ── Delete Confirmation Modal ── */}
+      <Modal opened={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Company" size="sm">
+        <Stack gap="md">
+          <Text size="sm">
+            Are you sure you want to delete <Text span fw={700}>{deleteTarget?.name}</Text>? This will remove the
+            tenant and all associated data. This action cannot be undone.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+            <Button color="red" onClick={() => deleteMutation.mutate(deleteTarget.id)} loading={deleteMutation.isPending}>
+              Delete Company
+            </Button>
           </Group>
         </Stack>
       </Modal>
