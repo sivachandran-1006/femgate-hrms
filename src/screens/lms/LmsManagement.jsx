@@ -15,7 +15,7 @@ import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertif
   useCreateCourse, useUpdateCourse, useDeleteCourse,
   useCreateEnrollment, useUpdateEnrollment, useDeleteEnrollment,
   useCreateCertificate, useDeleteCertificate,
-  useCreateAssessment, useDeleteAssessment } from "../../queries/useLms";
+  useCreateAssessment, useUpdateAssessment, useDeleteAssessment } from "../../queries/useLms";
 import { useToast } from "../../components/ui/Toast";
 import { exportLms } from "../../api/lmsApi";
 import ScreenWrapper from "../../components/layout/ScreenWrapper";
