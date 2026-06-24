@@ -1,17 +1,15 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Stack, Group, Text, Paper, Badge, Button, TextInput, Select, Avatar,
-  SimpleGrid, SegmentedControl, ActionIcon, Menu, ScrollArea, Table, Loader, Box, Tabs,
+  Group, Text, Button, ActionIcon, Menu, ScrollArea, Loader, Box, Tabs,
 } from "@mantine/core";
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import {
-  IconSearch, IconChevronDown, IconChevronRight, IconPlus, IconMinus,
   IconArrowsMaximize, IconArrowsMinimize, IconZoomIn, IconZoomOut, IconPrinter,
   IconFileExport, IconUsers, IconBuildingCommunity, IconBuilding, IconUserStar,
-  IconUser, IconHierarchy, IconChartBar, IconAlertTriangle, IconEye, IconUsersGroup,
+  IconUser, IconHierarchy, IconChartBar, IconAlertTriangle,
 } from "@tabler/icons-react";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -22,9 +20,7 @@ import { getAvatarColor, getInitials } from "../../utils/helpers";
 import { fetchBranches } from "../../api/branchApi";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
-import HubSpokeOrgChart from "./HubSpokeOrgChart";
 import { EnhancedTreeNode } from "./EnhancedTreeOrgChart";
-import BoxLineOrgChart from "./BoxLineOrgChart";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
@@ -143,12 +139,6 @@ export default function OrgChart() {
   const tree = treeData?.tree || [];
   const flat = treeData?.flat || [];
 
-  const [viewMode, setViewMode] = useState(searchParams.get("view") || "tree");      // tree | card | hierarchy | hubspoke
-  const [search, setSearch]     = useState("");
-  const [searchBy, setSearchBy] = useState("name");
-  const [branchF, setBranchF]   = useState("All");
-  const [deptF, setDeptF]       = useState("All");
-  const [statusF, setStatusF]   = useState("All");
   const [zoom, setZoom]         = useState(1);
   const [expandedSet, setExpandedSet] = useState(new Set());
   const printRef = useRef(null);
@@ -156,30 +146,13 @@ export default function OrgChart() {
   // expand all once data arrives
   useEffect(() => { if (flat.length) setExpandedSet(new Set(flat.map((n) => n.id))); }, [treeData]); // eslint-disable-line
 
-  const departments = useMemo(() => ["All", ...new Set(flat.map((e) => e.department).filter(Boolean))], [flat]);
-
   const allIds = flat.map((n) => n.id);
-  const allExpanded = expandedSet.size >= allIds.length && allIds.length > 0;
   const toggle = (id) => setExpandedSet((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
   const expandAll = () => setExpandedSet(new Set(allIds));
   const collapseAll = () => setExpandedSet(new Set());
 
   const onView = (node) => navigate(`/employees/${node.id}`);
-  const onTeam = (node) => { setViewMode("card"); setSearch(node.name); setSearchBy("name"); };
-
-  // search/filter predicate for flat lists (card & hierarchy views)
-  const matches = (e) => {
-    const q = search.toLowerCase();
-    const field = searchBy === "id" ? (e.employeeId || "")
-      : searchBy === "designation" ? (e.designation || "")
-      : searchBy === "department" ? (e.department || "") : e.name;
-    const branchName = branches.find((b) => b.id === e.branchId)?.name;
-    return (!q || field.toLowerCase().includes(q))
-      && (branchF === "All" || String(e.branchId) === branchF)
-      && (deptF === "All" || e.department === deptF)
-      && (statusF === "All" || e.status === statusF);
-  };
-  const filteredFlat = flat.filter(matches);
+  const onTeam = () => {};
 
   // ─── render ───
   if (isLoading) return <Box ta="center" py="xl"><Loader /></Box>;
@@ -233,22 +206,6 @@ export default function OrgChart() {
         <Tabs.Panel value="chart">
           <AppSection mb="md" p="md">
             <Group gap="sm" wrap="wrap" align="flex-end">
-              <SegmentedControl size="sm"
-                data={[
-                  { value: "boxline", label: "Box & Line" },
-                  { value: "tree", label: "Tree" },
-                  { value: "card", label: "Card" },
-                  { value: "hierarchy", label: "Hierarchy" },
-                  { value: "hubspoke", label: "Hub & Spoke" }
-                ]}
-                value={viewMode} onChange={(v) => { setViewMode(v); setSearchParams({ view: v }); }} />
-              <Select label="Search by" w={140} size="sm" value={searchBy} onChange={setSearchBy}
-                data={[{ value: "name", label: "Name" }, { value: "id", label: "Employee ID" }, { value: "designation", label: "Designation" }, { value: "department", label: "Department" }]} />
-              <TextInput label="Search" placeholder="Search employee…" leftSection={<IconSearch size={15} />}
-                value={search} onChange={(e) => setSearch(e.target.value)} size="sm" style={{ flex: 1, minWidth: 160 }} />
-              <Select label="Branch" w={140} size="sm" data={["All", ...branches.map((b) => ({ value: String(b.id), label: b.name }))]} value={branchF} onChange={setBranchF} />
-              <Select label="Department" w={150} size="sm" data={departments} value={deptF} onChange={setDeptF} />
-              <Select label="Status" w={130} size="sm" data={["All", "Active", "Probation", "Notice Period", "Resigned", "Terminated", "Inactive"]} value={statusF} onChange={setStatusF} />
               <Group gap={4}>
                 <ActionIcon variant="default" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))} title="Zoom out"><IconZoomOut size={16} /></ActionIcon>
                 <Text size="xs" w={36} ta="center">{Math.round(zoom * 100)}%</Text>
@@ -263,39 +220,9 @@ export default function OrgChart() {
             <AppSection p="md">
               <ScrollArea>
                 <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content" }}>
-                  {viewMode === "boxline" && <BoxLineOrgChart />}
-
-                  {viewMode === "tree" && tree.map((root) => (
+                  {tree.map((root) => (
                     <EnhancedTreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
                   ))}
-
-                  {viewMode === "card" && (
-                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
-                      {filteredFlat.map((e) => (
-                        <NodeCard key={e.id} node={e} hasChildren={false} onView={onView} onTeam={onTeam} onToggle={() => {}} />
-                      ))}
-                    </SimpleGrid>
-                  )}
-
-                  {viewMode === "hierarchy" && (
-                    <Table striped highlightOnHover>
-                      <Table.Thead><Table.Tr>{["Employee", "Designation", "Department", "Reports To", "Direct Reports", "Status"].map((c) => <Table.Th key={c}>{c}</Table.Th>)}</Table.Tr></Table.Thead>
-                      <Table.Tbody>
-                        {filteredFlat.map((e) => (
-                          <Table.Tr key={e.id} style={{ cursor: "pointer" }} onClick={() => onView(e)}>
-                            <Table.Td><Group gap="sm" wrap="nowrap"><Avatar size={28} radius="xl">{getInitials(e.name)}</Avatar><Text size="sm" fw={600}>{e.name}</Text></Group></Table.Td>
-                            <Table.Td><Text size="sm" c="dimmed">{e.designation || "—"}</Text></Table.Td>
-                            <Table.Td><Text size="sm" c="dimmed">{e.department || "—"}</Text></Table.Td>
-                            <Table.Td><Text size="sm" c="dimmed">{flat.find((m) => m.id === e.reportingTo)?.name || "—"}</Text></Table.Td>
-                            <Table.Td><Badge variant="light" radius="sm">{e.directReports || 0}</Badge></Table.Td>
-                            <Table.Td><Badge variant="light" color={STATUS_COLOR[e.status] || "gray"} radius="sm">{e.status}</Badge></Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  )}
-
-                  {viewMode === "hubspoke" && <HubSpokeOrgChart />}
                 </div>
               </ScrollArea>
             </AppSection>
