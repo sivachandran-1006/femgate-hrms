@@ -149,38 +149,50 @@ function EnhancedNodeCard({ node, onView, onTeam, hasChildren, expanded, onToggl
   );
 }
 
-// Enhanced tree node with improved connectors
+// Enhanced tree node with professional Mantine-style connectors
 export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0, isLast = true, showConnector = false }) {
   const hasChildren = (node.children || []).length > 0;
   const expanded = expandedSet.has(node.id);
   const childrenList = node.children || [];
+  const connectorColor = "#d0d9e8";
+  const connectorWidth = 2;
 
   return (
-    <div style={{ position: "relative", paddingLeft: depth > 0 ? 80 : 0, marginBottom: 40 }}>
-      {/* Vertical connector from parent */}
+    <div style={{ position: "relative", paddingLeft: depth > 0 ? 60 : 0, marginBottom: 32 }}>
+      {/* Vertical connector from parent - clean Mantine style */}
       {showConnector && depth > 0 && (
         <>
-          <div
+          {/* Vertical line from parent to card */}
+          <svg
             style={{
               position: "absolute",
-              left: -40,
-              top: -30,
-              width: 40,
+              left: -30,
+              top: -20,
+              width: 30,
               height: 60,
-              borderLeft: "3px solid #cbd5e1",
-              borderBottom: "3px solid #cbd5e1",
-              borderBottomLeftRadius: 12,
+              overflow: "visible",
             }}
-          />
+          >
+            <path
+              d={`M 28 0 L 28 ${isLast ? 30 : 100} L 0 30 Q 0 30 0 45`}
+              stroke={connectorColor}
+              strokeWidth={connectorWidth}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+
+          {/* Vertical continuation line for non-last items */}
           {!isLast && (
             <div
               style={{
                 position: "absolute",
-                left: -40,
+                left: -30,
                 top: 30,
-                width: 3,
-                height: "100%",
-                background: "#cbd5e1",
+                width: connectorWidth,
+                height: "calc(100% + 20px)",
+                background: connectorColor,
               }}
             />
           )}
@@ -188,7 +200,7 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
       )}
 
       {/* Node Card */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 24, position: "relative", zIndex: 1 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 20, position: "relative", zIndex: 1 }}>
         <EnhancedNodeCard
           node={node}
           onView={onView}
@@ -200,21 +212,66 @@ export function EnhancedTreeNode({ node, expandedSet, onToggle, onView, onTeam, 
         />
       </div>
 
-      {/* Children */}
+      {/* Children with professional horizontal connector */}
       {hasChildren && expanded && (
-        <div style={{ position: "relative" }}>
-          {/* Horizontal connector line from node */}
-          <div
-            style={{
-              position: "absolute",
-              left: -40,
-              top: -24,
-              height: 50,
-              width: 3,
-              background: "#cbd5e1",
-            }}
-          />
+        <div style={{ position: "relative", marginLeft: 0 }}>
+          {/* Horizontal line connecting to children */}
+          {childrenList.length > 0 && (
+            <svg
+              style={{
+                position: "absolute",
+                left: 0,
+                top: -32,
+                width: "100%",
+                height: 80,
+                overflow: "visible",
+                pointerEvents: "none",
+              }}
+            >
+              {/* Top vertical stem */}
+              <line
+                x1="30"
+                y1="32"
+                x2="30"
+                y2="60"
+                stroke={connectorColor}
+                strokeWidth={connectorWidth}
+                strokeLinecap="round"
+              />
 
+              {/* Horizontal line across children */}
+              <line
+                x1="30"
+                y1="60"
+                x2="calc(100% - 30px)"
+                y2="60"
+                stroke={connectorColor}
+                strokeWidth={connectorWidth}
+                strokeLinecap="round"
+              />
+
+              {/* Vertical drops to each child */}
+              {childrenList.map((_, idx) => {
+                const childCount = childrenList.length;
+                const childWidth = 100 / (childCount + 1);
+                const xPos = (idx + 1) * childWidth;
+                return (
+                  <line
+                    key={`drop-${idx}`}
+                    x1={`${xPos}%`}
+                    y1="60"
+                    x2={`${xPos}%`}
+                    y2="80"
+                    stroke={connectorColor}
+                    strokeWidth={connectorWidth}
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+            </svg>
+          )}
+
+          {/* Children nodes */}
           <div>
             {childrenList.map((child, idx) => (
               <EnhancedTreeNode
