@@ -39,7 +39,7 @@ export const SuperAdminDashboard = () => {
   const { data: attendData }    = useQuery({ queryKey: ["dashboard-attend"],    queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
   const { data: payrollData }   = useQuery({ queryKey: ["dashboard-payroll"],   queryFn: getPayrollSummary,    select: (r) => r?.data ?? r });
   const { data: healthData }    = useQuery({ queryKey: ["dashboard-health"],    queryFn: getSystemHealth,      select: (r) => r?.data ?? r, refetchInterval: 30000 });
-  const { data: onboardData = [] } = useQuery({ queryKey: ["onboarding"],       queryFn: getOnboarding });
+  const { data: onboardResponse = {} } = useQuery({ queryKey: ["onboarding"],       queryFn: getOnboarding });
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
@@ -67,8 +67,9 @@ export const SuperAdminDashboard = () => {
   const announcements  = announceData?.announcements || [];
   const events         = eventsData?.events          || [];
 
-  const activeOnboardings = onboardData.filter((o) => o.status === "Active").length;
-  const upcomingJoiners   = onboardData.filter((o) => o.status === "Upcoming").length;
+  const onboardData    = Array.isArray(onboardResponse) ? onboardResponse : (onboardResponse.onboardings || []);
+  const activeOnboardings = onboardData.filter((o) => o.status === "Pending" || o.status === "In Progress").length;
+  const upcomingJoiners   = onboardData.filter((o) => o.status === "Completed").length;
 
   const systemHealth = healthData ? [
     { label: "API Uptime",    sub: healthData.apiUptime?.label, value: healthData.apiUptime?.value ?? 0, color: "green"  },

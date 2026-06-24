@@ -44,6 +44,8 @@ import OrgChart       from "./screens/orgchart/OrgChart";
 import HolidayCalendar   from "./screens/holiday/HolidayCalendar";
 import ExpenseManagement from "./screens/expense/ExpenseManagement";
 import Announcements     from "./screens/announcements/Announcements";
+import CommunicationCenter from "./screens/communication/CommunicationCenter";
+import WorkflowEngine    from "./screens/workflow/WorkflowEngine";
 import Branches           from "./screens/branches/Branches";
 import Designations       from "./screens/designations/Designations";
 import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
@@ -500,6 +502,16 @@ export default function App() {
           <Route path="/expense" element={
             <RoleGuard routeId="expense" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><ExpenseManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/communications" element={
+            <RoleGuard routeId="communications" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><CommunicationCenter darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/workflows" element={
+            <RoleGuard routeId="workflows" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><WorkflowEngine darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/branches" element={
