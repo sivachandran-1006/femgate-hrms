@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Stack, Group, Text, Paper, Badge, Button, TextInput, Select, Avatar,
   SimpleGrid, SegmentedControl, ActionIcon, Menu, ScrollArea, Table, Loader, Box, Tabs,
@@ -22,6 +22,7 @@ import { getAvatarColor, getInitials } from "../../utils/helpers";
 import { fetchBranches } from "../../api/branchApi";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
+import HubSpokeOrgChart from "./HubSpokeOrgChart";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
@@ -63,25 +64,65 @@ function NodeCard({ node, onToggle, expanded, hasChildren, onView, onTeam, compa
   );
 }
 
-// ─── Recursive tree node (vertical, indented) ─────────────────────────────────
-function TreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0 }) {
+// ─── Recursive tree node with visual cards and connectors ─────────────────────────────────
+function TreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0, isLast = true, showConnector = false }) {
   const hasChildren = (node.children || []).length > 0;
   const expanded = expandedSet.has(node.id);
+  const childrenList = node.children || [];
+
   return (
-    <div style={{ marginLeft: depth ? 28 : 0, position: "relative" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
-        {hasChildren ? (
-          <ActionIcon size="sm" variant="subtle" onClick={() => onToggle(node.id)}>
-            {expanded ? <IconChevronDown size={15} /> : <IconChevronRight size={15} />}
+    <div style={{ position: "relative", paddingLeft: depth > 0 ? 60 : 0 }}>
+      {showConnector && depth > 0 && (
+        <>
+          <div style={{
+            position: "absolute", left: -30, top: -25, width: 30, height: 50,
+            borderLeft: "2px solid #cbd5e1", borderBottom: "2px solid #cbd5e1",
+            borderBottomLeftRadius: 8,
+          }} />
+          {!isLast && (
+            <div style={{
+              position: "absolute", left: -30, top: 25, width: 2, height: "100%",
+              background: "#cbd5e1",
+            }} />
+          )}
+        </>
+      )}
+
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 20, position: "relative", zIndex: 1 }}>
+        {hasChildren && (
+          <ActionIcon
+            size="lg"
+            variant="light"
+            onClick={() => onToggle(node.id)}
+            style={{ marginTop: 10, flexShrink: 0 }}
+            title={expanded ? "Collapse" : "Expand"}
+          >
+            {expanded ? <IconChevronDown size={18} /> : <IconChevronRight size={18} />}
           </ActionIcon>
-        ) : <span style={{ width: 28 }} />}
-        <NodeCard node={node} expanded={expanded} hasChildren={hasChildren} onToggle={onToggle} onView={onView} onTeam={onTeam} compact />
+        )}
+        {!hasChildren && <div style={{ width: 40, flexShrink: 0 }} />}
+
+        <NodeCard node={node} expanded={expanded} hasChildren={hasChildren} onToggle={onToggle} onView={onView} onTeam={onTeam} compact={false} />
       </div>
+
       {hasChildren && expanded && (
-        <div style={{ borderLeft: "1px dashed var(--mantine-color-gray-4)", marginLeft: 14 }}>
-          {node.children.map((c) => (
-            <TreeNode key={c.id} node={c} expandedSet={expandedSet} onToggle={onToggle} onView={onView} onTeam={onTeam} depth={depth + 1} />
-          ))}
+        <div style={{ position: "relative" }}>
+          <div style={{ position: "absolute", left: 20, top: -10, height: 30, width: "2px", background: "#cbd5e1" }} />
+          <div>
+            {childrenList.map((child, idx) => (
+              <TreeNode
+                key={child.id}
+                node={child}
+                expandedSet={expandedSet}
+                onToggle={onToggle}
+                onView={onView}
+                onTeam={onTeam}
+                depth={depth + 1}
+                isLast={idx === childrenList.length - 1}
+                showConnector={true}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -90,6 +131,7 @@ function TreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0 }) {
 
 export default function OrgChart() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: treeData, isLoading } = useOrgTree();
   const { data: analytics } = useOrgAnalytics();
   const { data: vacant } = useOrgVacant();
@@ -99,7 +141,7 @@ export default function OrgChart() {
   const tree = treeData?.tree || [];
   const flat = treeData?.flat || [];
 
-  const [viewMode, setViewMode] = useState("tree");      // tree | card | hierarchy
+  const [viewMode, setViewMode] = useState(searchParams.get("view") || "tree");      // tree | card | hierarchy | hubspoke
   const [search, setSearch]     = useState("");
   const [searchBy, setSearchBy] = useState("name");
   const [branchF, setBranchF]   = useState("All");
@@ -190,8 +232,13 @@ export default function OrgChart() {
           <AppSection mb="md" p="md">
             <Group gap="sm" wrap="wrap" align="flex-end">
               <SegmentedControl size="sm"
-                data={[{ value: "tree", label: "Tree" }, { value: "card", label: "Card" }, { value: "hierarchy", label: "Hierarchy" }]}
-                value={viewMode} onChange={setViewMode} />
+                data={[
+                  { value: "tree", label: "Tree" },
+                  { value: "card", label: "Card" },
+                  { value: "hierarchy", label: "Hierarchy" },
+                  { value: "hubspoke", label: "Hub & Spoke" }
+                ]}
+                value={viewMode} onChange={(v) => { setViewMode(v); setSearchParams({ view: v }); }} />
               <Select label="Search by" w={140} size="sm" value={searchBy} onChange={setSearchBy}
                 data={[{ value: "name", label: "Name" }, { value: "id", label: "Employee ID" }, { value: "designation", label: "Designation" }, { value: "department", label: "Department" }]} />
               <TextInput label="Search" placeholder="Search employee…" leftSection={<IconSearch size={15} />}
@@ -242,6 +289,8 @@ export default function OrgChart() {
                       </Table.Tbody>
                     </Table>
                   )}
+
+                  {viewMode === "hubspoke" && <HubSpokeOrgChart />}
                 </div>
               </ScrollArea>
             </AppSection>
