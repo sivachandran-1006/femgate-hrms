@@ -4,6 +4,7 @@ import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, Ico
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
 import { useWorkflowDashboard, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useApprovalInbox, useApproveRequest, useRejectRequest, useEscalateRequest, useWorkflowAnalytics } from "../../queries/useWorkflow";
 import { useToast } from "../../components/ui/Toast";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
 const MODULES = ["Leave", "Attendance", "Expense", "Asset", "Recruitment", "Onboarding", "Payroll", "Document"];
 const WORKFLOW_TYPES = ["Leave Workflow", "Attendance Workflow", "Expense Workflow", "Asset Workflow", "Recruitment Workflow", "Onboarding Workflow", "Payroll Workflow", "Document Approval Workflow", "Custom Workflow"];
@@ -146,7 +147,7 @@ function WorkflowsTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.workflows || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No workflows</Text></Center>
+        <AppEmptyState icon={<IconClipboard size={24} />} message="No workflows" sub="Create a workflow to get started." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
@@ -281,7 +282,7 @@ function ApprovalInboxTab() {
       <Select placeholder="Status" data={["", "Pending", "Approved", "Rejected", "Escalated"]} value={status} onChange={setStatus} w={150} clearable />
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.approvals || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No approvals</Text></Center>
+        <AppEmptyState icon={<IconCheck size={24} />} message="No approvals" sub="Pending approval requests will appear here." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>

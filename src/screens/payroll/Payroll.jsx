@@ -6,7 +6,7 @@ import {
 } from "@mantine/core";
 import {
   IconPlus, IconUsers, IconWallet, IconTrendingUp, IconClock,
-  IconSearch, IconFileText, IconPrinter, IconX,
+  IconSearch, IconFileText, IconPrinter, IconX, IconCurrencyRupee,
 } from "@tabler/icons-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell,
@@ -15,6 +15,7 @@ import {
 import { COLORS }          from "../../theme/colors";
 import { getStatusBadge }  from "../../utils/helpers";
 import DataTable           from "../../components/ui/DataTable";
+import { AppEmptyState }    from "../../components/ui/AppEmptyState";
 import { useToast }        from "../../components/ui/Toast";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 
@@ -424,7 +425,7 @@ const Payroll = ({ embedded = false } = {}) => {
               <Paper key={title} withBorder p="lg" radius="lg">
                 <Text fw={600} mb="md">{title}</Text>
                 {data.length === 0 ? (
-                  <Text c="dimmed" size="sm">No data</Text>
+                  <AppEmptyState icon={<IconCurrencyRupee size={24} />} message="No payroll data" />
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={data} barSize={32}>

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Progress, Checkbox, Textarea, NumberInput } from "@mantine/core";
-import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconChartLine, IconClipboard, IconFileText, IconBox, IconServer, IconCheck, IconX, IconLogout } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconChartLine, IconClipboard, IconFileText, IconBox, IconServer, IconCheck, IconX, IconLogout, IconDoorExit } from "@tabler/icons-react";
 import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateOnboarding, useChecklists, useTasks, useOffboardingDashboard, useOffboardings, useCreateOffboarding, useUpdateOffboarding, useCreateClearance, useUpdateAssetReturn, useCreateExitInterview, useCreateSettlement } from "../../queries/useOnboarding";
 import { useToast } from "../../components/ui/Toast";
 import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
 const ONBOARD_STATUSES = ["Pending", "In Progress", "Completed", "Delayed", "Cancelled"];
 const OFFBOARD_STATUSES = ["Pending", "In Progress", "Approved", "Completed"];
@@ -137,7 +138,7 @@ function NewJoinersTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.onboardings || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No records found</Text></Center>
+        <AppEmptyState icon={<IconClipboard size={24} />} message="No records found" sub="Initiate an onboarding to get started." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
@@ -229,7 +230,7 @@ function ChecklistsTab() {
       />
 
       {isLoading ? <Center h={300}><Loader /></Center> : checklists.length === 0 ? (
-        <Center h={300}><Text c="dimmed">No checklists</Text></Center>
+        <AppEmptyState icon={<IconFileText size={24} />} message="No checklists" sub="No checklist items for this employee yet." py={60} />
       ) : (
         <Stack gap="sm">
           {checklists.map((c) => (
@@ -275,7 +276,7 @@ function TasksTab() {
       />
 
       {isLoading ? <Center h={300}><Loader /></Center> : tasks.length === 0 ? (
-        <Center h={300}><Text c="dimmed">No tasks</Text></Center>
+        <AppEmptyState icon={<IconClipboard size={24} />} message="No tasks" sub="No onboarding tasks for this employee yet." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
@@ -388,7 +389,7 @@ function OffboardingListTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.exits || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No exit records</Text></Center>
+        <AppEmptyState icon={<IconDoorExit size={24} />} message="No exit records" sub="Create an exit request to get started." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>

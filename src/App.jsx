@@ -48,6 +48,7 @@ import ExpenseManagement from "./screens/expense/ExpenseManagement";
 import Announcements     from "./screens/announcements/Announcements";
 import CommunicationCenter from "./screens/communication/CommunicationCenter";
 import WorkflowEngine    from "./screens/workflow/WorkflowEngine";
+import EmployeeEngagement from "./screens/engagement/EmployeeEngagement";
 import Branches           from "./screens/branches/Branches";
 import Designations       from "./screens/designations/Designations";
 import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
@@ -551,6 +552,11 @@ export default function App() {
           <Route path="/announcements" element={
             <RoleGuard routeId="announcements" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><Announcements darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/engagement" element={
+            <RoleGuard routeId="engagement" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><EmployeeEngagement darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 

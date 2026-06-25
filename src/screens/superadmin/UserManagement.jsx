@@ -21,6 +21,7 @@ import {
 } from "../../api/userManagementApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard } from "../../components/ui/AppStatCard";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast } from "../../components/ui/Toast";
 import { isValidEmail } from "../../utils/validators";
 
@@ -311,7 +312,7 @@ export default function UserManagement() {
 
               {/* Table */}
               {users.length === 0 ? (
-                <Text c="dimmed" ta="center" py="xl">No users found.</Text>
+                <AppEmptyState icon={<IconUsers size={24} />} message="No users found" sub="Try adjusting your search or filters." />
               ) : (
                 <Table striped highlightOnHover>
                   <Table.Thead>

@@ -1,18 +1,19 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications"],
-  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team"],
-  HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team"],
-  MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals"],
-  FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals"],
-  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals"],
-  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement"],
+  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement"],
+  HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement"],
+  MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement"],
+  FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals","engagement"],
+  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals","engagement"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance","engagement"],
 };
 
 // ── Sidebar nav items per role ────────────────────────────────────────────────
 export const ROLE_SIDEBAR = {
   SUPER_ADMIN: [
     { id: "dashboard",        label: "Dashboard",         icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "employees",        label: "Employees",         icon: "IconUsers"             },
     { id: "departments",      label: "Departments",       icon: "IconBuildingCommunity" },
     { id: "branches",         label: "Branches",          icon: "IconBuilding"          },
@@ -54,6 +55,7 @@ export const ROLE_SIDEBAR = {
   ],
   ADMIN: [
     { id: "dashboard",    label: "Dashboard",    icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "employees",    label: "Employees",    icon: "IconUsers"             },
     { id: "departments",  label: "Departments",  icon: "IconBuildingCommunity" },
     { id: "branches",     label: "Branches",     icon: "IconBuilding"          },
@@ -82,6 +84,7 @@ export const ROLE_SIDEBAR = {
   ],
   HR: [
     { id: "dashboard",     label: "Dashboard",     icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "employees",     label: "Employees",     icon: "IconUsers"             },
     { id: "departments",   label: "Departments",   icon: "IconBuildingCommunity" },
     { id: "branches",      label: "Branches",      icon: "IconBuilding"          },
@@ -104,6 +107,7 @@ export const ROLE_SIDEBAR = {
   ],
   MANAGER: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "employees",   label: "My Team",     icon: "IconUsers"             },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
     { id: "approvals",   label: "Approvals",   icon: "IconCircleCheck"       },
@@ -118,6 +122,7 @@ export const ROLE_SIDEBAR = {
   ],
   FINANCE: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
     { id: "expense",     label: "Expenses",    icon: "IconReceipt"           },
@@ -126,6 +131,7 @@ export const ROLE_SIDEBAR = {
   ],
   IT_ADMIN: [
     { id: "dashboard",   label: "Dashboard",   icon: "IconLayoutDashboard"   },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "assets",      label: "Assets",      icon: "IconPackage"           },
     { id: "helpdesk",    label: "Helpdesk",    icon: "IconLifebuoy"          },
@@ -134,6 +140,7 @@ export const ROLE_SIDEBAR = {
   ],
   EMPLOYEE: [
     { id: "dashboard",    label: "Dashboard",     icon: "IconLayoutDashboard" },
+    { id: "engagement",     label: "Engagement",    icon: "IconHeartHandshake"  },
     { id: "my-profile",   label: "My Profile",    icon: "IconUser"            },
     { id: "attendance",   label: "My Attendance", icon: "IconClock"           },
     { id: "leave",        label: "My Leave",      icon: "IconCalendarOff"     },

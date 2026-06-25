@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppLoader }     from "../../components/ui/AppLoader";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast }      from "../../components/ui/Toast";
 import {
   getNotifications,
@@ -175,10 +176,12 @@ export default function NotificationCenter() {
 
         {/* Notification list */}
         {filtered.length === 0 ? (
-          <Stack align="center" py={48} gap="xs">
-            <IconBell size={32} color="var(--mantine-color-gray-4)" strokeWidth={1.2} />
-            <Text size="sm" c="dimmed">No notifications found</Text>
-          </Stack>
+          <AppEmptyState
+            icon={<IconBell size={24} />}
+            message="No notifications found"
+            sub="You're all caught up — new notifications will appear here."
+            py={48}
+          />
         ) : (
           filtered.map((n, i) => {
             const cfg = CAT_CONFIG[n.category] || CAT_CONFIG.Document;

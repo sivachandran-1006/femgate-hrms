@@ -369,9 +369,7 @@ export default function Recruitment() {
                       );
                     })}
                     {stageCandidates.length === 0 && (
-                      <Box p="md" style={{ textAlign: "center", border: "2px dashed var(--mantine-color-gray-3)", borderRadius: 8 }}>
-                        <Text size="xs" c="dimmed">No candidates</Text>
-                      </Box>
+                      <AppEmptyState icon={<Users size={24} />} message="No candidates" py={12} />
                     )}
                   </Stack>
                 </Box>

@@ -5,9 +5,10 @@ import {
 } from "@mantine/core";
 import {
   IconPlus, IconSearch, IconEdit, IconTrash, IconSend, IconBell,
-  IconBuildingCommunity, IconUsers, IconAlertCircle, IconCheck,
+  IconBuildingCommunity, IconUsers, IconAlertCircle, IconCheck, IconSpeakerphone,
 } from "@tabler/icons-react";
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
+import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { usePermission }  from "../../hooks/usePermission";
 import { AppSection }     from "../../components/ui/AppSection";
 import { AppStatCard }    from "../../components/ui/AppStatCard";
@@ -121,9 +122,12 @@ export default function Announcements() {
         {!isLoading && !isError && (
           <Stack gap="md">
             {publishedItems.length === 0 && (
-              <Paper withBorder p="xl" radius="xl" ta="center">
-                <IconBell size={32} color="#94a3b8" stroke={1.5} />
-                <Text c="dimmed" mt="sm">No announcements at this time</Text>
+              <Paper withBorder p="xl" radius="xl">
+                <AppEmptyState
+                  icon={<IconSpeakerphone size={24} />}
+                  message="No announcements"
+                  sub="There are no announcements at this time."
+                />
               </Paper>
             )}
             {publishedItems.map((a) => (
@@ -216,7 +220,11 @@ export default function Announcements() {
         <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.length === 0 && (
             <AppSection title="No Results">
-              <Text ta="center" c="dimmed" py="xl">No announcements found</Text>
+              <AppEmptyState
+                icon={<IconSpeakerphone size={24} />}
+                message="No announcements found"
+                sub="Try adjusting your search or create a new announcement."
+              />
             </AppSection>
           )}
 

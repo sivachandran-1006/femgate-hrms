@@ -7,6 +7,7 @@ import { IconSearch, IconPlus, IconEye, IconPencil, IconUserOff, IconBuilding, I
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCompanies, createCompany, updateCompany, deleteCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
 import { useToast } from "../../components/ui/Toast";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
 const PLAN_COLORS  = { Enterprise: "yellow", Pro: "blue", Starter: "violet" };
 const STATUS_COLORS = { Active: "green", Trial: "orange", Suspended: "red" };
@@ -272,12 +273,12 @@ export default function MultiCompany() {
           </SimpleGrid>
 
           {companies.length === 0 && (
-            <Center py={60}>
-              <Stack align="center" gap="xs">
-                <IconBuilding size={32} color="gray" />
-                <Text size="sm" c="dimmed">No companies found matching your search.</Text>
-              </Stack>
-            </Center>
+            <AppEmptyState
+              icon={<IconBuilding size={24} />}
+              message="No companies found"
+              sub="No companies match your search."
+              py={60}
+            />
           )}
         </>
       )}

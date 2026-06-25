@@ -22,6 +22,7 @@ import { AppPageHeader }  from "../../components/ui/AppPageHeader";
 import { AppStatCard }    from "../../components/ui/AppStatCard";
 import { AppSection }     from "../../components/ui/AppSection";
 import { AppButton }      from "../../components/ui/AppButton";
+import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { COLORS }               from "../../theme/colors";
 import { getAvatarColor }       from "../../utils/helpers";
@@ -216,7 +217,7 @@ export default function Performance({ darkMode: dark }) {
                 </Table.Thead>
                 <Table.Tbody>
                   {goalsList.length === 0 ? (
-                    <Table.Tr><Table.Td colSpan={6}><Text ta="center" c="dimmed" py="xl">No goals yet. Click "Add Goal" to create one.</Text></Table.Td></Table.Tr>
+                    <Table.Tr><Table.Td colSpan={6}><AppEmptyState icon={<Target size={24} />} message="No goals yet" sub='Click "Add Goal" to create one.' /></Table.Td></Table.Tr>
                   ) : goalsList.map(goal => {
                     const av = getAvatarColor(goal.employee);
                     return (
@@ -272,7 +273,7 @@ export default function Performance({ darkMode: dark }) {
                 </Table.Thead>
                 <Table.Tbody>
                   {apprList.length === 0 ? (
-                    <Table.Tr><Table.Td colSpan={7}><Text ta="center" c="dimmed" py="xl">No appraisals yet.</Text></Table.Td></Table.Tr>
+                    <Table.Tr><Table.Td colSpan={7}><AppEmptyState icon={<Star size={24} />} message="No appraisals yet" sub='Click "Add Appraisal" to create one.' /></Table.Td></Table.Tr>
                   ) : apprList.map(appr => {
                     const av = getAvatarColor(appr.employee);
                     return (

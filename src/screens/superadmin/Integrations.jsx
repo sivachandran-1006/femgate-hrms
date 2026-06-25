@@ -15,6 +15,7 @@ import {
   requestIntegration,
 } from "../../api/integrationsApi";
 import { useToast } from "../../components/ui/Toast";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
 const EMPTY_REQUEST = { name: "", category: "Productivity", reason: "" };
 
@@ -254,9 +255,12 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
       )}
 
       {!isLoading && filtered.length === 0 && (
-        <Center py={60}>
-          <Text size="sm" c="dimmed">No integrations found matching your search.</Text>
-        </Center>
+        <AppEmptyState
+          icon={<IconPlugConnected size={24} />}
+          message="No integrations found"
+          sub="No integrations match your search."
+          py={60}
+        />
       )}
 
       <Modal opened={showAddModal} onClose={() => setShowAddModal(false)} title="Request New Integration" size="md">

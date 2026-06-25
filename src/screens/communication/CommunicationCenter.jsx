@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Textarea, Textarea as MantineTextarea } from "@mantine/core";
-import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconBell, IconCalendar, IconAward, IconClipboard, IconCake, IconCheck, IconX } from "@tabler/icons-react";
+import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconBell, IconCalendar, IconAward, IconClipboard, IconCake, IconCheck, IconX, IconSpeakerphone, IconCalendarEvent, IconClipboardList, IconConfetti } from "@tabler/icons-react";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useCommunicationDashboard, useAnnouncements, useCreateAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement, useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, useRecognitions, useCreateRecognition, useSurveys, useCreateSurvey, useCloseSurvey, useBirthdaysUpcoming, useAnniversariesUpcoming } from "../../queries/useCommunication";
 import { useToast } from "../../components/ui/Toast";
 import { exportAnnouncementsCSV } from "../../api/communicationApi";
@@ -126,7 +127,7 @@ function AnnouncementsTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.announcements || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No announcements</Text></Center>
+        <AppEmptyState icon={<IconSpeakerphone size={24} />} message="No announcements" sub="Create an announcement to share updates." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
@@ -221,7 +222,7 @@ function EventsTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.events || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No upcoming events</Text></Center>
+        <AppEmptyState icon={<IconCalendarEvent size={24} />} message="No upcoming events" sub="Create an event to get started." py={60} />
       ) : (
         <Stack gap="sm">
           {(result.events || []).map((e) => (
@@ -297,7 +298,7 @@ function RecognitionsTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.recognitions || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No recognitions yet</Text></Center>
+        <AppEmptyState icon={<IconAward size={24} />} message="No recognitions yet" sub="Award recognition to celebrate your team." py={60} />
       ) : (
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           {(result.recognitions || []).map((r) => (
@@ -367,7 +368,7 @@ function SurveysTab() {
       </Group>
 
       {isLoading ? <Center h={200}><Loader /></Center> : (result.surveys || []).length === 0 ? (
-        <Center h={300}><Text c="dimmed">No surveys</Text></Center>
+        <AppEmptyState icon={<IconClipboardList size={24} />} message="No surveys" sub="Create a survey to gather feedback." py={60} />
       ) : (
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
@@ -424,7 +425,7 @@ function MilestonesTab() {
         <Stack gap="md">
           <Text fw={600}>🎂 Upcoming Birthdays</Text>
           {birthdays.length === 0 ? (
-            <Center h={200}><Text c="dimmed">No birthdays in next 30 days</Text></Center>
+            <AppEmptyState icon={<IconCake size={24} />} message="No birthdays in next 30 days" py={40} />
           ) : (
             <Stack gap="sm">
               {birthdays.map((e) => (
@@ -446,7 +447,7 @@ function MilestonesTab() {
         <Stack gap="md">
           <Text fw={600}>🎉 Work Anniversaries</Text>
           {anniversaries.length === 0 ? (
-            <Center h={200}><Text c="dimmed">No anniversaries in next 30 days</Text></Center>
+            <AppEmptyState icon={<IconConfetti size={24} />} message="No anniversaries in next 30 days" py={40} />
           ) : (
             <Stack gap="sm">
               {anniversaries.map((e) => (

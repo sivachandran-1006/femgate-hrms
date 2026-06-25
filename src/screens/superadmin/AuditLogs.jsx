@@ -5,12 +5,13 @@ import {
 } from "@mantine/core";
 import {
   IconShield, IconSettings, IconUser, IconSearch, IconDownload,
-  IconChevronDown, IconChevronRight,
+  IconChevronDown, IconChevronRight, IconClipboardList,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { getAuditLogs, getAuditStats, exportAuditLogs } from "../../api/auditLogsApi";
 
 const SEV_COLOR = { Critical: "red", Warning: "yellow", Info: "blue" };
@@ -174,7 +175,11 @@ export default function AuditLogs({ userRole = "SUPER_ADMIN" }) {
                     {logs.length === 0 ? (
                       <Table.Tr>
                         <Table.Td colSpan={7}>
-                          <Text ta="center" py="xl" c="dimmed" size="sm">No log entries match your filters.</Text>
+                          <AppEmptyState
+                            icon={<IconClipboardList size={24} />}
+                            message="No log entries"
+                            sub="No log entries match your filters."
+                          />
                         </Table.Td>
                       </Table.Tr>
                     ) : logs.map(log => (

@@ -17,6 +17,7 @@ import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertif
   useCreateCertificate, useDeleteCertificate,
   useCreateAssessment, useUpdateAssessment, useDeleteAssessment } from "../../queries/useLms";
 import { useToast } from "../../components/ui/Toast";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { exportLms } from "../../api/lmsApi";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
@@ -235,7 +236,7 @@ function CoursesTab() {
               </Table.Tr>
             ))}
             {courses.length === 0 && (
-              <Table.Tr><Table.Td colSpan={9}><Text ta="center" c="dimmed" py="xl">No courses found</Text></Table.Td></Table.Tr>
+              <Table.Tr><Table.Td colSpan={9}><AppEmptyState icon={<IconBook size={24} />} message="No courses found" sub="Add a course to get started." /></Table.Td></Table.Tr>
             )}
           </Table.Tbody>
         </Table>
@@ -381,7 +382,7 @@ function EnrollmentsTab() {
               </Table.Tr>
             ))}
             {enrollments.length === 0 && (
-              <Table.Tr><Table.Td colSpan={8}><Text ta="center" c="dimmed" py="xl">No enrollments found</Text></Table.Td></Table.Tr>
+              <Table.Tr><Table.Td colSpan={8}><AppEmptyState icon={<IconUsers size={24} />} message="No enrollments found" sub="Assign a course to enroll employees." /></Table.Td></Table.Tr>
             )}
           </Table.Tbody>
         </Table>
@@ -499,7 +500,7 @@ function CertificatesTab() {
               </Table.Tr>
             ))}
             {certs.length === 0 && (
-              <Table.Tr><Table.Td colSpan={9}><Text ta="center" c="dimmed" py="xl">No certificates found</Text></Table.Td></Table.Tr>
+              <Table.Tr><Table.Td colSpan={9}><AppEmptyState icon={<IconCertificate size={24} />} message="No certificates found" sub="Issue a certificate to get started." /></Table.Td></Table.Tr>
             )}
           </Table.Tbody>
         </Table>
@@ -609,7 +610,7 @@ function AssessmentsTab() {
               </Table.Tr>
             ))}
             {assessments.length === 0 && (
-              <Table.Tr><Table.Td colSpan={8}><Text ta="center" c="dimmed" py="xl">No assessments found</Text></Table.Td></Table.Tr>
+              <Table.Tr><Table.Td colSpan={8}><AppEmptyState icon={<IconClipboardList size={24} />} message="No assessments found" sub="Add an assessment to get started." /></Table.Td></Table.Tr>
             )}
           </Table.Tbody>
         </Table>
@@ -732,7 +733,7 @@ function AuditTab() {
           </Table.Tr>
         ))}
         {logs.length === 0 && (
-          <Table.Tr><Table.Td colSpan={4}><Text ta="center" c="dimmed" py="xl">No audit logs yet</Text></Table.Td></Table.Tr>
+          <Table.Tr><Table.Td colSpan={4}><AppEmptyState icon={<IconAward size={24} />} message="No audit logs yet" sub="Activity will appear here as it happens." /></Table.Td></Table.Tr>
         )}
       </Table.Tbody>
     </Table>

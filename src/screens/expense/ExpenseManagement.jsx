@@ -15,6 +15,7 @@ import {
   useCreateExpense, useUpdateExpense, useSubmitExpense, useApproveExpense, useRejectExpense, useClarifyExpense, useReimburseExpense, useDeleteExpense,
 } from "../../queries/useExpense";
 import { useToast } from "../../components/ui/Toast";
+import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { exportExpensesCSV } from "../../api/expenseApi";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2"];
@@ -304,9 +305,7 @@ function ApprovalsTab() {
   return (
     <Stack gap="md">
       {(result.expenses || []).length === 0 ? (
-        <Center h={300}>
-          <Text c="dimmed">No claims pending approval</Text>
-        </Center>
+        <AppEmptyState icon={<IconClock size={24} />} message="No claims pending approval" sub="Claims will appear here once submitted for approval." py={60} />
       ) : (
         <>
           <Table striped highlightOnHover withTableBorder>
@@ -407,9 +406,7 @@ function ReimbursementsTab() {
   return (
     <Stack gap="md">
       {(result.expenses || []).length === 0 ? (
-        <Center h={300}>
-          <Text c="dimmed">No approved claims pending reimbursement</Text>
-        </Center>
+        <AppEmptyState icon={<IconCreditCard size={24} />} message="No approved claims pending reimbursement" sub="Approved claims awaiting payment will show up here." py={60} />
       ) : (
         <>
           <Table striped highlightOnHover withTableBorder>

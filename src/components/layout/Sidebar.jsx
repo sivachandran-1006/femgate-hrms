@@ -46,6 +46,7 @@ import {
   IconUsersGroup,
   IconSitemap,
   IconMessage,
+  IconHeartHandshake,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
@@ -92,6 +93,7 @@ const ICON_MAP = {
   IconUsersGroup,
   IconSitemap,
   IconMessage,
+  IconHeartHandshake,
 };
 
 const Sidebar = ({

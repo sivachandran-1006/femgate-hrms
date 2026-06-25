@@ -18,6 +18,7 @@ import { AppButton }      from "../../components/ui/AppButton";
 import { AppModal }       from "../../components/ui/AppModal";
 import { AppInput }       from "../../components/ui/AppInput";
 import { useToast }       from "../../components/ui/Toast";
+import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { COLORS }         from "../../theme/colors";
 import { getAvatarColor } from "../../utils/helpers";
@@ -163,7 +164,7 @@ const Onboarding = () => {
             <Stack gap="md" style={{ flex: "1.6 1 0", minWidth: 0 }}>
               {active.length === 0 && (
                 <Paper withBorder radius="xl" p="xl">
-                  <Text ta="center" c="dimmed">No active onboardings</Text>
+                  <AppEmptyState icon={<IconUserPlus size={24} />} message="No active onboardings" sub="Add a new joiner or start an upcoming onboarding to see progress here." />
                 </Paper>
               )}
               {active.map((emp) => {
@@ -331,7 +332,7 @@ const Onboarding = () => {
                   </AppButton>
                 }
               >
-                {upcoming.length === 0 && <Text ta="center" c="dimmed" fz="sm" py="md">No upcoming joiners</Text>}
+                {upcoming.length === 0 && <AppEmptyState icon={<IconCalendar size={24} />} message="No upcoming joiners" py={16} />}
                 {upcoming.slice(0, 3).map((j, i, arr) => {
                   const av   = getAvatarColor(j.name);
                   const days = daysFrom(j.joiningDate);
@@ -362,7 +363,7 @@ const Onboarding = () => {
         {/* ── UPCOMING JOINERS ── */}
         <Tabs.Panel value="upcoming">
           {upcoming.length === 0 && (
-            <Paper withBorder radius="xl" p="xl"><Text ta="center" c="dimmed">No upcoming joiners</Text></Paper>
+            <Paper withBorder radius="xl" p="xl"><AppEmptyState icon={<IconCalendar size={24} />} message="No upcoming joiners" sub="New joiners with a future start date will appear here." /></Paper>
           )}
           <SimpleGrid cols={{ base: 1, sm: 2 }} gap="md">
             {upcoming.map((j) => {
