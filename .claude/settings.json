@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -v \"^--$\")",
+      "Bash(node -e ' *)",
+      "Bash(CLAUDE_CODE_TMPDIR=/tmp/claude-alt grep -rn \"const { showToast } = useToast\\(\\)\" /Users/annz/Documents/GitHub/mgate-hrms/src/)",
+      "Bash(sed -i '' 's/\\\\[\"SUPER_ADMIN\",\"ADMIN\"\\\\]/[\"SUPER_ADMIN\",\"COMPANY_ADMIN\",\"ADMIN\"]/g' /Users/annz/Documents/GitHub/mgate-hrms/src/constants/permissions.js)",
+      "Bash(sed -i '' 's/\\\\[\"ADMIN\",\"SUPER_ADMIN\"\\\\]/[\"SUPER_ADMIN\",\"COMPANY_ADMIN\",\"ADMIN\"]/g' /Users/annz/Documents/GitHub/mgate-hrms/src/constants/permissions.js)",
+      "Bash(sed -i '' 's/\\\\[\"HR\",\"ADMIN\",\"SUPER_ADMIN\"\\\\]/[\"SUPER_ADMIN\",\"COMPANY_ADMIN\",\"ADMIN\",\"HR\"]/g' /Users/annz/Documents/GitHub/mgate-hrms/src/constants/permissions.js)",
+      "Bash(sed -i '' 's/\\\\[\"MANAGER\",\"HR\",\"ADMIN\",\"SUPER_ADMIN\"\\\\]/[\"SUPER_ADMIN\",\"COMPANY_ADMIN\",\"ADMIN\",\"HR\",\"MANAGER\"]/g' /Users/annz/Documents/GitHub/mgate-hrms/src/constants/permissions.js)",
+      "Bash(lsof -ti:4000)",
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"sk@gmail.com\",\"password\":\"Admin@123\"}')",
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"sk@gmail.com\",\"password\":\"Admin@123\"}')"
+    ]
+  }
+}
