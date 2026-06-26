@@ -20,6 +20,7 @@ import { FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
 import { SPACING, GAP, PADDING }          from "../../theme/spacing";
 import { RADIUS, SHADOW }                 from "../../theme/sizes";
 import { useShifts, useSetShift }         from "../../queries/useHr";
+import { useFetchAllEmployees }           from "../../queries/useEmployees";
 import { useToast }                       from "../../components/ui/Toast";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -200,6 +201,11 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
   const [dayIndex, setDayIndex] = useState(0);
   const [shift, setShift] = useState("Morning");
 
+  // When the employee list loads (async), default the selection to the first one
+  useEffect(() => {
+    if (!employee && employees.length) setEmployee(employees[0]);
+  }, [employees, employee]);
+
   const inputStyle = {
     width: "100%",
     padding: PADDING.input,
@@ -317,7 +323,8 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
             Cancel
           </button>
           <button
-            onClick={() => { onSave(employee, dayIndex, shift); onClose(); }}
+            disabled={!employee}
+            onClick={() => { if (!employee) return; onSave(employee, dayIndex, shift); onClose(); }}
             style={{
               padding: "9px 20px",
               borderRadius: RADIUS.md,
@@ -697,6 +704,7 @@ const ShiftManagement = ({ darkMode = false }) => {
   const [swapRequests, setSwapRequests] = useState(SWAP_REQUESTS_INITIAL);
 
   const { data: shiftsData } = useShifts();
+  const { data: allEmployees = [] } = useFetchAllEmployees();
   const setShiftMutation = useSetShift();
   const { show } = useToast();
 
@@ -707,10 +715,13 @@ const ShiftManagement = ({ darkMode = false }) => {
     }
   }, [shiftsData]);
 
-  const employees = useMemo(
-    () => (shiftsData?.roster ? shiftsData.roster.map((r) => r.employeeName) : []),
-    [shiftsData]
-  );
+  // Dropdown / grid employees: ALL employees (so first-time assignment works),
+  // unioned with anyone already in the roster.
+  const employees = useMemo(() => {
+    const fromApi = (allEmployees || []).map((e) => e.name).filter(Boolean);
+    const fromRoster = shiftsData?.roster ? shiftsData.roster.map((r) => r.employeeName) : [];
+    return [...new Set([...fromApi, ...fromRoster])];
+  }, [allEmployees, shiftsData]);
 
   const weekDates = useMemo(() => {
     if (!shiftsData?.weekStart) return [];
@@ -723,6 +734,8 @@ const ShiftManagement = ({ darkMode = false }) => {
   }, [shiftsData]);
 
   const handleAssignShift = (employee, dayIndex, shift) => {
+    if (!employee) { show("Please select an employee", "error"); return; }
+    if (!shiftsData?.weekStart) { show("Roster still loading, please retry", "error"); return; }
     // Optimistic local update
     setRoster((prev) => {
       const updated = { ...prev };
@@ -731,7 +744,6 @@ const ShiftManagement = ({ darkMode = false }) => {
       updated[employee] = row;
       return updated;
     });
-    if (!shiftsData?.weekStart) return;
     setShiftMutation
       .mutateAsync({ employeeName: employee, weekStart: shiftsData.weekStart, dayIndex, shift })
       .then(() => show(`Shift updated for ${employee}`, "success"))

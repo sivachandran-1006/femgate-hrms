@@ -178,7 +178,7 @@ const Analytics = ({ darkMode: dark = false }) => {
     joiningDate: e.joiningDate || "",
   }));
 
-  const LEAVES = rawLeaves;
+  const LEAVES = Array.isArray(rawLeaves) ? rawLeaves : (rawLeaves?.leaves ?? rawLeaves?.data ?? []);
 
   // ── Derived from live data ──
   const total        = EMPLOYEES.length;

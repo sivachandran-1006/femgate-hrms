@@ -49,6 +49,10 @@ import Announcements     from "./screens/announcements/Announcements";
 import CommunicationCenter from "./screens/communication/CommunicationCenter";
 import WorkflowEngine    from "./screens/workflow/WorkflowEngine";
 import EmployeeEngagement from "./screens/engagement/EmployeeEngagement";
+import ComplianceManagement from "./screens/compliance/ComplianceManagement";
+import VisitorManagement from "./screens/visitors/VisitorManagement";
+import ShiftRoster from "./screens/roster/ShiftRoster";
+import BenefitsManagement from "./screens/benefits/BenefitsManagement";
 import Branches           from "./screens/branches/Branches";
 import Designations       from "./screens/designations/Designations";
 import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
@@ -557,6 +561,26 @@ export default function App() {
           <Route path="/engagement" element={
             <RoleGuard routeId="engagement" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><EmployeeEngagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/compliance" element={
+            <RoleGuard routeId="compliance" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ComplianceManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/visitors" element={
+            <RoleGuard routeId="visitors" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><VisitorManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/shift-roster" element={
+            <RoleGuard routeId="shift-roster" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ShiftRoster darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/benefits" element={
+            <RoleGuard routeId="benefits" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><BenefitsManagement darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 
