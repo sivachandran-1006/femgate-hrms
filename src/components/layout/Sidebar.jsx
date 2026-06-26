@@ -51,6 +51,7 @@ import {
   IconBuildingArch,
   IconCalendarTime,
   IconShieldHeart,
+  IconReportMoney,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
@@ -102,6 +103,7 @@ const ICON_MAP = {
   IconBuildingArch,
   IconCalendarTime,
   IconShieldHeart,
+  IconReportMoney,
 };
 
 const Sidebar = ({
