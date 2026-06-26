@@ -13,6 +13,15 @@ import {
 
 const C = COLORS;
 
+// Quick Login shows ONE representative account per role (keeps the list clean).
+// All MOCK_USERS still work for manual login.
+const QUICK_LOGIN_USERS = Object.values(
+  MOCK_USERS.reduce((acc, u) => {
+    if (!acc[u.role]) acc[u.role] = u;   // first account of each role
+    return acc;
+  }, {})
+);
+
 export default function Login() {
   const { login } = useAuth();
 
@@ -266,7 +275,7 @@ export default function Login() {
           </div>
 
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-            {MOCK_USERS.map((u, i) => {
+            {QUICK_LOGIN_USERS.map((u, i) => {
               const rc = ROLE_COLORS[u.role] || { bg:C.backgroundLight, text:C.secondary };
               const rl = ROLE_LABELS[u.role]  || u.role;
               const selected = email === u.email;

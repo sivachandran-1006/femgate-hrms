@@ -5,11 +5,34 @@ import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateO
 import { useToast } from "../../components/ui/Toast";
 import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+import { useDepartments } from "../../queries/useDepartments";
+import { useDesignations } from "../../queries/useDesignations";
 
 const ONBOARD_STATUSES = ["Pending", "In Progress", "Completed", "Delayed", "Cancelled"];
 const OFFBOARD_STATUSES = ["Pending", "In Progress", "Approved", "Completed"];
 const STATUS_COLORS = { Pending: "gray", "In Progress": "blue", Completed: "green", Delayed: "orange", Cancelled: "red", Approved: "green" };
 const PRIORITY_COLORS = { Critical: "red", High: "orange", Medium: "blue", Low: "gray" };
+
+// Shared pickers (memory rule: dropdowns over free-text for known entities)
+const useEmployeeOptions = () => {
+  const { data: employees = [] } = useFetchAllEmployees();
+  return (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
+};
+const useDepartmentOptions = () => {
+  const { data: depts = [] } = useDepartments();
+  const { data: employees = [] } = useFetchAllEmployees();
+  const fromApi = (depts || []).map((d) => d.name).filter(Boolean);
+  if (fromApi.length) return fromApi;
+  return [...new Set((employees || []).map((e) => e.department).filter(Boolean))];
+};
+const useDesignationOptions = () => {
+  const { data: desigs = [] } = useDesignations();
+  const { data: employees = [] } = useFetchAllEmployees();
+  const fromApi = (desigs || []).map((d) => d.name).filter(Boolean);
+  if (fromApi.length) return fromApi;
+  return [...new Set((employees || []).map((e) => e.designation).filter(Boolean))];
+};
 
 function KpiCard({ label, value, icon: Icon, color }) {
   return (
@@ -49,6 +72,9 @@ function OnboardingDashboardTab() {
 
 function NewJoinersTab() {
   const { show } = useToast();
+  const empOptions = useEmployeeOptions();
+  const deptOptions = useDepartmentOptions();
+  const desigOptions = useDesignationOptions();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -192,9 +218,9 @@ function NewJoinersTab() {
         <Stack gap="sm">
           <TextInput label="Employee" required value={form.employeeName} onChange={(e) => setForm((p) => ({ ...p, employeeName: e.target.value }))} />
           <TextInput type="date" label="Joining" required value={form.joiningDate} onChange={(e) => setForm((p) => ({ ...p, joiningDate: e.target.value }))} />
-          <TextInput label="Department" value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} />
-          <TextInput label="Designation" value={form.designation} onChange={(e) => setForm((p) => ({ ...p, designation: e.target.value }))} />
-          <TextInput label="Reporting Manager" value={form.reportingMgr} onChange={(e) => setForm((p) => ({ ...p, reportingMgr: e.target.value }))} />
+          <Select label="Department" placeholder="Select department" searchable clearable data={deptOptions} value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v }))} nothingFoundMessage="No department found" />
+          <Select label="Designation" placeholder="Select designation" searchable clearable data={desigOptions} value={form.designation} onChange={(v) => setForm((p) => ({ ...p, designation: v }))} nothingFoundMessage="No designation found" />
+          <Select label="Reporting Manager" placeholder="Select manager" searchable clearable data={empOptions} value={form.reportingMgr} onChange={(v) => setForm((p) => ({ ...p, reportingMgr: v }))} nothingFoundMessage="No employee found" />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => { setModalOpened(false); setSelectedRecord(null); }}>Cancel</Button>
             <Button onClick={selectedRecord ? handleUpdate : handleCreate} loading={selectedRecord ? update.isPending : create.isPending}>
@@ -334,6 +360,9 @@ function OffboardingDashboardTab() {
 
 function OffboardingListTab() {
   const { show } = useToast();
+  const empOptions = useEmployeeOptions();
+  const deptOptions = useDepartmentOptions();
+  const desigOptions = useDesignationOptions();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -436,9 +465,9 @@ function OffboardingListTab() {
 
       <Modal opened={modalOpened} onClose={() => { setModalOpened(false); setSelectedRecord(null); }} title="New Exit Request" size="md">
         <Stack gap="sm">
-          <TextInput label="Employee" required value={form.employeeName} onChange={(e) => setForm((p) => ({ ...p, employeeName: e.target.value }))} />
-          <TextInput label="Department" value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} />
-          <TextInput label="Designation" value={form.designation} onChange={(e) => setForm((p) => ({ ...p, designation: e.target.value }))} />
+          <Select label="Employee" required placeholder="Select employee" searchable data={empOptions} value={form.employeeName} onChange={(v) => setForm((p) => ({ ...p, employeeName: v }))} nothingFoundMessage="No employee found" />
+          <Select label="Department" placeholder="Select department" searchable clearable data={deptOptions} value={form.department} onChange={(v) => setForm((p) => ({ ...p, department: v }))} nothingFoundMessage="No department found" />
+          <Select label="Designation" placeholder="Select designation" searchable clearable data={desigOptions} value={form.designation} onChange={(v) => setForm((p) => ({ ...p, designation: v }))} nothingFoundMessage="No designation found" />
           <TextInput type="date" label="Last Working Date" required value={form.lastWorkingDate} onChange={(e) => setForm((p) => ({ ...p, lastWorkingDate: e.target.value }))} />
           <Textarea label="Reason for Leaving" value={form.reasonForExit} onChange={(e) => setForm((p) => ({ ...p, reasonForExit: e.target.value }))} rows={3} />
           <NumberInput label="Notice Period (days)" value={Number(form.noticePeriodDays)} onChange={(val) => setForm((p) => ({ ...p, noticePeriodDays: String(val) }))} />

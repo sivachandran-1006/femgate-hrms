@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
-  TextInput, Select, Modal, Table, ActionIcon, Loader, Center, ColorInput,
+  TextInput, Select, Textarea, Modal, Table, ActionIcon, Loader, Center, ColorInput,
   NumberInput, Tooltip, Progress, RingProgress,
 } from "@mantine/core";
 import {
@@ -268,9 +268,9 @@ function ChangeRequestsTab({ canManage }) {
 
       <Modal opened={open} onClose={() => setOpen(false)} title="Request Shift Change" size="md">
         <Stack gap="sm">
-          <TextInput label="Current Shift" value={form.currentShift} onChange={(e) => setForm({ ...form, currentShift: e.target.value })} />
-          <Select label="Requested Shift" required data={shifts.map((s) => s.name)} value={form.requestedShift} onChange={(v) => setForm({ ...form, requestedShift: v })} searchable />
-          <TextInput label="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+          <Select label="Current Shift" placeholder="Select your current shift" data={shifts.map((s) => s.name)} value={form.currentShift} onChange={(v) => setForm({ ...form, currentShift: v })} searchable clearable nothingFoundMessage="No shifts configured" />
+          <Select label="Requested Shift" required placeholder="Select the shift you want" data={shifts.map((s) => s.name)} value={form.requestedShift} onChange={(v) => setForm({ ...form, requestedShift: v })} searchable nothingFoundMessage="No shifts configured" />
+          <Textarea label="Reason" placeholder="Why do you need this change?" minRows={2} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
           <TextInput type="date" label="Effective Date" value={form.effectiveDate} onChange={(e) => setForm({ ...form, effectiveDate: e.target.value })} />
           <Group justify="flex-end"><Button variant="default" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={submit} loading={create.isPending}>Submit</Button></Group>
         </Stack>
@@ -322,7 +322,7 @@ function OvertimeTab({ canManage }) {
         <Stack gap="sm">
           <TextInput type="date" label="Date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
           <NumberInput label="Hours" required min={0.5} step={0.5} value={form.hours} onChange={(v) => setForm({ ...form, hours: v })} />
-          <TextInput label="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+          <Textarea label="Reason" placeholder="Reason for overtime" minRows={2} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
           <Group justify="flex-end"><Button variant="default" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={submit} loading={request.isPending}>Submit</Button></Group>
         </Stack>
       </Modal>

@@ -12,6 +12,8 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
+import { useDepartments } from "../../queries/useDepartments";
 import {
   useComplianceDashboard,
   usePolicies, useCreatePolicy, usePublishPolicy, useArchivePolicy,
@@ -30,6 +32,21 @@ const STATUTORY_TYPES = ["PF", "ESI", "Professional Tax", "Labour Law", "Shops &
 const CERT_TYPES = ["ISO Certificate", "Labour License", "Business License", "Insurance Certificate", "Vendor Compliance"];
 const PRIORITIES = ["Low", "Medium", "High"];
 const RISK_LEVELS = ["Low", "Medium", "High", "Critical"];
+
+// Shared pickers (memory rule: dropdowns over free-text for employees/departments)
+const useEmployeeOptions = () => {
+  const { data: employees = [] } = useFetchAllEmployees();
+  return (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
+};
+// Department options: from the Departments API, falling back to the distinct
+// departments present on employees (so the dropdown is never empty).
+const useDepartmentOptions = () => {
+  const { data: depts = [] } = useDepartments();
+  const { data: employees = [] } = useFetchAllEmployees();
+  const fromApi = (depts || []).map((d) => d.name).filter(Boolean);
+  if (fromApi.length) return fromApi;
+  return [...new Set((employees || []).map((e) => e.department).filter(Boolean))];
+};
 
 const STATUS_COLOR = {
   Draft: "gray", "Pending Approval": "orange", Published: "green", Archived: "dark", Expired: "red",
@@ -90,6 +107,8 @@ function PoliciesTab({ canManage }) {
   const publish = usePublishPolicy();
   const archive = useArchivePolicy();
   const ack = useAcknowledgePolicy();
+  const empOptions = useEmployeeOptions();
+  const deptOptions = useDepartmentOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", category: POLICY_CATEGORIES[0], description: "", version: "1.0", effectiveDate: "", reviewDate: "", owner: "", department: "" });
 
@@ -150,8 +169,8 @@ function PoliciesTab({ canManage }) {
             <TextInput type="date" label="Review Date (future)" value={form.reviewDate} onChange={(e) => setForm({ ...form, reviewDate: e.target.value })} />
           </Group>
           <Group grow>
-            <TextInput label="Owner" value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} />
-            <TextInput label="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
+            <Select label="Owner" placeholder="Select owner" searchable clearable data={empOptions} value={form.owner} onChange={(v) => setForm({ ...form, owner: v })} nothingFoundMessage="No employee found" />
+            <Select label="Department" placeholder="Select department" searchable clearable data={deptOptions} value={form.department} onChange={(v) => setForm({ ...form, department: v })} nothingFoundMessage="No department found" />
           </Group>
           <Group justify="flex-end"><Button variant="default" onClick={() => setOpen(false)}>Cancel</Button><Button onClick={submit} loading={create.isPending}>Create</Button></Group>
         </Stack>
@@ -190,6 +209,7 @@ function TasksTab({ canManage }) {
   const create = useCreateComplianceTask();
   const updateStatus = useUpdateTaskStatus();
   const del = useDeleteComplianceTask();
+  const empOptions = useEmployeeOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", owner: "", dueDate: "", priority: "Medium", recurring: false });
 
@@ -228,7 +248,7 @@ function TasksTab({ canManage }) {
           <TextInput label="Task Title" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <Textarea label="Description" minRows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <Group grow>
-            <TextInput label="Owner" value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} />
+            <Select label="Owner" placeholder="Select owner" searchable clearable data={empOptions} value={form.owner} onChange={(v) => setForm({ ...form, owner: v })} nothingFoundMessage="No employee found" />
             <TextInput type="date" label="Due Date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
           </Group>
           <Select label="Priority" data={PRIORITIES} value={form.priority} onChange={(v) => setForm({ ...form, priority: v })} />
