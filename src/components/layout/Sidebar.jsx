@@ -52,8 +52,9 @@ import {
   IconCalendarTime,
   IconShieldHeart,
   IconReportMoney,
+  IconPalette,
 } from "@tabler/icons-react";
-import { ROLE_SIDEBAR } from "../../constants/permissions";
+import { ROLE_SIDEBAR, SIDEBAR_SECTIONS, SIDEBAR_TOP } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { RADIUS } from "../../theme/sizes";
@@ -104,6 +105,7 @@ const ICON_MAP = {
   IconCalendarTime,
   IconShieldHeart,
   IconReportMoney,
+  IconPalette,
 };
 
 const Sidebar = ({
@@ -118,6 +120,15 @@ const Sidebar = ({
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
+  // Map of allowed item id → item, used to render doc-ordered grouped sections
+  const itemById = Object.fromEntries(menuItems.map((m) => [m.id, m]));
+  const topItems = SIDEBAR_TOP.map((id) => itemById[id]).filter(Boolean);
+  const groupedSections = SIDEBAR_SECTIONS
+    .map((sec) => ({ title: sec.title, items: sec.items.map((id) => itemById[id]).filter(Boolean) }))
+    .filter((sec) => sec.items.length > 0);
+  // Any allowed item not in TOP and not in any section → catch-all "OTHER" group (keeps nothing hidden)
+  const placed = new Set([...SIDEBAR_TOP, ...SIDEBAR_SECTIONS.flatMap((s) => s.items)]);
+  const otherItems = menuItems.filter((m) => !placed.has(m.id));
 
   const surface = dark
     ? {
@@ -208,78 +219,76 @@ const Sidebar = ({
         )}
       </div>
 
-      {/* ── Nav Items ── */}
+      {/* ── Nav Items (grouped into enterprise sections) ── */}
       <ScrollArea style={{ flex: 1 }} type="never">
         <div style={{ padding: "6px 6px 4px" }}>
-          {menuItems.map(({ id, label, icon }) => {
-            const Icon = ICON_MAP[icon];
-            const path = `/${id}`;
-            const active = location.pathname === path;
+          {(() => {
+            const renderItem = ({ id, label, icon }) => {
+              const Icon = ICON_MAP[icon];
+              const path = `/${id}`;
+              const active = location.pathname === path;
+              return (
+                <RouterNavLink
+                  key={id}
+                  to={path}
+                  onClick={onCloseMobile}
+                  title={collapsed ? label : undefined}
+                  aria-label={label}
+                  style={{ textDecoration: "none", display: "block", marginBottom: 1 }}
+                >
+                  <div
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: collapsed ? "10px 0" : "8px 10px",
+                      borderRadius: RADIUS.lg,
+                      background: active ? surface.activeBg : "transparent",
+                      fontWeight: active ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium,
+                      fontSize: FONT_SIZE.sm, cursor: "pointer",
+                      transition: "background 0.13s ease",
+                      justifyContent: collapsed ? "center" : "flex-start",
+                      borderLeft: active ? `3px solid ${COLORS.primary}` : "3px solid transparent",
+                    }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = surface.hover; }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+                  >
+                    {Icon && <Icon size={18} stroke={active ? 2.2 : 1.7} color={active ? COLORS.primary : surface.subtext} style={{ flexShrink: 0 }} />}
+                    {!collapsed && (
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: active ? surface.activeText : surface.subtext }}>
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                </RouterNavLink>
+              );
+            };
+
+            const SectionHeader = ({ title }) => collapsed
+              ? <div style={{ height: 1, background: surface.border, margin: "8px 8px" }} />
+              : <div style={{ fontSize: 11, fontWeight: 600, color: surface.subtext, letterSpacing: "0.07em", textTransform: "uppercase", padding: "12px 12px 4px" }}>{title}</div>;
 
             return (
-              <RouterNavLink
-                key={id}
-                to={path}
-                onClick={onCloseMobile}
-                title={collapsed ? label : undefined}
-                style={{
-                  textDecoration: "none",
-                  display: "block",
-                  marginBottom: 1,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: collapsed ? "10px 0" : "8px 10px",
-                    borderRadius: RADIUS.lg,
-                    background: active ? surface.activeBg : "transparent",
-                    fontWeight: active
-                      ? FONT_WEIGHT.semibold
-                      : FONT_WEIGHT.medium,
-                    fontSize: FONT_SIZE.sm,
-                    cursor: "pointer",
-                    transition: "background 0.13s ease",
-                    justifyContent: collapsed ? "center" : "flex-start",
-                    borderLeft: active
-                      ? `3px solid ${COLORS.primary}`
-                      : "3px solid transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active)
-                      e.currentTarget.style.background = surface.hover;
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active)
-                      e.currentTarget.style.background = "transparent";
-                  }}
-                >
-                  {Icon && (
-                    <Icon
-                      size={18}
-                      stroke={active ? 2.2 : 1.7}
-                      color={active ? COLORS.primary : surface.subtext}
-                      style={{ flexShrink: 0 }}
-                    />
-                  )}
-                  {!collapsed && (
-                    <span
-                      style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        color: active ? surface.activeText : surface.subtext,
-                      }}
-                    >
-                      {label}
-                    </span>
-                  )}
-                </div>
-              </RouterNavLink>
+              <>
+                {/* Top pinned items (Dashboard, AI Assistant) */}
+                {topItems.map(renderItem)}
+
+                {/* Grouped sections */}
+                {groupedSections.map((sec) => (
+                  <div key={sec.title}>
+                    <SectionHeader title={sec.title} />
+                    {sec.items.map(renderItem)}
+                  </div>
+                ))}
+
+                {/* Catch-all for any allowed item not assigned to a section */}
+                {otherItems.length > 0 && (
+                  <div>
+                    <SectionHeader title="OTHER" />
+                    {otherItems.map(renderItem)}
+                  </div>
+                )}
+              </>
             );
-          })}
+          })()}
         </div>
       </ScrollArea>
 

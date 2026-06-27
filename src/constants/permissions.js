@@ -1,13 +1,34 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation"],
-  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding"],
+  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","branding"],
   HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation"],
   MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement","compliance","visitors","shift-roster","benefits"],
   FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits","compensation"],
   IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits"],
   EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance","engagement","compliance","visitors","shift-roster","benefits"],
 };
+
+// ── Sidebar section grouping (enterprise SaaS IA) ─────────────────────────────
+// Each section lists menu-item IDs in display order. The Sidebar renders a
+// section only if the current role has at least one of its items (from ROLE_SIDEBAR),
+// and within a section shows only the items that role is allowed to see.
+// "dashboard" renders at the very top, above all sections.
+export const SIDEBAR_SECTIONS = [
+  { title: "ORGANIZATION", items: ["employees", "my-team", "departments", "branches", "designations", "orgchart"] },
+  { title: "WORKFORCE",    items: ["attendance", "my-attendance", "shift-roster", "shifts", "leave", "approvals", "calendar", "holiday-calendar", "expense"] },
+  { title: "TALENT MANAGEMENT", items: ["recruitment", "onboarding", "self-onboarding", "exit", "performance", "lms", "engagement", "benefits"] },
+  { title: "PAYROLL & FINANCE", items: ["payroll", "my-payslips", "compensation"] },
+  { title: "WORKPLACE",    items: ["assets", "my-assets", "documents", "my-documents", "visitors", "helpdesk"] },
+  { title: "COMPLIANCE",   items: ["compliance", "workflows", "audit-logs", "security"] },
+  { title: "ANALYTICS",    items: ["analytics", "reports", "communications", "announcements", "notifications"] },
+  { title: "ADMINISTRATION", items: ["user-management", "roles-permissions", "settings", "integrations", "company-settings"] },
+  { title: "PLATFORM",     items: ["companies", "billing", "branding"] },
+  { title: "ME",           items: ["my-profile"] },
+];
+
+// Items always pinned to the very top (above sections)
+export const SIDEBAR_TOP = ["dashboard"];
 
 // ── Sidebar nav items per role ────────────────────────────────────────────────
 export const ROLE_SIDEBAR = {
@@ -55,6 +76,7 @@ export const ROLE_SIDEBAR = {
     { id: "announcements",     label: "Announcements",     icon: "IconSpeakerphone"      },
     { id: "billing",           label: "Billing",           icon: "IconCreditCard"        },
     { id: "companies",         label: "Multi-Company",     icon: "IconBuildingFactory"   },
+    { id: "branding",      label: "White Label",   icon: "IconPalette"         },
     { id: "company-settings",  label: "Company Settings",  icon: "IconBuildingCog"       },
     { id: "settings",          label: "Settings",          icon: "IconSettings"          },
   ],

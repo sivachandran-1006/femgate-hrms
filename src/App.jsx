@@ -54,6 +54,7 @@ import VisitorManagement from "./screens/visitors/VisitorManagement";
 import ShiftRoster from "./screens/roster/ShiftRoster";
 import BenefitsManagement from "./screens/benefits/BenefitsManagement";
 import CompensationManagement from "./screens/compensation/CompensationManagement";
+import BrandingManagement from "./screens/branding/BrandingManagement";
 import Branches           from "./screens/branches/Branches";
 import Designations       from "./screens/designations/Designations";
 import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
@@ -587,6 +588,11 @@ export default function App() {
           <Route path="/compensation" element={
             <RoleGuard routeId="compensation" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><CompensationManagement darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/branding" element={
+            <RoleGuard routeId="branding" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><BrandingManagement darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
 
