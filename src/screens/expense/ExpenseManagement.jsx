@@ -10,6 +10,7 @@ import {
   IconChartLine, IconFileText, IconReceipt,
 } from "@tabler/icons-react";
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
+import { topSlices } from "../dashboard/components/DashboardKit";
 import {
   useExpenseDashboard, useExpenseAnalytics, useExpenses, useExpense,
   useCreateExpense, useUpdateExpense, useSubmitExpense, useApproveExpense, useRejectExpense, useClarifyExpense, useReimburseExpense, useDeleteExpense,
@@ -81,8 +82,8 @@ function DashboardTab() {
             <Card withBorder radius="md" p="md">
               <Text fw={600} mb="md">By Category</Text>
               <ResponsiveContainer width="100%" height={250}>
-                <RechartPie data={analytics.byCategory || []} dataKey="amount" nameKey="category" cx="50%" cy="50%" outerRadius={80} label>
-                  {(analytics.byCategory || []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <RechartPie data={topSlices(analytics.byCategory || [], "amount", 5, "category")} dataKey="amount" nameKey="category" cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} label>
+                  {topSlices(analytics.byCategory || [], "amount", 5, "category").map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </RechartPie>
               </ResponsiveContainer>
             </Card>

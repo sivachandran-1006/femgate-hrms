@@ -149,7 +149,7 @@ export const ROLE_SIDEBAR = {
     { id: "visitors",      label: "Visitors",      icon: "IconBuildingArch"    },
     { id: "shift-roster",  label: "Shift Roster",  icon: "IconCalendarTime"    },
     { id: "benefits",      label: "Benefits",      icon: "IconShieldHeart"     },
-    { id: "employees",   label: "My Team",     icon: "IconUsers"             },
+    { id: "employees",   label: "Team Directory", icon: "IconUsers"          },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
     { id: "approvals",   label: "Approvals",   icon: "IconCircleCheck"       },
     { id: "my-team",     label: "My Team",     icon: "IconUsersGroup"        },

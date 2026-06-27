@@ -1,25 +1,13 @@
-import { SimpleGrid, Box, Text, Badge, Table, Loader, Center } from "@mantine/core";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { SimpleGrid, Text, Badge, Table, Loader, Center } from "@mantine/core";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { IconWallet, IconTrendingUp, IconAward, IconShieldCheck } from "@tabler/icons-react";
-import { AppStatCard } from "../../../components/ui/AppStatCard";
-import { AppSection } from "../../../components/ui/AppSection";
 import { AppTable } from "../../../components/ui/AppTable";
 import { getDashboardSummary, getPayrollSummary } from "../../../api/dashboardApi";
-
-const ChartTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <Box p="sm" style={{ background: "var(--mantine-color-body)", border: "1px solid var(--mantine-color-default-border)", borderRadius: "var(--mantine-radius-md)" }}>
-      <Text fw={600} fz="sm" mb={4}>{label}</Text>
-      {payload.map((p) => (
-        <Text key={p.dataKey} fz="sm" c={p.color}>{p.name}: <Text span fw={700}>₹{p.value?.toLocaleString("en-IN")}</Text></Text>
-      ))}
-    </Box>
-  );
-};
+import { KpiCard, PanelCard, ChartTooltip, fmtMoney, SPARK_HEX } from "./DashboardKit";
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
+const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 export const FinanceDashboard = ({ employees }) => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
@@ -38,42 +26,50 @@ export const FinanceDashboard = ({ employees }) => {
     total: d.count * avgSalary,
   }));
 
+  const payrollSpark = payrollMonths.length > 1 ? payrollMonths.map((m) => m.payroll) : ramp(totalSalary);
+
   return (
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="md">
-        <AppStatCard icon={<IconWallet size={18}/>}      label="Total Monthly Payroll" value={`₹${(totalSalary / 1000).toFixed(0)}k`}  sub="All employees"    color="violet"  trend="+4%" up />
-        <AppStatCard icon={<IconTrendingUp size={18}/>}  label="Average Salary"        value={`₹${(avgSalary / 1000).toFixed(1)}k`}     sub="Per employee"     color="blue" />
-        <AppStatCard icon={<IconAward size={18}/>}       label="Highest Salary"        value={`₹${(maxSalary / 1000).toFixed(0)}k`}     sub="Top earner"       color="green" />
-        <AppStatCard icon={<IconShieldCheck size={18}/>} label="Payroll Records"        value={payrollData?.months?.length || 0}          sub="Months processed" color="cyan" />
+        <KpiCard icon={IconWallet}      label="Total Monthly Payroll" value={fmtMoney(totalSalary)} sub="All employees"    color="violet" trend="4%" up spark={payrollSpark} />
+        <KpiCard icon={IconTrendingUp}  label="Average Salary"        value={fmtMoney(avgSalary)}   sub="Per employee"     color="blue"  spark={ramp(avgSalary)} />
+        <KpiCard icon={IconAward}       label="Highest Salary"        value={fmtMoney(maxSalary)}   sub="Top earner"       color="green" spark={ramp(maxSalary)} />
+        <KpiCard icon={IconShieldCheck} label="Payroll Records"       value={payrollData?.months?.length || 0} sub="Months processed" color="cyan" spark={ramp(payrollData?.months?.length || 0)} />
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
-        <AppSection title="Payroll Trend" sub="Monthly net payroll">
+        <PanelCard title="Payroll Trend" sub="Monthly net payroll">
           <ResponsiveContainer width="100%" height={210}>
-            <LineChart data={payrollMonths}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis tickFormatter={fmtINR} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+            <AreaChart data={payrollMonths}>
+              <defs>
+                <linearGradient id="finPayroll" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SPARK_HEX.violet} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={SPARK_HEX.violet} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" vertical={false} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+              <YAxis tickFormatter={fmtINR} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
               <Tooltip content={<ChartTooltip />} />
-              <Line type="monotone" dataKey="payroll" name="Net Payroll" stroke="var(--mantine-color-violet-6)" strokeWidth={2.5} dot={{ fill: "var(--mantine-color-violet-6)", r: 4 }} activeDot={{ r: 6 }} />
-            </LineChart>
+              <Area type="monotone" dataKey="payroll" name="Net Payroll" stroke={SPARK_HEX.violet} strokeWidth={2.5} fill="url(#finPayroll)" dot={false} activeDot={{ r: 5 }} />
+            </AreaChart>
           </ResponsiveContainer>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="Payroll by Department" sub="Estimated based on avg salary">
+        <PanelCard title="Payroll by Department" sub="Estimated based on avg salary">
           <ResponsiveContainer width="100%" height={210}>
-            <BarChart data={deptPayroll} barSize={28} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
-              <XAxis type="number" tickFormatter={fmtINR} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis type="category" dataKey="dept" tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} width={80} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="total" name="Payroll" fill="var(--mantine-color-violet-5)" radius={[0, 4, 4, 0]} />
+            <BarChart data={deptPayroll} barSize={16} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" horizontal={false} />
+              <XAxis type="number" tickFormatter={fmtINR} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+              <YAxis type="category" dataKey="dept" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} width={80} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--mantine-color-default-hover)" }} />
+              <Bar dataKey="total" name="Payroll" fill={SPARK_HEX.violet} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </AppSection>
+        </PanelCard>
       </SimpleGrid>
 
-      <AppSection title="Employee Salary Breakdown" noPadding>
+      <PanelCard title="Employee Salary Breakdown" p={0}>
         <AppTable
           headers={["Employee", "Department", "Salary", "Band"]}
           data={[...employees].sort((a, b) => (Number(b.salary) || 0) - (Number(a.salary) || 0))}
@@ -84,13 +80,13 @@ export const FinanceDashboard = ({ employees }) => {
               <Table.Tr key={e.id || e._id || i}>
                 <Table.Td><Text fz="sm" fw={600}>{e.name}</Text></Table.Td>
                 <Table.Td><Text fz="sm" c="dimmed">{e.department}</Text></Table.Td>
-                <Table.Td><Text fz="sm" fw={700}>₹{sal.toLocaleString("en-IN")}</Text></Table.Td>
+                <Table.Td><Text fz="sm" fw={700} style={{ fontVariantNumeric: "tabular-nums" }}>{fmtMoney(sal)}</Text></Table.Td>
                 <Table.Td><Badge color={band.color} variant="light">{band.label}</Badge></Table.Td>
               </Table.Tr>
             );
           }}
         />
-      </AppSection>
+      </PanelCard>
     </>
   );
 };

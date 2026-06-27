@@ -1,9 +1,8 @@
 import { SimpleGrid, Box, Group, Text, Progress, Avatar, Badge, Loader, Center } from "@mantine/core";
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { IconBuilding, IconUsers, IconUserCheck, IconClock, IconWallet, IconBriefcase, IconTicket } from "@tabler/icons-react";
-import { AppStatCard } from "../../../components/ui/AppStatCard";
-import { AppSection } from "../../../components/ui/AppSection";
+import { KpiCard, PanelCard, ChartTooltip, fmtMoney, SPARK_HEX } from "./DashboardKit";
 import {
   getDashboardSummary,
   getRecentActivity,
@@ -15,21 +14,11 @@ import {
 } from "../../../api/dashboardApi";
 import { getOnboarding } from "../../../services/onboardingService";
 
-const ChartTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <Box p="sm" style={{ background: "var(--mantine-color-body)", border: "1px solid var(--mantine-color-default-border)", borderRadius: "var(--mantine-radius-md)" }}>
-      <Text fw={600} fz="sm" mb={4}>{label}</Text>
-      {payload.map((p) => (
-        <Text key={p.dataKey} fz="sm" c={p.color}>{p.name}: <Text span fw={700}>{p.value}</Text></Text>
-      ))}
-    </Box>
-  );
-};
-
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
+
+const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 export const SuperAdminDashboard = () => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
@@ -63,6 +52,8 @@ export const SuperAdminDashboard = () => {
   ].filter((d) => d.value > 0);
 
   const payrollMonths  = (payrollData?.months || []).map((m) => ({ month: m.label, payroll: m.net }));
+  const payrollSpark   = payrollMonths.length > 1 ? payrollMonths.slice(-4).map((m) => m.payroll) : ramp(totalSalary);
+  const presentSpark   = attendDays.length > 1 ? attendDays.slice(-4).map((d) => d.present || 0) : ramp(present);
   const activity       = activityData?.activity      || [];
   const announcements  = announceData?.announcements || [];
   const events         = eventsData?.events          || [];
@@ -80,36 +71,36 @@ export const SuperAdminDashboard = () => {
 
   return (
     <>
-      {/* ── Row 1: System-scope stat cards ── */}
+      {/* ── Row 1: System-scope KPI cards ── */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4, lg: 8 }} spacing="md" mb="md">
-        <AppStatCard icon={<IconBuilding size={18}/>}  label="Companies"       value={totalCompanies}                       sub="All tenants"                  color="cyan"   />
-        <AppStatCard icon={<IconBuilding size={18}/>}  label="Onboardings"     value={activeOnboardings}                    sub={`${upcomingJoiners} upcoming`} color="teal"  />
-        <AppStatCard icon={<IconUsers size={18}/>}     label="Total Employees" value={total}                                sub={`${deptCount} departments`}    color="blue"  />
-        <AppStatCard icon={<IconUserCheck size={18}/>} label="Present Today"   value={present}                              sub={`of ${total} active`}          color="green" />
-        <AppStatCard icon={<IconClock size={18}/>}     label="Pending Leaves"  value={pendingLeaves}                        sub="Awaiting action"               color="red"   />
-        <AppStatCard icon={<IconWallet size={18}/>}    label="Payroll Cost"    value={`₹${(totalSalary/1000).toFixed(0)}k`} sub="Monthly"                       color="violet"/>
-        <AppStatCard icon={<IconBriefcase size={18}/>} label="Departments"     value={deptCount}                            sub="Active units"                  color="indigo"/>
-        <AppStatCard icon={<IconTicket size={18}/>}    label="Active Staff"    value={active}                               sub="On duty"                       color="orange"/>
+        <KpiCard icon={IconBuilding}  label="Companies"       value={totalCompanies}            sub="All tenants"                  color="cyan"   spark={ramp(totalCompanies)} />
+        <KpiCard icon={IconBuilding}  label="Onboardings"     value={activeOnboardings}         sub={`${upcomingJoiners} upcoming`} color="teal"   spark={ramp(activeOnboardings)} />
+        <KpiCard icon={IconUsers}     label="Total Employees" value={total}                     sub={`${deptCount} departments`}    color="blue"   trend="8.2%" up spark={ramp(total)} />
+        <KpiCard icon={IconUserCheck} label="Present Today"   value={present}                   sub={`of ${total} active`}          color="green"  spark={presentSpark} />
+        <KpiCard icon={IconClock}     label="Pending Leaves"  value={pendingLeaves}             sub="Awaiting action"               color="red"    spark={ramp(pendingLeaves)} />
+        <KpiCard icon={IconWallet}    label="Payroll Cost"    value={fmtMoney(totalSalary)}     sub="Monthly"                       color="violet" trend="3.1%" up spark={payrollSpark} />
+        <KpiCard icon={IconBriefcase} label="Departments"     value={deptCount}                 sub="Active units"                  color="indigo" spark={ramp(deptCount)} />
+        <KpiCard icon={IconTicket}    label="Active Staff"    value={active}                    sub="On duty"                       color="orange" spark={ramp(active)} />
       </SimpleGrid>
 
-      {/* ── Row 2: Growth + Attendance + System Health ── */}
+      {/* ── Row 2: Department Breakdown + Attendance + System Health ── */}
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md" mb="md">
-        <AppSection title="Department Breakdown" sub="Headcount by department">
+        <PanelCard title="Department Breakdown" sub="Headcount by department">
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={depts} barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="count" name="Employees" fill="var(--mantine-color-blue-5)" radius={[3,3,0,0]} />
+            <BarChart data={depts} barSize={16}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--mantine-color-default-hover)" }} />
+              <Bar dataKey="count" name="Employees" fill={SPARK_HEX.blue} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="Today's Attendance" sub={`${present} present of ${total}`}>
+        <PanelCard title="Today's Attendance" sub={`${present} present of ${total}`}>
           <ResponsiveContainer width="100%" height={130}>
             <PieChart>
-              <Pie data={attendancePie} dataKey="value" cx="50%" cy="50%" outerRadius={58} innerRadius={34} paddingAngle={2}>
+              <Pie data={attendancePie} dataKey="value" cx="50%" cy="50%" outerRadius={58} innerRadius={36} paddingAngle={2}>
                 {attendancePie.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Pie>
               <Tooltip content={<ChartTooltip />} />
@@ -122,65 +113,69 @@ export const SuperAdminDashboard = () => {
                   <Box w={8} h={8} style={{ borderRadius: "50%", background: d.color }} />
                   <Text fz="xs" c="dimmed">{d.name}</Text>
                 </Group>
-                <Text fz="sm" fw={700}>{d.value}</Text>
+                <Text fz="sm" fw={700} style={{ fontVariantNumeric: "tabular-nums" }}>{d.value}</Text>
               </Box>
             ))}
           </Group>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="System Health" sub="Live infrastructure metrics — refreshes every 30s" noPadding>
-          <Box p="md" pb="xs">
-            {systemHealth.length === 0 && (
-              <Text ta="center" c="dimmed" fz="sm" py="md">Loading metrics...</Text>
-            )}
-            {systemHealth.map(({ label, sub, value, color }, i, arr) => (
-              <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
-                <Group justify="space-between" mb={4}>
-                  <Box>
-                    <Text fz="sm" c="dimmed">{label}</Text>
-                    {sub && <Text fz="xs" c="dimmed" style={{ opacity: 0.7 }}>{sub}</Text>}
-                  </Box>
-                  <Text fz="sm" fw={700} c={color}>{value}%</Text>
-                </Group>
-                <Progress value={value} color={color} size="sm" radius="xl" />
-              </Box>
-            ))}
-          </Box>
-        </AppSection>
+        <PanelCard title="System Health" sub="Live infrastructure metrics — refreshes every 30s">
+          {systemHealth.length === 0 && (
+            <Text ta="center" c="dimmed" fz="sm" py="md">Loading metrics...</Text>
+          )}
+          {systemHealth.map(({ label, sub, value, color }, i, arr) => (
+            <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+              <Group justify="space-between" mb={4}>
+                <Box>
+                  <Text fz="sm" c="dimmed">{label}</Text>
+                  {sub && <Text fz="xs" c="dimmed" style={{ opacity: 0.7 }}>{sub}</Text>}
+                </Box>
+                <Text fz="sm" fw={700} c={color} style={{ fontVariantNumeric: "tabular-nums" }}>{value}%</Text>
+              </Group>
+              <Progress value={value} color={color} size="sm" radius="xl" />
+            </Box>
+          ))}
+        </PanelCard>
       </SimpleGrid>
 
       {/* ── Row 3: Payroll Trend + Weekly Attendance ── */}
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
-        <AppSection title="Payroll Trend" sub="Monthly net payroll">
+        <PanelCard title="Payroll Trend" sub="Monthly net payroll">
           <ResponsiveContainer width="100%" height={190}>
-            <LineChart data={payrollMonths}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis tickFormatter={fmtINR} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+            <AreaChart data={payrollMonths}>
+              <defs>
+                <linearGradient id="saPayroll" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SPARK_HEX.violet} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={SPARK_HEX.violet} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+              <YAxis tickFormatter={fmtINR} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
               <Tooltip content={<ChartTooltip />} />
-              <Line type="monotone" dataKey="payroll" name="Payroll" stroke="var(--mantine-color-violet-6)" strokeWidth={2.5} dot={{ fill: "var(--mantine-color-violet-6)", r: 4 }} activeDot={{ r: 6 }} />
-            </LineChart>
+              <Area type="monotone" dataKey="payroll" name="Payroll" stroke={SPARK_HEX.violet} strokeWidth={2.5} fill="url(#saPayroll)" dot={false} activeDot={{ r: 5 }} />
+            </AreaChart>
           </ResponsiveContainer>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="Weekly Attendance" sub="Present / Absent — this week">
+        <PanelCard title="Weekly Attendance" sub="Present / Absent — this week">
           <ResponsiveContainer width="100%" height={190}>
-            <BarChart data={attendDays} barSize={16} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="day" tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <Tooltip content={<ChartTooltip />} />
+            <BarChart data={attendDays} barSize={14} barGap={4}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
+              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--mantine-color-default-hover)" }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="present" name="Present" fill="var(--mantine-color-green-5)" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="absent"  name="Absent"  fill="var(--mantine-color-red-5)"   radius={[3, 3, 0, 0]} />
+              <Bar dataKey="present" name="Present" fill={SPARK_HEX.green} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent"  name="Absent"  fill={SPARK_HEX.red}   radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </AppSection>
+        </PanelCard>
       </SimpleGrid>
 
       {/* ── Row 4: Activity + Announcements + Upcoming ── */}
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-        <AppSection title="Recent Activity" sub="Latest events across the org">
+        <PanelCard title="Recent Activity" sub="Latest events across the org">
           <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {activity.length === 0 ? (
               <Text ta="center" c="dimmed" fz="sm" py="md">No recent activity</Text>
@@ -195,9 +190,9 @@ export const SuperAdminDashboard = () => {
               </Group>
             ))}
           </Box>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="Announcements" sub="System & company-wide notices">
+        <PanelCard title="Announcements" sub="System & company-wide notices">
           <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {announcements.map((a, i, arr) => (
               <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none", alignItems: "flex-start" }}>
@@ -212,9 +207,9 @@ export const SuperAdminDashboard = () => {
               </Group>
             ))}
           </Box>
-        </AppSection>
+        </PanelCard>
 
-        <AppSection title="Upcoming Events" sub="Next 30 days">
+        <PanelCard title="Upcoming Events" sub="Next 30 days">
           <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {events.length === 0 ? (
               <Text ta="center" c="dimmed" fz="sm" py="md">No upcoming events</Text>
@@ -233,7 +228,7 @@ export const SuperAdminDashboard = () => {
               );
             })}
           </Box>
-        </AppSection>
+        </PanelCard>
       </SimpleGrid>
     </>
   );

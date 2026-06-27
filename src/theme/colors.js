@@ -1,15 +1,16 @@
 export const colors = {
+  // Premium violet primary (enterprise). primaryShade 6 → #6d28d9
   primary: [
-    "#eff6ff",
-    "#dbeafe",
-    "#bfdbfe",
-    "#93c5fd",
-    "#60a5fa",
-    "#3b82f6",
-    "#2563eb",
-    "#1d4ed8",
-    "#1e40af",
-    "#1e3a8a",
+    "#f5f3ff",
+    "#ede9fe",
+    "#ddd6fe",
+    "#c4b5fd",
+    "#a78bfa",
+    "#8b5cf6",
+    "#6d28d9",
+    "#5b21b6",
+    "#4c1d95",
+    "#3b0764",
   ],
   secondary: [
     "#f8fafc",
@@ -62,8 +63,8 @@ export const colors = {
 };
 
 export const COLORS = {
-  primary: "#2563eb",
-  primaryHover: "#1d4ed8",
+  primary: "#6d28d9",
+  primaryHover: "#5b21b6",
   secondary: "#64748b",
   success: "#16a34a",
   error: "#ef4444",
@@ -87,8 +88,8 @@ export const COLORS = {
   purpleMuted: "#f5f3ff",
   info: "#0ea5e9",
   infoLight: "#e0f2fe",
-  primaryLight: "#dbeafe",
-  primaryMuted: "#eff6ff",
+  primaryLight: "#ddd6fe",
+  primaryMuted: "#f5f3ff",
   danger: "#ef4444",
   dangerLight: "#fee2e2",
   dangerMuted: "#fef2f2",

@@ -4,35 +4,19 @@ import { useNavigate } from "react-router-dom";
 import {
   IconUserCheck, IconClock,
   IconCalendarOff, IconDownload, IconLifebuoy,
-  IconArrowRight, IconTrendingUp, IconWallet, IconAlertCircle,
+  IconArrowRight, IconWallet, IconAlertCircle,
   IconChevronRight, IconCircleCheck,
 } from "@tabler/icons-react";
 import { getMyAttendance, getMyPayslip, getLeaveBalance, getAnnouncements, getUpcomingEvents } from "../../../api/dashboardApi";
 import { fetchLeaves } from "../../../api/leaveApi";
 import { useFetchAllEmployees } from "../../../queries/useEmployees";
+import { KpiCard, PanelCard } from "./DashboardKit";
 
 const statusColor  = (s) => s === "Present" ? "#22c55e" : s === "Late" ? "#f59e0b" : s === "Absent" ? "#ef4444" : "#94a3b8";
 const statusBg     = (s) => s === "Present" ? "#f0fdf4" : s === "Late" ? "#fffbeb" : s === "Absent" ? "#fef2f2" : "#f8fafc";
 const statusText   = (s) => s === "Present" ? "#16a34a" : s === "Late" ? "#d97706" : s === "Absent" ? "#dc2626" : "#64748b";
 const fmt          = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
-
-// ── Mini Stat Card ────────────────────────────────────────────────────────────
-const MiniStat = ({ icon: Icon, label, value, sub, gradient, onClick }) => ( // eslint-disable-line
-  <Paper
-    radius="xl" p="lg" style={{ background: gradient, border: "none", cursor: onClick ? "pointer" : "default", flex: "1 1 0", minWidth: 0 }}
-    onClick={onClick}
-  >
-    <Group justify="space-between" mb={12} wrap="nowrap">
-      <Box style={{ width: 42, height: 42, borderRadius: 12, background: "rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Icon size={20} color="#fff" stroke={1.8} />
-      </Box>
-      <IconTrendingUp size={16} color="rgba(255,255,255,0.5)" stroke={1.8} />
-    </Group>
-    <Text fz="xs" fw={600} c="rgba(255,255,255,0.75)" tt="uppercase" mb={4} style={{ letterSpacing: "0.06em" }}>{label}</Text>
-    <Text fz="1.7rem" fw={800} c="white" lh={1}>{value}</Text>
-    {sub && <Text fz="xs" c="rgba(255,255,255,0.7)" mt={4}>{sub}</Text>}
-  </Paper>
-);
+const ramp         = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 // ── Quick Action Pill ─────────────────────────────────────────────────────────
 const QA = ({ icon: Icon, label, to, navigate }) => (
@@ -53,20 +37,12 @@ const QA = ({ icon: Icon, label, to, navigate }) => (
   </Box>
 );
 
-// ── Section Header ────────────────────────────────────────────────────────────
-const SH = ({ title, sub, navigate, to }) => (
-  <Group justify="space-between" mb="md" wrap="nowrap">
-    <Box>
-      <Text fw={700} fz="md">{title}</Text>
-      {sub && <Text fz="xs" c="dimmed" mt={2}>{sub}</Text>}
-    </Box>
-    {to && (
-      <Box onClick={() => navigate(to)} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
-        <Text fz="xs" c="blue" fw={600}>View all</Text>
-        <IconChevronRight size={13} color="#3b82f6" stroke={2.5} />
-      </Box>
-    )}
-  </Group>
+// ── Section "View all" action ──────────────────────────────────────────────────
+const ViewAll = ({ navigate, to }) => (
+  <Box onClick={() => navigate(to)} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+    <Text fz="xs" c="blue" fw={600}>View all</Text>
+    <IconChevronRight size={13} color="#3b82f6" stroke={2.5} />
+  </Box>
 );
 
 export const EmployeeDashboard = ({ user }) => {
@@ -198,13 +174,30 @@ export const EmployeeDashboard = ({ user }) => {
       </Paper>
 
       {/* ════════════════════════════════════════════════════════════
-          STAT CARDS
+          KPI CARDS
       ════════════════════════════════════════════════════════════ */}
       <SimpleGrid cols={{ base: 2, sm: 2, lg: 4 }} spacing="md" mb="xl">
-        <MiniStat icon={IconUserCheck}   label="Attendance"     value={`${attendPct}%`}            sub={`${presentDays} / ${records.length} days`} gradient="linear-gradient(135deg,#059669,#10b981)" onClick={() => navigate("/attendance")} />
-        <MiniStat icon={IconCalendarOff} label="Leave Approved" value={approvedLeaves}              sub="This year"                                 gradient="linear-gradient(135deg,#1d4ed8,#3b82f6)" onClick={() => navigate("/leave")} />
-        <MiniStat icon={IconClock}       label="Pending"        value={pendingLeaves}               sub="Awaiting approval"                         gradient="linear-gradient(135deg,#b45309,#f59e0b)" onClick={() => navigate("/leave")} />
-        <MiniStat icon={IconWallet}      label="Net Salary"     value={payslip ? fmt(payslip.net) : "—"} sub={payslip?.month || "Latest payslip"}  gradient="linear-gradient(135deg,#7c3aed,#a78bfa)" onClick={() => navigate("/my-payslips")} />
+        <KpiCard
+          icon={IconUserCheck} color="green" label="Attendance"
+          value={`${attendPct}%`} sub={`${presentDays} / ${records.length} days`}
+          trend={`${attendPct}%`} up={attendPct >= 75}
+          spark={ramp(attendPct)}
+        />
+        <KpiCard
+          icon={IconCalendarOff} color="blue" label="Leave Approved"
+          value={approvedLeaves} sub="This year"
+          spark={ramp(Math.max(approvedLeaves, 1))}
+        />
+        <KpiCard
+          icon={IconClock} color="orange" label="Pending"
+          value={pendingLeaves} sub="Awaiting approval"
+          spark={ramp(Math.max(pendingLeaves, 1))}
+        />
+        <KpiCard
+          icon={IconWallet} color="violet" label="Net Salary"
+          value={payslip ? fmt(payslip.net) : "—"} sub={payslip?.month || "Latest payslip"}
+          spark={ramp(payslip ? payslip.net : 1)}
+        />
       </SimpleGrid>
 
       {/* ════════════════════════════════════════════════════════════
@@ -213,8 +206,7 @@ export const EmployeeDashboard = ({ user }) => {
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
 
         {/* Attendance card */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="My Attendance" sub="This month's summary" to="/attendance" navigate={navigate} />
+        <PanelCard title="My Attendance" sub="This month's summary" action={<ViewAll navigate={navigate} to="/attendance" />}>
           <Group gap="lg" wrap="nowrap" mb="md">
             <RingProgress
               size={110} thickness={10}
@@ -234,7 +226,7 @@ export const EmployeeDashboard = ({ user }) => {
                     <Box style={{ width: 8, height: 8, borderRadius: "50%", background: s.color }} />
                     <Text fz="sm" c="dimmed">{s.label}</Text>
                   </Group>
-                  <Text fz="sm" fw={700}>{s.value}</Text>
+                  <Text fz="sm" fw={700} style={{ fontVariantNumeric: "tabular-nums" }}>{s.value}</Text>
                 </Group>
               ))}
             </Box>
@@ -261,11 +253,10 @@ export const EmployeeDashboard = ({ user }) => {
               </Box>
             </Group>
           ))}
-        </Paper>
+        </PanelCard>
 
         {/* Leave balance card */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="My Leave Balance" sub="Current year allocation" to="/leave" navigate={navigate} />
+        <PanelCard title="My Leave Balance" sub="Current year allocation" action={<ViewAll navigate={navigate} to="/leave" />}>
           {balance.length === 0 ? (
             <Text ta="center" c="dimmed" fz="sm" py="xl">No leave balance data</Text>
           ) : balance.map((b) => {
@@ -310,7 +301,7 @@ export const EmployeeDashboard = ({ user }) => {
               })}
             </>
           )}
-        </Paper>
+        </PanelCard>
       </SimpleGrid>
 
       {/* ════════════════════════════════════════════════════════════
@@ -319,8 +310,7 @@ export const EmployeeDashboard = ({ user }) => {
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
 
         {/* Payslip */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="Latest Payslip" sub={payslip?.month || "—"} to="/my-payslips" navigate={navigate} />
+        <PanelCard title="Latest Payslip" sub={payslip?.month || "—"} action={<ViewAll navigate={navigate} to="/my-payslips" />}>
           {payslip ? (
             <>
               <SimpleGrid cols={3} spacing="sm" mb="md">
@@ -331,7 +321,7 @@ export const EmployeeDashboard = ({ user }) => {
                 ].map((s) => (
                   <Box key={s.label} style={{ textAlign: "center", padding: "14px 8px", borderRadius: 14, background: s.bg }}>
                     <Text fz="xs" c="dimmed" fw={600} tt="uppercase" mb={4} style={{ letterSpacing: "0.04em" }}>{s.label}</Text>
-                    <Text fz="md" fw={800} style={{ color: s.color }}>{s.value}</Text>
+                    <Text fz="md" fw={800} style={{ color: s.color, fontVariantNumeric: "tabular-nums" }}>{s.value}</Text>
                   </Box>
                 ))}
               </SimpleGrid>
@@ -351,11 +341,10 @@ export const EmployeeDashboard = ({ user }) => {
               <Text c="dimmed" fz="sm" mt="sm">No payslip available yet</Text>
             </Box>
           )}
-        </Paper>
+        </PanelCard>
 
         {/* Announcements */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="Announcements" sub="Latest company notices" to="/announcements" navigate={navigate} />
+        <PanelCard title="Announcements" sub="Latest company notices" action={<ViewAll navigate={navigate} to="/announcements" />}>
           {announcements.length === 0 ? (
             <Box style={{ textAlign: "center", padding: "32px 0" }}>
               <IconAlertCircle size={40} color="#cbd5e1" stroke={1.2} />
@@ -381,7 +370,7 @@ export const EmployeeDashboard = ({ user }) => {
               </Group>
             );
           })}
-        </Paper>
+        </PanelCard>
       </SimpleGrid>
 
       {/* ════════════════════════════════════════════════════════════
@@ -390,8 +379,7 @@ export const EmployeeDashboard = ({ user }) => {
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
 
         {/* Birthdays */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="🎂 Birthdays" sub={`${birthdays.length} this month`} />
+        <PanelCard title="🎂 Birthdays" sub={`${birthdays.length} this month`}>
           {birthdays.length === 0 ? (
             <Text ta="center" c="dimmed" fz="sm" py="lg">No birthdays this month</Text>
           ) : birthdays.slice(0, 4).map((e) => (
@@ -406,11 +394,10 @@ export const EmployeeDashboard = ({ user }) => {
               </Box>
             </Group>
           ))}
-        </Paper>
+        </PanelCard>
 
         {/* Anniversaries */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="⭐ Anniversaries" sub={`${anniversaries.length} this month`} />
+        <PanelCard title="⭐ Anniversaries" sub={`${anniversaries.length} this month`}>
           {anniversaries.length === 0 ? (
             <Text ta="center" c="dimmed" fz="sm" py="lg">No anniversaries this month</Text>
           ) : anniversaries.slice(0, 4).map((e) => {
@@ -428,11 +415,10 @@ export const EmployeeDashboard = ({ user }) => {
               </Group>
             );
           })}
-        </Paper>
+        </PanelCard>
 
         {/* Upcoming Events */}
-        <Paper withBorder radius="xl" p="lg">
-          <SH title="📅 Upcoming" sub="Events & holidays" />
+        <PanelCard title="📅 Upcoming" sub="Events & holidays">
           {events.length === 0 ? (
             <Text ta="center" c="dimmed" fz="sm" py="lg">No upcoming events</Text>
           ) : events.slice(0, 4).map((e, i, arr) => {
@@ -451,9 +437,8 @@ export const EmployeeDashboard = ({ user }) => {
               </Group>
             );
           })}
-        </Paper>
+        </PanelCard>
       </SimpleGrid>
     </Box>
   );
 };
-

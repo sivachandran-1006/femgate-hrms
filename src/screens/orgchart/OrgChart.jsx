@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Group, Text, Button, ActionIcon, Menu, ScrollArea, Loader, Box, Tabs, SimpleGrid, Paper, Badge, Avatar, Stack,
+  Group, Text, Button, ActionIcon, Menu, ScrollArea, Loader, Box, Tabs, SimpleGrid, Paper, Badge, Avatar, Stack, Select,
 } from "@mantine/core";
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -20,7 +20,7 @@ import { getAvatarColor, getInitials } from "../../utils/helpers";
 import { fetchBranches } from "../../api/branchApi";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
-import { EnhancedTreeNode } from "./EnhancedTreeOrgChart";
+import CenteredOrgTree from "./CenteredOrgTree";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
@@ -140,19 +140,18 @@ export default function OrgChart() {
   const flat = treeData?.flat || [];
 
   const [zoom, setZoom]         = useState(1);
-  const [expandedSet, setExpandedSet] = useState(new Set());
+  const [levels, setLevels]     = useState("All");
   const printRef = useRef(null);
 
-  // expand all once data arrives
-  useEffect(() => { if (flat.length) setExpandedSet(new Set(flat.map((n) => n.id))); }, [treeData]); // eslint-disable-line
-
-  const allIds = flat.map((n) => n.id);
-  const toggle = (id) => setExpandedSet((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
-  const expandAll = () => setExpandedSet(new Set(allIds));
-  const collapseAll = () => setExpandedSet(new Set());
+  // Prune the tree to N levels deep (for the "Levels" control)
+  const pruneLevels = (nodes, maxDepth, depth = 1) =>
+    (nodes || []).map((n) => ({
+      ...n,
+      children: depth >= maxDepth ? [] : pruneLevels(n.children || [], maxDepth, depth + 1),
+    }));
+  const visibleRoots = levels === "All" ? tree : pruneLevels(tree, Number(levels));
 
   const onView = (node) => navigate(`/employees/${node.id}`);
-  const onTeam = () => {};
 
   // ─── render ───
   if (isLoading) return <Box ta="center" py="xl"><Loader /></Box>;
@@ -177,10 +176,6 @@ export default function OrgChart() {
         sub="Visual hierarchy of the company"
         action={
           <Group gap="sm">
-            <Button.Group>
-              <Button variant="default" size="sm" onClick={expandAll} leftSection={<IconArrowsMaximize size={15} />}>Expand</Button>
-              <Button variant="default" size="sm" onClick={collapseAll} leftSection={<IconArrowsMinimize size={15} />}>Collapse</Button>
-            </Button.Group>
             <Menu position="bottom-end" withinPortal>
               <Menu.Target><Button variant="default" size="sm" leftSection={<IconFileExport size={15} />}>Export</Button></Menu.Target>
               <Menu.Dropdown>
@@ -205,24 +200,30 @@ export default function OrgChart() {
         {/* ── CHART ── */}
         <Tabs.Panel value="chart">
           <AppSection mb="md" p="md">
-            <Group gap="sm" wrap="wrap" align="flex-end">
+            <Group justify="space-between" wrap="wrap">
+              <Group gap="sm">
+                <Group gap={6}>
+                  <Text size="xs" c="dimmed" fw={500}>Levels</Text>
+                  <Select size="xs" w={110} value={levels} onChange={setLevels}
+                    data={["All", "2", "3", "4"].map((v) => ({ value: v, label: v === "All" ? "All Levels" : `${v} Levels` }))} />
+                </Group>
+              </Group>
               <Group gap={4}>
+                <Button size="xs" variant="default" onClick={() => setZoom(1)}>Fit</Button>
                 <ActionIcon variant="default" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.1).toFixed(2)))} title="Zoom out"><IconZoomOut size={16} /></ActionIcon>
-                <Text size="xs" w={36} ta="center">{Math.round(zoom * 100)}%</Text>
+                <Text size="xs" w={40} ta="center" fw={600}>{Math.round(zoom * 100)}%</Text>
                 <ActionIcon variant="default" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(2)))} title="Zoom in"><IconZoomIn size={16} /></ActionIcon>
               </Group>
             </Group>
           </AppSection>
 
           {flat.length === 0 ? (
-            <AppEmptyState message="Organization structure not configured." />
+            <AppEmptyState icon={<IconHierarchy size={24} />} message="Organization structure not configured" sub="Set reporting managers on employees to build the chart." />
           ) : (
-            <AppSection p="md">
-              <ScrollArea>
-                <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top left", transition: "transform 0.15s", minWidth: "fit-content", padding: "40px 60px", background: "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)" }}>
-                  {tree.map((root) => (
-                    <EnhancedTreeNode key={root.id} node={root} expandedSet={expandedSet} onToggle={toggle} onView={onView} onTeam={onTeam} />
-                  ))}
+            <AppSection p={0} style={{ overflow: "hidden" }}>
+              <ScrollArea h="calc(100vh - 320px)" type="auto">
+                <div ref={printRef} style={{ transform: `scale(${zoom})`, transformOrigin: "top center", transition: "transform 0.15s", padding: "48px 60px", minWidth: "fit-content", background: "radial-gradient(circle at 50% 0, #faf5ff 0, #f8fafc 45%)" }}>
+                  <CenteredOrgTree roots={visibleRoots} onView={onView} />
                 </div>
               </ScrollArea>
             </AppSection>

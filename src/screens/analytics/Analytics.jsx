@@ -22,6 +22,7 @@ import {
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useFetchAllLeaves }    from "../../queries/useLeaves";
 import { useCandidates, useExits } from "../../queries/useHr";
+import { topSlices } from "../dashboard/components/DashboardKit";
 import { AppLoader }            from "../../components/ui/AppLoader";
 import { COLORS }                            from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
@@ -493,8 +494,8 @@ const Analytics = ({ darkMode: dark = false }) => {
               <div style={{ display:"flex", alignItems:"center", gap: GAP.xl }}>
                 <ResponsiveContainer width={180} height={180}>
                   <PieChart>
-                    <Pie data={DEPT_DATA} dataKey="value" cx="50%" cy="50%" outerRadius={80} innerRadius={46} paddingAngle={3}>
-                      {DEPT_DATA.map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]}/>)}
+                    <Pie data={topSlices(DEPT_DATA, "value", 6)} dataKey="value" cx="50%" cy="50%" outerRadius={80} innerRadius={46} paddingAngle={3}>
+                      {topSlices(DEPT_DATA, "value", 6).map((_,i) => <Cell key={i} fill={PALETTE[i%PALETTE.length]}/>)}
                     </Pie>
                     <Tooltip content={<ChartTooltip dark={dark}/>}/>
                   </PieChart>

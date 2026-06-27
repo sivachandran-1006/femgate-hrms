@@ -19,6 +19,7 @@ import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertif
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { exportLms } from "../../api/lmsApi";
+import { topSlices } from "../dashboard/components/DashboardKit";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
 const CATEGORY_OPTIONS = ["Technical", "Soft Skills", "Compliance", "Leadership", "Other"];
@@ -81,8 +82,8 @@ function DashboardTab() {
             <Text fw={600} mb="md">By Category</Text>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={dash.categories || []} dataKey="count" nameKey="category" cx="50%" cy="50%" outerRadius={80} label>
-                  {(dash.categories || []).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={topSlices(dash.categories || [], "count", 5, "category")} dataKey="count" nameKey="category" cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} label>
+                  {topSlices(dash.categories || [], "count", 5, "category").map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Legend />
               </PieChart>

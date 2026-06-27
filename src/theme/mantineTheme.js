@@ -41,7 +41,20 @@ export const theme = createTheme({
     },
     Card: {
       defaultProps: {
-        radius: "xl",
+        radius: 20,
+      },
+    },
+    Modal: {
+      defaultProps: {
+        radius: 16,
+      },
+    },
+    Table: {
+      defaultProps: {
+        highlightOnHover: true,
+        verticalSpacing: "sm",
+        horizontalSpacing: "md",
+        striped: false,
       },
     },
   },

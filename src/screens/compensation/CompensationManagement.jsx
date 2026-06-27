@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { topSlices } from "../dashboard/components/DashboardKit";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useDesignations } from "../../queries/useDesignations";
 import {
@@ -116,8 +117,8 @@ function DashboardTab() {
           <Text fw={600} mb="sm">Department Salary Cost</Text>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={a.departmentCost || []} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e) => e.name}>
-                {(a.departmentCost || []).map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              <Pie data={topSlices(a.departmentCost || [], "value", 5, "name")} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} label={(e) => e.name}>
+                {topSlices(a.departmentCost || [], "value", 5, "name").map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <RTooltip formatter={(v) => money(v)} />
             </PieChart>

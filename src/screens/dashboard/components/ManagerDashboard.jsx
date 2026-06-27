@@ -1,13 +1,14 @@
 import { SimpleGrid, Box, Group, Text, Avatar, Badge, Table, Loader, Center } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { IconUsers, IconUserCheck, IconUserMinus, IconClock } from "@tabler/icons-react";
-import { AppStatCard } from "../../../components/ui/AppStatCard";
-import { AppSection } from "../../../components/ui/AppSection";
+import { KpiCard, PanelCard } from "./DashboardKit";
 import { AppTable } from "../../../components/ui/AppTable";
 import { getInitials } from "../../../utils/helpers";
 import { getAnnouncements, getUpcomingEvents, getDashboardSummary } from "../../../api/dashboardApi";
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
+
+const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 export const ManagerDashboard = ({ employees, leaves }) => {
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
@@ -29,14 +30,14 @@ export const ManagerDashboard = ({ employees, leaves }) => {
   return (
     <>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md" mb="md">
-        <AppStatCard icon={<IconUsers size={18}/>}     label="Team Size"         value={teamTotal}    sub="All employees"              color="blue" />
-        <AppStatCard icon={<IconUserCheck size={18}/>} label="Present Today"     value={teamPresent}  sub={`${attendPct}% attendance`} color="green" />
-        <AppStatCard icon={<IconUserMinus size={18}/>} label="On Leave"          value={teamOnLeave}  sub="Members away"               color="yellow" />
-        <AppStatCard icon={<IconClock size={18}/>}     label="Pending Approvals" value={pendingLeaves}sub="Leave requests to review"   color="red" />
+        <KpiCard icon={IconUsers}     label="Team Size"         value={teamTotal}    sub="All employees"              color="blue"   spark={ramp(teamTotal)} />
+        <KpiCard icon={IconUserCheck} label="Present Today"     value={teamPresent}  sub={`${attendPct}% attendance`} color="green"  trend={`${attendPct}%`} up spark={ramp(teamPresent)} />
+        <KpiCard icon={IconUserMinus} label="On Leave"          value={teamOnLeave}  sub="Members away"               color="orange" spark={ramp(teamOnLeave)} />
+        <KpiCard icon={IconClock}     label="Pending Approvals" value={pendingLeaves} sub="Leave requests to review"  color="red"    spark={ramp(pendingLeaves)} />
       </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-        <AppSection title="Employee List" sub={`${teamTotal} members`} noPadding>
+        <PanelCard title="Employee List" sub={`${teamTotal} members`} p={0}>
           <AppTable
             headers={["Employee", "Role", "Status"]}
             data={myTeam}
@@ -58,10 +59,10 @@ export const ManagerDashboard = ({ employees, leaves }) => {
               );
             }}
           />
-        </AppSection>
+        </PanelCard>
 
         <Box style={{ display: "flex", flexDirection: "column", gap: "var(--mantine-spacing-md)" }}>
-          <AppSection title="Upcoming Events" sub="Next 30 days">
+          <PanelCard title="Upcoming Events" sub="Next 30 days">
             <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {events.length === 0 ? (
                 <Text ta="center" c="dimmed" fz="sm">No upcoming events</Text>
@@ -80,9 +81,9 @@ export const ManagerDashboard = ({ employees, leaves }) => {
                 );
               })}
             </Box>
-          </AppSection>
+          </PanelCard>
 
-          <AppSection title="Announcements">
+          <PanelCard title="Announcements">
             <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {announcements.slice(0, 3).map((a, i, arr) => (
                 <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
@@ -91,7 +92,7 @@ export const ManagerDashboard = ({ employees, leaves }) => {
                 </Group>
               ))}
             </Box>
-          </AppSection>
+          </PanelCard>
         </Box>
       </SimpleGrid>
     </>

@@ -24,6 +24,7 @@ import {
   IconDoorExit,
   IconX,
   IconMenu2,
+  IconChevronDown,
   IconUser,
   IconSun,
   IconMoon,
@@ -119,6 +120,10 @@ const Sidebar = ({
 }) => {
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [closedGroups, setClosedGroups] = useState(new Set());
+  const toggleGroup = (title) => setClosedGroups((prev) => {
+    const s = new Set(prev); s.has(title) ? s.delete(title) : s.add(title); return s;
+  });
   const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
   // Map of allowed item id → item, used to render doc-ordered grouped sections
   const itemById = Object.fromEntries(menuItems.map((m) => [m.id, m]));
@@ -130,25 +135,16 @@ const Sidebar = ({
   const placed = new Set([...SIDEBAR_TOP, ...SIDEBAR_SECTIONS.flatMap((s) => s.items)]);
   const otherItems = menuItems.filter((m) => !placed.has(m.id));
 
-  const surface = dark
-    ? {
-        bg: "#1e293b",
-        border: "#334155",
-        text: "#f1f5f9",
-        subtext: "#94a3b8",
-        hover: "#0f172a",
-        activeBg: "#1d4ed820",
-        activeText: "#60a5fa",
-      }
-    : {
-        bg: "#ffffff",
-        border: "#e2e8f0",
-        text: "#0f172a",
-        subtext: "#64748b",
-        hover: "#f1f5f9",
-        activeBg: "#eff6ff",
-        activeText: "#2563eb",
-      };
+  // Premium dark navy sidebar (matches reference) — same in light & dark app theme.
+  const surface = {
+    bg: "linear-gradient(180deg, #1e1b4b 0%, #161335 55%, #0f0c29 100%)",
+    border: "rgba(255,255,255,0.08)",
+    text: "#f1f5f9",
+    subtext: "#94a3b8",
+    hover: "rgba(255,255,255,0.06)",
+    activeBg: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+    activeText: "#ffffff",
+  };
 
   return (
     <div
@@ -177,7 +173,7 @@ const Sidebar = ({
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              background: "linear-gradient(135deg,#3b82f6,#6366f1)",
+              background: "linear-gradient(135deg,#8b5cf6,#6d28d9)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 12, fontWeight: 900, color: "#fff",
             }}>
@@ -212,7 +208,7 @@ const Sidebar = ({
         {onToggleCollapse && collapsed && (
           <button
             onClick={onToggleCollapse}
-            style={{ position: "absolute", bottom: 80, right: -10, width: 20, height: 20, borderRadius: "50%", border: `1px solid ${surface.border}`, background: surface.bg, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10 }}
+            style={{ position: "absolute", bottom: 80, right: -10, width: 20, height: 20, borderRadius: "50%", border: `1px solid ${surface.border}`, background: "#1e1b4b", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10 }}
           >
             <IconMenu2 size={11} stroke={2} color={surface.subtext} />
           </button>
@@ -244,16 +240,16 @@ const Sidebar = ({
                       background: active ? surface.activeBg : "transparent",
                       fontWeight: active ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium,
                       fontSize: FONT_SIZE.sm, cursor: "pointer",
-                      transition: "background 0.13s ease",
+                      transition: "background 0.15s ease",
                       justifyContent: collapsed ? "center" : "flex-start",
-                      borderLeft: active ? `3px solid ${COLORS.primary}` : "3px solid transparent",
+                      boxShadow: active ? "0 6px 16px rgba(124,58,237,0.45)" : "none",
                     }}
                     onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = surface.hover; }}
                     onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
                   >
-                    {Icon && <Icon size={18} stroke={active ? 2.2 : 1.7} color={active ? COLORS.primary : surface.subtext} style={{ flexShrink: 0 }} />}
+                    {Icon && <Icon size={18} stroke={active ? 2.3 : 1.8} color={active ? "#ffffff" : surface.subtext} style={{ flexShrink: 0 }} />}
                     {!collapsed && (
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: active ? surface.activeText : surface.subtext }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: active ? "#ffffff" : surface.text }}>
                         {label}
                       </span>
                     )}
@@ -262,30 +258,50 @@ const Sidebar = ({
               );
             };
 
-            const SectionHeader = ({ title }) => collapsed
-              ? <div style={{ height: 1, background: surface.border, margin: "8px 8px" }} />
-              : <div style={{ fontSize: 11, fontWeight: 600, color: surface.subtext, letterSpacing: "0.07em", textTransform: "uppercase", padding: "12px 12px 4px" }}>{title}</div>;
+            // Collapsible group: clickable header + chevron. A group auto-stays open
+            // when it contains the active route. Collapsed sidebar = items always shown (no headers).
+            const Group = ({ title, items }) => {
+              if (collapsed) {
+                return (
+                  <div>
+                    <div style={{ height: 1, background: surface.border, margin: "8px 8px" }} />
+                    {items.map(renderItem)}
+                  </div>
+                );
+              }
+              const hasActive = items.some((it) => location.pathname === `/${it.id}`);
+              const open = hasActive || !closedGroups.has(title);
+              return (
+                <div>
+                  <button
+                    onClick={() => toggleGroup(title)}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+                      background: "transparent", border: "none", cursor: "pointer",
+                      padding: "12px 12px 4px", color: surface.subtext,
+                      fontSize: 11, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase",
+                    }}
+                  >
+                    <span>{title}</span>
+                    <IconChevronDown size={12} stroke={2.5} style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s ease", opacity: 0.7 }} />
+                  </button>
+                  {open && items.map(renderItem)}
+                </div>
+              );
+            };
 
             return (
               <>
                 {/* Top pinned items (Dashboard, AI Assistant) */}
                 {topItems.map(renderItem)}
 
-                {/* Grouped sections */}
+                {/* Collapsible grouped sections */}
                 {groupedSections.map((sec) => (
-                  <div key={sec.title}>
-                    <SectionHeader title={sec.title} />
-                    {sec.items.map(renderItem)}
-                  </div>
+                  <Group key={sec.title} title={sec.title} items={sec.items} />
                 ))}
 
-                {/* Catch-all for any allowed item not assigned to a section */}
-                {otherItems.length > 0 && (
-                  <div>
-                    <SectionHeader title="OTHER" />
-                    {otherItems.map(renderItem)}
-                  </div>
-                )}
+                {/* Catch-all for any allowed item not in a section */}
+                {otherItems.length > 0 && <Group title="OTHER" items={otherItems} />}
               </>
             );
           })()}
