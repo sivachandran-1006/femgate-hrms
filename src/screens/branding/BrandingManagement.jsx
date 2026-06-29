@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import {
   useBrandSettings, useSaveBrandSettings, usePublishBrand, useResetBrand,
   useBrandDashboard, useEmailTemplates, useUpdateEmailTemplate,
@@ -255,12 +256,7 @@ export default function BrandingManagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">White Label & Branding</Text>
-          <Text size="xs" c="dimmed">Customize logo, colors, login page, email templates & domain — with live preview</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="White Label & Branding" sub="Customize logo, colors, login page, email templates & domain — with live preview" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

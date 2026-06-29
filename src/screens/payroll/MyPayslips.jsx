@@ -9,6 +9,7 @@ import { COLORS }               from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW }       from "../../theme/sizes";
+import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 
 const computeBreakdown = (slip) => {
   const basic     = Math.round(slip.salary * 0.5);
@@ -106,11 +107,7 @@ const MyPayslips = ({ darkMode: dark = false }) => {
   return (
     <div style={{ fontFamily:FONT_FAMILY.base }}>
 
-      {/* Header */}
-      <div style={{ marginBottom:SPACING[5] }}>
-        <h1 style={{ margin:0, fontSize:FONT_SIZE["2xl"], fontWeight:FONT_WEIGHT.bold, color:surface.text }}>My Payslips</h1>
-        <p style={{ margin:"4px 0 0", fontSize:FONT_SIZE.sm, color:surface.subtext }}>View and download your monthly salary statements</p>
-      </div>
+      <AppPageHeader title="My Payslips" sub="View and download your monthly salary statements" />
 
       {/* KPI row */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:GAP.md, marginBottom:SPACING[5] }}>

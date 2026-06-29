@@ -6,6 +6,7 @@ import {
   IconChevronRight, IconCheck, IconX,
 } from "@tabler/icons-react";
 import { fetchMyTeam, fetchApprovals, approveLeave } from "../../api/approvalsApi";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { getInitials, getAvatarColor } from "../../utils/helpers";
 
 const statusColor = (s) => s === "Active" ? "#22c55e" : s === "On Leave" ? "#f59e0b" : "#94a3b8";
@@ -48,12 +49,7 @@ export default function MyTeam({ darkMode }) {
 
   return (
     <Box>
-      <Group justify="space-between" mb="xl">
-        <Box>
-          <Text fz="xl" fw={800} c={text}>My Team</Text>
-          <Text fz="sm" c={sub} mt={2}>{team.length} direct reportees</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="My Team" sub={`${team.length} direct reportees`} mb="xl" />
 
       {/* Team Members */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md" mb="xl">

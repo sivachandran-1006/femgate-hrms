@@ -17,6 +17,7 @@ import {
 } from "../../queries/useExpense";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { exportExpensesCSV } from "../../api/expenseApi";
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2"];
@@ -489,16 +490,10 @@ export default function ExpenseManagement({ employeeView = false }) {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Group gap="xs">
-          <Box>
-            <Text fw={700} size="lg">{employeeView ? "My Expenses" : "Expense & Reimbursement"}</Text>
-            <Text size="xs" c="dimmed">
-              {employeeView ? "Submit and track your expense claims" : "Track claims, approvals, and reimbursements"}
-            </Text>
-          </Box>
-        </Group>
-      </Group>
+      <AppPageHeader
+        title={employeeView ? "My Expenses" : "Expense & Reimbursement"}
+        sub={employeeView ? "Submit and track your expense claims" : "Track claims, approvals, and reimbursements"}
+      />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

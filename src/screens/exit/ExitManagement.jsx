@@ -29,6 +29,7 @@ import { SPACING, GAP, PADDING }               from "../../theme/spacing";
 import { RADIUS, SHADOW }                      from "../../theme/sizes";
 import { useExits, useUpdateExit }             from "../../queries/useHr";
 import { useToast }                            from "../../components/ui/Toast";
+import { AppPageHeader }                       from "../../components/ui/AppPageHeader";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -261,24 +262,7 @@ const ExitManagement = ({ darkMode = false }) => {
       boxSizing: "border-box",
     }}>
 
-      {/* ── Header ── */}
-      <div style={{ marginBottom: SPACING.lg }}>
-        <div style={{ display: "flex", alignItems: "center", gap: GAP.sm, marginBottom: 4 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: RADIUS.lg,
-            background: COLORS.dangerMuted,
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <UserMinus size={18} color={COLORS.danger} />
-          </div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE.xl, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>
-            Exit Management
-          </h1>
-        </div>
-        <p style={{ margin: 0, fontSize: FONT_SIZE.sm, color: surface.subtext, paddingLeft: 44 }}>
-          Manage employee offboarding, clearances, and full &amp; final settlements
-        </p>
-      </div>
+      <AppPageHeader title="Exit Management" sub="Manage employee offboarding, clearances, and full & final settlements" />
 
       {/* ── Stat Cards ── */}
       <div style={{

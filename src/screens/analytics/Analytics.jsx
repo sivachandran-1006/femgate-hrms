@@ -24,6 +24,7 @@ import { useFetchAllLeaves }    from "../../queries/useLeaves";
 import { useCandidates, useExits } from "../../queries/useHr";
 import { topSlices } from "../dashboard/components/DashboardKit";
 import { AppLoader }            from "../../components/ui/AppLoader";
+import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 import { COLORS }                            from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }     from "../../theme/spacing";
@@ -248,11 +249,7 @@ const Analytics = ({ darkMode: dark = false }) => {
   return (
     <div style={{ fontFamily: FONT_FAMILY.base }}>
 
-      {/* ── Page Header ── */}
-      <div style={{ marginBottom: SPACING[5] }}>
-        <h1 style={{ margin:0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: text }}>HR Analytics</h1>
-        <p style={{ margin:"4px 0 0", fontSize: FONT_SIZE.sm, color: sub }}>Comprehensive workforce intelligence — Jun 2026</p>
-      </div>
+      <AppPageHeader title="HR Analytics" sub="Comprehensive workforce intelligence" />
 
       {/* ── KPI Row ── */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap: GAP.md, marginBottom: SPACING[5] }}>

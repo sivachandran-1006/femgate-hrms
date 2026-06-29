@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Stack, Group, Text, Title, Paper, Badge, Button, Tabs,
+  Stack, Group, Text, Paper, Badge, Button, Tabs,
   SimpleGrid, Progress, Table, ActionIcon, Loader, Center, Modal, Select,
 } from "@mantine/core";
 import {
@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/Toast";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import {
   getBillingPlan,
   getBillingInvoices,
@@ -188,19 +189,9 @@ export default function Billing() {
 
   return (
     <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
-      <Group justify="space-between">
-        <div>
-          <Title order={3}>Billing &amp; Subscription</Title>
-          <Text size="sm" c="dimmed">Manage your plan, invoices and payment methods</Text>
-        </div>
-        <Button
-          leftSection={<IconTrendingUp size={16} />}
-          loading={upgradeMutation.isPending}
-          onClick={openUpgrade}
-        >
-          Upgrade Plan
-        </Button>
-      </Group>
+      <AppPageHeader title="Billing & Subscription" sub="Manage your plan, invoices and payment methods"
+        action={<Button leftSection={<IconTrendingUp size={16} />} loading={upgradeMutation.isPending} onClick={openUpgrade}>Upgrade Plan</Button>}
+      />
 
       <Paper
         p="xl"

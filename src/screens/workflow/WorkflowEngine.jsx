@@ -5,6 +5,7 @@ import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as
 import { useWorkflowDashboard, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useApprovalInbox, useApproveRequest, useRejectRequest, useEscalateRequest, useWorkflowAnalytics } from "../../queries/useWorkflow";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const MODULES = ["Leave", "Attendance", "Expense", "Asset", "Recruitment", "Onboarding", "Payroll", "Document"];
 const WORKFLOW_TYPES = ["Leave Workflow", "Attendance Workflow", "Expense Workflow", "Asset Workflow", "Recruitment Workflow", "Onboarding Workflow", "Payroll Workflow", "Document Approval Workflow", "Custom Workflow"];
@@ -327,12 +328,7 @@ export default function WorkflowEngine() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Workflow & Approval Engine</Text>
-          <Text size="xs" c="dimmed">Configure approval workflows and manage approvals</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Workflow & Approval Engine" sub="Configure approval workflows and manage approvals" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

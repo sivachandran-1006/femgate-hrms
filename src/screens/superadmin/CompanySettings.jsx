@@ -18,6 +18,7 @@ import {
   getNotificationSettings, updateNotificationSettings,
 } from "../../api/companyApi";
 import { useToast } from "../../components/ui/Toast";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 // ── Static config only (no fake data) ────────────────────────────────────────
 const INIT_COMPANY = {
@@ -434,13 +435,7 @@ export default function CompanySettings() {
   // ── Root ──────────────────────────────────────────────────────────────────────
   return (
     <Stack gap="lg" p="lg">
-      <Group gap="sm">
-        <ThemeIcon size="xl" radius="md" variant="light"><IconBuilding size={20} /></ThemeIcon>
-        <div>
-          <Title order={3}>Company Settings</Title>
-          <Text size="sm" c="dimmed">Manage company profile, branding, and communication templates</Text>
-        </div>
-      </Group>
+      <AppPageHeader title="Company Settings" sub="Manage company profile, branding, and communication templates" />
 
       <Tabs value={tab} onChange={setTab} keepMounted={false}>
         <Tabs.List mb="lg">

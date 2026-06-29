@@ -5,6 +5,7 @@ import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateO
 import { useToast } from "../../components/ui/Toast";
 import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useDepartments } from "../../queries/useDepartments";
 import { useDesignations } from "../../queries/useDesignations";
@@ -672,12 +673,7 @@ export default function OnboardingManagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Onboarding & Offboarding</Text>
-          <Text size="xs" c="dimmed">Employee lifecycle management</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Onboarding & Offboarding" sub="Employee lifecycle management" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

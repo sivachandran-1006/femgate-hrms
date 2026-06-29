@@ -7,7 +7,7 @@ import {
 import {
   IconBook, IconCertificate, IconUsers, IconChartBar,
   IconPlus, IconPencil, IconTrash, IconDownload, IconSearch,
-  IconSchool, IconClipboardList, IconAward, IconRefresh,
+  IconClipboardList, IconAward, IconRefresh,
   IconCheck, IconX, IconEye, IconPlayerPlay, IconClock,
 } from "@tabler/icons-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -18,6 +18,7 @@ import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertif
   useCreateAssessment, useUpdateAssessment, useDeleteAssessment } from "../../queries/useLms";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { exportLms } from "../../api/lmsApi";
 import { topSlices } from "../dashboard/components/DashboardKit";
 
@@ -747,15 +748,7 @@ export default function LmsManagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Group gap="xs">
-          <IconSchool size={24} color="var(--mantine-color-blue-6)" />
-          <Box>
-            <Text fw={700} size="lg">Learning Management System</Text>
-            <Text size="xs" c="dimmed">Courses · Enrollments · Certifications · Assessments</Text>
-          </Box>
-        </Group>
-      </Group>
+      <AppPageHeader title="Learning Management System" sub="Courses · Enrollments · Certifications · Assessments" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

@@ -22,6 +22,7 @@ import { RADIUS, SHADOW }                 from "../../theme/sizes";
 import { useShifts, useSetShift }         from "../../queries/useHr";
 import { useFetchAllEmployees }           from "../../queries/useEmployees";
 import { useToast }                       from "../../components/ui/Toast";
+import { AppPageHeader }                  from "../../components/ui/AppPageHeader";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -772,22 +773,7 @@ const ShiftManagement = ({ darkMode = false }) => {
         boxSizing: "border-box",
       }}
     >
-      {/* Page header */}
-      <div style={{ marginBottom: SPACING.lg }}>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: FONT_SIZE.xl,
-            fontWeight: FONT_WEIGHT.bold,
-            color: surface.text,
-          }}
-        >
-          Shift Management
-        </h1>
-        <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.sm, color: surface.subtext }}>
-          Manage employee shifts, rosters, and swap requests
-        </p>
-      </div>
+      <AppPageHeader title="Shift Management" sub="Manage employee shifts, rosters, and swap requests" />
 
       {/* Stat Cards */}
       <div

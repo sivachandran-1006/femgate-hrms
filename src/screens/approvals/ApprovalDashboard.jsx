@@ -6,6 +6,7 @@ import {
   IconCheck, IconX, IconAlertCircle,
 } from "@tabler/icons-react";
 import { fetchApprovals, approveLeave, approveExpense, reviewOnboarding } from "../../api/approvalsApi";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
@@ -64,24 +65,25 @@ export default function ApprovalDashboard({ darkMode }) {
 
   return (
     <Box>
-      <Group justify="space-between" mb="xl">
-        <Box>
-          <Text fz="xl" fw={800} c={text}>Approval Dashboard</Text>
-          <Text fz="sm" c={sub} mt={2}>Review and approve pending requests</Text>
-        </Box>
-        <Group gap={10}>
-          {[
-            { label: "Leaves",   count: leaves.length,   color: "#3b82f6" },
-            { label: "Expenses", count: expenses.length, color: "#f59e0b" },
-            { label: "Onboard",  count: onboard.length,  color: "#8b5cf6" },
-          ].map(b => (
-            <Box key={b.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 12, padding: "8px 16px", textAlign: "center" }}>
-              <Text fz="1.4rem" fw={900} c={b.color} lh={1}>{b.count}</Text>
-              <Text fz="xs" c={sub} fw={600}>{b.label}</Text>
-            </Box>
-          ))}
-        </Group>
-      </Group>
+      <AppPageHeader
+        title="Approval Dashboard"
+        sub="Review and approve pending requests"
+        mb="xl"
+        action={
+          <Group gap={10}>
+            {[
+              { label: "Leaves",   count: leaves.length,   color: "#3b82f6" },
+              { label: "Expenses", count: expenses.length, color: "#f59e0b" },
+              { label: "Onboard",  count: onboard.length,  color: "#8b5cf6" },
+            ].map(b => (
+              <Box key={b.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 12, padding: "8px 16px", textAlign: "center" }}>
+                <Text fz="1.4rem" fw={900} c={b.color} lh={1}>{b.count}</Text>
+                <Text fz="xs" c={sub} fw={600}>{b.label}</Text>
+              </Box>
+            ))}
+          </Group>
+        }
+      />
 
       <Box style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 24 }}>
         <Tabs value={activeTab} onChange={setActiveTab}>

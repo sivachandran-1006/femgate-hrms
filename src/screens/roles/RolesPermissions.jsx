@@ -8,6 +8,7 @@ import { MOCK_USERS } from "../../constants/mockUsers";
 import { COLORS } from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
 import { RADIUS, SHADOW } from "../../theme/sizes";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const ROLES_ORDER = ["SUPER_ADMIN", "ADMIN", "HR", "MANAGER", "FINANCE", "IT_ADMIN", "EMPLOYEE"];
 
@@ -467,17 +468,7 @@ export default function RolesPermissions({ darkMode = false }) {
   return (
     <div style={{ fontFamily: FONT_FAMILY.base, color: surface.text, maxWidth: "100%" }}>
 
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-          <div style={{ width: 40, height: 40, borderRadius: RADIUS.xl, background: COLORS.purpleMuted, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Shield size={20} color={COLORS.purple} strokeWidth={1.8} />
-          </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text }}>Roles & Permissions</h1>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.sm, color: surface.subtext }}>Manage system roles, permission matrix, and user assignments</p>
-          </div>
-        </div>
-      </div>
+      <AppPageHeader title="Roles & Permissions" sub="Manage system roles, permission matrix, and user assignments" />
 
       <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${surface.border}`, marginBottom: 24 }}>
         {TABS.map(t => {

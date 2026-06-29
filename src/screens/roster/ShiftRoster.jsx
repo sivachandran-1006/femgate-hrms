@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import {
   useRosterDashboard, useRosterAnalytics,
@@ -338,12 +339,7 @@ export default function ShiftRoster() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Shift & Roster Management</Text>
-          <Text size="xs" c="dimmed">Shifts · Roster · Change Requests · Overtime</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Shift & Roster Management" sub="Manage shifts, rosters, change requests and overtime" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

@@ -11,6 +11,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import {
   useVisitorDashboard,
@@ -304,12 +305,7 @@ export default function VisitorManagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Visitor Management</Text>
-          <Text size="xs" c="dimmed">Register · Approve · Check-in · Badges · Blacklist</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Visitor Management" sub="Register, approve, check-in and manage visitor badges" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

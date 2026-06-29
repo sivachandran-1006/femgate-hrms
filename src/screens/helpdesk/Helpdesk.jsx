@@ -22,6 +22,7 @@ import { useTickets, useRaiseTicket, useUpdateTicketStatus } from "../../queries
 import { AppModal }          from "../../components/ui/AppModal";
 import { AppInput }          from "../../components/ui/AppInput";
 import { AppButton }         from "../../components/ui/AppButton";
+import { AppPageHeader }     from "../../components/ui/AppPageHeader";
 
 // Map API ticket → UI shape ("InProgress" → "In Progress")
 const mapTicket = (t) => ({
@@ -167,15 +168,9 @@ export default function Helpdesk() {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          <Title order={3}>IT Helpdesk</Title>
-          <Text size="sm" c="dimmed">Manage and track IT support tickets</Text>
-        </div>
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setShowRaiseModal(true)}>
-          Raise Ticket
-        </Button>
-      </Group>
+      <AppPageHeader title="IT Helpdesk" sub="Manage and track IT support tickets"
+        action={<Button leftSection={<IconPlus size={16} />} onClick={() => setShowRaiseModal(true)}>Raise Ticket</Button>}
+      />
 
       <SimpleGrid cols={5}>
         {kpis.map((k) => (

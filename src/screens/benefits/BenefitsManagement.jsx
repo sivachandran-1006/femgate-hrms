@@ -10,6 +10,7 @@ import {
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import {
   useBenefitsDashboard,
   usePlans, useCreatePlan, useDeletePlan,
@@ -268,12 +269,7 @@ export default function BenefitsManagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Benefits & Insurance</Text>
-          <Text size="xs" c="dimmed">Plans · Enrollments · Dependents · Claims</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Benefits & Insurance" sub="Plans · Enrollments · Dependents · Claims" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

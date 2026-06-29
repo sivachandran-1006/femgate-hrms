@@ -16,6 +16,7 @@ import {
 } from "../../api/integrationsApi";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const EMPTY_REQUEST = { name: "", category: "Productivity", reason: "" };
 
@@ -123,17 +124,15 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
         </Alert>
       )}
 
-      <Group justify="space-between">
-        <div>
-          <Title order={3}>Integrations</Title>
-          <Text size="sm" c="dimmed">Connect third-party tools to this platform</Text>
-        </div>
-        {!isReadOnly && (
+      <AppPageHeader
+        title="Integrations"
+        sub="Connect third-party tools to this platform"
+        action={!isReadOnly && (
           <Button leftSection={<IconPlus size={16} />} onClick={() => setShowAddModal(true)}>
             Add Integration
           </Button>
         )}
-      </Group>
+      />
 
       <SimpleGrid cols={4}>
         {STATS.map((s) => (

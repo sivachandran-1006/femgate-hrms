@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCompanies, createCompany, updateCompany, deleteCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const PLAN_COLORS  = { Enterprise: "yellow", Pro: "blue", Starter: "violet" };
 const STATUS_COLORS = { Active: "green", Trial: "orange", Suspended: "red" };
@@ -141,15 +142,9 @@ export default function MultiCompany() {
   // ── UI ────────────────────────────────────────────────────────────────────
   return (
     <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
-      <Group justify="space-between">
-        <div>
-          <Title order={3}>Multi-Company Management</Title>
-          <Text size="sm" c="dimmed">Manage all tenant companies on this platform</Text>
-        </div>
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setShowAddModal(true)}>
-          Add Company
-        </Button>
-      </Group>
+      <AppPageHeader title="Multi-Company Management" sub="Manage all tenant companies on this platform"
+        action={<Button leftSection={<IconPlus size={16} />} onClick={() => setShowAddModal(true)}>Add Company</Button>}
+      />
 
       <SimpleGrid cols={4}>
         {STATS.map((s) => (

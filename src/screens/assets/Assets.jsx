@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@mantine/core";
 import {
   IconDeviceLaptop as Laptop,
   IconDeviceDesktop as Monitor,
@@ -20,6 +21,7 @@ import { getStatusBadge }                                                from ".
 import { usePermission }                                                  from "../../hooks/usePermission";
 import { useAssets, useCreateAsset }                                      from "../../queries/useHr";
 import { useToast }                                                       from "../../components/ui/Toast";
+import { AppPageHeader }                                                  from "../../components/ui/AppPageHeader";
 
 // API status → UI label
 const STATUS_LABELS = {
@@ -192,63 +194,13 @@ export default function Assets({ darkMode = false }) {
         fontFamily: FONT_FAMILY.base,
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: SPACING[6],
-          flexWrap: "wrap",
-          gap: GAP.md,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: FONT_SIZE["2xl"],
-              fontWeight: FONT_WEIGHT.bold,
-              color: surface.text,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            Asset Management
-          </h1>
-          <p
-            style={{
-              margin: `${GAP.xs}px 0 0`,
-              fontSize: FONT_SIZE.md,
-              color: surface.subtext,
-              fontFamily: FONT_FAMILY.base,
-            }}
-          >
-            Track and manage company assets
-          </p>
-        </div>
-        {can("assets.add") && (
-          <button
-            onClick={openModal}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: GAP.sm,
-              padding: PADDING.btn,
-              background: COLORS.primary,
-              color: COLORS.white,
-              border: "none",
-              borderRadius: RADIUS.lg,
-              fontSize: FONT_SIZE.md,
-              fontWeight: FONT_WEIGHT.semibold,
-              fontFamily: FONT_FAMILY.base,
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={ICON_SIZE.sm} />
-            Add Asset
-          </button>
+      <AppPageHeader
+        title="Asset Management"
+        sub="Track and manage company assets"
+        action={can("assets.add") && (
+          <Button onClick={openModal} leftSection={<Plus size={16} />}>Add Asset</Button>
         )}
-      </div>
+      />
 
       {/* KPI Cards */}
       <div

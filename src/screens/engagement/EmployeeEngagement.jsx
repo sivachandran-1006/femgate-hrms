@@ -13,6 +13,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { usePermission } from "../../hooks/usePermission";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import {
   useEngagementDashboard, useAwards, useCreateAward, useDeleteAward,
@@ -545,12 +546,7 @@ export default function EmployeeEngagement() {
 
   return (
     <Box>
-      <Group justify="space-between" mb="md">
-        <Box>
-          <Text fw={700} size="lg">Employee Engagement & Rewards</Text>
-          <Text size="xs" c="dimmed">Recognition · Kudos · Rewards · Surveys · Wellness</Text>
-        </Box>
-      </Group>
+      <AppPageHeader title="Employee Engagement & Rewards" sub="Recognition, kudos, rewards, surveys and wellness" />
 
       <Tabs value={tab} onChange={setTab}>
         <Tabs.List mb="md">

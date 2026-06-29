@@ -21,6 +21,7 @@ import { useToast } from "../../components/ui/Toast";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import api from "../../api/axios";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
 import { RADIUS, SHADOW } from "../../theme/sizes";
@@ -395,33 +396,11 @@ const Documents = ({ darkMode: dark = false }) => {
   return (
     <div style={{ minHeight: "100vh", background: pageBg, padding: PADDING.container, fontFamily: "'Inter', sans-serif" }}>
 
-      {/* ── Page Header ── */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: GAP.md, marginBottom: SPACING[6] }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: textMain }}>Documents</h1>
-          <p style={{ margin: "4px 0 0", fontSize: FONT_SIZE.sm, color: textMuted }}>Manage and verify employee documents</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          style={{
-            display:      "flex",
-            alignItems:   "center",
-            gap:          GAP.sm,
-            padding:      "10px 18px",
-            borderRadius: RADIUS.lg,
-            border:       "none",
-            background:   COLORS.primary,
-            color:        COLORS.white,
-            fontSize:     FONT_SIZE.sm,
-            fontWeight:   FONT_WEIGHT.semibold,
-            cursor:       "pointer",
-            boxShadow:    SHADOW.sm,
-          }}
-        >
-          <IconPlus size={17} stroke={2.5} />
-          Upload Document
-        </button>
-      </div>
+      <AppPageHeader
+        title="Documents"
+        sub="Manage and verify employee documents"
+        action={<button onClick={() => setShowModal(true)} style={{ display:"flex",alignItems:"center",gap:GAP.sm,padding:"10px 18px",borderRadius:RADIUS.lg,border:"none",background:COLORS.primary,color:COLORS.white,fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.semibold,cursor:"pointer",boxShadow:SHADOW.sm }}><IconPlus size={17} stroke={2.5} /> Upload Document</button>}
+      />
 
       {/* ── Stat Cards ── */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: GAP.md, marginBottom: SPACING[6] }}>

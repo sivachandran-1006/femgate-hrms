@@ -20,6 +20,7 @@ import {
 } from "recharts";
 
 import { useToast } from "../../components/ui/Toast";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { COLORS }                              from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
 import { SPACING, PADDING, GAP, LAYOUT }       from "../../theme/spacing";
@@ -144,18 +145,7 @@ const LMS = ({ darkMode = false }) => {
   return (
     <div style={{ fontFamily: FONT_FAMILY.base, color: surface.text }}>
 
-      {/* ── Header ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: SPACING[5], flexWrap: "wrap", gap: GAP.md }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text, display: "flex", alignItems: "center", gap: GAP.sm }}>
-            <BookOpen size={26} color={COLORS.primary} /> Learning Management System
-          </h1>
-          <p style={{ margin: `${GAP.xs}px 0 0`, fontSize: FONT_SIZE.base, color: surface.subtext }}>Grow your skills, earn certifications, lead the leaderboard</p>
-        </div>
-        <button style={{ display: "flex", alignItems: "center", gap: GAP.xs, background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: RADIUS.lg, padding: PADDING.btn, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.semibold, cursor: "pointer", fontFamily: FONT_FAMILY.base }}>
-          <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> Add Course
-        </button>
-      </div>
+            <AppPageHeader title="Learning Management System" sub="Grow your skills, earn certifications, lead the leaderboard" />
 
       {/* ── KPI Cards ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: GAP.md, marginBottom: SPACING[5] }}>

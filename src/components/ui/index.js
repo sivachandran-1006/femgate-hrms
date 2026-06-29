@@ -14,3 +14,4 @@ export { AppPageHeader }  from "./AppPageHeader";
 export { AppStatCard }    from "./AppStatCard";
 export { AppSection }     from "./AppSection";
 export { AppEmptyState }  from "./AppEmptyState";
+export { PageSearchBar }  from "./PageSearchBar";

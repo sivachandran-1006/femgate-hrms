@@ -16,6 +16,7 @@ import { COLORS }          from "../../theme/colors";
 import { getStatusBadge }  from "../../utils/helpers";
 import DataTable           from "../../components/ui/DataTable";
 import { AppEmptyState }    from "../../components/ui/AppEmptyState";
+import { AppPageHeader }    from "../../components/ui/AppPageHeader";
 import { useToast }        from "../../components/ui/Toast";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 
@@ -299,17 +300,19 @@ const Payroll = ({ embedded = false } = {}) => {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between">
-        <div>
-          {!embedded && <Title order={3}>Payroll</Title>}
-          {!embedded && <Text size="sm" c="dimmed">Manage employee compensation and payments</Text>}
-        </div>
-        <Group gap="sm">
-          <Button variant={activeTab === "list" ? "filled" : "default"} size="sm" onClick={() => setActiveTab("list")}>List</Button>
-          <Button variant={activeTab === "analytics" ? "filled" : "default"} size="sm" onClick={() => setActiveTab("analytics")}>Analytics</Button>
-          <Button leftSection={<IconPlus size={16} />} onClick={() => setShowModal(true)}>Generate Payroll</Button>
-        </Group>
-      </Group>
+      {!embedded && (
+        <AppPageHeader
+          title="Payroll"
+          sub="Manage employee compensation and payments"
+          action={
+            <Group gap="sm">
+              <Button variant={activeTab === "list" ? "filled" : "default"} size="sm" onClick={() => setActiveTab("list")}>List</Button>
+              <Button variant={activeTab === "analytics" ? "filled" : "default"} size="sm" onClick={() => setActiveTab("analytics")}>Analytics</Button>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => setShowModal(true)}>Generate Payroll</Button>
+            </Group>
+          }
+        />
+      )}
 
       <SimpleGrid cols={4}>
         {STATS.map((s) => (

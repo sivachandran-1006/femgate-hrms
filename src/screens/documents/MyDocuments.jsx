@@ -10,6 +10,7 @@ import { Stack, Group }        from "@mantine/core";
 import { AppModal }  from "../../components/ui/AppModal";
 import { AppInput }  from "../../components/ui/AppInput";
 import { AppButton } from "../../components/ui/AppButton";
+import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { COLORS }               from "../../theme/colors";
 import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
 import { SPACING, GAP, PADDING } from "../../theme/spacing";
@@ -92,16 +93,11 @@ const MyDocuments = ({ darkMode: dark = false }) => {
   return (
     <div style={{ fontFamily:FONT_FAMILY.base }}>
 
-      {/* Header */}
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:SPACING[5], flexWrap:"wrap", gap:GAP.md }}>
-        <div>
-          <h1 style={{ margin:0, fontSize:FONT_SIZE["2xl"], fontWeight:FONT_WEIGHT.bold, color:surface.text }}>My Documents</h1>
-          <p style={{ margin:"4px 0 0", fontSize:FONT_SIZE.sm, color:surface.subtext }}>Upload and manage your personal documents</p>
-        </div>
-        <button onClick={()=>setShowUpload(true)} style={{ display:"flex",alignItems:"center",gap:GAP.xs,padding:"10px 18px",borderRadius:RADIUS.lg,border:"none",background:COLORS.primary,color:COLORS.white,fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.semibold,cursor:"pointer" }}>
-          <IconUpload size={16} stroke={2}/> Upload Document
-        </button>
-      </div>
+      <AppPageHeader
+        title="My Documents"
+        sub="Upload and manage your personal documents"
+        action={<AppButton onClick={() => setShowUpload(true)} leftSection={<IconUpload size={16} />}>Upload Document</AppButton>}
+      />
 
       {/* Stat chips */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:GAP.md, marginBottom:SPACING[5] }}>
