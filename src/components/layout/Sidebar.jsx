@@ -25,6 +25,7 @@ import {
   IconX,
   IconMenu2,
   IconChevronDown,
+  IconSearch,
   IconUser,
   IconSun,
   IconMoon,
@@ -121,10 +122,16 @@ const Sidebar = ({
   const location = useLocation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [closedGroups, setClosedGroups] = useState(new Set());
+  const [menuQuery, setMenuQuery] = useState("");
   const toggleGroup = (title) => setClosedGroups((prev) => {
     const s = new Set(prev); s.has(title) ? s.delete(title) : s.add(title); return s;
   });
-  const menuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
+  const allMenuItems = ROLE_SIDEBAR[userRole] || ROLE_SIDEBAR["EMPLOYEE"];
+  // Live menu-search filter (matches label or id)
+  const q = menuQuery.trim().toLowerCase();
+  const matches = (m) => !q || m.label.toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
+  const menuItems = allMenuItems.filter(matches);
+  const searching = q.length > 0;
   // Map of allowed item id → item, used to render doc-ordered grouped sections
   const itemById = Object.fromEntries(menuItems.map((m) => [m.id, m]));
   const topItems = SIDEBAR_TOP.map((id) => itemById[id]).filter(Boolean);
@@ -215,6 +222,27 @@ const Sidebar = ({
         )}
       </div>
 
+      {/* ── Menu search ── */}
+      {!collapsed && (
+        <div style={{ padding: "10px 10px 4px", flexShrink: 0 }}>
+          <div style={{ position: "relative" }}>
+            <IconSearch size={14} stroke={2} color={surface.subtext} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              value={menuQuery}
+              onChange={(e) => setMenuQuery(e.target.value)}
+              placeholder="Search menu…"
+              style={{
+                width: "100%", boxSizing: "border-box",
+                padding: "8px 10px 8px 30px", borderRadius: 10,
+                border: `1px solid ${surface.border}`,
+                background: "rgba(255,255,255,0.06)", color: surface.text,
+                fontSize: 13, outline: "none",
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* ── Nav Items (grouped into enterprise sections) ── */}
       <ScrollArea style={{ flex: 1 }} type="never">
         <div style={{ padding: "6px 6px 4px" }}>
@@ -270,7 +298,7 @@ const Sidebar = ({
                 );
               }
               const hasActive = items.some((it) => location.pathname === `/${it.id}`);
-              const open = hasActive || !closedGroups.has(title);
+              const open = searching || hasActive || !closedGroups.has(title);
               return (
                 <div>
                   <button
@@ -302,6 +330,13 @@ const Sidebar = ({
 
                 {/* Catch-all for any allowed item not in a section */}
                 {otherItems.length > 0 && <Group title="OTHER" items={otherItems} />}
+
+                {/* No-results state while searching */}
+                {searching && menuItems.length === 0 && (
+                  <div style={{ padding: "20px 12px", textAlign: "center", color: surface.subtext, fontSize: 13 }}>
+                    No menu matches “{menuQuery}”
+                  </div>
+                )}
               </>
             );
           })()}

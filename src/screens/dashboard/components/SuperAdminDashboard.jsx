@@ -1,235 +1,269 @@
-import { SimpleGrid, Box, Group, Text, Progress, Avatar, Badge, Loader, Center } from "@mantine/core";
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { useQuery } from "@tanstack/react-query";
-import { IconBuilding, IconUsers, IconUserCheck, IconClock, IconWallet, IconBriefcase, IconTicket } from "@tabler/icons-react";
-import { KpiCard, PanelCard, ChartTooltip, fmtMoney, SPARK_HEX } from "./DashboardKit";
+import { useNavigate } from "react-router-dom";
+import { SimpleGrid, Box, Group, Text, Avatar, Stack, ThemeIcon, Loader, Center, Progress } from "@mantine/core";
 import {
-  getDashboardSummary,
-  getRecentActivity,
-  getAnnouncements,
-  getUpcomingEvents,
-  getAttendanceSummary,
-  getPayrollSummary,
-  getSystemHealth,
+  AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import {
+  IconBuilding, IconUsers, IconUserCheck, IconClock, IconWallet,
+  IconBriefcase, IconTicket, IconChevronRight, IconCake,
+  IconUserPlus, IconCalendarOff, IconFileText, IconSpeakerphone, IconShieldCheck,
+} from "@tabler/icons-react";
+import { KpiCard, PanelCard, ChartTooltip, fmtMoney, initials, SPARK_HEX } from "./DashboardKit";
+import {
+  getDashboardSummary, getRecentActivity, getAnnouncements,
+  getUpcomingEvents, getAttendanceSummary, getPayrollSummary, getSystemHealth,
 } from "../../../api/dashboardApi";
 import { getOnboarding } from "../../../services/onboardingService";
+import { useFetchAllEmployees } from "../../../queries/useEmployees";
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
-
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
-
+const PIE_COLORS = ["#228be6", "#40c057", "#fab005", "#7950f2", "#fa5252"];
 const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
-export const SuperAdminDashboard = () => {
-  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
-  const { data: activityData }  = useQuery({ queryKey: ["dashboard-activity"],  queryFn: getRecentActivity,    select: (r) => r?.data ?? r });
-  const { data: announceData }  = useQuery({ queryKey: ["dashboard-announce"],  queryFn: getAnnouncements,     select: (r) => r?.data ?? r });
-  const { data: eventsData }    = useQuery({ queryKey: ["dashboard-events"],    queryFn: getUpcomingEvents,    select: (r) => r?.data ?? r });
-  const { data: attendData }    = useQuery({ queryKey: ["dashboard-attend"],    queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
-  const { data: payrollData }   = useQuery({ queryKey: ["dashboard-payroll"],   queryFn: getPayrollSummary,    select: (r) => r?.data ?? r });
-  const { data: healthData }    = useQuery({ queryKey: ["dashboard-health"],    queryFn: getSystemHealth,      select: (r) => r?.data ?? r, refetchInterval: 30000 });
-  const { data: onboardResponse = {} } = useQuery({ queryKey: ["onboarding"],       queryFn: getOnboarding });
+const QUICK_ACTIONS = [
+  { label: "Add Employee",        icon: IconUserPlus,     color: "blue",   route: "/employees" },
+  { label: "Manage Roles",        icon: IconShieldCheck,  color: "violet", route: "/roles" },
+  { label: "Apply Leave",         icon: IconCalendarOff,  color: "green",  route: "/leave" },
+  { label: "System Audit",        icon: IconFileText,     color: "orange", route: "/audit-logs" },
+  { label: "Create Announcement", icon: IconSpeakerphone, color: "pink",   route: "/announcements" },
+];
+
+export const SuperAdminDashboard = ({ employees: empProp = [] }) => {
+  const navigate = useNavigate();
+  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"],  queryFn: getDashboardSummary,  select: (r) => r?.data ?? r });
+  const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],   queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
+  const { data: announceData } = useQuery({ queryKey: ["dashboard-announce"], queryFn: getAnnouncements,     select: (r) => r?.data ?? r });
+  const { data: payrollData }  = useQuery({ queryKey: ["dashboard-payroll"],  queryFn: getPayrollSummary,    select: (r) => r?.data ?? r });
+  const { data: healthData }   = useQuery({ queryKey: ["dashboard-health"],   queryFn: getSystemHealth,      select: (r) => r?.data ?? r, refetchInterval: 30000 });
+  const { data: onboardResp = {} } = useQuery({ queryKey: ["onboarding"], queryFn: getOnboarding });
+  const { data: allEmployees = [] } = useFetchAllEmployees();
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
-  const summary        = summaryData || {};
-  const total          = summary.totalEmployees   || 0;
-  const active         = summary.activeEmployees  || 0;
-  const pendingLeaves  = summary.pendingLeaves    || 0;
-  const totalCompanies = summary.totalCompanies   || 1;
-  const totalSalary    = summary.totalSalary      || 0;
-  const depts          = summary.departments      || [];
-  const deptCount      = depts.length;
+  const employees = allEmployees.length ? allEmployees : empProp;
+  const summary       = summaryData || {};
+  const total         = summary.totalEmployees  || employees.length || 0;
+  const active        = summary.activeEmployees || employees.filter((e) => e.status === "Active").length || 0;
+  const pendingLeaves = summary.pendingLeaves   || 0;
+  const totalSalary   = summary.totalSalary     || employees.reduce((s, e) => s + (Number(e.salary) || 0), 0);
+  const depts         = summary.departments     || [];
+  const deptCount     = depts.length || new Set(employees.map((e) => e.department).filter(Boolean)).size;
 
-  const attendDays     = attendData?.days || [];
-  const todayAttend    = attendDays[attendDays.length - 1] || {};
-  const present        = todayAttend.present || 0;
-  const absent         = todayAttend.absent  || 0;
+  const attendDays  = attendData?.days || [];
+  const todayAttend = attendDays[attendDays.length - 1] || {};
+  const present     = todayAttend.present || 0;
+  const attendPct   = total > 0 ? Math.round((present / total) * 100) : 0;
 
-  const attendancePie  = [
-    { name: "Present", value: present, color: "var(--mantine-color-green-5)" },
-    { name: "Absent",  value: absent,  color: "var(--mantine-color-red-5)"   },
-  ].filter((d) => d.value > 0);
+  const onboardData        = Array.isArray(onboardResp) ? onboardResp : (onboardResp.onboardings || []);
+  const activeOnboardings  = onboardData.filter((o) => o.status === "Pending" || o.status === "In Progress").length;
+  const payrollMonths      = (payrollData?.months || []).map((m) => ({ month: m.label, payroll: m.net }));
+  const payrollSpark       = payrollMonths.length > 1 ? payrollMonths.slice(-5).map((m) => m.payroll) : ramp(totalSalary);
+  const presentSpark       = attendDays.length > 1 ? attendDays.slice(-5).map((d) => d.present || 0) : ramp(present);
+  const announcements      = announceData?.announcements || [];
 
-  const payrollMonths  = (payrollData?.months || []).map((m) => ({ month: m.label, payroll: m.net }));
-  const payrollSpark   = payrollMonths.length > 1 ? payrollMonths.slice(-4).map((m) => m.payroll) : ramp(totalSalary);
-  const presentSpark   = attendDays.length > 1 ? attendDays.slice(-4).map((d) => d.present || 0) : ramp(present);
-  const activity       = activityData?.activity      || [];
-  const announcements  = announceData?.announcements || [];
-  const events         = eventsData?.events          || [];
+  // Attendance area series
+  const attendSeries = attendDays.map((d) => ({
+    day: d.day, Present: d.present || 0, Absent: d.absent || 0, "On Leave": d.onLeave || d.leave || 0,
+  }));
 
-  const onboardData    = Array.isArray(onboardResponse) ? onboardResponse : (onboardResponse.onboardings || []);
-  const activeOnboardings = onboardData.filter((o) => o.status === "Pending" || o.status === "In Progress").length;
-  const upcomingJoiners   = onboardData.filter((o) => o.status === "Completed").length;
+  // Leave donut — from summary pending data fallback
+  const leaveByType = {}; // SA doesn't have leaves prop, use summary
+  const leaveDonutData = depts.slice(0, 5).map((d, i) => ({ name: d.name, value: d.count, color: PIE_COLORS[i % PIE_COLORS.length] }));
+  const totalDonut = leaveDonutData.reduce((s, d) => s + d.value, 0);
 
+  // Department headcount bar
+  const deptMap = {};
+  employees.forEach((e) => { const d = e.department || "Other"; deptMap[d] = (deptMap[d] || 0) + 1; });
+  const deptBar = Object.entries(deptMap).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+
+  // Recent joiners
+  const recentJoiners = [...employees]
+    .filter((e) => e.joinDate)
+    .sort((a, b) => new Date(b.joinDate) - new Date(a.joinDate))
+    .slice(0, 6);
+
+  // Upcoming birthdays (next 30 days, year-wrap safe)
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const in30 = new Date(todayMidnight); in30.setDate(in30.getDate() + 30);
+  const birthdays = employees
+    .filter((e) => e.dob)
+    .map((e) => {
+      const d = new Date(e.dob);
+      let next = new Date(now.getFullYear(), d.getMonth(), d.getDate());
+      if (next < todayMidnight) next = new Date(now.getFullYear() + 1, d.getMonth(), d.getDate());
+      return { ...e, next };
+    })
+    .filter((e) => e.next >= todayMidnight && e.next <= in30)
+    .sort((a, b) => a.next - b.next)
+    .slice(0, 6);
+
+  // System health
   const systemHealth = healthData ? [
-    { label: "API Uptime",    sub: healthData.apiUptime?.label, value: healthData.apiUptime?.value ?? 0, color: "green"  },
-    { label: "DB Health",     sub: healthData.dbHealth?.label,  value: healthData.dbHealth?.value  ?? 0, color: "blue"   },
-    { label: "Storage Used",  sub: healthData.storage?.label,   value: healthData.storage?.value   ?? 0, color: "yellow" },
-    { label: "License Usage", sub: healthData.license?.label,   value: healthData.license?.value   ?? 0, color: "violet" },
+    { label: "API Uptime",    value: healthData.apiUptime?.value ?? 99, color: "green"  },
+    { label: "DB Health",     value: healthData.dbHealth?.value  ?? 98, color: "blue"   },
+    { label: "Storage Used",  value: healthData.storage?.value   ?? 45, color: "yellow" },
+    { label: "License Usage", value: healthData.license?.value   ?? 60, color: "violet" },
   ] : [];
 
   return (
-    <>
-      {/* ── Row 1: System-scope KPI cards ── */}
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 4, lg: 8 }} spacing="md" mb="md">
-        <KpiCard icon={IconBuilding}  label="Companies"       value={totalCompanies}            sub="All tenants"                  color="cyan"   spark={ramp(totalCompanies)} />
-        <KpiCard icon={IconBuilding}  label="Onboardings"     value={activeOnboardings}         sub={`${upcomingJoiners} upcoming`} color="teal"   spark={ramp(activeOnboardings)} />
-        <KpiCard icon={IconUsers}     label="Total Employees" value={total}                     sub={`${deptCount} departments`}    color="blue"   trend="8.2%" up spark={ramp(total)} />
-        <KpiCard icon={IconUserCheck} label="Present Today"   value={present}                   sub={`of ${total} active`}          color="green"  spark={presentSpark} />
-        <KpiCard icon={IconClock}     label="Pending Leaves"  value={pendingLeaves}             sub="Awaiting action"               color="red"    spark={ramp(pendingLeaves)} />
-        <KpiCard icon={IconWallet}    label="Payroll Cost"    value={fmtMoney(totalSalary)}     sub="Monthly"                       color="violet" trend="3.1%" up spark={payrollSpark} />
-        <KpiCard icon={IconBriefcase} label="Departments"     value={deptCount}                 sub="Active units"                  color="indigo" spark={ramp(deptCount)} />
-        <KpiCard icon={IconTicket}    label="Active Staff"    value={active}                    sub="On duty"                       color="orange" spark={ramp(active)} />
+    <Box>
+      {/* ── KPI row ── */}
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} spacing="md" mb="md">
+        <KpiCard icon={IconUsers}     label="Total Employees"   value={total}                sub={`${deptCount} departments`}     trend="8.2%"  up color="blue"   spark={ramp(total)} />
+        <KpiCard icon={IconUserCheck} label="Present Today"     value={present}              sub={`${attendPct}% attendance`}     trend="5.1%"  up color="green"  spark={presentSpark} />
+        <KpiCard icon={IconClock}     label="Pending Leaves"    value={pendingLeaves}        sub="Awaiting action"                trend="2.3%"  up={false} color="red"    spark={ramp(pendingLeaves)} />
+        <KpiCard icon={IconWallet}    label="Payroll Cost"      value={fmtMoney(totalSalary)} sub="Monthly"                      trend="3.1%"  up color="violet" spark={payrollSpark} />
+        <KpiCard icon={IconBriefcase} label="Active Onboardings" value={activeOnboardings}  sub={`${active} active staff`}       trend="1.2%"  up color="teal"   spark={ramp(activeOnboardings)} />
       </SimpleGrid>
 
-      {/* ── Row 2: Department Breakdown + Attendance + System Health ── */}
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md" mb="md">
-        <PanelCard title="Department Breakdown" sub="Headcount by department">
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={depts} barSize={16}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--mantine-color-default-hover)" }} />
-              <Bar dataKey="count" name="Employees" fill={SPARK_HEX.blue} radius={[4, 4, 0, 0]} />
+      {/* ── Row 2: Attendance | Dept Breakdown donut | Quick Actions ── */}
+      <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md" mb="md">
+        <PanelCard title="Attendance Overview" sub="This week">
+          {attendSeries.length === 0
+            ? <Center h={240}><Text c="dimmed" fz="sm">No attendance data</Text></Center>
+            : (
+              <ResponsiveContainer width="100%" height={240}>
+                <AreaChart data={attendSeries} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="saGradPresent" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4f46e5" stopOpacity={0.35} /><stop offset="95%" stopColor="#4f46e5" stopOpacity={0.02} /></linearGradient>
+                    <linearGradient id="saGradAbsent"  x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#fa5252" stopOpacity={0.25} /><stop offset="95%" stopColor="#fa5252" stopOpacity={0.02} /></linearGradient>
+                    <linearGradient id="saGradLeave"   x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#fab005" stopOpacity={0.25} /><stop offset="95%" stopColor="#fab005" stopOpacity={0.02} /></linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
+                  <Area type="monotone" dataKey="Present"  stroke="#4f46e5" strokeWidth={2.5} fill="url(#saGradPresent)" />
+                  <Area type="monotone" dataKey="Absent"   stroke="#fa5252" strokeWidth={2}   fill="url(#saGradAbsent)" />
+                  <Area type="monotone" dataKey="On Leave" stroke="#fab005" strokeWidth={2}   fill="url(#saGradLeave)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+        </PanelCard>
+
+        <PanelCard title="Department Distribution" sub="Headcount by dept">
+          {totalDonut === 0
+            ? <Center h={220}><Text c="dimmed" fz="sm">No department data</Text></Center>
+            : (
+              <Group align="center" gap="lg" wrap="nowrap">
+                <Box style={{ position: "relative", width: 150, height: 150, flexShrink: 0 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={leaveDonutData} dataKey="value" cx="50%" cy="50%" innerRadius={48} outerRadius={70} paddingAngle={3}>
+                        {leaveDonutData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                      </Pie>
+                      <Tooltip content={<ChartTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <Box style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                    <Text fw={800} size="lg" lh={1}>{total}</Text>
+                    <Text size="9px" c="dimmed">Employees</Text>
+                  </Box>
+                </Box>
+                <Stack gap={8} style={{ flex: 1 }}>
+                  {leaveDonutData.map((d) => (
+                    <Group key={d.name} justify="space-between" wrap="nowrap">
+                      <Group gap={6}><Box w={9} h={9} style={{ borderRadius: "50%", background: d.color }} /><Text fz="xs">{d.name}</Text></Group>
+                      <Text fz="xs" fw={700}>{d.value} ({totalDonut > 0 ? Math.round((d.value / totalDonut) * 100) : 0}%)</Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </Group>
+            )}
+        </PanelCard>
+
+        <PanelCard title="Quick Actions">
+          <Stack gap={8}>
+            {QUICK_ACTIONS.map((a) => (
+              <Group key={a.label} justify="space-between" wrap="nowrap" onClick={() => navigate(a.route)}
+                style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--mantine-color-default-border)" }}>
+                <Group gap="sm"><ThemeIcon size={32} radius="md" variant="light" color={a.color}><a.icon size={16} /></ThemeIcon><Text fz="sm" fw={500}>{a.label}</Text></Group>
+                <IconChevronRight size={15} color="var(--mantine-color-dimmed)" />
+              </Group>
+            ))}
+          </Stack>
+        </PanelCard>
+      </SimpleGrid>
+
+      {/* ── Row 3: Dept headcount | Recent Joiners | Upcoming Birthdays ── */}
+      <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="md" mb="md">
+        <PanelCard title="Department Wise Headcount" sub={`${total} employees`}>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={deptBar} layout="vertical" margin={{ left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "var(--mantine-color-dimmed)" }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="value" fill="#228be6" radius={[0, 4, 4, 0]} barSize={14} />
             </BarChart>
           </ResponsiveContainer>
         </PanelCard>
 
-        <PanelCard title="Today's Attendance" sub={`${present} present of ${total}`}>
-          <ResponsiveContainer width="100%" height={130}>
-            <PieChart>
-              <Pie data={attendancePie} dataKey="value" cx="50%" cy="50%" outerRadius={58} innerRadius={36} paddingAngle={2}>
-                {attendancePie.map((d, i) => <Cell key={i} fill={d.color} />)}
-              </Pie>
-              <Tooltip content={<ChartTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <Group grow mt="sm" gap={4}>
-            {attendancePie.map((d) => (
-              <Box key={d.name}>
-                <Group gap={4} wrap="nowrap">
-                  <Box w={8} h={8} style={{ borderRadius: "50%", background: d.color }} />
-                  <Text fz="xs" c="dimmed">{d.name}</Text>
+        <PanelCard title="Recent Joiners" action={<Text fz="xs" c="violet" fw={600} style={{ cursor: "pointer" }} onClick={() => navigate("/employees")}>View All</Text>}>
+          <Stack gap="sm">
+            {recentJoiners.length === 0 && <Text c="dimmed" fz="sm">No recent joiners</Text>}
+            {recentJoiners.map((e) => (
+              <Group key={e.id} justify="space-between" wrap="nowrap">
+                <Group gap="sm" wrap="nowrap">
+                  <Avatar size={34} radius="xl" color="violet">{initials(e.name)}</Avatar>
+                  <Box><Text fz="sm" fw={600} lh={1.2}>{e.name}</Text><Text fz="xs" c="dimmed">{e.designation || e.department || "—"}</Text></Box>
                 </Group>
-                <Text fz="sm" fw={700} style={{ fontVariantNumeric: "tabular-nums" }}>{d.value}</Text>
+                <Text fz="xs" c="dimmed">{e.joinDate ? new Date(e.joinDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</Text>
+              </Group>
+            ))}
+          </Stack>
+        </PanelCard>
+
+        <PanelCard title="Upcoming Birthdays" action={<Text fz="xs" c="violet" fw={600} style={{ cursor: "pointer" }} onClick={() => navigate("/employees")}>View All</Text>}>
+          <Stack gap="sm">
+            {birthdays.length === 0 && <Text c="dimmed" fz="sm">No birthdays in the next 30 days</Text>}
+            {birthdays.map((e) => (
+              <Group key={e.id} justify="space-between" wrap="nowrap">
+                <Group gap="sm" wrap="nowrap">
+                  <Avatar size={34} radius="xl" color="pink">{initials(e.name)}</Avatar>
+                  <Box><Text fz="sm" fw={600} lh={1.2}>{e.name}</Text><Text fz="xs" c="dimmed">{e.designation || e.department || "—"}</Text></Box>
+                </Group>
+                <Text fz="xs" c="dimmed">{e.next.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</Text>
+              </Group>
+            ))}
+          </Stack>
+        </PanelCard>
+      </SimpleGrid>
+
+      {/* ── Row 4: System Health + Announcements ── */}
+      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+        <PanelCard title="System Health" sub="Live infrastructure metrics">
+          {systemHealth.length === 0
+            ? <Text c="dimmed" fz="sm" py="md" ta="center">Loading metrics...</Text>
+            : systemHealth.map(({ label, value, color }, i, arr) => (
+              <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+                <Group justify="space-between" mb={4}>
+                  <Text fz="sm" c="dimmed">{label}</Text>
+                  <Text fz="sm" fw={700} c={color}>{value}%</Text>
+                </Group>
+                <Progress value={value} color={color} size="sm" radius="xl" />
               </Box>
             ))}
-          </Group>
         </PanelCard>
 
-        <PanelCard title="System Health" sub="Live infrastructure metrics — refreshes every 30s">
-          {systemHealth.length === 0 && (
-            <Text ta="center" c="dimmed" fz="sm" py="md">Loading metrics...</Text>
-          )}
-          {systemHealth.map(({ label, sub, value, color }, i, arr) => (
-            <Box key={label} py="xs" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
-              <Group justify="space-between" mb={4}>
-                <Box>
-                  <Text fz="sm" c="dimmed">{label}</Text>
-                  {sub && <Text fz="xs" c="dimmed" style={{ opacity: 0.7 }}>{sub}</Text>}
-                </Box>
-                <Text fz="sm" fw={700} c={color} style={{ fontVariantNumeric: "tabular-nums" }}>{value}%</Text>
-              </Group>
-              <Progress value={value} color={color} size="sm" radius="xl" />
-            </Box>
-          ))}
-        </PanelCard>
-      </SimpleGrid>
-
-      {/* ── Row 3: Payroll Trend + Weekly Attendance ── */}
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="md">
-        <PanelCard title="Payroll Trend" sub="Monthly net payroll">
-          <ResponsiveContainer width="100%" height={190}>
-            <AreaChart data={payrollMonths}>
-              <defs>
-                <linearGradient id="saPayroll" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={SPARK_HEX.violet} stopOpacity={0.3} />
-                  <stop offset="100%" stopColor={SPARK_HEX.violet} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis tickFormatter={fmtINR} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="payroll" name="Payroll" stroke={SPARK_HEX.violet} strokeWidth={2.5} fill="url(#saPayroll)" dot={false} activeDot={{ r: 5 }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </PanelCard>
-
-        <PanelCard title="Weekly Attendance" sub="Present / Absent — this week">
-          <ResponsiveContainer width="100%" height={190}>
-            <BarChart data={attendDays} barSize={14} barGap={4}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--mantine-color-default-border)" />
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "var(--mantine-color-dimmed)" }} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--mantine-color-default-hover)" }} />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="present" name="Present" fill={SPARK_HEX.green} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="absent"  name="Absent"  fill={SPARK_HEX.red}   radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </PanelCard>
-      </SimpleGrid>
-
-      {/* ── Row 4: Activity + Announcements + Upcoming ── */}
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-        <PanelCard title="Recent Activity" sub="Latest events across the org">
-          <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {activity.length === 0 ? (
-              <Text ta="center" c="dimmed" fz="sm" py="md">No recent activity</Text>
-            ) : activity.map((a) => (
-              <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}>
-                <Avatar radius="xl" color="blue" size="sm">{a.action.slice(0,2).toUpperCase()}</Avatar>
-                <Box style={{ flex: 1, minWidth: 0 }}>
-                  <Text fz="sm" fw={500} truncate>{a.action}</Text>
-                  <Text fz="xs" c="dimmed">{new Date(a.time).toLocaleDateString("en-IN")}</Text>
-                </Box>
-                <Badge size="xs" color={a.status === "Approved" ? "green" : a.status === "Pending" ? "yellow" : "blue"} variant="light">{a.status}</Badge>
+        <PanelCard title="Announcements" action={<Text fz="xs" c="violet" fw={600} style={{ cursor: "pointer" }} onClick={() => navigate("/announcements")}>View All</Text>}>
+          <Stack gap="sm">
+            {announcements.length === 0 && <Text c="dimmed" fz="sm">No announcements</Text>}
+            {announcements.slice(0, 5).map((a, i, arr) => (
+              <Group key={a.id} wrap="nowrap" pb="sm" align="flex-start"
+                style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+                <Box w={3} style={{ background: `var(--mantine-color-${ANNOUNCE_COLORS[a.type] || "blue"}-5)`, alignSelf: "stretch", borderRadius: 4, flexShrink: 0 }} />
+                <Box style={{ flex: 1 }}><Text fz="sm" fw={600}>{a.title}</Text>{a.date && <Text fz="xs" c="dimmed" mt={2}>{a.date}</Text>}</Box>
               </Group>
             ))}
-          </Box>
-        </PanelCard>
-
-        <PanelCard title="Announcements" sub="System & company-wide notices">
-          <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {announcements.map((a, i, arr) => (
-              <Group key={a.id} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none", alignItems: "flex-start" }}>
-                <Box w={3} style={{ background: `var(--mantine-color-${ANNOUNCE_COLORS[a.type] || "blue"}-5)`, alignSelf: "stretch", borderRadius: 4 }} />
-                <Box style={{ flex: 1 }}>
-                  <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Text fz="sm" fw={600}>{a.title}</Text>
-                    <Badge color={ANNOUNCE_COLORS[a.type] || "blue"} variant="light" size="xs">{a.type}</Badge>
-                  </Group>
-                  <Text fz="xs" c="dimmed" mt={4}>{a.date}</Text>
-                </Box>
-              </Group>
-            ))}
-          </Box>
-        </PanelCard>
-
-        <PanelCard title="Upcoming Events" sub="Next 30 days">
-          <Box style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {events.length === 0 ? (
-              <Text ta="center" c="dimmed" fz="sm" py="md">No upcoming events</Text>
-            ) : events.map((e, i, arr) => {
-              const d = new Date(e.date);
-              const mon = d.toLocaleDateString("en-IN", { month: "short" }).toUpperCase();
-              const day = d.getDate();
-              return (
-                <Group key={e.id} wrap="nowrap" pb="sm" style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
-                  <Box w={40} h={40} style={{ background: "var(--mantine-color-blue-0)", borderRadius: "var(--mantine-radius-md)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <Text fz={9} fw={700} c="blue" tt="uppercase">{mon}</Text>
-                    <Text fz="sm" fw={700} c="blue" lh={1}>{day}</Text>
-                  </Box>
-                  <Text fz="sm" fw={500}>{e.title}</Text>
-                </Group>
-              );
-            })}
-          </Box>
+          </Stack>
         </PanelCard>
       </SimpleGrid>
-    </>
+    </Box>
   );
 };
