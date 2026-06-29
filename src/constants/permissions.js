@@ -74,7 +74,7 @@ export const ROLE_SIDEBAR = {
     { id: "holiday-calendar",  label: "Holiday Calendar",  icon: "IconCalendarEvent"     },
     { id: "expense",           label: "Expense Management",icon: "IconReceipt"           },
     { id: "announcements",     label: "Announcements",     icon: "IconSpeakerphone"      },
-    { id: "billing",           label: "Billing",           icon: "IconCreditCard"        },
+    { id: "billing",           label: "Subscription & Billing", icon: "IconCreditCard"   },
     { id: "companies",         label: "Multi-Company",     icon: "IconBuildingFactory"   },
     { id: "branding",      label: "White Label",   icon: "IconPalette"         },
     { id: "company-settings",  label: "Company Settings",  icon: "IconBuildingCog"       },

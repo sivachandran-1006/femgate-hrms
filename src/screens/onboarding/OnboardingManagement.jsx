@@ -237,7 +237,8 @@ function NewJoinersTab() {
 function ChecklistsTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
-  const { data: onboardings = [], isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
   const { data: checklists = [], isLoading } = useChecklists(firstId);
 
@@ -283,7 +284,8 @@ function ChecklistsTab() {
 function TasksTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
-  const { data: onboardings = [], isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
   const { data: tasks = [], isLoading } = useTasks(firstId);
 

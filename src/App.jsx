@@ -68,7 +68,8 @@ import UserManagement  from "./screens/superadmin/UserManagement";
 import AuditLogs       from "./screens/superadmin/AuditLogs";
 import SecurityCenter  from "./screens/superadmin/SecurityCenter";
 import Integrations    from "./screens/superadmin/Integrations";
-import Billing         from "./screens/superadmin/Billing";
+import Billing              from "./screens/superadmin/Billing";
+import BillingManagement   from "./screens/billing/BillingManagement";
 import MultiCompany         from "./screens/superadmin/MultiCompany";
 import CompanySettings      from "./screens/superadmin/CompanySettings";
 import NotificationCenter   from "./screens/superadmin/NotificationCenter";
@@ -490,7 +491,7 @@ export default function App() {
           } />
           <Route path="/billing" element={
             <RoleGuard routeId="billing" userRole={userRole}>
-              <ScreenWrapper darkMode={dark}><Billing darkMode={dark} /></ScreenWrapper>
+              <ScreenWrapper darkMode={dark}><BillingManagement /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/companies" element={
