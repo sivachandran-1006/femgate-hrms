@@ -61,6 +61,14 @@ import ApprovalDashboard  from "./screens/approvals/ApprovalDashboard";
 import MyTeam             from "./screens/myteam/MyTeam";
 import SelfOnboarding     from "./screens/onboarding-self/SelfOnboarding";
 
+// M9 Platform screens
+import FeatureFlags       from "./screens/platform/FeatureFlags";
+import ReleaseManagement  from "./screens/platform/ReleaseManagement";
+import Marketplace        from "./screens/platform/Marketplace";
+import PlatformMonitoring from "./screens/platform/PlatformMonitoring";
+import BackupRecovery     from "./screens/platform/BackupRecovery";
+import SubscriptionEngine from "./screens/platform/SubscriptionEngine";
+
 // Super Admin screens
 import RoleManagement from "./screens/roles/RoleManagement";
 import RoleProfile     from "./screens/roles/RoleProfile";
@@ -492,6 +500,36 @@ export default function App() {
           <Route path="/billing" element={
             <RoleGuard routeId="billing" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><BillingManagement /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/marketplace" element={
+            <RoleGuard routeId="marketplace" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><Marketplace /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/monitoring" element={
+            <RoleGuard routeId="monitoring" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><PlatformMonitoring /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/backup" element={
+            <RoleGuard routeId="backup" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><BackupRecovery /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/releases" element={
+            <RoleGuard routeId="releases" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><ReleaseManagement /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/feature-flags" element={
+            <RoleGuard routeId="feature-flags" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><FeatureFlags /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/subscriptions" element={
+            <RoleGuard routeId="subscriptions" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><SubscriptionEngine /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/companies" element={

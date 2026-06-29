@@ -1,6 +1,6 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","marketplace","monitoring","backup","releases","feature-flags","subscriptions"],
   ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","branding"],
   HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation"],
   MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement","compliance","visitors","shift-roster","benefits"],
@@ -23,7 +23,7 @@ export const SIDEBAR_SECTIONS = [
   { title: "COMPLIANCE",   items: ["compliance", "workflows", "audit-logs", "security"] },
   { title: "ANALYTICS",    items: ["analytics", "reports", "communications", "announcements", "notifications"] },
   { title: "ADMINISTRATION", items: ["user-management", "roles-permissions", "settings", "integrations", "company-settings"] },
-  { title: "PLATFORM",     items: ["companies", "billing", "branding"] },
+  { title: "PLATFORM",     items: ["companies", "billing", "branding", "subscriptions", "marketplace", "monitoring", "backup", "releases", "feature-flags"] },
   { title: "ME",           items: ["my-profile"] },
 ];
 
@@ -74,11 +74,17 @@ export const ROLE_SIDEBAR = {
     { id: "holiday-calendar",  label: "Holiday Calendar",  icon: "IconCalendarEvent"     },
     { id: "expense",           label: "Expense Management",icon: "IconReceipt"           },
     { id: "announcements",     label: "Announcements",     icon: "IconSpeakerphone"      },
-    { id: "billing",           label: "Subscription & Billing", icon: "IconCreditCard"   },
-    { id: "companies",         label: "Multi-Company",     icon: "IconBuildingFactory"   },
-    { id: "branding",      label: "White Label",   icon: "IconPalette"         },
-    { id: "company-settings",  label: "Company Settings",  icon: "IconBuildingCog"       },
-    { id: "settings",          label: "Settings",          icon: "IconSettings"          },
+    { id: "billing",           label: "Subscription & Billing", icon: "IconCreditCard"        },
+    { id: "companies",         label: "Multi-Company",          icon: "IconBuildingFactory"   },
+    { id: "branding",          label: "White Label",            icon: "IconPalette"           },
+    { id: "subscriptions",     label: "Subscription Engine",    icon: "IconCloudCheck"        },
+    { id: "marketplace",       label: "Marketplace",            icon: "IconBuildingStore"     },
+    { id: "monitoring",        label: "Platform Monitoring",    icon: "IconActivityHeartbeat" },
+    { id: "backup",            label: "Backup & Recovery",      icon: "IconDatabaseExport"    },
+    { id: "releases",          label: "Release Management",     icon: "IconRocket"            },
+    { id: "feature-flags",     label: "Feature Flags",          icon: "IconFlag"              },
+    { id: "company-settings",  label: "Company Settings",       icon: "IconBuildingCog"       },
+    { id: "settings",          label: "Settings",               icon: "IconSettings"          },
   ],
   ADMIN: [
     { id: "dashboard",    label: "Dashboard",    icon: "IconLayoutDashboard"   },
