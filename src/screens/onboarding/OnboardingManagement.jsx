@@ -487,7 +487,8 @@ function OffboardingListTab() {
 function ClearanceTrackerTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
-  const { data: offboardings = [], isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
   const { data: exit = {} } = useOffboardings({ limit: 1 });
 
@@ -524,7 +525,8 @@ function ClearanceTrackerTab() {
 function AssetReturnTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
-  const { data: offboardings = [], isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
 
   const assets = [
@@ -577,7 +579,8 @@ function ExitInterviewTab() {
   const [selectedId, setSelectedId] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [suggestions, setSuggestions] = useState("");
-  const { data: offboardings = [], isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
   const create = useCreateExitInterview();
 
@@ -622,7 +625,8 @@ function SettlementTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
   const [settlement, setSettlement] = useState({ salaryPayable: 0, leaveEncashment: 0, bonus: 0, deductions: 0, assetRecovery: 0 });
-  const { data: offboardings = [], isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
   const create = useCreateSettlement();
 

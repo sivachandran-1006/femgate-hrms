@@ -337,6 +337,7 @@ const Documents = ({ darkMode: dark = false }) => {
   const [categoryFilter,setCategoryFilter]= useState("All");
   const [statusFilter,  setStatusFilter]  = useState("All");
   const [showModal,     setShowModal]     = useState(false);
+  const [viewDoc,       setViewDoc]       = useState(null);
 
   const { show } = useToast();
   const qc = useQueryClient();
@@ -511,6 +512,7 @@ const Documents = ({ darkMode: dark = false }) => {
                     textMuted={textMuted}
                     rowHover={rowHover}
                     isLast={idx === filtered.length - 1}
+                    onView={() => setViewDoc(doc)}
                     onDelete={() => handleDelete(doc.id)}
                   />
                 ))
@@ -528,13 +530,33 @@ const Documents = ({ darkMode: dark = false }) => {
           onUploaded={() => qc.invalidateQueries({ queryKey: ["documents", "all"] })}
         />
       )}
+
+      {/* View Document Modal */}
+      {viewDoc && (
+        <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center" }}
+          onClick={() => setViewDoc(null)}>
+          <div style={{ background: dark ? COLORS.dark.cardBg : "#fff", borderRadius: RADIUS["2xl"], padding: SPACING[6], minWidth: 360, maxWidth: 480, boxShadow: SHADOW.lg }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: SPACING[4] }}>
+              <span style={{ fontWeight: FONT_WEIGHT.bold, fontSize: FONT_SIZE.lg, color: dark ? COLORS.dark.text : COLORS.textLight }}>Document Details</span>
+              <button onClick={() => setViewDoc(null)} style={{ background:"none",border:"none",cursor:"pointer",color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}><IconX size={18} /></button>
+            </div>
+            {[["Name", viewDoc.name], ["Employee", viewDoc.employee], ["Category", viewDoc.category], ["Uploaded", viewDoc.uploadDate || "—"], ["Expiry", viewDoc.expiryDate === "N/A" ? "—" : viewDoc.expiryDate], ["Status", viewDoc.status]].map(([k, v]) => (
+              <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:`${SPACING[2]}px 0`, borderBottom:`1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+                <span style={{ fontSize: FONT_SIZE.sm, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}>{k}</span>
+                <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: dark ? COLORS.dark.text : COLORS.textLight }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── Document Row ─────────────────────────────────────────────────────────────
 
-const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast, onDelete }) => {
+const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast, onView, onDelete }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -594,7 +616,7 @@ const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast,
       {/* Actions */}
       <td style={{ padding: PADDING.tableCell }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: GAP.xs }}>
-          <ActionBtn icon={IconEye}      title="View"     color={COLORS.primary} hoverBg={COLORS.primaryMuted} onClick={() => {}} />
+          <ActionBtn icon={IconEye}      title="View"     color={COLORS.primary} hoverBg={COLORS.primaryMuted} onClick={onView} />
           <ActionBtn icon={IconDownload} title="Download" color={COLORS.success} hoverBg={COLORS.successLight} onClick={() => {}} />
           <ActionBtn icon={IconTrash}    title="Delete"   color={COLORS.danger}  hoverBg={COLORS.dangerMuted}  onClick={onDelete} />
         </div>

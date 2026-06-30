@@ -324,6 +324,7 @@ function SubscriptionsTab({ toast }) {
   const [filterPlan, setFilterPlan] = useState("All");
   const [showCreate, setShowCreate] = useState(false);
   const [step, setStep] = useState(0);
+  const [viewSub, setViewSub] = useState(null);
 
   const filtered = SUBSCRIPTIONS.filter(s => {
     const q = search.toLowerCase();
@@ -381,7 +382,7 @@ function SubscriptionsTab({ toast }) {
                   <Table.Td><Badge size="xs" color={STATUS_COLOR[s.status]} variant="light">{s.status}</Badge></Table.Td>
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
-                      <Tooltip label="View"><ActionIcon size="sm" variant="subtle"><IconEye size={14} /></ActionIcon></Tooltip>
+                      <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewSub(s)}><IconEye size={14} /></ActionIcon></Tooltip>
                       <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={14} /></ActionIcon></Tooltip>
                       <Tooltip label="Renew"><ActionIcon size="sm" variant="subtle" color="green"><IconRotate size={14} /></ActionIcon></Tooltip>
                       <Tooltip label="Invoice"><ActionIcon size="sm" variant="subtle" color="violet"><IconFileInvoice size={14} /></ActionIcon></Tooltip>
@@ -454,6 +455,21 @@ function SubscriptionsTab({ toast }) {
           }
         </Group>
       </Modal>
+
+      <Modal opened={!!viewSub} onClose={() => setViewSub(null)} title="Subscription Details" size="md" radius="lg">
+        {viewSub && (
+          <Stack gap="sm">
+            <Group justify="space-between"><Text size="sm" c="dimmed">Company</Text><Text fw={600}>{viewSub.company}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Plan</Text><Badge variant="light" color="violet">{viewSub.plan}</Badge></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Users</Text><Text>{viewSub.users}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Billing Cycle</Text><Text>{viewSub.cycle}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Start Date</Text><Text>{fmtDate(viewSub.start)}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Renewal Date</Text><Text>{fmtDate(viewSub.renewal)}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Amount</Text><Text fw={700} size="lg">{viewSub.amount ? fmtINR(viewSub.amount) : "Free"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Status</Text><Badge color={STATUS_COLOR[viewSub.status]} variant="light">{viewSub.status}</Badge></Group>
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }
@@ -461,6 +477,7 @@ function SubscriptionsTab({ toast }) {
 // ── 3. Plans Tab ─────────────────────────────────────────────────────────────
 function PlansTab({ toast }) {
   const [showCreate, setShowCreate] = useState(false);
+  const [viewPlan, setViewPlan] = useState(null);
 
   return (
     <Stack gap="md">
@@ -502,7 +519,7 @@ function PlansTab({ toast }) {
               ))}
             </Stack>
             <Group gap="xs">
-              <Button size="xs" variant="light" leftSection={<IconEye size={12} />}>View</Button>
+              <Button size="xs" variant="light" leftSection={<IconEye size={12} />} onClick={() => setViewPlan(p)}>View</Button>
               <Button size="xs" variant="default" leftSection={<IconPencil size={12} />}>Edit</Button>
               <Button size="xs" variant="default" onClick={() => toast?.show(`${p.name} duplicated`, "success")}>Duplicate</Button>
             </Group>
@@ -534,6 +551,21 @@ function PlansTab({ toast }) {
           </Group>
         </Stack>
       </Modal>
+
+      <Modal opened={!!viewPlan} onClose={() => setViewPlan(null)} title="Plan Details" size="md" radius="lg">
+        {viewPlan && (
+          <Stack gap="sm">
+            <Group justify="space-between"><Text size="sm" c="dimmed">Name</Text><Text fw={700}>{viewPlan.name}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Status</Text><Badge color="green" variant="light">{viewPlan.status}</Badge></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Price</Text><Text fw={700} size="lg">{viewPlan.price ? `₹${viewPlan.price.toLocaleString("en-IN")}/${viewPlan.cycle}` : "Custom"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Users</Text><Text>{viewPlan.users ?? "Unlimited"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Storage</Text><Text>{viewPlan.storage ? `${viewPlan.storage} GB` : "Unlimited"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">AI Credits</Text><Text>{viewPlan.ai ? viewPlan.ai.toLocaleString() : "Unlimited"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Support</Text><Text>{viewPlan.support}</Text></Group>
+            {viewPlan.modules?.length > 0 && <><Text size="sm" c="dimmed" mt="xs">Modules</Text><Text size="sm">{viewPlan.modules.join(", ")}</Text></>}
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }
@@ -541,6 +573,7 @@ function PlansTab({ toast }) {
 // ── 4. Customers Tab ─────────────────────────────────────────────────────────
 function CustomersTab() {
   const [search, setSearch] = useState("");
+  const [viewCust, setViewCust] = useState(null);
   const filtered = CUSTOMERS.filter(c => c.company.toLowerCase().includes(search.toLowerCase()));
 
   return (
@@ -575,7 +608,7 @@ function CustomersTab() {
                   <Table.Td><Badge size="xs" color={STATUS_COLOR[c.status]} variant="light">{c.status}</Badge></Table.Td>
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
-                      <Tooltip label="View Profile"><ActionIcon size="sm" variant="subtle"><IconEye size={14} /></ActionIcon></Tooltip>
+                      <Tooltip label="View Profile"><ActionIcon size="sm" variant="subtle" onClick={() => setViewCust(c)}><IconEye size={14} /></ActionIcon></Tooltip>
                       <Tooltip label="Subscriptions"><ActionIcon size="sm" variant="subtle"><IconFileInvoice size={14} /></ActionIcon></Tooltip>
                       <Tooltip label="Usage"><ActionIcon size="sm" variant="subtle" color="blue"><IconChartBar size={14} /></ActionIcon></Tooltip>
                     </Group>
@@ -586,6 +619,20 @@ function CustomersTab() {
           </Table>
         </ScrollArea>
       </Paper>
+
+      <Modal opened={!!viewCust} onClose={() => setViewCust(null)} title="Customer Profile" size="md" radius="lg">
+        {viewCust && (
+          <Stack gap="sm">
+            <Group justify="space-between"><Text size="sm" c="dimmed">Company</Text><Text fw={700}>{viewCust.company}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Tenant ID</Text><Text ff="monospace" size="sm">{viewCust.tenant}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Plan</Text><Badge variant="light" color="blue">{viewCust.plan}</Badge></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Admin</Text><Text>{viewCust.admin}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">MRR</Text><Text fw={700} size="lg">{viewCust.mrr ? fmtINR(viewCust.mrr) : "—"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Renewal</Text><Text>{fmtDate(viewCust.renewal)}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Status</Text><Badge color={STATUS_COLOR[viewCust.status]} variant="light">{viewCust.status}</Badge></Group>
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }

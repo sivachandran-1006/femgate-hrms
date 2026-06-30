@@ -105,6 +105,7 @@ function ExpenseListTab() {
   const [limit, setLimit] = useState(25);
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [viewExp, setViewExp] = useState(null);
 
   const { data: result = {}, isLoading } = useExpenses({ search, status, category, page, limit });
   const deleteExp = useDeleteExpense();
@@ -177,7 +178,7 @@ function ExpenseListTab() {
                 <Table.Td><Badge color={STATUS_COLORS[e.status]}>{e.status}</Badge></Table.Td>
                 <Table.Td>
                   <Group gap={4}>
-                    <Tooltip label="View"><ActionIcon size="sm" variant="subtle"><IconEye size={14} /></ActionIcon></Tooltip>
+                    <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewExp(e)}><IconEye size={14} /></ActionIcon></Tooltip>
                     {e.status === "Draft" && <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => { setEditId(e.id); setFormOpen(true); }}><IconPencil size={14} /></ActionIcon></Tooltip>}
                     {e.status === "Draft" && <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDelete(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>}
                   </Group>
@@ -198,6 +199,21 @@ function ExpenseListTab() {
       </Group>
 
       <ExpenseFormModal opened={formOpen} onClose={() => setFormOpen(false)} expenseId={editId} />
+
+      <Modal opened={!!viewExp} onClose={() => setViewExp(null)} title="Expense Details" size="md" radius="lg">
+        {viewExp && (
+          <Stack gap="sm">
+            <Group justify="space-between"><Text size="sm" c="dimmed">Claim ID</Text><Text fw={500}>{viewExp.claimNo}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Employee</Text><Text fw={500}>{viewExp.employee}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Category</Text><Badge variant="light" color="blue">{viewExp.category}</Badge></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Amount</Text><Text fw={700} size="lg">₹{viewExp.amount?.toLocaleString()}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Date</Text><Text>{new Date(viewExp.date).toLocaleDateString()}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Submitted</Text><Text>{viewExp.submittedAt ? new Date(viewExp.submittedAt).toLocaleDateString() : "—"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Status</Text><Badge color={STATUS_COLORS[viewExp.status]}>{viewExp.status}</Badge></Group>
+            {viewExp.description && <><Text size="sm" c="dimmed" mt="xs">Description</Text><Text size="sm">{viewExp.description}</Text></>}
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }

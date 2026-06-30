@@ -286,6 +286,7 @@ function DashboardTab({ onNav }) {
 function BrandProfilesTab({ toast }) {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [viewBrand, setViewBrand] = useState(null);
 
   const { data: companiesResult, isLoading } = useQuery({
     queryKey: ["companies-branding"],
@@ -361,7 +362,7 @@ function BrandProfilesTab({ toast }) {
                   <Table.Td><Badge size="xs" color={STATUS_COLOR[b.status]} variant="light">{b.status}</Badge></Table.Td>
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
-                      <Tooltip label="View"><ActionIcon size="sm" variant="subtle"><IconEye size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewBrand(b)}><IconEye size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle"><IconCopy size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Preview"><ActionIcon size="sm" variant="subtle" color="blue"><IconDeviceDesktop size={13} /></ActionIcon></Tooltip>
@@ -386,6 +387,22 @@ function BrandProfilesTab({ toast }) {
             <Button onClick={() => { setShowCreate(false); toast?.show("Brand profile created", "success"); }}>Create</Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal opened={!!viewBrand} onClose={() => setViewBrand(null)} title="Brand Profile" size="md" radius="lg">
+        {viewBrand && (
+          <Stack gap="sm">
+            <Group justify="space-between"><Text size="sm" c="dimmed">Company</Text><Text fw={700}>{viewBrand.company}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Tenant</Text><Text ff="monospace" size="sm">{viewBrand.tenant}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Theme</Text><Badge variant="light" color="violet">{viewBrand.theme}</Badge></Group>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">Primary Color</Text>
+              <Group gap="xs"><Box w={16} h={16} style={{ borderRadius: 4, background: viewBrand.color }} /><Text size="sm" ff="monospace">{viewBrand.color}</Text></Group>
+            </Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Domain</Text><Text size="sm">{viewBrand.domain || "—"}</Text></Group>
+            <Group justify="space-between"><Text size="sm" c="dimmed">Status</Text><Badge color={STATUS_COLOR[viewBrand.status]} variant="light">{viewBrand.status}</Badge></Group>
+          </Stack>
+        )}
       </Modal>
     </Stack>
   );
@@ -691,6 +708,7 @@ function EmailTemplatesTab() {
   const { data: templates = [], isLoading } = useEmailTemplates();
   const update = useUpdateEmailTemplate();
   const [edit, setEdit] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [search, setSearch] = useState("");
 
   const allTemplates = templates.length > 0 ? templates : [
@@ -735,7 +753,7 @@ function EmailTemplatesTab() {
                 <Table.Td>
                   <Group gap={4} wrap="nowrap">
                     <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setEdit({ ...t, body: t.body || "Hi {{name}},\n\n" })}><IconPencil size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Preview"><ActionIcon size="sm" variant="subtle" color="blue"><IconEye size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Preview"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => setPreview(t)}><IconEye size={13} /></ActionIcon></Tooltip>
                     <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle"><IconCopy size={13} /></ActionIcon></Tooltip>
                     <Tooltip label="Disable"><ActionIcon size="sm" variant="subtle" color="orange"><IconBan size={13} /></ActionIcon></Tooltip>
                   </Group>
@@ -780,6 +798,20 @@ function EmailTemplatesTab() {
             show("Template published", "success"); setEdit(null);
           }} loading={update.isPending}>Publish</Button>
         </Group>
+      </Modal>
+
+      <Modal opened={!!preview} onClose={() => setPreview(null)} title={`Preview: ${preview?.type || ""}`} size="md" radius="lg">
+        {preview && (
+          <Stack gap="sm">
+            <Paper withBorder p="md" radius="md" style={{ background: "#f8fafc" }}>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={4}>Subject</Text>
+              <Text size="sm" fw={600} mb="md">{preview.subject}</Text>
+              <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={4}>Body</Text>
+              <Text size="sm" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>{preview.body || "(no body — click Edit to add content)"}</Text>
+            </Paper>
+            <Badge size="xs" color={STATUS_COLOR[preview.status]} variant="light" style={{ alignSelf: "flex-start" }}>{preview.status}</Badge>
+          </Stack>
+        )}
       </Modal>
     </Stack>
   );

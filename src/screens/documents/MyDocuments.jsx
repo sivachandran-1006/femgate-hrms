@@ -49,6 +49,7 @@ const MyDocuments = ({ darkMode: dark = false }) => {
   const [showUpload,setShowUpload] = useState(false);
   const [fileName, setFileName]   = useState("No file chosen");
   const [form, setForm] = useState({ name:"", category:"Identity" });
+  const [viewDoc, setViewDoc] = useState(null);
 
   const { data: docsRaw = [] } = useMyDocuments();
   const createMut = useCreateDocument();
@@ -170,7 +171,7 @@ const MyDocuments = ({ darkMode: dark = false }) => {
                     </td>
                     <td style={{ padding:PADDING.tableCell }}>
                       <div style={{ display:"flex",gap:GAP.xs }}>
-                        <button title="View"     style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.primary   }}><IconEye      size={13}/></button>
+                        <button title="View" onClick={()=>setViewDoc(doc)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.primary   }}><IconEye      size={13}/></button>
                         <button title="Download" style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success  }}><IconDownload size={13}/></button>
                         <button title="Delete"   onClick={()=>handleDelete(doc)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.danger   }}><IconTrash    size={13}/></button>
                       </div>
@@ -236,6 +237,26 @@ const MyDocuments = ({ darkMode: dark = false }) => {
           </Group>
         </Stack>
       </AppModal>
+
+      {/* View Document Modal */}
+      {viewDoc && (
+        <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center" }}
+          onClick={() => setViewDoc(null)}>
+          <div style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], padding:SPACING[6], minWidth:340, maxWidth:440, boxShadow:SHADOW.lg }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:SPACING[4] }}>
+              <span style={{ fontWeight:FONT_WEIGHT.bold, fontSize:FONT_SIZE.lg, color:surface.text }}>Document Details</span>
+              <button onClick={() => setViewDoc(null)} style={{ background:"none",border:"none",cursor:"pointer",color:surface.subtext }}><IconX size={18}/></button>
+            </div>
+            {[["Name", viewDoc.name], ["Category", viewDoc.category], ["Uploaded", viewDoc.uploadDate || "—"], ["Status", viewDoc.status], ["Size", viewDoc.size]].map(([k, v]) => (
+              <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:`${SPACING[2]}px 0`, borderBottom:`1px solid ${surface.border}` }}>
+                <span style={{ fontSize:FONT_SIZE.sm, color:surface.subtext }}>{k}</span>
+                <span style={{ fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.medium, color:surface.text }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

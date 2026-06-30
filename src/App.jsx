@@ -62,12 +62,15 @@ import MyTeam             from "./screens/myteam/MyTeam";
 import SelfOnboarding     from "./screens/onboarding-self/SelfOnboarding";
 
 // M9 Platform screens
-import FeatureFlags       from "./screens/platform/FeatureFlags";
-import ReleaseManagement  from "./screens/platform/ReleaseManagement";
-import Marketplace        from "./screens/platform/Marketplace";
-import PlatformMonitoring from "./screens/platform/PlatformMonitoring";
-import BackupRecovery     from "./screens/platform/BackupRecovery";
-import SubscriptionEngine from "./screens/platform/SubscriptionEngine";
+import FeatureFlags        from "./screens/platform/FeatureFlags";
+import ReleaseManagement   from "./screens/platform/ReleaseManagement";
+import Marketplace         from "./screens/platform/Marketplace";
+import PlatformMonitoring  from "./screens/platform/PlatformMonitoring";
+import BackupRecovery      from "./screens/platform/BackupRecovery";
+import SubscriptionEngine  from "./screens/platform/SubscriptionEngine";
+import DashboardBuilder    from "./screens/platform/DashboardBuilder";
+import WorkflowBuilder     from "./screens/platform/WorkflowBuilder";
+import FormBuilder         from "./screens/platform/FormBuilder";
 
 // Super Admin screens
 import RoleManagement from "./screens/roles/RoleManagement";
@@ -530,6 +533,21 @@ export default function App() {
           <Route path="/subscriptions" element={
             <RoleGuard routeId="subscriptions" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><SubscriptionEngine /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/dashboard-builder" element={
+            <RoleGuard routeId="dashboard-builder" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><DashboardBuilder darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/workflow-builder" element={
+            <RoleGuard routeId="workflow-builder" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><WorkflowBuilder darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/form-builder" element={
+            <RoleGuard routeId="form-builder" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><FormBuilder darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/companies" element={
