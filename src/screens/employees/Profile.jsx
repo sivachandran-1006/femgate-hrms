@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 
 import { IconChartBar, IconHistory }                   from "@tabler/icons-react";
-import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, useEmpPerformance, useEmpActivity } from "../../queries/useEmployees";
+import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, useEmpPerformance, useEmpActivity, useEmpDocuments, useEmpAssets } from "../../queries/useEmployees";
 import { AppLoader }                                   from "../../components/ui/AppLoader";
 import { COLORS, STATUS_BADGE }                        from "../../theme/colors";
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
@@ -540,16 +540,18 @@ const PayrollTab = ({ emp, dark, empId }) => {
   );
 };
 
-const DocumentsTab = ({ dark }) => {
+const DocumentsTab = ({ dark, empId }) => {
   const text    = dark ? COLORS.dark.text    : COLORS.textLight;
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
   const cardBg  = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
   const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
   const inputBg = dark ? COLORS.dark.inputBg : COLORS.gray50;
 
+  const { data: docs = MOCK_DOCUMENTS } = useEmpDocuments(empId);
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: GAP.md }}>
-      {MOCK_DOCUMENTS.map((doc) => {
+      {docs.map((doc) => {
         const DocIcon = doc.icon;
         const isUploaded = doc.status === "uploaded";
         return (
@@ -610,14 +612,15 @@ const DocumentsTab = ({ dark }) => {
   );
 };
 
-const AssetsTab = ({ dark }) => {
+const AssetsTab = ({ dark, empId }) => {
   const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
   const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
   const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
   const text     = dark ? COLORS.dark.text     : COLORS.textLight;
 
-  const assigned = MOCK_ASSETS.filter((a) => a.status === "Assigned").length;
-  const returned = MOCK_ASSETS.filter((a) => a.status === "Returned").length;
+  const { data: assets = MOCK_ASSETS } = useEmpAssets(empId);
+  const assigned = assets.filter((a) => a.status === "Assigned").length;
+  const returned = assets.filter((a) => a.status === "Returned").length;
 
   const conditionColor = {
     Excellent: COLORS.success,
@@ -632,7 +635,7 @@ const AssetsTab = ({ dark }) => {
       <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Assigned"   value={assigned}            color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Returned"   value={returned}            color={COLORS.danger}  bg={COLORS.dangerMuted}  />
-        <MiniStatCard dark={dark} label="Total Items" value={MOCK_ASSETS.length} color={COLORS.primary} bg={COLORS.primaryLight} />
+        <MiniStatCard dark={dark} label="Total Items" value={assets.length} color={COLORS.primary} bg={COLORS.primaryLight} />
       </div>
 
       <TableWrapper dark={dark}>
@@ -646,7 +649,7 @@ const AssetsTab = ({ dark }) => {
           </tr>
         </thead>
         <tbody>
-          {MOCK_ASSETS.map((asset) => (
+          {assets.map((asset) => (
             <tr
               key={asset.id}
               style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
@@ -967,8 +970,8 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
             {activeTab === "Attendance"  && <AttendanceTab  empId={targetId} dark={dark} />}
             {activeTab === "Payroll"     && <PayrollTab     emp={employee} empId={targetId} dark={dark} />}
             {activeTab === "Performance" && <PerformanceTab empId={targetId} dark={dark} />}
-            {activeTab === "Documents"   && <DocumentsTab   dark={dark} />}
-            {activeTab === "Assets"      && <AssetsTab      dark={dark} />}
+            {activeTab === "Documents"   && <DocumentsTab   empId={targetId} dark={dark} />}
+            {activeTab === "Assets"      && <AssetsTab      empId={targetId} dark={dark} />}
             {activeTab === "Activity"    && <ActivityTab    empId={targetId} dark={dark} />}
           </div>
         </div>

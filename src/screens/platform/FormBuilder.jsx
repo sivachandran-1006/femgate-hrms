@@ -29,6 +29,10 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import {
+  useFBDashboard, useForms, useFBResponses,
+  useCreateForm, useUpdateForm, useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
+} from "../../queries/useFormBuilder";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -168,19 +172,23 @@ function KpiCard({ label, value, change, icon: Icon, color }) {
 // ── 1. Dashboard ──────────────────────────────────────────────────────────────
 
 function DashboardTab() {
-  const published = MOCK_FORMS.filter(f => f.status==="Published").length;
-  const draft     = MOCK_FORMS.filter(f => f.status==="Draft").length;
-  const totalResp = MOCK_FORMS.reduce((s, f) => s + f.responses, 0);
+  const { data: kpis } = useFBDashboard();
+  const published = kpis?.published ?? MOCK_FORMS.filter(f => f.status==="Published").length;
+  const draft     = kpis?.draft     ?? MOCK_FORMS.filter(f => f.status==="Draft").length;
+  const total     = kpis?.total     ?? MOCK_FORMS.length;
+  const totalResp = kpis?.totalResponses ?? MOCK_FORMS.reduce((s, f) => s + f.responses, 0);
+  const todayResp = kpis?.todayResponses ?? 42;
+  const pending   = kpis?.pending   ?? 14;
 
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base:2, sm:4 }} spacing="md">
-        <KpiCard label="Total Forms"       value={MOCK_FORMS.length} change={12}  icon={IconForms}       color="blue"   />
-        <KpiCard label="Published"         value={published}         change={8}   icon={IconRocket}      color="green"  />
-        <KpiCard label="Drafts"            value={draft}             change={-2}  icon={IconPencil}      color="orange" />
-        <KpiCard label="Total Responses"   value={totalResp}         change={21}  icon={IconClipboard}   color="violet" />
-        <KpiCard label="Today's Responses" value={42}                change={5}   icon={IconCalendar}    color="teal"   />
-        <KpiCard label="Pending Approval"  value={14}                change={-3}  icon={IconClock}       color="yellow" />
+        <KpiCard label="Total Forms"       value={total}     change={12}  icon={IconForms}       color="blue"   />
+        <KpiCard label="Published"         value={published} change={8}   icon={IconRocket}      color="green"  />
+        <KpiCard label="Drafts"            value={draft}     change={-2}  icon={IconPencil}      color="orange" />
+        <KpiCard label="Total Responses"   value={totalResp} change={21}  icon={IconClipboard}   color="violet" />
+        <KpiCard label="Today's Responses" value={todayResp}          change={5}   icon={IconCalendar}    color="teal"   />
+        <KpiCard label="Pending Approval"  value={pending}           change={-3}  icon={IconClock}       color="yellow" />
         <KpiCard label="Archived"          value={3}                 change={0}   icon={IconArchive}     color="gray"   />
         <KpiCard label="Active Templates"  value={TEMPLATES.length}  change={0}   icon={IconTemplate}    color="cyan"   />
       </SimpleGrid>
@@ -270,7 +278,12 @@ function MyFormsTab({ onCreate }) {
   const [catF,   setCatF]   = useState("");
   const [statF,  setStatF]  = useState("");
   const [viewForm, setViewForm] = useState(null);
-  const [forms, setForms]   = useState(MOCK_FORMS);
+  const { data: rawForms = [] } = useForms({ category: catF || undefined, status: statF || undefined, search: search || undefined });
+  const forms = rawForms.length ? rawForms : MOCK_FORMS;
+  const deleteMut    = useDeleteForm();
+  const publishMut   = usePublishForm();
+  const archiveMut   = useArchiveForm();
+  const duplicateMut = useDuplicateForm();
 
   const filtered = forms.filter(f => {
     const q = search.toLowerCase();
@@ -325,10 +338,10 @@ function MyFormsTab({ onCreate }) {
                     <Group gap={3} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewForm(f)}><IconEye size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={onCreate}><IconPencil size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => show(`"${f.name}" duplicated`, "success")}><IconCopy size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show("Published","success")}><IconRocket size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" onClick={() => show("Archived","info")}><IconArchive size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Deleted","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" loading={duplicateMut.isPending} onClick={() => duplicateMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" duplicated`, "success"), onError: () => show("Duplicate failed","error") })}><IconCopy size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" loading={publishMut.isPending} onClick={() => publishMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" published`, "success"), onError: () => show("Publish failed","error") })}><IconRocket size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" loading={archiveMut.isPending} onClick={() => archiveMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" archived`, "info"), onError: () => show("Archive failed","error") })}><IconArchive size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending} onClick={() => deleteMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" deleted`, "error"), onError: () => show("Delete failed","error") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -882,13 +895,24 @@ function FormResponsesTab() {
   const { show } = useToast();
   const [viewResp, setViewResp] = useState(null);
   const [respTab,  setRespTab]  = useState("overview");
+  const [search, setSearch]     = useState("");
+  const [statusF, setStatusF]   = useState("");
+  const [deptF,   setDeptF]     = useState("");
+  const { data: rawResponses = [] } = useFBResponses({ status: statusF || undefined, search: search || undefined });
+  const responses = rawResponses.length ? rawResponses : MOCK_RESPONSES;
+  const filtered = responses.filter(r => {
+    const q = search.toLowerCase();
+    return (!q || r.id?.toLowerCase().includes(q) || r.employee?.toLowerCase().includes(q) || r.form?.toLowerCase().includes(q))
+      && (!statusF || r.status === statusF)
+      && (!deptF || r.department === deptF);
+  });
 
   return (
     <Stack gap="md">
       <Group gap="sm" wrap="wrap">
-        <TextInput placeholder="Search by ID, employee, form…" leftSection={<IconSearch size={14} />} w={280} radius="md" />
-        <Select placeholder="Status"     data={["Approved","Pending","Rejected","Under Review"]} clearable w={150} radius="md" />
-        <Select placeholder="Department" data={["Engineering","HR","Finance","Operations"]}      clearable w={160} radius="md" />
+        <TextInput placeholder="Search by ID, employee, form…" leftSection={<IconSearch size={14} />} w={280} radius="md" value={search} onChange={e => setSearch(e.currentTarget.value)} />
+        <Select placeholder="Status"     data={["Approved","Pending","Rejected","Under Review"]} clearable w={150} radius="md" value={statusF} onChange={setStatusF} />
+        <Select placeholder="Department" data={["Engineering","HR","Finance","Operations"]}      clearable w={160} radius="md" value={deptF} onChange={setDeptF} />
       </Group>
 
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -906,7 +930,7 @@ function FormResponsesTab() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {MOCK_RESPONSES.map(r => (
+              {filtered.map(r => (
                 <Table.Tr key={r.id}>
                   <Table.Td><Text size="xs" ff="monospace" fw={600}>{r.id}</Text></Table.Td>
                   <Table.Td><Text size="sm">{r.employee}</Text></Table.Td>

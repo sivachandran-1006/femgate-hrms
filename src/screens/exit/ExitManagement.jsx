@@ -146,8 +146,9 @@ const ActionBtn = ({ label, color, bg, onClick }) => (
 const ExitManagement = ({ darkMode = false }) => {
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
-  const [activeTab, setActiveTab] = useState("active");
-  const [remarks, setRemarks]     = useState({});
+  const [activeTab, setActiveTab]   = useState("active");
+  const [remarks, setRemarks]       = useState({});
+  const [viewExit, setViewExit]     = useState(null);
 
   const { data: exits = [] } = useExits();
   const updateExit           = useUpdateExit();
@@ -408,13 +409,13 @@ const ExitManagement = ({ darkMode = false }) => {
                             label="View"
                             color={COLORS.primary}
                             bg={COLORS.primaryMuted}
-                            onClick={() => {}}
+                            onClick={() => setViewExit(emp)}
                           />
                           <ActionBtn
                             label="Track"
                             color={COLORS.info}
                             bg={COLORS.infoLight}
-                            onClick={() => {}}
+                            onClick={() => { setViewExit(emp); setActiveTab("clearance"); }}
                           />
                         </div>
                       </td>
@@ -859,6 +860,37 @@ const ExitManagement = ({ darkMode = false }) => {
                 Print
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── View Exit Detail Modal ── */}
+      {viewExit && (
+        <div
+          onClick={() => setViewExit(null)}
+          style={{ position:"fixed", inset:0, background:"rgba(15,23,42,0.55)", zIndex:9999, display:"flex", alignItems:"center", justifyContent:"center", padding:16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: surface.cardBg, borderRadius: RADIUS.xl, border:`1px solid ${surface.border}`, boxShadow:SHADOW.xl, width:"100%", maxWidth:480, padding:28 }}
+          >
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+              <p style={{ margin:0, fontSize:FONT_SIZE.md, fontWeight:FONT_WEIGHT.bold, color:surface.text }}>Exit Details</p>
+              <button onClick={() => setViewExit(null)} style={{ background:"none", border:"none", cursor:"pointer", color:surface.subtext, fontSize:18 }}>✕</button>
+            </div>
+            {[
+              ["Employee",         viewExit.name],
+              ["Department",       viewExit.dept],
+              ["Last Working Day", formatLWD(viewExit.lwd || viewExit.lastWorkingDay)],
+              ["Exit Type",        viewExit.type],
+              ["Stage",            viewExit.stage],
+              ["Notice Period",    viewExit.noticePeriod || "—"],
+            ].map(([label, value]) => (
+              <div key={label} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${surface.border}` }}>
+                <span style={{ fontSize:FONT_SIZE.sm, color:surface.subtext }}>{label}</span>
+                <span style={{ fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.medium, color:surface.text }}>{value}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}

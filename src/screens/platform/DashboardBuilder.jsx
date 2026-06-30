@@ -23,6 +23,11 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import {
+  useDBBuilderDashboard, useDashboards, useSharedDashboards,
+  useCreateDashboard, useDeleteDashboard, usePublishDashboard,
+  useArchiveDashboard, useDuplicateDashboard, useUnshare,
+} from "../../queries/useDashboardBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -152,17 +157,21 @@ function KpiCard({ label, value, change, icon: Icon, color, sub }) {
 // ── 1. Dashboard Home ─────────────────────────────────────────────────────────
 function DashboardHomeTab({ onNav }) {
   const USAGE_TREND = [78,82,91,88,95,103,110,108,115,122,118,130];
+  const { data: rawDash = [] }   = useDashboards();
+  const { data: rawShared = [] } = useSharedDashboards();
+  const dash   = rawDash.length   ? rawDash   : MOCK_DASHBOARDS;
+  const shared = rawShared.length ? rawShared : MOCK_SHARED;
 
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="md">
-        <KpiCard label="Total Dashboards"     value={MOCK_DASHBOARDS.length}                                          change={12}  icon={IconLayoutDashboard} color="blue"   />
-        <KpiCard label="Published"            value={MOCK_DASHBOARDS.filter(d=>d.status==="Published").length}        change={8}   icon={IconRocket}          color="green"  />
-        <KpiCard label="Drafts"               value={MOCK_DASHBOARDS.filter(d=>d.status==="Draft").length}            change={-2}  icon={IconPencil}          color="orange" />
-        <KpiCard label="Total Widgets"        value={MOCK_DASHBOARDS.reduce((s,d)=>s+d.widgets,0)}                   change={15}  icon={IconGrid3x3}         color="violet" />
-        <KpiCard label="Active Users"         value="247"                                                             change={5}   icon={IconUsers}           color="teal"   />
-        <KpiCard label="Shared Dashboards"    value={MOCK_SHARED.length}                                              change={0}   icon={IconShare}           color="cyan"   />
-        <KpiCard label="Favorite Dashboards"  value={MOCK_DASHBOARDS.filter(d=>d.starred).length}                    icon={IconStarFilled} color="yellow" />
+        <KpiCard label="Total Dashboards"     value={dash.length}                                          change={12}  icon={IconLayoutDashboard} color="blue"   />
+        <KpiCard label="Published"            value={dash.filter(d=>d.status==="Published").length}        change={8}   icon={IconRocket}          color="green"  />
+        <KpiCard label="Drafts"               value={dash.filter(d=>d.status==="Draft").length}            change={-2}  icon={IconPencil}          color="orange" />
+        <KpiCard label="Total Widgets"        value={dash.reduce((s,d)=>s+(d.widgets||0),0)}               change={15}  icon={IconGrid3x3}         color="violet" />
+        <KpiCard label="Active Users"         value="247"                                                   change={5}   icon={IconUsers}           color="teal"   />
+        <KpiCard label="Shared Dashboards"    value={shared.length}                                         change={0}   icon={IconShare}           color="cyan"   />
+        <KpiCard label="Favorite Dashboards"  value={dash.filter(d=>d.starred).length}                    icon={IconStarFilled} color="yellow" />
         <KpiCard label="Templates Available"  value={TEMPLATES.length}                                               icon={IconTemplate}  color="gray"  />
       </SimpleGrid>
 
@@ -264,16 +273,21 @@ function DashboardLibraryTab({ onCreate }) {
   const [role, setRole]         = useState("");
   const [status, setStatus]     = useState("");
   const [viewDash, setViewDash] = useState(null);
-  const [dashboards, setDashboards] = useState(MOCK_DASHBOARDS);
+  const { data: rawDash = [] } = useDashboards({ role: role || undefined, status: status || undefined, search: search || undefined });
+  const dashboards = rawDash.length ? rawDash : MOCK_DASHBOARDS;
+  const deleteMut    = useDeleteDashboard();
+  const publishMut   = usePublishDashboard();
+  const archiveMut   = useArchiveDashboard();
+  const duplicateMut = useDuplicateDashboard();
 
   const filtered = dashboards.filter(d => {
     const q = search.toLowerCase();
-    return (!q || d.name.toLowerCase().includes(q) || d.createdBy.toLowerCase().includes(q))
+    return (!q || d.name.toLowerCase().includes(q) || (d.createdBy||"").toLowerCase().includes(q))
       && (!role   || d.role === role)
       && (!status || d.status === status);
   });
 
-  const toggleStar = (id) => setDashboards(prev => prev.map(d => d.id === id ? { ...d, starred: !d.starred } : d));
+  const toggleStar = () => {};
 
   return (
     <Stack gap="md">
@@ -322,11 +336,11 @@ function DashboardLibraryTab({ onCreate }) {
                     <Group gap={4} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewDash(d)}><IconEye size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => show(`"${d.name}" duplicated`, "success")}><IconCopy size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show(`"${d.name}" published`, "success")}><IconRocket size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" loading={duplicateMut.isPending} onClick={() => duplicateMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" duplicated`, "success"), onError: () => show("Duplicate failed","error") })}><IconCopy size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" loading={publishMut.isPending} onClick={() => publishMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" published`, "success"), onError: () => show("Publish failed","error") })}><IconRocket size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Share"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => show("Share link copied", "info")}><IconShare size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" onClick={() => show(`"${d.name}" archived`, "info")}><IconArchive size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show(`"${d.name}" deleted`, "error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" loading={archiveMut.isPending} onClick={() => archiveMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" archived`, "info"), onError: () => show("Archive failed","error") })}><IconArchive size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending} onClick={() => deleteMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" deleted`, "error"), onError: () => show("Delete failed","error") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -776,10 +790,12 @@ function WidgetLibraryTab() {
 // ── 5. My Dashboards ──────────────────────────────────────────────────────────
 function MyDashboardsTab() {
   const { show } = useToast();
-  const starred    = MOCK_DASHBOARDS.filter(d => d.starred);
-  const recent     = [...MOCK_DASHBOARDS].sort((a,b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0,4);
-  const drafts     = MOCK_DASHBOARDS.filter(d => d.status === "Draft");
-  const pinned     = MOCK_DASHBOARDS.slice(0, 2);
+  const { data: rawDash = [] } = useDashboards();
+  const all     = rawDash.length ? rawDash : MOCK_DASHBOARDS;
+  const starred = all.filter(d => d.starred);
+  const recent  = [...all].sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||"")).slice(0,4);
+  const drafts  = all.filter(d => d.status === "Draft");
+  const pinned  = all.slice(0, 2);
 
   const DashCard = ({ d }) => (
     <Paper withBorder p="md" radius="lg">
@@ -836,6 +852,9 @@ function MyDashboardsTab() {
 function SharedDashboardsTab() {
   const { show } = useToast();
   const [viewShared, setViewShared] = useState(null);
+  const { data: rawShared = [] } = useSharedDashboards();
+  const shared   = rawShared.length ? rawShared : MOCK_SHARED;
+  const unshareMut = useUnshare();
 
   return (
     <Stack gap="md">
@@ -852,7 +871,7 @@ function SharedDashboardsTab() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {MOCK_SHARED.map(s => (
+            {shared.map(s => (
               <Table.Tr key={s.id}>
                 <Table.Td><Text size="sm" fw={500}>{s.name}</Text></Table.Td>
                 <Table.Td><Text size="sm" c="dimmed">{s.owner}</Text></Table.Td>
@@ -863,7 +882,7 @@ function SharedDashboardsTab() {
                   <Group gap={4}>
                     <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewShared(s)}><IconEye size={13} /></ActionIcon></Tooltip>
                     <Tooltip label="Copy link"><ActionIcon size="sm" variant="subtle" onClick={() => show("Share link copied", "info")}><IconShare size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Remove"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Removed share", "info")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Remove"><ActionIcon size="sm" variant="subtle" color="red" loading={unshareMut.isPending} onClick={() => unshareMut.mutate(s.id, { onSuccess: () => show("Removed share", "info"), onError: () => show("Remove failed","error") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -973,6 +992,8 @@ function AnalyticsWidgetsTab() {
 // ── 9. Dashboard Settings ─────────────────────────────────────────────────────
 function DashboardSettingsTab() {
   const { show } = useToast();
+  const { data: rawDash = [] } = useDashboards();
+  const dashNames = (rawDash.length ? rawDash : MOCK_DASHBOARDS).map(d => d.name);
   const [settings, setSettings] = useState({
     defaultDash: "HR Operations HQ",
     autoRefresh: "Every 5min",
@@ -991,7 +1012,7 @@ function DashboardSettingsTab() {
       <Paper withBorder p="lg" radius="lg">
         <Text fw={600} mb="md">Dashboard Defaults</Text>
         <Stack gap="sm">
-          <Select label="Default Dashboard" data={MOCK_DASHBOARDS.map(d => d.name)} value={settings.defaultDash} onChange={s("defaultDash")} radius="md" />
+          <Select label="Default Dashboard" data={dashNames} value={settings.defaultDash} onChange={s("defaultDash")} radius="md" />
           <Select label="Auto Refresh" data={FREQ} value={settings.autoRefresh} onChange={s("autoRefresh")} radius="md" />
           <Select label="Default Layout" data={LAYOUTS.map(l => l.label)} value={LAYOUTS.find(l=>l.id===settings.defaultLayout)?.label} radius="md" />
         </Stack>

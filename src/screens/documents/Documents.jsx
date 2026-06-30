@@ -513,6 +513,7 @@ const Documents = ({ darkMode: dark = false }) => {
                     rowHover={rowHover}
                     isLast={idx === filtered.length - 1}
                     onView={() => setViewDoc(doc)}
+                    onDownload={() => { if (doc.fileUrl) window.open(doc.fileUrl, "_blank"); }}
                     onDelete={() => handleDelete(doc.id)}
                   />
                 ))
@@ -556,7 +557,7 @@ const Documents = ({ darkMode: dark = false }) => {
 
 // ─── Document Row ─────────────────────────────────────────────────────────────
 
-const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast, onView, onDelete }) => {
+const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast, onView, onDownload, onDelete }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -617,7 +618,7 @@ const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast,
       <td style={{ padding: PADDING.tableCell }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: GAP.xs }}>
           <ActionBtn icon={IconEye}      title="View"     color={COLORS.primary} hoverBg={COLORS.primaryMuted} onClick={onView} />
-          <ActionBtn icon={IconDownload} title="Download" color={COLORS.success} hoverBg={COLORS.successLight} onClick={() => {}} />
+          <ActionBtn icon={IconDownload} title="Download" color={COLORS.success} hoverBg={COLORS.successLight} onClick={onDownload} />
           <ActionBtn icon={IconTrash}    title="Delete"   color={COLORS.danger}  hoverBg={COLORS.dangerMuted}  onClick={onDelete} />
         </div>
       </td>

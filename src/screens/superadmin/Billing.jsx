@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Stack, Group, Text, Paper, Badge, Button, Tabs,
-  SimpleGrid, Progress, Table, ActionIcon, Loader, Center, Modal, Select,
+  SimpleGrid, Progress, Table, ActionIcon, Loader, Center, Modal, Select, TextInput, Divider,
 } from "@mantine/core";
 import {
   IconDownload, IconCreditCard, IconCheck, IconPlus, IconTrendingUp,
@@ -16,6 +16,7 @@ import {
   getBillingUsage,
   upgradePlan,
   getPaymentMethods,
+  addPaymentMethod,
 } from "../../api/billingApi";
 
 const PLAN_FEATURES = [
@@ -69,6 +70,19 @@ export default function Billing() {
     onError: () => {
       toast.show("Failed to upgrade plan. Please try again.", "error");
     },
+  });
+
+  const [showAddCard, setShowAddCard]   = useState(false);
+  const [cardForm, setCardForm]         = useState({ number: "", expiry: "", cvv: "", name: "" });
+  const addCardMut = useMutation({
+    mutationFn: addPaymentMethod,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["billing-payment-methods"] });
+      setShowAddCard(false);
+      setCardForm({ number: "", expiry: "", cvv: "", name: "" });
+      toast.show("Payment method added", "success");
+    },
+    onError: () => toast.show("Failed to add payment method", "error"),
   });
 
   const openUpgrade = () => {
@@ -367,7 +381,7 @@ export default function Billing() {
                 leftSection={<IconPlus size={16} />}
                 fullWidth
                 style={{ borderStyle: "dashed" }}
-                onClick={() => toast.show("Add card flow coming soon", "info")}
+                onClick={() => setShowAddCard(true)}
               >
                 Add Payment Method
               </Button>
@@ -397,6 +411,29 @@ export default function Billing() {
               disabled={selectedPlan === plan.plan}
             >
               Confirm Change
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* ── Add Payment Method Modal ── */}
+      <Modal opened={showAddCard} onClose={() => setShowAddCard(false)} title="Add Payment Method" size="sm" radius="lg">
+        <Stack gap="sm">
+          <TextInput label="Cardholder Name" placeholder="Name on card" value={cardForm.name} onChange={e => setCardForm(p => ({ ...p, name: e.currentTarget.value }))} radius="md" />
+          <TextInput label="Card Number" placeholder="1234 5678 9012 3456" value={cardForm.number} onChange={e => setCardForm(p => ({ ...p, number: e.currentTarget.value }))} radius="md" maxLength={19} />
+          <Group grow>
+            <TextInput label="Expiry" placeholder="MM/YY" value={cardForm.expiry} onChange={e => setCardForm(p => ({ ...p, expiry: e.currentTarget.value }))} radius="md" maxLength={5} />
+            <TextInput label="CVV" placeholder="•••" value={cardForm.cvv} onChange={e => setCardForm(p => ({ ...p, cvv: e.currentTarget.value }))} radius="md" maxLength={4} type="password" />
+          </Group>
+          <Divider />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setShowAddCard(false)}>Cancel</Button>
+            <Button
+              loading={addCardMut.isPending}
+              disabled={!cardForm.name || !cardForm.number || !cardForm.expiry || !cardForm.cvv}
+              onClick={() => addCardMut.mutate({ name: cardForm.name, number: cardForm.number, expiry: cardForm.expiry, cvv: cardForm.cvv })}
+            >
+              Add Card
             </Button>
           </Group>
         </Stack>

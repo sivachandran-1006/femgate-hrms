@@ -28,6 +28,10 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
+import {
+  useWFDashboard, useWorkflows, useWFHistory,
+  useCreateWF, useUpdateWF, useDeleteWF, usePublishWF, useDuplicateWF,
+} from "../../queries/useWorkflowBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -160,21 +164,23 @@ function KpiCard({ label, value, change, icon: Icon, color }) {
 
 // ── 1. Dashboard ──────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const active    = MOCK_WORKFLOWS.filter(w => w.status === "Active").length;
-  const draft     = MOCK_WORKFLOWS.filter(w => w.status === "Draft").length;
-  const running   = 14;
-  const pending   = 38;
-  const failed    = 3;
-  const escalated = 5;
-  const totalExec = EXEC_TREND.reduce((s, d) => s + d.executions, 0);
+  const { data: kpis } = useWFDashboard();
+  const active    = kpis?.active    ?? MOCK_WORKFLOWS.filter(w => w.status === "Active").length;
+  const draft     = kpis?.draft     ?? MOCK_WORKFLOWS.filter(w => w.status === "Draft").length;
+  const total     = kpis?.total     ?? MOCK_WORKFLOWS.length;
+  const running   = kpis?.running   ?? 14;
+  const pending   = kpis?.pending   ?? 38;
+  const failed    = kpis?.failed    ?? 3;
+  const escalated = kpis?.escalated ?? 5;
+  const totalExec = kpis?.totalExecutions ?? EXEC_TREND.reduce((s, d) => s + d.executions, 0);
   const completedToday = EXEC_TREND[4].completed;
 
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-        <KpiCard label="Total Workflows"  value={MOCK_WORKFLOWS.length} change={8}   icon={IconSitemap}       color="blue"   />
-        <KpiCard label="Active"           value={active}               change={2}   icon={IconPlayerPlay}    color="green"  />
-        <KpiCard label="Drafts"           value={draft}                change={-1}  icon={IconPencil}        color="orange" />
+        <KpiCard label="Total Workflows"  value={total}   change={8}   icon={IconSitemap}       color="blue"   />
+        <KpiCard label="Active"           value={active}  change={2}   icon={IconPlayerPlay}    color="green"  />
+        <KpiCard label="Drafts"           value={draft}   change={-1}  icon={IconPencil}        color="orange" />
         <KpiCard label="Running Now"      value={running}              change={12}  icon={IconRefresh}       color="violet" />
         <KpiCard label="Completed Today"  value={completedToday}       change={5}   icon={IconCircleCheck}   color="teal"   />
         <KpiCard label="Pending Approvals"value={pending}              change={-3}  icon={IconClock}         color="yellow" />
@@ -270,7 +276,11 @@ function WorkflowLibraryTab({ onCreate }) {
   const [module, setModule]   = useState("");
   const [status, setStatus]   = useState("");
   const [viewWf, setViewWf]   = useState(null);
-  const [wfs, setWfs]         = useState(MOCK_WORKFLOWS);
+  const { data: rawWfs = [] } = useWorkflows({ module: module || undefined, status: status || undefined, search: search || undefined });
+  const wfs = rawWfs.length ? rawWfs : MOCK_WORKFLOWS;
+  const deleteMut    = useDeleteWF();
+  const publishMut   = usePublishWF();
+  const duplicateMut = useDuplicateWF();
 
   const filtered = wfs.filter(w => {
     const q = search.toLowerCase();
@@ -328,10 +338,10 @@ function WorkflowLibraryTab({ onCreate }) {
                     <Group gap={3} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewWf(w)}><IconEye size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => show(`"${w.name}" duplicated`, "success")}><IconCopy size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show("Published","success")}><IconRocket size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Export"><ActionIcon size="sm" variant="subtle" color="blue"><IconDownload size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Deleted","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => duplicateMut.mutate(w.id, { onSuccess: () => show(`"${w.name}" duplicated`, "success") })}><IconCopy size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => publishMut.mutate(w.id, { onSuccess: () => show("Published", "success") })}><IconRocket size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Export"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => { const blob = new Blob([JSON.stringify(w, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${w.name}.json`; a.click(); }}><IconDownload size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => deleteMut.mutate(w.id, { onSuccess: () => show("Deleted", "success") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -779,7 +789,11 @@ function TemplatesTab({ onCreate }) {
 // ── 5. Active / Draft Workflows ───────────────────────────────────────────────
 function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
   const { show } = useToast();
-  const list = MOCK_WORKFLOWS.filter(w => w.status === filterStatus);
+  const { data: rawList = [] } = useWorkflows({ status: filterStatus });
+  const list = rawList.length ? rawList : MOCK_WORKFLOWS.filter(w => w.status === filterStatus);
+  const publishMut   = usePublishWF();
+  const deleteMut    = useDeleteWF();
+  const duplicateMut = useDuplicateWF();
   return (
     <Stack gap="md">
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -830,6 +844,8 @@ function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
 function WorkflowHistoryTab() {
   const { show } = useToast();
   const [viewHist, setViewHist] = useState(null);
+  const { data: rawHistory = [] } = useWFHistory();
+  const historyData = rawHistory.length ? rawHistory : MOCK_HISTORY;
 
   return (
     <Stack gap="md">
@@ -855,7 +871,7 @@ function WorkflowHistoryTab() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {MOCK_HISTORY.map(h => (
+              {historyData.map(h => (
                 <Table.Tr key={h.id}>
                   <Table.Td><Text size="xs" ff="monospace" fw={600}>{h.id}</Text></Table.Td>
                   <Table.Td><Text size="sm" fw={500}>{h.workflow}</Text></Table.Td>

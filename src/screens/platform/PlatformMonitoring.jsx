@@ -17,7 +17,7 @@ import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { ChartTooltip } from "../dashboard/components/DashboardKit";
-import { usePlatformHealth, usePlatformStats } from "../../queries/usePlatform";
+import { usePlatformHealth, usePlatformStats, useHealthHistory } from "../../queries/usePlatform";
 
 const MOCK_SERVICES = [
   { service:"api",      status:"healthy",  latencyMs:45  },
@@ -75,6 +75,8 @@ export default function PlatformMonitoring() {
 
   const { data: healthData, isLoading: loadingHealth, refetch } = usePlatformHealth();
   const { data: statsData,  isLoading: loadingStats             } = usePlatformStats();
+  const { data: rawHistory = []                                  } = useHealthHistory();
+  const historyData = rawHistory.length ? rawHistory : MOCK_HISTORY;
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
   useEffect(() => {
@@ -145,7 +147,7 @@ export default function PlatformMonitoring() {
           </Group>
         </Group>
         <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={MOCK_HISTORY}>
+          <BarChart data={historyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-default-border)" />
             <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} allowDecimals={false} domain={[0, 7]} />
