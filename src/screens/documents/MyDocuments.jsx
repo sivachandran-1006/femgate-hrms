@@ -1,20 +1,21 @@
 import { useState } from "react";
 import {
   IconFolder, IconUpload, IconDownload, IconEye,
-  IconTrash, IconFile, IconX, IconChevronDown, IconShieldCheck,
+  IconTrash, IconFile, IconShieldCheck,
 } from "@tabler/icons-react";
 import { useAuth }              from "../../hooks/useAuth";
 import { useMyDocuments, useCreateDocument, useDeleteDocument } from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
-import { Stack, Group }        from "@mantine/core";
-import { AppModal }  from "../../components/ui/AppModal";
-import { AppInput }  from "../../components/ui/AppInput";
-import { AppButton } from "../../components/ui/AppButton";
+import {
+  Stack, Group, Box, Paper, SimpleGrid, Text, Badge,
+  ActionIcon, Table, UnstyledButton, Modal,
+} from "@mantine/core";
+import { AppModal }      from "../../components/ui/AppModal";
+import { AppInput }      from "../../components/ui/AppInput";
+import { AppButton }     from "../../components/ui/AppButton";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { COLORS }               from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { SPACING, GAP, PADDING } from "../../theme/spacing";
-import { RADIUS, SHADOW }       from "../../theme/sizes";
+import { COLORS }        from "../../theme/colors";
+import { RADIUS }        from "../../theme/sizes";
 
 const mapApiDoc = (d) => ({
   id:         d.id,
@@ -27,36 +28,35 @@ const mapApiDoc = (d) => ({
 
 const CATEGORIES = ["All","Identity","Education","Employment","Financial","Other"];
 
-const STATUS_STYLE = {
-  Verified: { bg:COLORS.successLight, color:COLORS.success },
-  Pending:  { bg:COLORS.warningLight, color:COLORS.warning },
-  Expired:  { bg:COLORS.dangerMuted,  color:COLORS.danger  },
+const STATUS_COLOR = {
+  Verified: { bg: COLORS.successLight, color: COLORS.success },
+  Pending:  { bg: COLORS.warningLight, color: COLORS.warning },
+  Expired:  { bg: COLORS.dangerMuted,  color: COLORS.danger  },
 };
 
-const CAT_STYLE = {
-  Identity:   { bg:COLORS.primaryMuted, color:COLORS.primary },
-  Education:  { bg:COLORS.purpleMuted,  color:COLORS.purple  },
-  Employment: { bg:COLORS.infoLight,    color:COLORS.info    },
-  Financial:  { bg:COLORS.successLight, color:COLORS.success },
-  Other:      { bg:COLORS.gray200,      color:COLORS.gray600 },
+const CAT_COLOR = {
+  Identity:   { bg: COLORS.primaryMuted, color: COLORS.primary },
+  Education:  { bg: COLORS.purpleMuted,  color: COLORS.purple  },
+  Employment: { bg: COLORS.infoLight,    color: COLORS.info    },
+  Financial:  { bg: COLORS.successLight, color: COLORS.success },
+  Other:      { bg: COLORS.gray200,      color: COLORS.gray600 },
 };
 
 const MyDocuments = ({ darkMode: dark = false }) => {
   const { user }  = useAuth();
   const { show }  = useToast();
-  const surface   = dark ? COLORS.dark : COLORS.light;
-  const [catFilter,setCatFilter] = useState("All");
-  const [showUpload,setShowUpload] = useState(false);
-  const [fileName, setFileName]   = useState("No file chosen");
-  const [form, setForm] = useState({ name:"", category:"Identity" });
+  const [catFilter,  setCatFilter]  = useState("All");
+  const [showUpload, setShowUpload] = useState(false);
+  const [fileName,   setFileName]   = useState("No file chosen");
+  const [form, setForm] = useState({ name: "", category: "Identity" });
   const [viewDoc, setViewDoc] = useState(null);
 
   const { data: docsRaw = [] } = useMyDocuments();
   const createMut = useCreateDocument();
   const deleteMut = useDeleteDocument();
 
-  const docs = docsRaw.map(mapApiDoc);
-  const filtered = docs.filter((d)=>catFilter==="All"||d.category===catFilter);
+  const docs     = docsRaw.map(mapApiDoc);
+  const filtered = docs.filter((d) => catFilter === "All" || d.category === catFilter);
 
   const handleUpload = async () => {
     if (!form.name.trim()) return;
@@ -68,7 +68,7 @@ const MyDocuments = ({ darkMode: dark = false }) => {
         fileSize: fileName !== "No file chosen" ? fileName : null,
       });
       show(`"${form.name}" uploaded`, "success");
-      setForm({ name:"", category:"Identity" });
+      setForm({ name: "", category: "Identity" });
       setFileName("No file chosen");
       setShowUpload(false);
     } catch {
@@ -85,112 +85,175 @@ const MyDocuments = ({ darkMode: dark = false }) => {
     }
   };
 
-  const Card = ({ children, style={} }) => (
-    <div style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], border:`1px solid ${surface.border}`, boxShadow:SHADOW.sm, ...style }}>
-      {children}
-    </div>
-  );
-
   return (
-    <div style={{ fontFamily:FONT_FAMILY.base }}>
-
+    <Box>
       <AppPageHeader
         title="My Documents"
         sub="Upload and manage your personal documents"
-        action={<AppButton onClick={() => setShowUpload(true)} leftSection={<IconUpload size={16} />}>Upload Document</AppButton>}
+        action={
+          <AppButton onClick={() => setShowUpload(true)} leftSection={<IconUpload size={16} />}>
+            Upload Document
+          </AppButton>
+        }
       />
 
       {/* Stat chips */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:GAP.md, marginBottom:SPACING[5] }}>
+      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md" mb="lg">
         {[
-          { label:"Total",    value:docs.length,                                   color:COLORS.primary, bg:COLORS.primaryMuted },
-          { label:"Verified", value:docs.filter(d=>d.status==="Verified").length,  color:COLORS.success, bg:COLORS.successLight },
-          { label:"Pending",  value:docs.filter(d=>d.status==="Pending").length,   color:COLORS.warning, bg:COLORS.warningLight },
-          { label:"Expired",  value:docs.filter(d=>d.status==="Expired").length,   color:COLORS.danger,  bg:COLORS.dangerMuted  },
-        ].map((s)=>(
-          <div key={s.label} style={{ background:surface.cardBg,borderRadius:RADIUS["2xl"],border:`1px solid ${surface.border}`,boxShadow:SHADOW.sm,padding:`${SPACING[4]}px`,display:"flex",alignItems:"center",gap:GAP.md }}>
-            <div style={{ width:44,height:44,borderRadius:RADIUS.xl,background:s.bg,display:"flex",alignItems:"center",justifyContent:"center" }}>
-              <IconFolder size={20} color={s.color} stroke={1.8}/>
-            </div>
-            <div>
-              <p style={{ margin:0,fontSize:FONT_SIZE.xs,color:surface.subtext }}>{s.label} Documents</p>
-              <p style={{ margin:0,fontSize:FONT_SIZE["2xl"],fontWeight:FONT_WEIGHT.bold,color:s.color,lineHeight:1.1 }}>{s.value}</p>
-            </div>
-          </div>
+          { label: "Total",    value: docs.length,                                      color: COLORS.primary, bg: COLORS.primaryMuted },
+          { label: "Verified", value: docs.filter(d => d.status === "Verified").length, color: COLORS.success, bg: COLORS.successLight },
+          { label: "Pending",  value: docs.filter(d => d.status === "Pending").length,  color: COLORS.warning, bg: COLORS.warningLight },
+          { label: "Expired",  value: docs.filter(d => d.status === "Expired").length,  color: COLORS.danger,  bg: COLORS.dangerMuted  },
+        ].map((s) => (
+          <Paper key={s.label} radius="xl" withBorder shadow="sm" p="md">
+            <Group gap="md">
+              <Box
+                style={{
+                  width: 44, height: 44, borderRadius: RADIUS.xl,
+                  background: s.bg, display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <IconFolder size={20} color={s.color} stroke={1.8} />
+              </Box>
+              <Box>
+                <Text size="xs" c="dimmed">{s.label} Documents</Text>
+                <Text size="xl" fw={700} style={{ color: s.color, lineHeight: 1.1 }}>{s.value}</Text>
+              </Box>
+            </Group>
+          </Paper>
         ))}
-      </div>
+      </SimpleGrid>
 
       {/* Filter + Table */}
-      <Card>
+      <Paper radius="xl" withBorder shadow="sm">
         {/* Filter bar */}
-        <div style={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:GAP.sm, padding:`${SPACING[4]}px ${SPACING[5]}px`, borderBottom:`1px solid ${surface.border}` }}>
-          {CATEGORIES.map((c)=>(
-            <button key={c} onClick={()=>setCatFilter(c)} style={{ padding:"5px 14px", borderRadius:RADIUS.full, border:`1px solid ${catFilter===c?COLORS.primary:surface.border}`, background:catFilter===c?COLORS.primaryMuted:"transparent", color:catFilter===c?COLORS.primary:surface.subtext, fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, cursor:"pointer" }}>
+        <Group
+          gap="sm"
+          p="md"
+          wrap="wrap"
+          style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
+        >
+          {CATEGORIES.map((c) => (
+            <UnstyledButton
+              key={c}
+              onClick={() => setCatFilter(c)}
+              style={{
+                padding: "5px 14px",
+                borderRadius: RADIUS.full,
+                border: `1px solid ${catFilter === c ? COLORS.primary : "var(--mantine-color-default-border)"}`,
+                background: catFilter === c ? COLORS.primaryMuted : "transparent",
+                color: catFilter === c ? COLORS.primary : "var(--mantine-color-dimmed)",
+                fontSize: "var(--mantine-font-size-xs)",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
               {c}
-            </button>
+            </UnstyledButton>
           ))}
-          <span style={{ marginLeft:"auto", fontSize:FONT_SIZE.xs, color:surface.subtext }}>{filtered.length} documents</span>
-        </div>
+          <Text size="xs" c="dimmed" ml="auto">{filtered.length} documents</Text>
+        </Group>
 
         {/* Table */}
-        <div style={{ overflowX:"auto" }}>
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead>
-              <tr style={{ background:surface.theadBg }}>
-                {["Document","Category","Upload Date","Size","Status","Actions"].map((h)=>(
-                  <th key={h} style={{ padding:PADDING.tableHeader,textAlign:"left",fontSize:FONT_SIZE.xs,fontWeight:FONT_WEIGHT.semibold,color:surface.subtext,textTransform:"uppercase",letterSpacing:"0.05em",borderBottom:`1px solid ${surface.border}`,whiteSpace:"nowrap" }}>{h}</th>
+        <div style={{ overflowX: "auto" }}>
+          <Table highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                {["Document","Category","Upload Date","Size","Status","Actions"].map((h) => (
+                  <Table.Th key={h}>{h}</Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((doc,i,arr)=>{
-                const st = STATUS_STYLE[doc.status]||STATUS_STYLE.Pending;
-                const ct = CAT_STYLE[doc.category]||CAT_STYLE.Other;
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {filtered.map((doc) => {
+                const st = STATUS_COLOR[doc.status] || STATUS_COLOR.Pending;
+                const ct = CAT_COLOR[doc.category]  || CAT_COLOR.Other;
                 return (
-                  <tr key={doc.id} style={{ borderBottom:i<arr.length-1?`1px solid ${surface.border}`:"none" }}
-                    onMouseEnter={(e)=>(e.currentTarget.style.background=surface.rowHover)}
-                    onMouseLeave={(e)=>(e.currentTarget.style.background="transparent")}>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <div style={{ display:"flex",alignItems:"center",gap:GAP.sm }}>
-                        <div style={{ width:34,height:34,borderRadius:RADIUS.md,background:COLORS.primaryMuted,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
-                          <IconFile size={16} color={COLORS.primary} stroke={2}/>
-                        </div>
-                        <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.medium,color:surface.text }}>{doc.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <span style={{ display:"inline-block",padding:"2px 9px",borderRadius:RADIUS.full,fontSize:FONT_SIZE.xs,fontWeight:FONT_WEIGHT.semibold,background:ct.bg,color:ct.color }}>{doc.category}</span>
-                    </td>
-                    <td style={{ padding:PADDING.tableCell,fontSize:FONT_SIZE.sm,color:surface.subtext }}>{doc.uploadDate}</td>
-                    <td style={{ padding:PADDING.tableCell,fontSize:FONT_SIZE.sm,color:surface.subtext }}>{doc.size}</td>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <span style={{ display:"inline-flex",alignItems:"center",gap:5,padding:"3px 9px",borderRadius:RADIUS.full,fontSize:FONT_SIZE.xs,fontWeight:FONT_WEIGHT.semibold,background:st.bg,color:st.color }}>
-                        <span style={{ width:5,height:5,borderRadius:"50%",background:st.color,display:"inline-block" }}/>
-                        {doc.status}
-                      </span>
-                    </td>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <div style={{ display:"flex",gap:GAP.xs }}>
-                        <button title="View" onClick={()=>setViewDoc(doc)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.primary   }}><IconEye      size={13}/></button>
-                        <button title="Download" style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success  }}><IconDownload size={13}/></button>
-                        <button title="Delete"   onClick={()=>handleDelete(doc)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.danger   }}><IconTrash    size={13}/></button>
-                      </div>
-                    </td>
-                  </tr>
+                  <Table.Tr key={doc.id}>
+                    <Table.Td>
+                      <Group gap="sm">
+                        <Box
+                          style={{
+                            width: 34, height: 34, borderRadius: RADIUS.md,
+                            background: COLORS.primaryMuted, display: "flex",
+                            alignItems: "center", justifyContent: "center", flexShrink: 0,
+                          }}
+                        >
+                          <IconFile size={16} color={COLORS.primary} stroke={2} />
+                        </Box>
+                        <Text size="sm" fw={500}>{doc.name}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge
+                        size="sm"
+                        style={{ background: ct.bg, color: ct.color, border: "none" }}
+                      >
+                        {doc.category}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td><Text size="sm" c="dimmed">{doc.uploadDate}</Text></Table.Td>
+                    <Table.Td><Text size="sm" c="dimmed">{doc.size}</Text></Table.Td>
+                    <Table.Td>
+                      <Group gap={5} wrap="nowrap">
+                        <Box
+                          style={{
+                            width: 5, height: 5, borderRadius: "50%",
+                            background: st.color, display: "inline-block", flexShrink: 0,
+                          }}
+                        />
+                        <Text size="xs" fw={600} style={{ color: st.color }}>{doc.status}</Text>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon
+                          title="View"
+                          variant="default"
+                          size="sm"
+                          onClick={() => setViewDoc(doc)}
+                          color="blue"
+                        >
+                          <IconEye size={13} />
+                        </ActionIcon>
+                        <ActionIcon title="Download" variant="default" size="sm" color="green">
+                          <IconDownload size={13} />
+                        </ActionIcon>
+                        <ActionIcon
+                          title="Delete"
+                          variant="default"
+                          size="sm"
+                          color="red"
+                          onClick={() => handleDelete(doc)}
+                        >
+                          <IconTrash size={13} />
+                        </ActionIcon>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
                 );
               })}
-            </tbody>
-          </table>
+            </Table.Tbody>
+          </Table>
         </div>
-      </Card>
+      </Paper>
 
       {/* Security notice */}
-      <div style={{ marginTop:GAP.md, padding:"12px 16px", borderRadius:RADIUS.xl, background:COLORS.infoLight, border:`1px solid ${COLORS.info}30`, display:"flex", alignItems:"center", gap:GAP.sm }}>
-        <IconShieldCheck size={16} color={COLORS.info} stroke={2}/>
-        <p style={{ margin:0, fontSize:FONT_SIZE.xs, color:COLORS.info }}>All documents are securely stored and accessible only by you and authorised HR personnel.</p>
-      </div>
+      <Paper
+        mt="md"
+        radius="xl"
+        p="sm"
+        style={{ background: COLORS.infoLight, border: `1px solid ${COLORS.info}30` }}
+      >
+        <Group gap="sm">
+          <IconShieldCheck size={16} color={COLORS.info} stroke={2} />
+          <Text size="xs" style={{ color: COLORS.info }}>
+            All documents are securely stored and accessible only by you and authorised HR personnel.
+          </Text>
+        </Group>
+      </Paper>
 
-      {/* ── Upload Modal (Mantine) ── */}
+      {/* ── Upload Modal ── */}
       <AppModal
         opened={showUpload}
         onClose={() => setShowUpload(false)}
@@ -215,23 +278,50 @@ const MyDocuments = ({ darkMode: dark = false }) => {
             data={["Identity","Education","Employment","Financial","Other"]}
           />
           {/* File picker */}
-          <div>
-            <label style={{ display:"block", fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, color:surface.subtext, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.05em" }}>File</label>
-            <label style={{ display:"flex", alignItems:"center", gap:GAP.sm, padding:"10px 14px", borderRadius:RADIUS.lg, border:`1.5px dashed ${surface.border}`, background:surface.inputBg, cursor:"pointer" }}>
-              <div style={{ width:30, height:30, borderRadius:RADIUS.md, background:COLORS.primaryMuted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <IconFile size={15} color={COLORS.primary} stroke={2}/>
-              </div>
-              <span style={{ fontSize:FONT_SIZE.sm, color:surface.subtext, flex:1 }}>{fileName}</span>
-              <span style={{ fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, color:COLORS.primary, background:COLORS.primaryMuted, padding:"3px 10px", borderRadius:RADIUS.full }}>Browse</span>
-              <input type="file" onChange={(e) => setFileName(e.target.files?.[0]?.name || "No file chosen")} style={{ display:"none" }}/>
-            </label>
-          </div>
+          <Box>
+            <Text size="xs" fw={600} c="dimmed" tt="uppercase" mb={5} style={{ letterSpacing: "0.05em" }}>
+              File
+            </Text>
+            <Box
+              component="label"
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "10px 14px", borderRadius: RADIUS.lg,
+                border: "1.5px dashed var(--mantine-color-default-border)",
+                background: "var(--mantine-color-default-hover)",
+                cursor: "pointer",
+              }}
+            >
+              <Box
+                style={{
+                  width: 30, height: 30, borderRadius: RADIUS.md,
+                  background: COLORS.primaryMuted, display: "flex",
+                  alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}
+              >
+                <IconFile size={15} color={COLORS.primary} stroke={2} />
+              </Box>
+              <Text size="sm" c="dimmed" style={{ flex: 1 }}>{fileName}</Text>
+              <Text
+                size="xs"
+                fw={600}
+                style={{
+                  color: COLORS.primary, background: COLORS.primaryMuted,
+                  padding: "3px 10px", borderRadius: RADIUS.full,
+                }}
+              >
+                Browse
+              </Text>
+              <input
+                type="file"
+                onChange={(e) => setFileName(e.target.files?.[0]?.name || "No file chosen")}
+                style={{ display: "none" }}
+              />
+            </Box>
+          </Box>
           <Group justify="flex-end" gap="sm" mt="xs">
             <AppButton variant="default" onClick={() => setShowUpload(false)}>Cancel</AppButton>
-            <AppButton
-              leftSection={<IconUpload size={14} stroke={2} />}
-              onClick={handleUpload}
-            >
+            <AppButton leftSection={<IconUpload size={14} stroke={2} />} onClick={handleUpload}>
               Upload
             </AppButton>
           </Group>
@@ -239,25 +329,36 @@ const MyDocuments = ({ darkMode: dark = false }) => {
       </AppModal>
 
       {/* View Document Modal */}
-      {viewDoc && (
-        <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center" }}
-          onClick={() => setViewDoc(null)}>
-          <div style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], padding:SPACING[6], minWidth:340, maxWidth:440, boxShadow:SHADOW.lg }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:SPACING[4] }}>
-              <span style={{ fontWeight:FONT_WEIGHT.bold, fontSize:FONT_SIZE.lg, color:surface.text }}>Document Details</span>
-              <button onClick={() => setViewDoc(null)} style={{ background:"none",border:"none",cursor:"pointer",color:surface.subtext }}><IconX size={18}/></button>
-            </div>
-            {[["Name", viewDoc.name], ["Category", viewDoc.category], ["Uploaded", viewDoc.uploadDate || "—"], ["Status", viewDoc.status], ["Size", viewDoc.size]].map(([k, v]) => (
-              <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:`${SPACING[2]}px 0`, borderBottom:`1px solid ${surface.border}` }}>
-                <span style={{ fontSize:FONT_SIZE.sm, color:surface.subtext }}>{k}</span>
-                <span style={{ fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.medium, color:surface.text }}>{v}</span>
-              </div>
+      <Modal
+        opened={!!viewDoc}
+        onClose={() => setViewDoc(null)}
+        title={<Text fw={700} size="lg">Document Details</Text>}
+        size="sm"
+        radius="xl"
+      >
+        {viewDoc && (
+          <Stack gap={0}>
+            {[
+              ["Name",     viewDoc.name],
+              ["Category", viewDoc.category],
+              ["Uploaded", viewDoc.uploadDate || "—"],
+              ["Status",   viewDoc.status],
+              ["Size",     viewDoc.size],
+            ].map(([k, v]) => (
+              <Group
+                key={k}
+                justify="space-between"
+                py="xs"
+                style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
+              >
+                <Text size="sm" c="dimmed">{k}</Text>
+                <Text size="sm" fw={500}>{v}</Text>
+              </Group>
             ))}
-          </div>
-        </div>
-      )}
-    </div>
+          </Stack>
+        )}
+      </Modal>
+    </Box>
   );
 };
 

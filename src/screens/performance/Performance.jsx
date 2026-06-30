@@ -11,11 +11,12 @@ import {
   IconPlayerPlayFilled as PlayCircle,
   IconTrendingUp as TrendingUp,
   IconUser as User,
-  IconPlus, IconEdit, IconTrash, IconX, IconCheck,
+  IconPlus, IconEdit, IconTrash, IconCheck,
 } from "@tabler/icons-react";
 import {
-  Group, SimpleGrid, Text, Badge, Avatar,
+  Group, Stack, SimpleGrid, Text, Badge, Avatar, Box, Paper,
   ScrollArea, Table, Progress, Tabs, Modal, TextInput, Select, Textarea,
+  ActionIcon,
 } from "@mantine/core";
 
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
@@ -40,20 +41,20 @@ const progressColor = (s) =>
 const StarRating = ({ value, onChange }) => (
   <Group gap={2} wrap="nowrap">
     {[1,2,3,4,5].map(i => (
-      <span key={i} onClick={() => onChange?.(i)} style={{ cursor: onChange ? "pointer" : "default" }}>
+      <Box
+        key={i}
+        component="span"
+        onClick={() => onChange?.(i)}
+        style={{ cursor: onChange ? "pointer" : "default", display: "inline-flex" }}
+      >
         <Star size={13} fill={i <= value ? COLORS.warning : "none"} color={i <= value ? COLORS.warning : "#dee2e6"} />
-      </span>
+      </Box>
     ))}
   </Group>
 );
 
 const EMPTY_GOAL = { employee: "", goal: "", targetDate: "", progress: 0, status: "On Track" };
 const EMPTY_APPRAISAL = { employee: "", reviewer: "", period: "", selfRating: 0, managerRating: 0, status: "Pending" };
-
-const inp = (dark) => ({
-  input: { background: dark ? "#0f172a" : "#f8fafc", borderColor: dark ? "#334155" : "#e2e8f0", color: dark ? "#f1f5f9" : "#0f172a" },
-  label: { color: dark ? "#94a3b8" : "#64748b", fontWeight: 600, fontSize: 12 },
-});
 
 export default function Performance({ darkMode: dark }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -78,11 +79,6 @@ export default function Performance({ darkMode: dark }) {
 
   const goalsList = goals ?? (perfData?.goals || []).map(g => ({ ...g, targetDate: (g.targetDate||"").split("T")[0] }));
   const apprList  = appraisals ?? (perfData?.appraisals || []);
-
-  const card   = dark ? "#1e293b" : "#ffffff";
-  const border = dark ? "#334155" : "#e2e8f0";
-  const text   = dark ? "#f1f5f9" : "#0f172a";
-  const sub    = dark ? "#94a3b8" : "#64748b";
 
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
@@ -120,11 +116,6 @@ export default function Performance({ darkMode: dark }) {
     setDeleteAppr(null);
   };
 
-  const modalStyles = {
-    header: { background: card, borderBottom: `1px solid ${border}` },
-    body:   { background: card },
-  };
-
   return (
     <>
       <AppPageHeader
@@ -138,10 +129,13 @@ export default function Performance({ darkMode: dark }) {
       />
 
       {saved && (
-        <Group gap={6} mb="sm" style={{ background: "#dcfce7", border: "1px solid #86efac", borderRadius: 10, padding: "8px 14px", display: "inline-flex" }}>
-          <IconCheck size={14} color="#16a34a" stroke={2.5} />
-          <Text fz="sm" c="#16a34a" fw={600}>Saved successfully</Text>
-        </Group>
+        <Paper withBorder={false} p="xs" radius="md" mb="sm" bg="var(--mantine-color-green-0)"
+          style={{ border: "1px solid var(--mantine-color-green-3)", display: "inline-flex" }}>
+          <Group gap={6}>
+            <IconCheck size={14} color="var(--mantine-color-green-7)" stroke={2.5} />
+            <Text fz="sm" c="green.7" fw={600}>Saved successfully</Text>
+          </Group>
+        </Paper>
       )}
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mb="lg">
@@ -164,10 +158,10 @@ export default function Performance({ darkMode: dark }) {
             <AppSection title="Rating Distribution" icon={<TrendingUp size={18} color={COLORS.purple} />}>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={ratingDistribution} barSize={36}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={border} />
-                  <XAxis dataKey="rating" tick={{ fill: sub, fontSize: 12 }} axisLine={{ stroke: border }} tickLine={false} />
-                  <YAxis tick={{ fill: sub, fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: card, border: `1px solid ${border}`, borderRadius: 8, fontSize: 12 }} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--mantine-color-gray-3)" />
+                  <XAxis dataKey="rating" tick={{ fill: "var(--mantine-color-dimmed)", fontSize: 12 }} axisLine={{ stroke: "var(--mantine-color-gray-3)" }} tickLine={false} />
+                  <YAxis tick={{ fill: "var(--mantine-color-dimmed)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: "var(--mantine-color-body)", border: "1px solid var(--mantine-color-gray-3)", borderRadius: 8, fontSize: 12 }} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
                   <Bar dataKey="count" name="Employees" fill={COLORS.purple} radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -185,13 +179,13 @@ export default function Performance({ darkMode: dark }) {
                 <Table.Tbody>
                   {departmentPerformance.map(dept => (
                     <Table.Tr key={dept.department}>
-                      <Table.Td><Text size="sm" fw={500} c={text}>{dept.department}</Text></Table.Td>
-                      <Table.Td><Text size="sm" c={sub}>{dept.employees}</Text></Table.Td>
-                      <Table.Td><Text size="sm" fw={600} c={text}>{dept.avgRating}</Text></Table.Td>
+                      <Table.Td><Text size="sm" fw={500}>{dept.department}</Text></Table.Td>
+                      <Table.Td><Text size="sm" c="dimmed">{dept.employees}</Text></Table.Td>
+                      <Table.Td><Text size="sm" fw={600}>{dept.avgRating}</Text></Table.Td>
                       <Table.Td style={{ minWidth: 120 }}>
                         <Group gap="xs" wrap="nowrap">
                           <Progress value={Math.round((dept.avgRating/5)*100)} color={dept.avgRating>=4.2?"green":dept.avgRating>=4.0?"violet":"yellow"} radius="xl" size="sm" style={{ flex:1 }} />
-                          <Text size="xs" fw={600} c={sub} w={32}>{Math.round((dept.avgRating/5)*100)}%</Text>
+                          <Text size="xs" fw={600} c="dimmed" w={32}>{Math.round((dept.avgRating/5)*100)}%</Text>
                         </Group>
                       </Table.Td>
                     </Table.Tr>
@@ -227,26 +221,26 @@ export default function Performance({ darkMode: dark }) {
                             <Avatar size={34} radius="xl" style={{ background: av.bg, color: av.color }}>
                               <Text size="xs" fw={700}>{(goal.employee||"?").charAt(0).toUpperCase()}</Text>
                             </Avatar>
-                            <Text size="sm" fw={500} c={text}>{goal.employee}</Text>
+                            <Text size="sm" fw={500}>{goal.employee}</Text>
                           </Group>
                         </Table.Td>
-                        <Table.Td style={{ maxWidth: 260 }}><Text size="sm" c={text} lineClamp={1}>{goal.goal}</Text></Table.Td>
-                        <Table.Td><Text size="sm" c={sub} style={{ whiteSpace:"nowrap" }}>{goal.targetDate||"—"}</Text></Table.Td>
+                        <Table.Td style={{ maxWidth: 260 }}><Text size="sm" lineClamp={1}>{goal.goal}</Text></Table.Td>
+                        <Table.Td><Text size="sm" c="dimmed" style={{ whiteSpace:"nowrap" }}>{goal.targetDate||"—"}</Text></Table.Td>
                         <Table.Td style={{ minWidth: 140 }}>
                           <Group gap="xs" wrap="nowrap">
                             <Progress value={Number(goal.progress)||0} color={progressColor(goal.status)} radius="xl" size="sm" style={{ flex:1 }} />
-                            <Text size="xs" fw={600} c={sub} w={32}>{goal.progress}%</Text>
+                            <Text size="xs" fw={600} c="dimmed" w={32}>{goal.progress}%</Text>
                           </Group>
                         </Table.Td>
                         <Table.Td><Badge color={statusColor(goal.status)} variant="light" radius="xl">{goal.status}</Badge></Table.Td>
                         <Table.Td>
                           <Group gap={4} wrap="nowrap">
-                            <button onClick={() => openEditGoal(goal)} style={{ width:28, height:28, borderRadius:6, border:"none", background:"#eff6ff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <IconEdit size={13} color="#2563eb" />
-                            </button>
-                            <button onClick={() => setDeleteGoal(goal)} style={{ width:28, height:28, borderRadius:6, border:"none", background:"#fee2e2", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <IconTrash size={13} color="#dc2626" />
-                            </button>
+                            <ActionIcon size="sm" variant="light" color="blue" radius="md" onClick={() => openEditGoal(goal)}>
+                              <IconEdit size={13} />
+                            </ActionIcon>
+                            <ActionIcon size="sm" variant="light" color="red" radius="md" onClick={() => setDeleteGoal(goal)}>
+                              <IconTrash size={13} />
+                            </ActionIcon>
                           </Group>
                         </Table.Td>
                       </Table.Tr>
@@ -283,22 +277,22 @@ export default function Performance({ darkMode: dark }) {
                             <Avatar size={34} radius="xl" style={{ background: av.bg, color: av.color }}>
                               <Text size="xs" fw={700}>{(appr.employee||"?").charAt(0).toUpperCase()}</Text>
                             </Avatar>
-                            <Text size="sm" fw={500} c={text}>{appr.employee}</Text>
+                            <Text size="sm" fw={500}>{appr.employee}</Text>
                           </Group>
                         </Table.Td>
-                        <Table.Td><Group gap={6} wrap="nowrap"><User size={13} color={sub}/><Text size="sm" c={sub}>{appr.reviewer}</Text></Group></Table.Td>
+                        <Table.Td><Group gap={6} wrap="nowrap"><User size={13} color="var(--mantine-color-dimmed)"/><Text size="sm" c="dimmed">{appr.reviewer}</Text></Group></Table.Td>
                         <Table.Td><Badge variant="outline" color="gray" radius="sm">{appr.period}</Badge></Table.Td>
                         <Table.Td><StarRating value={appr.selfRating} /></Table.Td>
                         <Table.Td><StarRating value={appr.managerRating} /></Table.Td>
                         <Table.Td><Badge color={statusColor(appr.status)} variant="light" radius="xl">{appr.status}</Badge></Table.Td>
                         <Table.Td>
                           <Group gap={4} wrap="nowrap">
-                            <button onClick={() => openEditAppr(appr)} style={{ width:28, height:28, borderRadius:6, border:"none", background:"#eff6ff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <IconEdit size={13} color="#2563eb" />
-                            </button>
-                            <button onClick={() => setDeleteAppr(appr)} style={{ width:28, height:28, borderRadius:6, border:"none", background:"#fee2e2", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                              <IconTrash size={13} color="#dc2626" />
-                            </button>
+                            <ActionIcon size="sm" variant="light" color="blue" radius="md" onClick={() => openEditAppr(appr)}>
+                              <IconEdit size={13} />
+                            </ActionIcon>
+                            <ActionIcon size="sm" variant="light" color="red" radius="md" onClick={() => setDeleteAppr(appr)}>
+                              <IconTrash size={13} />
+                            </ActionIcon>
                           </Group>
                         </Table.Td>
                       </Table.Tr>
@@ -314,78 +308,82 @@ export default function Performance({ darkMode: dark }) {
       {/* ── Goal Add/Edit Modal ── */}
       <Modal opened={!!goalModal} onClose={() => setGoalModal(null)}
         title={goalModal === "add" ? "Add Goal" : "Edit Goal"}
-        centered radius="xl" size="md" styles={modalStyles}>
-        <SimpleGrid cols={2} spacing="sm">
-          <TextInput label="Employee Name" placeholder="e.g. John Doe" value={goalForm.employee}
-            onChange={e => setGoalForm(f=>({...f, employee: e.target.value}))} styles={inp(dark)} />
-          <TextInput type="date" label="Target Date" value={goalForm.targetDate}
-            onChange={e => setGoalForm(f=>({...f, targetDate: e.target.value}))} styles={inp(dark)} />
-        </SimpleGrid>
-        <Textarea label="Goal Description" placeholder="Describe the goal..." mt="sm" rows={3}
-          value={goalForm.goal} onChange={e => setGoalForm(f=>({...f, goal: e.target.value}))} styles={inp(dark)} />
-        <SimpleGrid cols={2} spacing="sm" mt="sm">
-          <TextInput type="number" label="Progress (%)" placeholder="0-100" value={goalForm.progress}
-            onChange={e => setGoalForm(f=>({...f, progress: Math.min(100, Math.max(0, Number(e.target.value)))}))} styles={inp(dark)} />
-          <Select label="Status" value={goalForm.status}
-            onChange={v => setGoalForm(f=>({...f, status: v}))}
-            data={["On Track","At Risk","Completed"]} styles={inp(dark)} />
-        </SimpleGrid>
-        <Group justify="flex-end" mt="lg" gap="sm">
-          <button onClick={() => setGoalModal(null)} style={{ padding:"8px 18px", borderRadius:8, border:`1px solid ${border}`, background:"transparent", color:sub, cursor:"pointer" }}>Cancel</button>
-          <button onClick={saveGoal} style={{ padding:"8px 18px", borderRadius:8, border:"none", background:"#7c3aed", color:"#fff", fontWeight:600, cursor:"pointer" }}>
-            {goalModal === "add" ? "Add Goal" : "Save Changes"}
-          </button>
-        </Group>
+        centered radius="xl" size="md">
+        <Stack gap="sm">
+          <SimpleGrid cols={2} spacing="sm">
+            <TextInput label="Employee Name" placeholder="e.g. John Doe" value={goalForm.employee}
+              onChange={e => setGoalForm(f=>({...f, employee: e.target.value}))} />
+            <TextInput type="date" label="Target Date" value={goalForm.targetDate}
+              onChange={e => setGoalForm(f=>({...f, targetDate: e.target.value}))} />
+          </SimpleGrid>
+          <Textarea label="Goal Description" placeholder="Describe the goal..." rows={3}
+            value={goalForm.goal} onChange={e => setGoalForm(f=>({...f, goal: e.target.value}))} />
+          <SimpleGrid cols={2} spacing="sm">
+            <TextInput type="number" label="Progress (%)" placeholder="0-100" value={goalForm.progress}
+              onChange={e => setGoalForm(f=>({...f, progress: Math.min(100, Math.max(0, Number(e.target.value)))}))} />
+            <Select label="Status" value={goalForm.status}
+              onChange={v => setGoalForm(f=>({...f, status: v}))}
+              data={["On Track","At Risk","Completed"]} />
+          </SimpleGrid>
+          <Group justify="flex-end" gap="sm">
+            <AppButton variant="default" onClick={() => setGoalModal(null)}>Cancel</AppButton>
+            <AppButton color="violet" onClick={saveGoal}>
+              {goalModal === "add" ? "Add Goal" : "Save Changes"}
+            </AppButton>
+          </Group>
+        </Stack>
       </Modal>
 
       {/* ── Appraisal Add/Edit Modal ── */}
       <Modal opened={!!apprModal} onClose={() => setApprModal(null)}
         title={apprModal === "add" ? "Add Appraisal" : "Edit Appraisal"}
-        centered radius="xl" size="md" styles={modalStyles}>
-        <SimpleGrid cols={2} spacing="sm">
-          <TextInput label="Employee Name" placeholder="e.g. John Doe" value={apprForm.employee}
-            onChange={e => setApprForm(f=>({...f, employee: e.target.value}))} styles={inp(dark)} />
-          <TextInput label="Reviewer" placeholder="e.g. Manager Name" value={apprForm.reviewer}
-            onChange={e => setApprForm(f=>({...f, reviewer: e.target.value}))} styles={inp(dark)} />
-          <TextInput label="Period" placeholder="e.g. Q1 2026" value={apprForm.period}
-            onChange={e => setApprForm(f=>({...f, period: e.target.value}))} styles={inp(dark)} />
-          <Select label="Status" value={apprForm.status}
-            onChange={v => setApprForm(f=>({...f, status: v}))}
-            data={["Pending","Submitted","Reviewed","Completed"]} styles={inp(dark)} />
-        </SimpleGrid>
-        <Group mt="sm" gap="xl">
-          <div>
-            <Text fz="xs" fw={600} c={sub} mb={4}>Self Rating</Text>
-            <StarRating value={apprForm.selfRating} onChange={v => setApprForm(f=>({...f, selfRating: v}))} />
-          </div>
-          <div>
-            <Text fz="xs" fw={600} c={sub} mb={4}>Manager Rating</Text>
-            <StarRating value={apprForm.managerRating} onChange={v => setApprForm(f=>({...f, managerRating: v}))} />
-          </div>
-        </Group>
-        <Group justify="flex-end" mt="lg" gap="sm">
-          <button onClick={() => setApprModal(null)} style={{ padding:"8px 18px", borderRadius:8, border:`1px solid ${border}`, background:"transparent", color:sub, cursor:"pointer" }}>Cancel</button>
-          <button onClick={saveAppr} style={{ padding:"8px 18px", borderRadius:8, border:"none", background:"#7c3aed", color:"#fff", fontWeight:600, cursor:"pointer" }}>
-            {apprModal === "add" ? "Add Appraisal" : "Save Changes"}
-          </button>
-        </Group>
+        centered radius="xl" size="md">
+        <Stack gap="sm">
+          <SimpleGrid cols={2} spacing="sm">
+            <TextInput label="Employee Name" placeholder="e.g. John Doe" value={apprForm.employee}
+              onChange={e => setApprForm(f=>({...f, employee: e.target.value}))} />
+            <TextInput label="Reviewer" placeholder="e.g. Manager Name" value={apprForm.reviewer}
+              onChange={e => setApprForm(f=>({...f, reviewer: e.target.value}))} />
+            <TextInput label="Period" placeholder="e.g. Q1 2026" value={apprForm.period}
+              onChange={e => setApprForm(f=>({...f, period: e.target.value}))} />
+            <Select label="Status" value={apprForm.status}
+              onChange={v => setApprForm(f=>({...f, status: v}))}
+              data={["Pending","Submitted","Reviewed","Completed"]} />
+          </SimpleGrid>
+          <Group gap="xl">
+            <Stack gap={4}>
+              <Text fz="xs" fw={600} c="dimmed">Self Rating</Text>
+              <StarRating value={apprForm.selfRating} onChange={v => setApprForm(f=>({...f, selfRating: v}))} />
+            </Stack>
+            <Stack gap={4}>
+              <Text fz="xs" fw={600} c="dimmed">Manager Rating</Text>
+              <StarRating value={apprForm.managerRating} onChange={v => setApprForm(f=>({...f, managerRating: v}))} />
+            </Stack>
+          </Group>
+          <Group justify="flex-end" gap="sm">
+            <AppButton variant="default" onClick={() => setApprModal(null)}>Cancel</AppButton>
+            <AppButton color="violet" onClick={saveAppr}>
+              {apprModal === "add" ? "Add Appraisal" : "Save Changes"}
+            </AppButton>
+          </Group>
+        </Stack>
       </Modal>
 
       {/* ── Delete Goal Confirm ── */}
-      <Modal opened={!!deleteGoal} onClose={() => setDeleteGoal(null)} title="Delete Goal" centered radius="xl" size="sm" styles={modalStyles}>
-        <Text fz="sm" c={sub} mb="lg">Are you sure you want to delete the goal for <strong>{deleteGoal?.employee}</strong>? This cannot be undone.</Text>
+      <Modal opened={!!deleteGoal} onClose={() => setDeleteGoal(null)} title="Delete Goal" centered radius="xl" size="sm">
+        <Text fz="sm" c="dimmed" mb="lg">Are you sure you want to delete the goal for <strong>{deleteGoal?.employee}</strong>? This cannot be undone.</Text>
         <Group justify="flex-end" gap="sm">
-          <button onClick={() => setDeleteGoal(null)} style={{ padding:"8px 18px", borderRadius:8, border:`1px solid ${border}`, background:"transparent", color:sub, cursor:"pointer" }}>Cancel</button>
-          <button onClick={confirmDeleteGoal} style={{ padding:"8px 18px", borderRadius:8, border:"none", background:"#ef4444", color:"#fff", fontWeight:600, cursor:"pointer" }}>Delete</button>
+          <AppButton variant="default" onClick={() => setDeleteGoal(null)}>Cancel</AppButton>
+          <AppButton color="red" onClick={confirmDeleteGoal}>Delete</AppButton>
         </Group>
       </Modal>
 
       {/* ── Delete Appraisal Confirm ── */}
-      <Modal opened={!!deleteAppr} onClose={() => setDeleteAppr(null)} title="Delete Appraisal" centered radius="xl" size="sm" styles={modalStyles}>
-        <Text fz="sm" c={sub} mb="lg">Delete appraisal for <strong>{deleteAppr?.employee}</strong>?</Text>
+      <Modal opened={!!deleteAppr} onClose={() => setDeleteAppr(null)} title="Delete Appraisal" centered radius="xl" size="sm">
+        <Text fz="sm" c="dimmed" mb="lg">Delete appraisal for <strong>{deleteAppr?.employee}</strong>?</Text>
         <Group justify="flex-end" gap="sm">
-          <button onClick={() => setDeleteAppr(null)} style={{ padding:"8px 18px", borderRadius:8, border:`1px solid ${border}`, background:"transparent", color:sub, cursor:"pointer" }}>Cancel</button>
-          <button onClick={confirmDeleteAppr} style={{ padding:"8px 18px", borderRadius:8, border:"none", background:"#ef4444", color:"#fff", fontWeight:600, cursor:"pointer" }}>Delete</button>
+          <AppButton variant="default" onClick={() => setDeleteAppr(null)}>Cancel</AppButton>
+          <AppButton color="red" onClick={confirmDeleteAppr}>Delete</AppButton>
         </Group>
       </Modal>
     </>

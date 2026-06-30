@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
-  Stack, Group, SimpleGrid, Text, Title, Paper, Badge, Button,
+  Stack, Group, SimpleGrid, Text, Paper, Badge, Button,
   TextInput, Select, ActionIcon, Tabs, Table, Pagination, Modal,
-  Textarea, ThemeIcon,
+  ThemeIcon, Avatar, Box,
 } from "@mantine/core";
 import {
   IconTicket, IconSearch, IconEye, IconX, IconAlertCircle,
@@ -164,8 +164,6 @@ export default function Helpdesk() {
     ...(can("helpdesk.view_sla")         ? [{ value: "sla", label: "SLA Report" }] : []),
   ];
 
-  const showTable = activeTab === "all" || activeTab === "mine";
-
   return (
     <Stack gap="lg">
       <AppPageHeader title="IT Helpdesk" sub="Manage and track IT support tickets"
@@ -267,9 +265,9 @@ export default function Helpdesk() {
                         </Table.Td>
                         <Table.Td>
                           <Group gap="xs">
-                            <div style={{ width: 26, height: 26, borderRadius: "50%", background: av.bg, color: av.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                            <Avatar size={26} radius="xl" style={{ background: av.bg, color: av.color, fontWeight: 700, fontSize: 10, flexShrink: 0 }}>
                               {initials(tk.raisedBy)}
-                            </div>
+                            </Avatar>
                             <Text size="sm">{tk.raisedBy}</Text>
                           </Group>
                         </Table.Td>
@@ -344,7 +342,7 @@ export default function Helpdesk() {
                   {catPie.map((d, i) => (
                     <Group key={d.name} justify="space-between">
                       <Group gap="xs">
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        <Box w={8} h={8} style={{ borderRadius: "50%", background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
                         <Text size="xs" c="dimmed">{d.name}</Text>
                       </Group>
                       <Text size="xs" fw={700}>{d.value}</Text>
@@ -371,9 +369,9 @@ export default function Helpdesk() {
                             <Text size="sm" fw={500}>{item}</Text>
                             <Text size="xs" c="dimmed">{count} ({pct}%)</Text>
                           </Group>
-                          <div style={{ height: 8, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: colorOf(item), borderRadius: 999, transition: "width 0.5s" }} />
-                          </div>
+                          <Box h={8} style={{ background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
+                            <Box h="100%" style={{ width: `${pct}%`, background: colorOf(item), borderRadius: 999, transition: "width 0.5s" }} />
+                          </Box>
                         </Stack>
                       );
                     })}
@@ -417,9 +415,9 @@ export default function Helpdesk() {
                       <Table.Td ta="center" fw={600} c={row.breached > 0 ? "red" : "green"}>{row.breached}</Table.Td>
                       <Table.Td miw={140}>
                         <Group gap="xs">
-                          <div style={{ flex: 1, height: 8, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 999 }} />
-                          </div>
+                          <Box style={{ flex: 1, height: 8, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
+                            <Box style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: 999 }} />
+                          </Box>
                           <Text size="sm" fw={700} c={healthColor} miw={36}>{pct}%</Text>
                         </Group>
                       </Table.Td>

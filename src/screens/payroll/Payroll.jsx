@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchPayroll, createPayrollRecord, markPayrollPaid, deletePayrollRecord } from "../../api/payrollApi";
 import {
-  Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid,
+  Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid, ThemeIcon,
   TextInput, Select, Progress, Modal, ActionIcon, Notification, Loader, Center,
 } from "@mantine/core";
 import {
@@ -318,13 +318,13 @@ const Payroll = ({ embedded = false } = {}) => {
         {STATS.map((s) => (
           <Paper key={s.label} withBorder p="md" radius="lg">
             <Group gap="md">
-              <Paper w={48} h={48} radius="lg" style={{ background: `var(--mantine-color-${s.color}-0)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: `var(--mantine-color-${s.color}-6)` }}>{s.icon}</span>
-              </Paper>
-              <div>
+              <ThemeIcon size={48} radius="lg" variant="light" color={s.color} style={{ flexShrink: 0 }}>
+                {s.icon}
+              </ThemeIcon>
+              <Stack gap={2}>
                 <Text size="sm" c="dimmed">{s.label}</Text>
                 <Text size="lg" fw={700} c={`${s.color}.7`}>{s.prefix}{s.value}</Text>
-              </div>
+              </Stack>
             </Group>
           </Paper>
         ))}
@@ -353,7 +353,7 @@ const Payroll = ({ embedded = false } = {}) => {
               data={[{ value: "All", label: "All Months" }, ...uniqueMonths.map(m => ({ value: m, label: m }))]}
               w={150}
             />
-            <Text size="sm" c="dimmed" style={{ display: "flex", alignItems: "center" }}>{filtered.length} record{filtered.length !== 1 ? "s" : ""}</Text>
+            <Text size="sm" c="dimmed">{filtered.length} record{filtered.length !== 1 ? "s" : ""}</Text>
           </Group>
 
           {payroll.length > 0 && (
@@ -454,7 +454,7 @@ const Payroll = ({ embedded = false } = {}) => {
                 { label: "Paid",          value: `${paidCount} (₹${paidAmount.toLocaleString("en-IN")})`,        color: "green" },
                 { label: "Pending",       value: `${pendingCount} (₹${pendingAmount.toLocaleString("en-IN")})`,  color: "orange" },
               ].map((s) => (
-                <Paper key={s.label} p="md" radius="lg" style={{ background: `var(--mantine-color-${s.color}-0)` }}>
+                <Paper key={s.label} p="md" radius="lg" bg={`${s.color}.0`}>
                   <Text size="sm" c="dimmed" mb={4}>{s.label}</Text>
                   <Text size="lg" fw={700} c={`${s.color}.7`}>{s.value}</Text>
                 </Paper>

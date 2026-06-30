@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+  Box, Stack, Group, Paper, SimpleGrid, Text, Button,
+  Table, Badge as MantineBadge,
+} from "@mantine/core";
+import {
   IconUser, IconBriefcase, IconCalendarOff, IconClock,
   IconCurrencyRupee, IconFile, IconDeviceLaptop,
   IconPhone, IconMail, IconMapPin, IconAlertCircle,
   IconCalendar, IconBuilding, IconUserCheck, IconDownload,
-  IconUpload, IconEye, IconCheck, IconX, IconMinus,
-  IconChevronDown,
+  IconUpload, IconEye,
 } from "@tabler/icons-react";
 
 import { IconChartBar, IconHistory }                   from "@tabler/icons-react";
 import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, useEmpPerformance, useEmpActivity, useEmpDocuments, useEmpAssets } from "../../queries/useEmployees";
 import { AppLoader }                                   from "../../components/ui/AppLoader";
-import { COLORS, STATUS_BADGE }                        from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
-import { SPACING, PADDING, GAP, LAYOUT }               from "../../theme/spacing";
-import { RADIUS, SHADOW, ICON_SIZE, TRANSITION }       from "../../theme/sizes";
+import { COLORS }                                      from "../../theme/colors";
 import { getAvatarColor, getInitials, formatCurrency } from "../../utils/helpers";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -108,35 +108,26 @@ const DEPT_COLORS = {
 
 // ─── Helper: Status Badge ─────────────────────────────────────────────────────
 
-const Badge = ({ label, dark }) => {
+const Badge = ({ label }) => {
   const map = {
-    Present:  { bg: COLORS.successLight,  color: COLORS.success  },
-    Approved: { bg: COLORS.successLight,  color: COLORS.success  },
-    Assigned: { bg: COLORS.successLight,  color: COLORS.success  },
-    uploaded: { bg: COLORS.successLight,  color: COLORS.success  },
-    Active:   { bg: COLORS.successLight,  color: COLORS.success  },
-    Absent:   { bg: COLORS.dangerMuted,   color: COLORS.danger   },
-    Rejected: { bg: COLORS.dangerMuted,   color: COLORS.danger   },
-    Returned: { bg: COLORS.dangerMuted,   color: COLORS.danger   },
-    Leave:    { bg: COLORS.warningLight,  color: COLORS.warning  },
-    Pending:  { bg: COLORS.primaryLight,  color: COLORS.primary  },
-    pending:  { bg: COLORS.warningLight,  color: COLORS.warning  },
-    Inactive: { bg: COLORS.gray100,       color: COLORS.gray500  },
+    Present:  { color: "green"  },
+    Approved: { color: "green"  },
+    Assigned: { color: "green"  },
+    uploaded: { color: "green"  },
+    Active:   { color: "green"  },
+    Absent:   { color: "red"    },
+    Rejected: { color: "red"    },
+    Returned: { color: "red"    },
+    Leave:    { color: "yellow" },
+    Pending:  { color: "blue"   },
+    pending:  { color: "yellow" },
+    Inactive: { color: "gray"   },
   };
-  const s = map[label] || { bg: COLORS.gray200, color: COLORS.gray600 };
+  const s = map[label] || { color: "gray" };
   return (
-    <span style={{
-      display:      "inline-block",
-      padding:      "3px 10px",
-      borderRadius: RADIUS.full,
-      fontSize:     FONT_SIZE.xs,
-      fontWeight:   FONT_WEIGHT.semibold,
-      background:   s.bg,
-      color:        s.color,
-      whiteSpace:   "nowrap",
-    }}>
+    <MantineBadge color={s.color} variant="light" size="sm" radius="xl">
       {label.charAt(0).toUpperCase() + label.slice(1)}
-    </span>
+    </MantineBadge>
   );
 };
 
@@ -194,156 +185,141 @@ const openPayslip = (emp, row) => {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const InfoRow = ({ label, value, icon: Icon, dark }) => {
-  const text    = dark ? COLORS.dark.text    : COLORS.textLight;
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
-  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
+  const iconBg  = dark ? COLORS.dark.inputBg : COLORS.gray100;
   return (
-    <div style={{
-      display:      "flex",
-      alignItems:   "flex-start",
-      gap:          GAP.sm,
-      padding:      `${SPACING[3]}px 0`,
-      borderBottom: `1px solid ${border}`,
-    }}>
+    <Group
+      align="flex-start"
+      gap="sm"
+      py="xs"
+      style={{ borderBottom: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}
+    >
       {Icon && (
-        <div style={{ width: 32, height: 32, borderRadius: RADIUS.md, background: dark ? COLORS.dark.inputBg : COLORS.gray100, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+        <Box
+          w={32} h={32}
+          style={{
+            borderRadius: 8,
+            background: iconBg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            marginTop: 1,
+          }}
+        >
           <Icon size={15} color={subtext} />
-        </div>
+        </Box>
       )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: "0 0 2px", fontSize: FONT_SIZE.xs, color: subtext, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base }}>{label}</p>
-        <p style={{ margin: 0, fontSize: FONT_SIZE.base, color: text, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, wordBreak: "break-word" }}>{value || "—"}</p>
-      </div>
-    </div>
+      <Box style={{ flex: 1, minWidth: 0 }}>
+        <Text size="xs" c={subtext} fw={500} mb={2}>{label}</Text>
+        <Text size="sm" c={dark ? COLORS.dark.text : COLORS.textLight} fw={500} style={{ wordBreak: "break-word" }}>
+          {value || "—"}
+        </Text>
+      </Box>
+    </Group>
   );
 };
 
 const MiniStatCard = ({ label, value, color, bg, dark }) => (
-  <div style={{
-    flex:         1, minWidth: 120,
-    background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
-    border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-    borderRadius: RADIUS.xl,
-    padding:      `${SPACING[4]}px`,
-    textAlign:    "center",
-    boxShadow:    SHADOW.xs,
-  }}>
-    <div style={{ width: 44, height: 44, borderRadius: RADIUS.full, background: bg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
-      <span style={{ fontSize: FONT_SIZE.xl, fontWeight: FONT_WEIGHT.bold, color }}>{value}</span>
-    </div>
-    <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight, fontFamily: FONT_FAMILY.base, fontWeight: FONT_WEIGHT.medium }}>{label}</p>
-  </div>
-);
-
-const TableWrapper = ({ dark, children }) => (
-  <div style={{ overflowX: "auto", borderRadius: RADIUS.xl, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
-    <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: FONT_FAMILY.base }}>
-      {children}
-    </table>
-  </div>
-);
-
-const Th = ({ children, dark }) => (
-  <th style={{
-    padding:       PADDING.tableHeader,
-    textAlign:     "left",
-    fontSize:      FONT_SIZE.xs,
-    fontWeight:    FONT_WEIGHT.semibold,
-    color:         dark ? COLORS.dark.subtext : COLORS.textMutedLight,
-    fontFamily:    FONT_FAMILY.base,
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
-    whiteSpace:    "nowrap",
-    background:    dark ? COLORS.dark.theadBg : COLORS.gray50,
-    borderBottom:  `2px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-  }}>
-    {children}
-  </th>
-);
-
-const Td = ({ children, dark, muted, bold }) => (
-  <td style={{
-    padding:    PADDING.tableCell,
-    fontSize:   FONT_SIZE.base,
-    color:      muted
-      ? (dark ? COLORS.dark.subtext : COLORS.textMutedLight)
-      : (dark ? COLORS.dark.text    : COLORS.textLight),
-    fontWeight: bold ? FONT_WEIGHT.semibold : FONT_WEIGHT.normal,
-    fontFamily: FONT_FAMILY.base,
-    whiteSpace: "nowrap",
-  }}>
-    {children}
-  </td>
+  <Paper
+    style={{ flex: 1, minWidth: 120 }}
+    bg={dark ? COLORS.dark.cardBg : COLORS.surfaceLight}
+    withBorder
+    radius="xl"
+    p="md"
+    shadow="xs"
+  >
+    <Stack align="center" gap={0}>
+      <Box
+        w={44} h={44}
+        style={{
+          borderRadius: "50%",
+          background: bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 10,
+        }}
+      >
+        <Text size="xl" fw={700} c={color}>{value}</Text>
+      </Box>
+      <Text size="xs" c={dark ? COLORS.dark.subtext : COLORS.textMutedLight} fw={500}>{label}</Text>
+    </Stack>
+  </Paper>
 );
 
 // ─── Tab Panels ───────────────────────────────────────────────────────────────
 
-const PersonalTab = ({ emp, dark }) => {
-  const text    = dark ? COLORS.dark.text    : COLORS.textLight;
-  const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
-  const cardBg  = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
-  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
+const PersonalTab = ({ emp, dark }) => (
+  <SimpleGrid cols={2} spacing="lg">
+    <Paper
+      bg={dark ? COLORS.dark.cardBg : COLORS.surfaceLight}
+      withBorder
+      radius="xl"
+      p="xl"
+      shadow="xs"
+    >
+      <Text size="sm" fw={600} c={dark ? COLORS.dark.text : COLORS.textLight} mb="xs">Personal Details</Text>
+      <InfoRow dark={dark} icon={IconUser}         label="Full Name"       value={emp.name}        />
+      <InfoRow dark={dark} icon={IconMail}         label="Email Address"   value={emp.email}       />
+      <InfoRow dark={dark} icon={IconPhone}        label="Phone"           value={emp.phone}       />
+      <InfoRow dark={dark} icon={IconCalendar}     label="Date of Birth"   value={emp.dateOfBirth} />
+      <InfoRow dark={dark} icon={IconMapPin}       label="Address"         value={emp.address}     />
+    </Paper>
 
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.lg }}>
-      {/* Personal Details */}
-      <div style={{ background: cardBg, borderRadius: RADIUS.xl, border: `1px solid ${border}`, padding: SPACING[5], boxShadow: SHADOW.xs }}>
-        <p style={{ margin: "0 0 12px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>Personal Details</p>
-        <InfoRow dark={dark} icon={IconUser}         label="Full Name"       value={emp.name}        />
-        <InfoRow dark={dark} icon={IconMail}         label="Email Address"   value={emp.email}       />
-        <InfoRow dark={dark} icon={IconPhone}        label="Phone"           value={emp.phone}       />
-        <InfoRow dark={dark} icon={IconCalendar}     label="Date of Birth"   value={emp.dateOfBirth} />
-        <InfoRow dark={dark} icon={IconMapPin}       label="Address"         value={emp.address}     />
-      </div>
+    <Paper
+      bg={dark ? COLORS.dark.cardBg : COLORS.surfaceLight}
+      withBorder
+      radius="xl"
+      p="xl"
+      shadow="xs"
+    >
+      <Text size="sm" fw={600} c={dark ? COLORS.dark.text : COLORS.textLight} mb="xs">Emergency & Identification</Text>
+      <InfoRow dark={dark} icon={IconAlertCircle}  label="Emergency Contact"        value={emp.emergencyContact?.name}  />
+      <InfoRow dark={dark} icon={IconPhone}        label="Emergency Phone"          value={emp.emergencyContact?.phone} />
+      <InfoRow dark={dark} icon={IconUserCheck}    label="Employee ID"              value={emp.employeeId}              />
+      <InfoRow dark={dark} icon={IconBuilding}     label="Department"               value={emp.department}              />
+      <InfoRow dark={dark} icon={IconBriefcase}    label="Designation"              value={emp.designation}             />
+    </Paper>
+  </SimpleGrid>
+);
 
-      {/* Emergency & IDs */}
-      <div style={{ background: cardBg, borderRadius: RADIUS.xl, border: `1px solid ${border}`, padding: SPACING[5], boxShadow: SHADOW.xs }}>
-        <p style={{ margin: "0 0 12px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>Emergency & Identification</p>
-        <InfoRow dark={dark} icon={IconAlertCircle}  label="Emergency Contact"        value={emp.emergencyContact?.name}  />
-        <InfoRow dark={dark} icon={IconPhone}        label="Emergency Phone"          value={emp.emergencyContact?.phone} />
-        <InfoRow dark={dark} icon={IconUserCheck}    label="Employee ID"              value={emp.employeeId}              />
-        <InfoRow dark={dark} icon={IconBuilding}     label="Department"               value={emp.department}              />
-        <InfoRow dark={dark} icon={IconBriefcase}    label="Designation"              value={emp.designation}             />
-      </div>
-    </div>
-  );
-};
-
-const JobTab = ({ emp, dark }) => {
-  const text    = dark ? COLORS.dark.text    : COLORS.textLight;
-  const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
-  const cardBg  = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
-  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
-
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.lg }}>
-      <div style={{ background: cardBg, borderRadius: RADIUS.xl, border: `1px solid ${border}`, padding: SPACING[5], boxShadow: SHADOW.xs }}>
-        <p style={{ margin: "0 0 12px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>Role & Position</p>
-        <InfoRow dark={dark} icon={IconBuilding}    label="Department"          value={emp.department}      />
-        <InfoRow dark={dark} icon={IconBriefcase}   label="Designation"         value={emp.designation}     />
-        <InfoRow dark={dark} icon={IconUserCheck}   label="Role"                value={emp.role}            />
-        <InfoRow dark={dark} icon={IconUser}        label="Reporting Manager"   value={emp.reportingManager}/>
-      </div>
-      <div style={{ background: cardBg, borderRadius: RADIUS.xl, border: `1px solid ${border}`, padding: SPACING[5], boxShadow: SHADOW.xs }}>
-        <p style={{ margin: "0 0 12px", fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>Employment Details</p>
-        <InfoRow dark={dark} icon={IconCalendar}    label="Join Date"           value={emp.joinDate}         />
-        <InfoRow dark={dark} icon={IconFile}        label="Employment Type"     value={emp.employmentType}   />
-        <InfoRow dark={dark} icon={IconMapPin}      label="Work Location"       value={emp.workLocation}     />
-        <InfoRow dark={dark} icon={IconCurrencyRupee} label="CTC (Monthly)"    value={emp.salary ? formatCurrency(emp.salary) : "—"} />
-      </div>
-    </div>
-  );
-};
+const JobTab = ({ emp, dark }) => (
+  <SimpleGrid cols={2} spacing="lg">
+    <Paper
+      bg={dark ? COLORS.dark.cardBg : COLORS.surfaceLight}
+      withBorder
+      radius="xl"
+      p="xl"
+      shadow="xs"
+    >
+      <Text size="sm" fw={600} c={dark ? COLORS.dark.text : COLORS.textLight} mb="xs">Role & Position</Text>
+      <InfoRow dark={dark} icon={IconBuilding}    label="Department"          value={emp.department}      />
+      <InfoRow dark={dark} icon={IconBriefcase}   label="Designation"         value={emp.designation}     />
+      <InfoRow dark={dark} icon={IconUserCheck}   label="Role"                value={emp.role}            />
+      <InfoRow dark={dark} icon={IconUser}        label="Reporting Manager"   value={emp.reportingManager}/>
+    </Paper>
+    <Paper
+      bg={dark ? COLORS.dark.cardBg : COLORS.surfaceLight}
+      withBorder
+      radius="xl"
+      p="xl"
+      shadow="xs"
+    >
+      <Text size="sm" fw={600} c={dark ? COLORS.dark.text : COLORS.textLight} mb="xs">Employment Details</Text>
+      <InfoRow dark={dark} icon={IconCalendar}    label="Join Date"           value={emp.joinDate}         />
+      <InfoRow dark={dark} icon={IconFile}        label="Employment Type"     value={emp.employmentType}   />
+      <InfoRow dark={dark} icon={IconMapPin}      label="Work Location"       value={emp.workLocation}     />
+      <InfoRow dark={dark} icon={IconCurrencyRupee} label="CTC (Monthly)"    value={emp.salary ? formatCurrency(emp.salary) : "—"} />
+    </Paper>
+  </SimpleGrid>
+);
 
 const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 const LeaveTab = ({ dark, empId }) => {
-  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
-  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
-
   const { data } = useEmpLeave(empId);
   const apiLeaves = data?.leaves;
-  // real data when present, else mock fallback (never breaks)
   const rows = apiLeaves && apiLeaves.length
     ? apiLeaves.map((l) => ({ id: l.id, type: l.type, from: fmtD(l.fromDate), to: fmtD(l.toDate), days: l.days, status: l.status }))
     : MOCK_LEAVE_HISTORY;
@@ -354,49 +330,43 @@ const LeaveTab = ({ dark, empId }) => {
   const totalDays = sum ? sum.daysUsed : rows.filter((l) => l.status === "Approved").reduce((s, l) => s + l.days, 0);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-      <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
+    <Stack gap="lg">
+      <Group gap="md" style={{ flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Approved"  value={approved}  color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Pending"   value={pending}   color={COLORS.primary} bg={COLORS.primaryLight} />
         <MiniStatCard dark={dark} label="Rejected"  value={rejected}  color={COLORS.danger}  bg={COLORS.dangerMuted}  />
         <MiniStatCard dark={dark} label="Days Used" value={totalDays} color={COLORS.warning} bg={COLORS.warningLight} />
-      </div>
+      </Group>
 
-      <TableWrapper dark={dark}>
-        <thead>
-          <tr>
-            <Th dark={dark}>Leave Type</Th>
-            <Th dark={dark}>From</Th>
-            <Th dark={dark}>To</Th>
-            <Th dark={dark}>Days</Th>
-            <Th dark={dark}>Status</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr
-              key={row.id}
-              style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              <Td dark={dark} bold>{row.type}</Td>
-              <Td dark={dark} muted>{row.from}</Td>
-              <Td dark={dark} muted>{row.to}</Td>
-              <Td dark={dark}>{row.days}d</Td>
-              <td style={{ padding: PADDING.tableCell }}><Badge label={row.status} dark={dark} /></td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrapper>
-    </div>
+      <Box style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+        <Table striped={false} highlightOnHover withColumnBorders={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Leave Type</Table.Th>
+              <Table.Th>From</Table.Th>
+              <Table.Th>To</Table.Th>
+              <Table.Th>Days</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {rows.map((row) => (
+              <Table.Tr key={row.id}>
+                <Table.Td><Text size="sm" fw={600}>{row.type}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{row.from}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{row.to}</Text></Table.Td>
+                <Table.Td><Text size="sm">{row.days}d</Text></Table.Td>
+                <Table.Td><Badge label={row.status} dark={dark} /></Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Box>
+    </Stack>
   );
 };
 
 const AttendanceTab = ({ dark, empId }) => {
-  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
-  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
-
   const { data } = useEmpAttendance(empId);
   const apiRecords = data?.records;
   const rows = apiRecords && apiRecords.length
@@ -415,52 +385,43 @@ const AttendanceTab = ({ dark, empId }) => {
   const total   = rows.length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-      {/* Monthly summary */}
-      <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
+    <Stack gap="lg">
+      <Group gap="md" style={{ flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Present"      value={present} color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Absent"       value={absent}  color={COLORS.danger}  bg={COLORS.dangerMuted}  />
         <MiniStatCard dark={dark} label={s ? "Late" : "Leave"} value={leave} color={COLORS.warning} bg={COLORS.warningLight} />
         <MiniStatCard dark={dark} label="Total Days"   value={total}   color={COLORS.info}    bg={COLORS.infoLight}    />
-      </div>
+      </Group>
 
-      <TableWrapper dark={dark}>
-        <thead>
-          <tr>
-            <Th dark={dark}>Date</Th>
-            <Th dark={dark}>Check In</Th>
-            <Th dark={dark}>Check Out</Th>
-            <Th dark={dark}>Hours</Th>
-            <Th dark={dark}>Status</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr
-              key={i}
-              style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              <Td dark={dark} bold>{row.date}</Td>
-              <Td dark={dark} muted>{row.checkIn}</Td>
-              <Td dark={dark} muted>{row.checkOut}</Td>
-              <Td dark={dark}>{row.hours}</Td>
-              <td style={{ padding: PADDING.tableCell }}><Badge label={row.status} dark={dark} /></td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrapper>
-    </div>
+      <Box style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+        <Table striped={false} highlightOnHover withColumnBorders={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Date</Table.Th>
+              <Table.Th>Check In</Table.Th>
+              <Table.Th>Check Out</Table.Th>
+              <Table.Th>Hours</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {rows.map((row, i) => (
+              <Table.Tr key={i}>
+                <Table.Td><Text size="sm" fw={600}>{row.date}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{row.checkIn}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{row.checkOut}</Text></Table.Td>
+                <Table.Td><Text size="sm">{row.hours}</Text></Table.Td>
+                <Table.Td><Badge label={row.status} dark={dark} /></Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Box>
+    </Stack>
   );
 };
 
 const PayrollTab = ({ emp, dark, empId }) => {
-  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
-  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
-  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
-  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
-
   const { data } = useEmpPayroll(empId);
   const apiPay = data?.payrolls;
   const PAYROLL = apiPay && apiPay.length
@@ -474,69 +435,53 @@ const PayrollTab = ({ emp, dark, empId }) => {
   const avgNet    = Math.round(totalNet / (PAYROLL.length || 1));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-      {/* Payroll summary */}
-      <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
+    <Stack gap="lg">
+      <Group gap="md" style={{ flexWrap: "wrap" }}>
         <MiniStatCard dark={dark} label="Months Paid"    value={PAYROLL.length} color={COLORS.primary} bg={COLORS.primaryLight} />
         <MiniStatCard dark={dark} label="Avg Net / Mo"   value={`₹${Math.round(avgNet/1000)}K`}  color={COLORS.success} bg={COLORS.successLight} />
         <MiniStatCard dark={dark} label="Total YTD"      value={`₹${Math.round(totalNet/1000)}K`} color={COLORS.warning} bg={COLORS.warningLight} />
-      </div>
+      </Group>
 
-      <TableWrapper dark={dark}>
-        <thead>
-          <tr>
-            <Th dark={dark}>Month</Th>
-            <Th dark={dark}>Basic</Th>
-            <Th dark={dark}>Allowances</Th>
-            <Th dark={dark}>Deductions</Th>
-            <Th dark={dark}>Net Pay</Th>
-            <Th dark={dark}>Payslip</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {PAYROLL.map((row, i) => (
-            <tr
-              key={i}
-              style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              <Td dark={dark} bold>{row.month}</Td>
-              <Td dark={dark} muted>₹{row.basic.toLocaleString("en-IN")}</Td>
-              <Td dark={dark} muted>+₹{row.allowances.toLocaleString("en-IN")}</Td>
-              <Td dark={dark} muted>-₹{row.deductions.toLocaleString("en-IN")}</Td>
-              <td style={{ padding: PADDING.tableCell }}>
-                <span style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.bold, color: COLORS.success, fontFamily: FONT_FAMILY.base }}>
-                  ₹{row.net.toLocaleString("en-IN")}
-                </span>
-              </td>
-              <td style={{ padding: PADDING.tableCell }}>
-                <button
-                  onClick={() => openPayslip(emp, row)}
-                  style={{
-                    display:      "inline-flex", alignItems: "center", gap: 5,
-                    padding:      "6px 12px",
-                    borderRadius: RADIUS.md,
-                    border:       `1px solid ${COLORS.primary}`,
-                    background:   COLORS.primaryMuted,
-                    color:        COLORS.primary,
-                    fontSize:     FONT_SIZE.xs,
-                    fontWeight:   FONT_WEIGHT.semibold,
-                    fontFamily:   FONT_FAMILY.base,
-                    cursor:       "pointer",
-                    transition:   TRANSITION.fast,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.primary; e.currentTarget.style.color = COLORS.white; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.primaryMuted; e.currentTarget.style.color = COLORS.primary; }}
-                >
-                  <IconDownload size={13} /> Download
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrapper>
-    </div>
+      <Box style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+        <Table striped={false} highlightOnHover withColumnBorders={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Month</Table.Th>
+              <Table.Th>Basic</Table.Th>
+              <Table.Th>Allowances</Table.Th>
+              <Table.Th>Deductions</Table.Th>
+              <Table.Th>Net Pay</Table.Th>
+              <Table.Th>Payslip</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {PAYROLL.map((row, i) => (
+              <Table.Tr key={i}>
+                <Table.Td><Text size="sm" fw={600}>{row.month}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">₹{row.basic.toLocaleString("en-IN")}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">+₹{row.allowances.toLocaleString("en-IN")}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">-₹{row.deductions.toLocaleString("en-IN")}</Text></Table.Td>
+                <Table.Td>
+                  <Text size="sm" fw={700} c={COLORS.success}>
+                    ₹{row.net.toLocaleString("en-IN")}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    leftSection={<IconDownload size={13} />}
+                    onClick={() => openPayslip(emp, row)}
+                  >
+                    Download
+                  </Button>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Box>
+    </Stack>
   );
 };
 
@@ -544,79 +489,62 @@ const DocumentsTab = ({ dark, empId }) => {
   const text    = dark ? COLORS.dark.text    : COLORS.textLight;
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
   const cardBg  = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
-  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
-  const inputBg = dark ? COLORS.dark.inputBg : COLORS.gray50;
 
   const { data: docs = MOCK_DOCUMENTS } = useEmpDocuments(empId);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: GAP.md }}>
+    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
       {docs.map((doc) => {
         const DocIcon = doc.icon;
         const isUploaded = doc.status === "uploaded";
         return (
-          <div
+          <Paper
             key={doc.id}
-            style={{
-              background:   cardBg,
-              border:       `1px solid ${border}`,
-              borderRadius: RADIUS.xl,
-              padding:      SPACING[5],
-              boxShadow:    SHADOW.xs,
-              display:      "flex",
-              flexDirection:"column",
-              alignItems:   "center",
-              textAlign:    "center",
-              gap:          GAP.sm,
-            }}
+            bg={cardBg}
+            withBorder
+            radius="xl"
+            p="xl"
+            shadow="xs"
           >
-            <div style={{
-              width:        56, height: 56, borderRadius: RADIUS.xl,
-              background:   isUploaded ? COLORS.successLight : COLORS.warningLight,
-              display:      "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <DocIcon size={24} color={isUploaded ? COLORS.success : COLORS.warning} />
-            </div>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>{doc.name}</p>
-            <Badge label={doc.status} dark={dark} />
-            {doc.date !== "--" && (
-              <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base }}>Uploaded {doc.date}</p>
-            )}
-            <div style={{ display: "flex", gap: GAP.xs, marginTop: 4 }}>
-              {isUploaded ? (
-                <button style={{
-                  display:      "inline-flex", alignItems: "center", gap: 4,
-                  padding:      "6px 12px", borderRadius: RADIUS.md,
-                  border:       `1px solid ${border}`, background: inputBg,
-                  color:        subtext, fontSize: FONT_SIZE.xs,
-                  fontWeight:   FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, cursor: "pointer",
-                }}>
-                  <IconEye size={13} /> View
-                </button>
-              ) : (
-                <button style={{
-                  display:      "inline-flex", alignItems: "center", gap: 4,
-                  padding:      "6px 12px", borderRadius: RADIUS.md,
-                  border:       `1px solid ${COLORS.primary}`, background: COLORS.primaryMuted,
-                  color:        COLORS.primary, fontSize: FONT_SIZE.xs,
-                  fontWeight:   FONT_WEIGHT.semibold, fontFamily: FONT_FAMILY.base, cursor: "pointer",
-                }}>
-                  <IconUpload size={13} /> Upload
-                </button>
+            <Stack align="center" gap="sm">
+              <Box
+                w={56} h={56}
+                style={{
+                  borderRadius: 12,
+                  background: isUploaded ? COLORS.successLight : COLORS.warningLight,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <DocIcon size={24} color={isUploaded ? COLORS.success : COLORS.warning} />
+              </Box>
+              <Text size="sm" fw={600} c={text} ta="center">{doc.name}</Text>
+              <Badge label={doc.status} dark={dark} />
+              {doc.date !== "--" && (
+                <Text size="xs" c={subtext}>Uploaded {doc.date}</Text>
               )}
-            </div>
-          </div>
+              <Group gap="xs" mt={4}>
+                {isUploaded ? (
+                  <Button size="xs" variant="default" leftSection={<IconEye size={13} />}>
+                    View
+                  </Button>
+                ) : (
+                  <Button size="xs" variant="light" leftSection={<IconUpload size={13} />}>
+                    Upload
+                  </Button>
+                )}
+              </Group>
+            </Stack>
+          </Paper>
         );
       })}
-    </div>
+    </SimpleGrid>
   );
 };
 
 const AssetsTab = ({ dark, empId }) => {
-  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
-  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
-  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
-  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
+  const text = dark ? COLORS.dark.text : COLORS.textLight;
 
   const { data: assets = MOCK_ASSETS } = useEmpAssets(empId);
   const assigned = assets.filter((a) => a.status === "Assigned").length;
@@ -630,134 +558,130 @@ const AssetsTab = ({ dark, empId }) => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: GAP.lg }}>
-      {/* Summary */}
-      <div style={{ display: "flex", gap: GAP.md, flexWrap: "wrap" }}>
-        <MiniStatCard dark={dark} label="Assigned"   value={assigned}            color={COLORS.success} bg={COLORS.successLight} />
-        <MiniStatCard dark={dark} label="Returned"   value={returned}            color={COLORS.danger}  bg={COLORS.dangerMuted}  />
+    <Stack gap="lg">
+      <Group gap="md" style={{ flexWrap: "wrap" }}>
+        <MiniStatCard dark={dark} label="Assigned"    value={assigned}      color={COLORS.success} bg={COLORS.successLight} />
+        <MiniStatCard dark={dark} label="Returned"    value={returned}      color={COLORS.danger}  bg={COLORS.dangerMuted}  />
         <MiniStatCard dark={dark} label="Total Items" value={assets.length} color={COLORS.primary} bg={COLORS.primaryLight} />
-      </div>
+      </Group>
 
-      <TableWrapper dark={dark}>
-        <thead>
-          <tr>
-            <Th dark={dark}>Asset Name</Th>
-            <Th dark={dark}>Asset ID</Th>
-            <Th dark={dark}>Assigned Date</Th>
-            <Th dark={dark}>Condition</Th>
-            <Th dark={dark}>Status</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {assets.map((asset) => (
-            <tr
-              key={asset.id}
-              style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast, background: "transparent" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-            >
-              <Td dark={dark} bold>{asset.name}</Td>
-              <Td dark={dark} muted>{asset.assetId}</Td>
-              <Td dark={dark} muted>{asset.assignedDate}</Td>
-              <td style={{ padding: PADDING.tableCell }}>
-                <span style={{
-                  fontSize:   FONT_SIZE.xs,
-                  fontWeight: FONT_WEIGHT.semibold,
-                  color:      conditionColor[asset.condition] || text,
-                  fontFamily: FONT_FAMILY.base,
-                }}>
-                  {asset.condition}
-                </span>
-              </td>
-              <td style={{ padding: PADDING.tableCell }}><Badge label={asset.status} dark={dark} /></td>
-            </tr>
-          ))}
-        </tbody>
-      </TableWrapper>
-    </div>
+      <Box style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+        <Table striped={false} highlightOnHover withColumnBorders={false}>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Asset Name</Table.Th>
+              <Table.Th>Asset ID</Table.Th>
+              <Table.Th>Assigned Date</Table.Th>
+              <Table.Th>Condition</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {assets.map((asset) => (
+              <Table.Tr key={asset.id}>
+                <Table.Td><Text size="sm" fw={600}>{asset.name}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{asset.assetId}</Text></Table.Td>
+                <Table.Td><Text size="sm" c="dimmed">{asset.assignedDate}</Text></Table.Td>
+                <Table.Td>
+                  <Text size="xs" fw={600} c={conditionColor[asset.condition] || text}>
+                    {asset.condition}
+                  </Text>
+                </Table.Td>
+                <Table.Td><Badge label={asset.status} dark={dark} /></Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Box>
+    </Stack>
   );
 };
 
 // ─── Main Profile Component ───────────────────────────────────────────────────
 
 const PerformanceTab = ({ dark, empId }) => {
-  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
-  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
-  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
-  const rowHover = dark ? COLORS.dark.rowHover : COLORS.gray50;
+  const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
 
   const { data } = useEmpPerformance(empId);
   const goals = data?.goals || [];
 
   if (!goals.length) {
     return (
-      <div style={{ textAlign: "center", padding: SPACING[8], color: subtext, fontFamily: FONT_FAMILY.base }}>
+      <Stack align="center" py="xl" gap="xs">
         <IconChartBar size={36} color={subtext} style={{ opacity: 0.5 }} />
-        <p style={{ margin: `${GAP.sm}px 0 0`, fontSize: FONT_SIZE.sm }}>No performance goals or reviews yet.</p>
-      </div>
+        <Text size="sm" c={subtext}>No performance goals or reviews yet.</Text>
+      </Stack>
     );
   }
 
   return (
-    <TableWrapper dark={dark}>
-      <thead>
-        <tr>
-          <Th dark={dark}>Goal / KPI</Th>
-          <Th dark={dark}>Target</Th>
-          <Th dark={dark}>Progress</Th>
-          <Th dark={dark}>Rating</Th>
-          <Th dark={dark}>Status</Th>
-        </tr>
-      </thead>
-      <tbody>
-        {goals.map((g, i) => (
-          <tr key={g.id || i}
-            style={{ borderBottom: `1px solid ${border}`, transition: TRANSITION.fast }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = rowHover)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}>
-            <Td dark={dark} bold>{g.title || g.goal || g.name || "—"}</Td>
-            <Td dark={dark} muted>{g.target || g.targetDate || "—"}</Td>
-            <Td dark={dark}>{g.progress != null ? `${g.progress}%` : "—"}</Td>
-            <Td dark={dark}>{g.rating != null ? `${g.rating}/5` : "—"}</Td>
-            <td style={{ padding: PADDING.tableCell }}><Badge label={g.status || "Active"} dark={dark} /></td>
-          </tr>
-        ))}
-      </tbody>
-    </TableWrapper>
+    <Box style={{ overflowX: "auto", borderRadius: 12, border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+      <Table striped={false} highlightOnHover withColumnBorders={false}>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Goal / KPI</Table.Th>
+            <Table.Th>Target</Table.Th>
+            <Table.Th>Progress</Table.Th>
+            <Table.Th>Rating</Table.Th>
+            <Table.Th>Status</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {goals.map((g, i) => (
+            <Table.Tr key={g.id || i}>
+              <Table.Td><Text size="sm" fw={600}>{g.title || g.goal || g.name || "—"}</Text></Table.Td>
+              <Table.Td><Text size="sm" c="dimmed">{g.target || g.targetDate || "—"}</Text></Table.Td>
+              <Table.Td><Text size="sm">{g.progress != null ? `${g.progress}%` : "—"}</Text></Table.Td>
+              <Table.Td><Text size="sm">{g.rating != null ? `${g.rating}/5` : "—"}</Text></Table.Td>
+              <Table.Td><Badge label={g.status || "Active"} dark={dark} /></Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Box>
   );
 };
 
 const ActivityTab = ({ dark, empId }) => {
-  const text     = dark ? COLORS.dark.text     : COLORS.textLight;
-  const subtext  = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
-  const border   = dark ? COLORS.dark.border   : COLORS.borderLight;
+  const text    = dark ? COLORS.dark.text    : COLORS.textLight;
+  const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
+  const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
 
   const { data: logs = [] } = useEmpActivity(empId);
 
   if (!logs.length) {
     return (
-      <div style={{ textAlign: "center", padding: SPACING[8], color: subtext, fontFamily: FONT_FAMILY.base }}>
+      <Stack align="center" py="xl" gap="xs">
         <IconHistory size={36} color={subtext} style={{ opacity: 0.5 }} />
-        <p style={{ margin: `${GAP.sm}px 0 0`, fontSize: FONT_SIZE.sm }}>No activity history yet.</p>
-      </div>
+        <Text size="sm" c={subtext}>No activity history yet.</Text>
+      </Stack>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+    <Stack gap={0}>
       {logs.map((l, i) => (
-        <div key={l.id || i} style={{ display: "flex", gap: GAP.md, padding: `${SPACING[3]}px 0`, borderBottom: i < logs.length - 1 ? `1px solid ${border}` : "none" }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.primary, marginTop: 6, flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: text, fontFamily: FONT_FAMILY.base }}>{l.action}</p>
-            {l.details && <p style={{ margin: "2px 0 0", fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base }}>{l.details}</p>}
-          </div>
-          <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base, whiteSpace: "nowrap" }}>
+        <Group
+          key={l.id || i}
+          gap="md"
+          py="xs"
+          style={{ borderBottom: i < logs.length - 1 ? `1px solid ${border}` : "none" }}
+          align="flex-start"
+        >
+          <Box
+            w={8} h={8}
+            style={{ borderRadius: "50%", background: COLORS.primary, marginTop: 6, flexShrink: 0 }}
+          />
+          <Box style={{ flex: 1 }}>
+            <Text size="sm" fw={600} c={text}>{l.action}</Text>
+            {l.details && <Text size="xs" c={subtext} mt={2}>{l.details}</Text>}
+          </Box>
+          <Text size="xs" c={subtext} style={{ whiteSpace: "nowrap" }}>
             {l.actorName ? `${l.actorName} · ` : ""}{l.createdAt ? new Date(l.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
-          </p>
-        </div>
+          </Text>
+        </Group>
       ))}
-    </div>
+    </Stack>
   );
 };
 
@@ -802,7 +726,6 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
   const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
   const text    = dark ? COLORS.dark.text    : COLORS.textLight;
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
-  const inputBg = dark ? COLORS.dark.inputBg : COLORS.gray50;
 
   const av   = getAvatarColor(employee.name);
   const dept = DEPT_COLORS[employee.department] || { bg: COLORS.gray100, text: COLORS.gray600 };
@@ -810,69 +733,69 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
   if (isLoading) return <AppLoader fullScreen />;
 
   return (
-    <div style={{ fontFamily: FONT_FAMILY.base, background: pageBg, minHeight: "100vh", padding: SPACING[6] }}>
+    <Box bg={pageBg} style={{ minHeight: "100vh" }} p="xl">
 
       {/* ── Page Header ── */}
-      <div style={{ marginBottom: SPACING[6] }}>
-        <h1 style={{ margin: 0, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: text, fontFamily: FONT_FAMILY.base }}>
-          Employee Profile
-        </h1>
-        <p style={{ margin: `${GAP.xs}px 0 0`, fontSize: FONT_SIZE.base, color: subtext, fontFamily: FONT_FAMILY.base }}>
-          View and manage employee information
-        </p>
-      </div>
+      <Box mb="xl">
+        <Text size="2xl" fw={700} c={text}>Employee Profile</Text>
+        <Text size="sm" c={subtext} mt={4}>View and manage employee information</Text>
+      </Box>
 
       {/* ── Layout: Sidebar + Content ── */}
-      <div style={{ display: "flex", gap: GAP.lg, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <Group align="flex-start" gap="lg" style={{ flexWrap: "wrap" }}>
 
         {/* ── Left Sidebar ── */}
-        <div style={{
-          width:        280,
-          flexShrink:   0,
-          background:   cardBg,
-          borderRadius: RADIUS["2xl"],
-          border:       `1px solid ${border}`,
-          boxShadow:    SHADOW.card,
-          overflow:     "hidden",
-        }}>
-          {/* Gradient banner */}
-          <div style={{
-            height:     96,
-            background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.purple} 100%)`,
-          }} />
+        <Paper
+          bg={cardBg}
+          withBorder
+          radius={16}
+          shadow="md"
+          style={{ width: 280, flexShrink: 0, overflow: "hidden" }}
+        >
+          {/* Gradient banner — custom gradient, no Mantine prop equivalent */}
+          <Box
+            h={96}
+            style={{ background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.purple} 100%)` }}
+          />
 
           {/* Avatar */}
-          <div style={{ padding: `0 ${SPACING[5]}px ${SPACING[5]}px`, textAlign: "center", marginTop: -44 }}>
-            <div style={{
-              width:        88, height: 88, borderRadius: RADIUS.full,
-              background:   av.bg, color: av.color,
-              display:      "flex", alignItems: "center", justifyContent: "center",
-              fontSize:     FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold,
-              border:       `3px solid ${cardBg}`,
-              margin:       "0 auto",
-              boxShadow:    SHADOW.sm,
-            }}>
-              {getInitials(employee.name)}
-            </div>
+          <Box p="xl" pt={0} ta="center" mt={-44}>
+            <Box
+              w={88} h={88}
+              style={{
+                borderRadius: "50%",
+                background: av.bg,
+                color: av.color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: `3px solid ${cardBg}`,
+                margin: "0 auto",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+              }}
+            >
+              <Text size="xl" fw={700} c={av.color}>{getInitials(employee.name)}</Text>
+            </Box>
 
             {/* Name & role */}
-            <p style={{ margin: `${GAP.sm}px 0 4px`, fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: text, fontFamily: FONT_FAMILY.base }}>
-              {employee.name}
-            </p>
-            <p style={{ margin: "0 0 10px", fontSize: FONT_SIZE.xs, color: subtext, fontFamily: FONT_FAMILY.base }}>
-              {employee.designation}
-            </p>
+            <Text size="lg" fw={700} c={text} mt="sm" mb={4}>{employee.name}</Text>
+            <Text size="xs" c={subtext} mb="xs">{employee.designation}</Text>
 
             {/* Badges */}
-            <div style={{ display: "flex", justifyContent: "center", gap: GAP.xs, flexWrap: "wrap", marginBottom: SPACING[4] }}>
-              <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: RADIUS.full, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, background: dept.bg, color: dept.text }}>
+            <Group justify="center" gap="xs" style={{ flexWrap: "wrap" }} mb="md">
+              <MantineBadge
+                style={{ background: dept.bg, color: dept.text }}
+                variant="filled"
+                size="sm"
+                radius="xl"
+              >
                 {employee.department}
-              </span>
+              </MantineBadge>
               <Badge label={employee.status} dark={dark} />
-            </div>
+            </Group>
 
             {/* Divider */}
-            <div style={{ borderTop: `1px solid ${border}`, margin: `0 0 ${SPACING[4]}px` }} />
+            <Box style={{ borderTop: `1px solid ${border}` }} mb="md" />
 
             {/* Info rows */}
             {[
@@ -881,102 +804,89 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
               { icon: IconMail,         label: "Email",        value: employee.email        },
               { icon: IconPhone,        label: "Phone",        value: employee.phone        },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: GAP.sm, padding: `${GAP.xs}px 0`, textAlign: "left" }}>
+              <Group key={label} gap="sm" py={4} align="flex-start">
                 <Icon size={14} color={subtext} style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: "0.65rem", color: subtext, fontWeight: FONT_WEIGHT.medium, fontFamily: FONT_FAMILY.base, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</p>
-                  <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: text, fontFamily: FONT_FAMILY.base, wordBreak: "break-all" }}>{value || "—"}</p>
-                </div>
-              </div>
+                <Box style={{ minWidth: 0 }}>
+                  <Text
+                    size="xs"
+                    c={subtext}
+                    fw={500}
+                    style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "0.65rem" }}
+                  >
+                    {label}
+                  </Text>
+                  <Text size="xs" c={text} style={{ wordBreak: "break-all" }}>{value || "—"}</Text>
+                </Box>
+              </Group>
             ))}
-          </div>
-        </div>
+          </Box>
+        </Paper>
 
         {/* ── Right Content ── */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: GAP.md }}>
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Stack gap="md">
 
-          {/* Tabs bar */}
-          <div style={{
-            background:   cardBg,
-            borderRadius: RADIUS["2xl"],
-            border:       `1px solid ${border}`,
-            boxShadow:    SHADOW.card,
-            padding:      `${SPACING[2]}px ${SPACING[3]}px`,
-            display:      "flex",
-            gap:          GAP.xs,
-            flexWrap:     "wrap",
-          }}>
-            {TABS.map(({ key, icon: TabIcon }) => {
-              const isActive = activeTab === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key)}
-                  style={{
-                    display:      "inline-flex",
-                    alignItems:   "center",
-                    gap:          GAP.xs,
-                    padding:      `${SPACING[2]}px ${SPACING[3]}px`,
-                    borderRadius: RADIUS.lg,
-                    border:       "none",
-                    background:   isActive ? COLORS.primary : "transparent",
-                    color:        isActive ? COLORS.white   : subtext,
-                    fontSize:     FONT_SIZE.sm,
-                    fontWeight:   isActive ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium,
-                    fontFamily:   FONT_FAMILY.base,
-                    cursor:       "pointer",
-                    transition:   TRANSITION.fast,
-                    whiteSpace:   "nowrap",
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = dark ? COLORS.dark.rowHover : COLORS.gray100; e.currentTarget.style.color = text; } }}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = subtext; } }}
-                >
-                  <TabIcon size={15} />
-                  {key}
-                </button>
-              );
-            })}
-          </div>
+            {/* Tabs bar */}
+            <Paper
+              bg={cardBg}
+              withBorder
+              radius={16}
+              shadow="md"
+              px="sm"
+              py="xs"
+            >
+              <Group gap="xs" style={{ flexWrap: "wrap" }}>
+                {TABS.map(({ key, icon: TabIcon }) => {
+                  const isActive = activeTab === key;
+                  return (
+                    <Button
+                      key={key}
+                      variant={isActive ? "filled" : "subtle"}
+                      size="sm"
+                      radius="md"
+                      leftSection={<TabIcon size={15} />}
+                      onClick={() => setActiveTab(key)}
+                      styles={{ root: { whiteSpace: "nowrap" } }}
+                    >
+                      {key}
+                    </Button>
+                  );
+                })}
+              </Group>
+            </Paper>
 
-          {/* Tab content card */}
-          <div style={{
-            background:   cardBg,
-            borderRadius: RADIUS["2xl"],
-            border:       `1px solid ${border}`,
-            boxShadow:    SHADOW.card,
-            padding:      SPACING[5],
-          }}>
-            {/* Tab heading */}
-            <p style={{
-              margin:     `0 0 ${SPACING[5]}px`,
-              fontSize:   FONT_SIZE.lg,
-              fontWeight: FONT_WEIGHT.bold,
-              color:      text,
-              fontFamily: FONT_FAMILY.base,
-              display:    "flex",
-              alignItems: "center",
-              gap:        GAP.sm,
-            }}>
-              {(() => {
-                const { icon: Icon } = TABS.find((t) => t.key === activeTab) || {};
-                return Icon ? <Icon size={20} color={COLORS.primary} /> : null;
-              })()}
-              {activeTab} Information
-            </p>
+            {/* Tab content card */}
+            <Paper
+              bg={cardBg}
+              withBorder
+              radius={16}
+              shadow="md"
+              p="xl"
+            >
+              {/* Tab heading */}
+              <Group gap="sm" mb="xl">
+                {(() => {
+                  const { icon: Icon } = TABS.find((t) => t.key === activeTab) || {};
+                  return Icon ? <Icon size={20} color={COLORS.primary} /> : null;
+                })()}
+                <Text size="lg" fw={700} c={text}>{activeTab} Information</Text>
+              </Group>
 
-            {activeTab === "Personal"    && <PersonalTab    emp={employee} dark={dark} />}
-            {activeTab === "Job"         && <JobTab         emp={employee} dark={dark} />}
-            {activeTab === "Leave"       && <LeaveTab       empId={targetId} dark={dark} />}
-            {activeTab === "Attendance"  && <AttendanceTab  empId={targetId} dark={dark} />}
-            {activeTab === "Payroll"     && <PayrollTab     emp={employee} empId={targetId} dark={dark} />}
-            {activeTab === "Performance" && <PerformanceTab empId={targetId} dark={dark} />}
-            {activeTab === "Documents"   && <DocumentsTab   empId={targetId} dark={dark} />}
-            {activeTab === "Assets"      && <AssetsTab      empId={targetId} dark={dark} />}
-            {activeTab === "Activity"    && <ActivityTab    empId={targetId} dark={dark} />}
-          </div>
-        </div>
-      </div>
-    </div>
+              {activeTab === "Personal"    && <PersonalTab    emp={employee} dark={dark} />}
+              {activeTab === "Job"         && <JobTab         emp={employee} dark={dark} />}
+              {activeTab === "Leave"       && <LeaveTab       empId={targetId} dark={dark} />}
+              {activeTab === "Attendance"  && <AttendanceTab  empId={targetId} dark={dark} />}
+              {activeTab === "Payroll"     && <PayrollTab     emp={employee} empId={targetId} dark={dark} />}
+              {activeTab === "Performance" && <PerformanceTab empId={targetId} dark={dark} />}
+              {activeTab === "Documents"   && <DocumentsTab   empId={targetId} dark={dark} />}
+              {activeTab === "Assets"      && <AssetsTab      empId={targetId} dark={dark} />}
+              {activeTab === "Activity"    && <ActivityTab    empId={targetId} dark={dark} />}
+            </Paper>
+
+          </Stack>
+        </Box>
+      </Group>
+    </Box>
   );
 };
 

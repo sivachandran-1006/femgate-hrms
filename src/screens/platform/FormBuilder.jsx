@@ -3,27 +3,27 @@ import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
   Paper, Grid, ThemeIcon, ScrollArea, Divider, Switch,
-  Stepper, SegmentedControl, Progress, NumberInput, MultiSelect,
-  Center, RingProgress, ColorSwatch, ColorPicker,
+  Stepper, SegmentedControl, NumberInput, MultiSelect,
+  Center, Checkbox, Radio,
 } from "@mantine/core";
 import {
   IconForms, IconPlus, IconSearch, IconPencil, IconTrash, IconEye,
-  IconCopy, IconRocket, IconDownload, IconArchive, IconX, IconCheck,
-  IconChartBar, IconChartLine, IconClock, IconAlertCircle, IconBell,
-  IconMail, IconArrowRight, IconArrowUpRight, IconArrowDownRight,
-  IconTemplate, IconSettings, IconList, IconBookmark, IconHistory,
-  IconUsers, IconShieldCheck, IconTag, IconCalendar, IconFileText,
-  IconClipboard, IconFlag, IconFilter, IconStar, IconStarFilled,
-  IconDragDrop, IconLayoutGrid, IconDeviceDesktop, IconDeviceTablet,
+  IconCopy, IconRocket, IconDownload, IconArchive, IconCheck,
+  IconChartBar, IconClock,
+  IconArrowUpRight, IconArrowDownRight,
+  IconTemplate, IconSettings, IconList, IconHistory,
+  IconUsers, IconCalendar,
+  IconClipboard,
+  IconDragDrop, IconDeviceDesktop, IconDeviceTablet,
   IconDeviceMobile, IconPhoto, IconSignature, IconToggleLeft,
   IconLetterCase, IconNumbers, IconCurrencyDollar, IconAt, IconPhone,
   IconCalendarEvent, IconAlignLeft, IconChevronDown, IconCheckbox,
   IconCircleDot, IconUpload, IconUser, IconBuilding, IconBriefcase,
-  IconGripVertical, IconInfoCircle, IconMinus, IconTextSize,
-  IconRowRemove, IconSection, IconTypography,
+  IconGripVertical, IconMinus, IconTextSize,
+  IconTypography,
 } from "@tabler/icons-react";
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RTooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
 } from "recharts";
 import { useToast } from "../../components/ui/Toast";
@@ -31,7 +31,7 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import {
   useFBDashboard, useForms, useFBResponses,
-  useCreateForm, useUpdateForm, useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
+  useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
 } from "../../queries/useFormBuilder";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -357,7 +357,7 @@ function MyFormsTab({ onCreate }) {
           <Stack gap="sm">
             <Group gap="sm">
               <Text size="2xl">{viewForm.icon}</Text>
-              <div><Text fw={700}>{viewForm.name}</Text><Text size="xs" c="dimmed">{viewForm.category}</Text></div>
+              <Stack gap={2}><Text fw={700}>{viewForm.name}</Text><Text size="xs" c="dimmed">{viewForm.category}</Text></Stack>
             </Group>
             <Divider />
             {[["Status",viewForm.status],["Created By",viewForm.createdBy],["Responses",viewForm.responses.toLocaleString()],["Last Updated",viewForm.updatedAt]].map(([k,v]) => (
@@ -438,8 +438,8 @@ function CreateFormTab() {
             </Grid.Col>
             <Grid.Col span={{ base:12, md:5 }}>
               <Stack gap="sm">
-                <div>
-                  <Text size="sm" fw={500} mb={6}>Form Icon</Text>
+                <Stack gap={6}>
+                  <Text size="sm" fw={500}>Form Icon</Text>
                   <Group gap="xs" wrap="wrap">
                     {FORM_ICONS.map(ic => (
                       <Paper key={ic} withBorder p={8} radius="md" style={{ cursor:"pointer", fontSize:20,
@@ -448,9 +448,9 @@ function CreateFormTab() {
                       }} onClick={() => f("icon")(ic)}>{ic}</Paper>
                     ))}
                   </Group>
-                </div>
-                <div>
-                  <Text size="sm" fw={500} mb={6}>Form Color</Text>
+                </Stack>
+                <Stack gap={6}>
+                  <Text size="sm" fw={500}>Form Color</Text>
                   <Group gap="xs" wrap="wrap">
                     {FORM_COLORS.map(c => (
                       <Box key={c} w={26} h={26} radius="xl" style={{ borderRadius:"50%", cursor:"pointer",
@@ -460,17 +460,17 @@ function CreateFormTab() {
                       }} onClick={() => f("color")(c)} />
                     ))}
                   </Group>
-                </div>
+                </Stack>
                 {/* Preview chip */}
-                <Paper withBorder p="md" radius="md" style={{ background:"var(--mantine-color-gray-0)" }}>
+                <Paper withBorder p="md" radius="md" bg="gray.0">
                   <Group gap="sm">
                     <ThemeIcon size={40} radius={10} variant="light" color={form.color || "blue"}>
                       <Text size="xl">{form.icon}</Text>
                     </ThemeIcon>
-                    <div>
+                    <Stack gap={2}>
                       <Text size="sm" fw={600}>{form.name || "Form Name"}</Text>
                       <Text size="xs" c="dimmed">{form.category || "Category"}</Text>
-                    </div>
+                    </Stack>
                   </Group>
                 </Paper>
               </Stack>
@@ -706,12 +706,12 @@ function CreateFormTab() {
                   <Text fw={600} size="sm">Form Preview</Text>
                   <SegmentedControl size="xs" value={preview} onChange={setPreview}
                     data={[
-                      { label:<Group gap={4} wrap="nowrap"><IconDeviceDesktop size={13} /><span>Desktop</span></Group>, value:"desktop" },
-                      { label:<Group gap={4} wrap="nowrap"><IconDeviceTablet  size={13} /><span>Tablet</span></Group>,  value:"tablet"  },
-                      { label:<Group gap={4} wrap="nowrap"><IconDeviceMobile  size={13} /><span>Mobile</span></Group>,  value:"mobile"  },
+                      { label:<Group gap={4} wrap="nowrap"><IconDeviceDesktop size={13} /><Text size="xs">Desktop</Text></Group>, value:"desktop" },
+                      { label:<Group gap={4} wrap="nowrap"><IconDeviceTablet  size={13} /><Text size="xs">Tablet</Text></Group>,  value:"tablet"  },
+                      { label:<Group gap={4} wrap="nowrap"><IconDeviceMobile  size={13} /><Text size="xs">Mobile</Text></Group>,  value:"mobile"  },
                     ]} />
                 </Group>
-                <Box style={{ display:"flex", justifyContent:"center" }}>
+                <Group justify="center">
                   <Paper withBorder p="lg" radius="lg"
                     style={{ width:PREVIEW_WIDTH[preview], maxWidth:"100%", transition:"width 0.2s", background:"var(--mantine-color-default)" }}>
                     {/* Form header */}
@@ -719,10 +719,10 @@ function CreateFormTab() {
                       <ThemeIcon size={40} radius={10} variant="light" color={form.color || "blue"}>
                         <Text size="xl">{form.icon}</Text>
                       </ThemeIcon>
-                      <div>
+                      <Stack gap={2}>
                         <Text fw={700}>{form.name || "Untitled Form"}</Text>
                         <Text size="xs" c="dimmed">{form.description || "No description"}</Text>
-                      </div>
+                      </Stack>
                     </Group>
                     <Divider mb="md" />
                     {/* Render fields */}
@@ -734,8 +734,8 @@ function CreateFormTab() {
                         if (field.type === "paragraph") return <Text key={field.id} size="sm" c="dimmed">{field.label}</Text>;
                         if (field.type === "textarea")  return <Textarea key={field.id} label={field.label} placeholder={`Enter ${field.label.toLowerCase()}…`} minRows={3} radius="md" readOnly />;
                         if (field.type === "dropdown")  return <Select key={field.id} label={field.label} placeholder={`Select ${field.label.toLowerCase()}…`} data={["Option 1","Option 2"]} radius="md" readOnly />;
-                        if (field.type === "checkbox")  return <Group key={field.id} gap="xs"><input type="checkbox" readOnly /><Text size="sm">{field.label}</Text></Group>;
-                        if (field.type === "radio")     return <Group key={field.id} gap="xs"><input type="radio" readOnly /><Text size="sm">{field.label}</Text></Group>;
+                        if (field.type === "checkbox")  return <Checkbox key={field.id} label={field.label} readOnly />;
+                        if (field.type === "radio")     return <Radio key={field.id} label={field.label} readOnly />;
                         if (field.type === "toggle")    return <Switch key={field.id} label={field.label} readOnly />;
                         if (field.type === "signature") return <Paper key={field.id} withBorder p="md" radius="md" style={{ minHeight:60, background:"var(--mantine-color-gray-0)" }}><Text size="xs" c="dimmed">Signature field — {field.label}</Text></Paper>;
                         if (["file","image"].includes(field.type)) return <Paper key={field.id} withBorder p="md" radius="md" style={{ minHeight:50, background:"var(--mantine-color-gray-0)" }}><Text size="xs" c="dimmed">{field.label} — upload area</Text></Paper>;
@@ -751,7 +751,7 @@ function CreateFormTab() {
                       </Group>
                     )}
                   </Paper>
-                </Box>
+                </Group>
               </Stack>
             </Grid.Col>
             <Grid.Col span={{ base:12, md:4 }}>
@@ -809,10 +809,10 @@ function FormTemplatesTab({ onCreate }) {
           <Paper key={t.id} withBorder p="lg" radius="lg">
             <Group gap="xs" mb="xs">
               <Text size="2xl">{t.icon}</Text>
-              <div>
+              <Stack gap={2}>
                 <Text fw={700} size="sm">{t.name}</Text>
                 <Badge size="xs" variant="light" color="blue">{t.cat}</Badge>
-              </div>
+              </Stack>
             </Group>
             <Text size="xs" c="dimmed" mb="sm">{t.desc}</Text>
             {t.fields > 0 && <Badge size="xs" variant="outline" mb="md">{t.fields} fields</Badge>}
@@ -828,7 +828,7 @@ function FormTemplatesTab({ onCreate }) {
       <Modal opened={!!viewTpl} onClose={() => setViewTpl(null)} title={`Template: ${viewTpl?.name||""}`} size="sm" radius="lg">
         {viewTpl && (
           <Stack gap="sm">
-            <Group gap="xs"><Text size="2xl">{viewTpl.icon}</Text><div><Text fw={700}>{viewTpl.name}</Text><Text size="xs" c="dimmed">{viewTpl.desc}</Text></div></Group>
+            <Group gap="xs"><Text size="2xl">{viewTpl.icon}</Text><Stack gap={2}><Text fw={700}>{viewTpl.name}</Text><Text size="xs" c="dimmed">{viewTpl.desc}</Text></Stack></Group>
             <Divider />
             <Text size="xs" fw={700} c="dimmed" tt="uppercase">Typical Fields ({viewTpl.fields})</Text>
             {["Employee Name","Email","Department","Date","Description","Attachments"].slice(0, Math.min(viewTpl.fields, 6)).map((n,i) => (
@@ -956,7 +956,7 @@ function FormResponsesTab() {
         {viewResp && (
           <Stack gap="sm">
             <Group justify="space-between">
-              <div><Text fw={700}>{viewResp.form}</Text><Text size="xs" c="dimmed">{viewResp.employee} · {viewResp.submitted}</Text></div>
+              <Stack gap={2}><Text fw={700}>{viewResp.form}</Text><Text size="xs" c="dimmed">{viewResp.employee} · {viewResp.submitted}</Text></Stack>
               <Badge color={RESP_COLOR[viewResp.status]} variant="light">{viewResp.status}</Badge>
             </Group>
             <Tabs value={respTab} onChange={setRespTab}>

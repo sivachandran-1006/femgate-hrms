@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Button } from "@mantine/core";
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  Button,
+  ActionIcon,
+  SimpleGrid,
+  Table,
+  Alert,
+} from "@mantine/core";
 import {
   IconDeviceLaptop as Laptop,
   IconDeviceDesktop as Monitor,
@@ -54,19 +65,19 @@ const TYPE_ICONS = {
 function StatusBadge({ status }) {
   const badge = getStatusBadge(status);
   return (
-    <span
+    <Text
+      component="span"
+      size="sm"
+      fw={600}
       style={{
         padding: PADDING.badge,
         borderRadius: RADIUS.full,
-        fontSize: FONT_SIZE.sm,
-        fontWeight: FONT_WEIGHT.semibold,
-        fontFamily: FONT_FAMILY.base,
         background: badge.bg,
         color: badge.color,
       }}
     >
       {status}
-    </span>
+    </Text>
   );
 }
 
@@ -189,11 +200,7 @@ export default function Assets({ darkMode = false }) {
   const selectStyle = { ...inputStyle, cursor: "pointer" };
 
   return (
-    <div
-      style={{
-        fontFamily: FONT_FAMILY.base,
-      }}
-    >
+    <Box>
       <AppPageHeader
         title="Asset Management"
         sub="Track and manage company assets"
@@ -203,95 +210,72 @@ export default function Assets({ darkMode = false }) {
       />
 
       {/* KPI Cards */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: GAP.lg,
-          marginBottom: SPACING[6],
-        }}
-      >
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} spacing="lg" mb="xl">
         {kpiCards.map((k) => {
           const Icon = k.icon;
           return (
-            <div
+            <Paper
               key={k.label}
+              radius="xl"
+              p="xl"
               style={{
                 background: surface.cardBg,
                 border: `1px solid ${surface.border}`,
-                borderRadius: RADIUS.xl,
-                padding: SPACING[5],
-                display: "flex",
-                alignItems: "center",
-                gap: GAP.lg,
                 boxShadow: SHADOW.card,
               }}
             >
-              <div
-                style={{
-                  width: LAYOUT.iconBoxLg - 4,
-                  height: LAYOUT.iconBoxLg - 4,
-                  borderRadius: RADIUS.lg,
-                  background: k.color + "22",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                <Icon size={ICON_SIZE.lg + 2} color={k.color} />
-              </div>
-              <div>
-                <div
+              <Group gap="lg">
+                <Box
                   style={{
-                    fontSize: FONT_SIZE["3xl"] - 2,
-                    fontWeight: FONT_WEIGHT.bold,
-                    color: surface.text,
-                    fontFamily: FONT_FAMILY.base,
-                    lineHeight: 1,
+                    width: LAYOUT.iconBoxLg - 4,
+                    height: LAYOUT.iconBoxLg - 4,
+                    borderRadius: RADIUS.lg,
+                    background: k.color + "22",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
-                  {k.value}
-                </div>
-                <div
-                  style={{
-                    fontSize: FONT_SIZE.base,
-                    color: surface.subtext,
-                    fontFamily: FONT_FAMILY.base,
-                    marginTop: GAP.xs,
-                  }}
-                >
-                  {k.label}
-                </div>
-              </div>
-            </div>
+                  <Icon size={ICON_SIZE.lg + 2} color={k.color} />
+                </Box>
+                <Stack gap={4}>
+                  <Text fw={700} size="xl" c={surface.text} lh={1}>
+                    {k.value}
+                  </Text>
+                  <Text size="sm" c={surface.subtext}>
+                    {k.label}
+                  </Text>
+                </Stack>
+              </Group>
+            </Paper>
           );
         })}
-      </div>
+      </SimpleGrid>
 
       {/* Main Card */}
-      <div
+      <Paper
+        radius="xl"
         style={{
           background: surface.cardBg,
           border: `1px solid ${surface.border}`,
-          borderRadius: RADIUS["2xl"],
           overflow: "hidden",
           boxShadow: SHADOW.card,
         }}
       >
         {/* Tabs */}
-        <div
+        <Box
+          px="xl"
           style={{
             display: "flex",
             borderBottom: `1px solid ${surface.border}`,
-            padding: `0 ${SPACING[5]}px`,
-            gap: GAP.xs,
             overflowX: "auto",
           }}
         >
           {tabs.map((tab) => (
-            <button
+            <Box
               key={tab}
+              component="button"
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: `${SPACING[3] + 2}px ${SPACING[4] + 2}px`,
@@ -308,22 +292,20 @@ export default function Assets({ darkMode = false }) {
               }}
             >
               {tab}
-            </button>
+            </Box>
           ))}
-        </div>
+        </Box>
 
         {/* Filters */}
-        <div
-          style={{
-            padding: `${GAP.lg}px ${SPACING[5]}px`,
-            display: "flex",
-            gap: GAP.md,
-            flexWrap: "wrap",
-            borderBottom: `1px solid ${surface.border}`,
-          }}
+        <Group
+          gap="md"
+          wrap="wrap"
+          px="xl"
+          py="md"
+          style={{ borderBottom: `1px solid ${surface.border}` }}
         >
           {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
+          <Box style={{ position: "relative", flex: "1 1 220px", minWidth: 180 }}>
             <Search
               size={ICON_SIZE.sm - 1}
               style={{
@@ -332,6 +314,7 @@ export default function Assets({ darkMode = false }) {
                 top: "50%",
                 transform: "translateY(-50%)",
                 color: surface.subtext,
+                zIndex: 1,
               }}
             />
             <input
@@ -341,40 +324,39 @@ export default function Assets({ darkMode = false }) {
               onChange={(e) => setSearch(e.target.value)}
               style={{ ...inputStyle, paddingLeft: SPACING[8] }}
             />
-          </div>
+          </Box>
 
           {/* Type Filter */}
-          <div style={{ position: "relative", flex: "0 1 160px" }}>
+          <Box style={{ position: "relative", flex: "0 1 160px" }}>
             <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={selectStyle}>
               <option value="All">All Types</option>
               {typeOptions.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
-          </div>
+          </Box>
 
           {/* Status Filter */}
-          <div style={{ flex: "0 1 160px" }}>
+          <Box style={{ flex: "0 1 160px" }}>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
               <option value="All">All Status</option>
               {["Assigned", "Available", "Maintenance", "Retired"].map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
-          </div>
-        </div>
+          </Box>
+        </Group>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: FONT_SIZE.md, fontFamily: FONT_FAMILY.base }}>
-            <thead>
-              <tr style={{ background: surface.theadBg }}>
+        <Box style={{ overflowX: "auto" }}>
+          <Table style={{ fontSize: FONT_SIZE.md, fontFamily: FONT_FAMILY.base }}>
+            <Table.Thead style={{ background: surface.theadBg }}>
+              <Table.Tr>
                 {["Asset ID", "Asset Name", "Type", "Assigned To", "Serial No", "Status", "Purchase Date", "Action"].map((col) => (
-                  <th
+                  <Table.Th
                     key={col}
                     style={{
                       padding: PADDING.tableHeader,
-                      textAlign: "left",
                       fontWeight: FONT_WEIGHT.semibold,
                       color: surface.subtext,
                       fontSize: FONT_SIZE.sm,
@@ -386,32 +368,29 @@ export default function Assets({ darkMode = false }) {
                     }}
                   >
                     {col}
-                  </th>
+                  </Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
               {filtered.length === 0 ? (
-                <tr>
-                  <td
+                <Table.Tr>
+                  <Table.Td
                     colSpan={8}
-                    style={{
-                      padding: SPACING[10],
-                      textAlign: "center",
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                    }}
+                    style={{ padding: SPACING[10], textAlign: "center" }}
                   >
-                    {isLoading ? "Loading assets..." : "No assets found."}
-                  </td>
-                </tr>
+                    <Text c={surface.subtext}>
+                      {isLoading ? "Loading assets..." : "No assets found."}
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
               ) : (
                 filtered.map((asset) => {
                   const Icon = TYPE_ICONS[asset.type] || Package;
                   const rowBg = surface.cardBg;
 
                   return (
-                    <tr
+                    <Table.Tr
                       key={asset.id}
                       style={{
                         background: rowBg,
@@ -421,117 +400,62 @@ export default function Assets({ darkMode = false }) {
                       onMouseEnter={(e) => (e.currentTarget.style.background = surface.rowHover)}
                       onMouseLeave={(e) => (e.currentTarget.style.background = rowBg)}
                     >
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          color: COLORS.primary,
-                          fontWeight: FONT_WEIGHT.semibold,
-                          fontFamily: "monospace",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {asset.id}
-                      </td>
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          color: surface.text,
-                          fontWeight: FONT_WEIGHT.medium,
-                          fontFamily: FONT_FAMILY.base,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {asset.name}
-                      </td>
-                      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: GAP.sm - 2,
-                            color: surface.subtext,
-                            fontFamily: FONT_FAMILY.base,
-                          }}
-                        >
-                          <Icon size={ICON_SIZE.sm - 2} />
-                          {asset.type}
-                        </span>
-                      </td>
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          color: surface.text,
-                          fontFamily: FONT_FAMILY.base,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {asset.assignedTo}
-                      </td>
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          color: surface.subtext,
-                          fontFamily: FONT_FAMILY.base,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {asset.serial}
-                      </td>
-                      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Text c={COLORS.primary} fw={600} ff="monospace">
+                          {asset.id}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Text c={surface.text} fw={500}>
+                          {asset.name}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Group gap={GAP.sm - 2} wrap="nowrap">
+                          <Icon size={ICON_SIZE.sm - 2} color={surface.subtext} />
+                          <Text c={surface.subtext}>{asset.type}</Text>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Text c={surface.text}>{asset.assignedTo}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Text c={surface.subtext}>{asset.serial}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
                         <StatusBadge status={asset.status} />
-                      </td>
-                      <td
-                        style={{
-                          padding: PADDING.tableCell,
-                          color: surface.subtext,
-                          fontFamily: FONT_FAMILY.base,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {asset.purchaseDate}
-                      </td>
-                      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-                        <button
-                          style={{
-                            padding: `${GAP.xs + 1}px ${GAP.md}px`,
-                            borderRadius: RADIUS.sm + 1,
-                            border: `1px solid ${surface.border}`,
-                            background: "transparent",
-                            color: surface.subtext,
-                            fontSize: FONT_SIZE.sm,
-                            fontFamily: FONT_FAMILY.base,
-                            fontWeight: FONT_WEIGHT.medium,
-                            cursor: "pointer",
-                          }}
-                        >
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Text c={surface.subtext}>{asset.purchaseDate}</Text>
+                      </Table.Td>
+                      <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
+                        <Button variant="outline" size="xs" color="gray">
                           View
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
                   );
                 })
               )}
-            </tbody>
-          </table>
-        </div>
+            </Table.Tbody>
+          </Table>
+        </Box>
 
         {/* Table Footer */}
-        <div
-          style={{
-            padding: `${GAP.md}px ${SPACING[5]}px`,
-            borderTop: `1px solid ${surface.border}`,
-            color: surface.subtext,
-            fontSize: FONT_SIZE.base,
-            fontFamily: FONT_FAMILY.base,
-          }}
+        <Box
+          px="xl"
+          py="sm"
+          style={{ borderTop: `1px solid ${surface.border}` }}
         >
-          Showing {filtered.length} of {assets.length} assets
-        </div>
-      </div>
+          <Text size="sm" c={surface.subtext}>
+            Showing {filtered.length} of {assets.length} assets
+          </Text>
+        </Box>
+      </Paper>
 
       {/* Add Asset Modal — only IT_ADMIN / ADMIN / SUPER_ADMIN */}
       {showModal && can("assets.add") && (
-        <div
+        <Box
           style={{
             position: "fixed",
             inset: 0,
@@ -544,11 +468,11 @@ export default function Assets({ darkMode = false }) {
           }}
           onClick={(e) => e.target === e.currentTarget && closeModal()}
         >
-          <div
+          <Paper
+            radius="xl"
             style={{
               background: surface.cardBg,
               border: `1px solid ${surface.border}`,
-              borderRadius: RADIUS["3xl"],
               width: "100%",
               maxWidth: 520,
               maxHeight: "90vh",
@@ -557,129 +481,73 @@ export default function Assets({ darkMode = false }) {
             }}
           >
             {/* Modal Header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: PADDING.card,
-                borderBottom: `1px solid ${surface.border}`,
-              }}
+            <Group
+              justify="space-between"
+              align="center"
+              p="xl"
+              style={{ borderBottom: `1px solid ${surface.border}` }}
             >
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: FONT_SIZE.xl,
-                  fontWeight: FONT_WEIGHT.bold,
-                  color: surface.text,
-                  fontFamily: FONT_FAMILY.base,
-                }}
-              >
+              <Text size="xl" fw={700} c={surface.text}>
                 Add New Asset
-              </h2>
-              <button
+              </Text>
+              <ActionIcon
+                variant="transparent"
                 onClick={closeModal}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  color: surface.subtext,
-                  display: "flex",
-                  alignItems: "center",
-                }}
+                c={surface.subtext}
               >
                 <X size={ICON_SIZE.lg} />
-              </button>
-            </div>
+              </ActionIcon>
+            </Group>
 
             {/* Modal Body */}
-            <form
+            <Stack
+              component="form"
               onSubmit={handleAddAsset}
-              style={{
-                padding: SPACING[6],
-                display: "flex",
-                flexDirection: "column",
-                gap: GAP.lg,
-              }}
+              gap="lg"
+              p="xl"
             >
               {formError && (
-                <div
-                  style={{
-                    padding: `${SPACING[2] + 2}px ${SPACING[3] + 2}px`,
-                    background: COLORS.dangerMuted,
-                    color: COLORS.danger,
-                    borderRadius: RADIUS.md,
-                    fontSize: FONT_SIZE.base,
-                    fontFamily: FONT_FAMILY.base,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: GAP.sm,
-                  }}
+                <Alert
+                  icon={<AlertTriangle size={ICON_SIZE.md - 4} />}
+                  color="red"
+                  variant="light"
                 >
-                  <AlertTriangle size={ICON_SIZE.md - 4} />
                   {formError}
-                </div>
+                </Alert>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md + 2 }}>
+              <SimpleGrid cols={2} spacing="md">
                 {/* Asset ID (read-only) */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c={surface.subtext}>
                     Asset ID
-                  </label>
+                  </Text>
                   <input
                     name="id"
                     value="Auto-generated"
                     readOnly
                     style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }}
                   />
-                </div>
+                </Stack>
 
                 {/* Type */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c={surface.subtext}>
                     Type *
-                  </label>
+                  </Text>
                   <select name="category" value={form.category} onChange={handleFormChange} style={selectStyle}>
                     {["Laptop", "Desktop", "Mobile", "Monitor", "License", "Server"].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
-                </div>
-              </div>
+                </Stack>
+              </SimpleGrid>
 
               {/* Asset Name */}
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: FONT_SIZE.base,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    color: surface.subtext,
-                    fontFamily: FONT_FAMILY.base,
-                    marginBottom: GAP.sm - 2,
-                  }}
-                >
+              <Stack gap={4}>
+                <Text size="sm" fw={600} c={surface.subtext}>
                   Asset Name *
-                </label>
+                </Text>
                 <input
                   name="name"
                   value={form.name}
@@ -687,23 +555,14 @@ export default function Assets({ darkMode = false }) {
                   placeholder="e.g. Dell Laptop XPS 15"
                   style={inputStyle}
                 />
-              </div>
+              </Stack>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md + 2 }}>
-                {/* Assigned To */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
+              <SimpleGrid cols={2} spacing="md">
+                {/* Serial Number */}
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c={surface.subtext}>
                     Serial Number
-                  </label>
+                  </Text>
                   <input
                     name="serialNumber"
                     value={form.serialNumber}
@@ -711,22 +570,13 @@ export default function Assets({ darkMode = false }) {
                     placeholder="e.g. SN-12345"
                     style={inputStyle}
                   />
-                </div>
+                </Stack>
 
                 {/* Purchase Value */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c={surface.subtext}>
                     Purchase Value
-                  </label>
+                  </Text>
                   <input
                     name="purchaseValue"
                     type="number"
@@ -737,24 +587,15 @@ export default function Assets({ darkMode = false }) {
                     placeholder="e.g. 85000"
                     style={inputStyle}
                   />
-                </div>
-              </div>
+                </Stack>
+              </SimpleGrid>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.md + 2 }}>
+              <SimpleGrid cols={2} spacing="md">
                 {/* Purchase Date */}
-                <div>
-                  <label
-                    style={{
-                      display: "block",
-                      fontSize: FONT_SIZE.base,
-                      fontWeight: FONT_WEIGHT.semibold,
-                      color: surface.subtext,
-                      fontFamily: FONT_FAMILY.base,
-                      marginBottom: GAP.sm - 2,
-                    }}
-                  >
+                <Stack gap={4}>
+                  <Text size="sm" fw={600} c={surface.subtext}>
                     Purchase Date
-                  </label>
+                  </Text>
                   <input
                     name="purchaseDate"
                     type="date"
@@ -762,58 +603,31 @@ export default function Assets({ darkMode = false }) {
                     onChange={handleFormChange}
                     style={inputStyle}
                   />
-                </div>
-              </div>
+                </Stack>
+              </SimpleGrid>
 
               {/* Actions */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: GAP.md,
-                  justifyContent: "flex-end",
-                  marginTop: GAP.xs,
-                }}
-              >
-                <button
+              <Group justify="flex-end" gap="md" mt={4}>
+                <Button
                   type="button"
+                  variant="outline"
+                  color="gray"
                   onClick={closeModal}
-                  style={{
-                    padding: PADDING.btn,
-                    borderRadius: RADIUS.lg,
-                    border: `1px solid ${surface.border}`,
-                    background: "transparent",
-                    color: surface.subtext,
-                    fontSize: FONT_SIZE.md,
-                    fontFamily: FONT_FAMILY.base,
-                    fontWeight: FONT_WEIGHT.medium,
-                    cursor: "pointer",
-                  }}
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={createAsset.isPending}
-                  style={{
-                    padding: PADDING.btn,
-                    borderRadius: RADIUS.lg,
-                    border: "none",
-                    background: COLORS.primary,
-                    color: COLORS.white,
-                    fontSize: FONT_SIZE.md,
-                    fontFamily: FONT_FAMILY.base,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    cursor: createAsset.isPending ? "not-allowed" : "pointer",
-                    opacity: createAsset.isPending ? 0.7 : 1,
-                  }}
+                  loading={createAsset.isPending}
                 >
                   {createAsset.isPending ? "Adding..." : "Add Asset"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+                </Button>
+              </Group>
+            </Stack>
+          </Paper>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }

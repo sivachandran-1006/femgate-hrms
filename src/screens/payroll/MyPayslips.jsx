@@ -1,14 +1,21 @@
 import { useState } from "react";
 import {
   IconWallet, IconDownload, IconEye, IconFileText,
-  IconX, IconPrinter, IconChevronDown,
+  IconX, IconPrinter,
 } from "@tabler/icons-react";
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  ActionIcon,
+  Table,
+  Modal,
+} from "@mantine/core";
 import { useAuth }              from "../../hooks/useAuth";
 import { useMyPayslips, useMyProfile } from "../../queries/useSelfService";
 import { COLORS }               from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT, FONT_FAMILY } from "../../theme/fonts";
-import { SPACING, GAP, PADDING } from "../../theme/spacing";
-import { RADIUS, SHADOW }       from "../../theme/sizes";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 
 const computeBreakdown = (slip) => {
@@ -49,12 +56,6 @@ const MyPayslips = ({ darkMode: dark = false }) => {
   const paidSlips = MY_PAYSLIPS.filter((s)=>s.status==="Paid");
   const totalPaid = paidSlips.reduce((a,s)=>a+s.net,0);
   const avgNet    = paidSlips.length ? Math.round(totalPaid / paidSlips.length) : 0;
-
-  const Card = ({ children, style={} }) => (
-    <div style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], border:`1px solid ${surface.border}`, boxShadow:SHADOW.sm, ...style }}>
-      {children}
-    </div>
-  );
 
   const bd = viewSlip ? computeBreakdown(viewSlip) : null;
 
@@ -105,167 +106,259 @@ const MyPayslips = ({ darkMode: dark = false }) => {
   };
 
   return (
-    <div style={{ fontFamily:FONT_FAMILY.base }}>
-
+    <Box>
       <AppPageHeader title="My Payslips" sub="View and download your monthly salary statements" />
 
       {/* KPI row */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:GAP.md, marginBottom:SPACING[5] }}>
+      <Box style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 24 }}>
         {[
           { label:"YTD Earnings",   value:`₹${(totalPaid/1000).toFixed(1)}k`,  color:COLORS.primary, bg:COLORS.primaryMuted, icon:IconWallet   },
           { label:"Average Monthly",value:`₹${(avgNet/1000).toFixed(1)}k`,     color:COLORS.success, bg:COLORS.successLight, icon:IconFileText  },
           { label:"Total Payslips", value:MY_PAYSLIPS.length,                  color:COLORS.purple,  bg:COLORS.purpleMuted,  icon:IconFileText  },
         ].map((k)=>(
-          <div key={k.label} style={{ background:surface.cardBg, borderRadius:RADIUS["2xl"], border:`1px solid ${surface.border}`, boxShadow:SHADOW.sm, padding:SPACING[4], display:"flex", alignItems:"center", gap:GAP.md }}>
-            <div style={{ width:46, height:46, borderRadius:RADIUS.xl, background:k.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <k.icon size={22} color={k.color} stroke={1.8}/>
-            </div>
-            <div>
-              <p style={{ margin:0, fontSize:FONT_SIZE.xs, color:surface.subtext, fontWeight:FONT_WEIGHT.medium }}>{k.label}</p>
-              <p style={{ margin:"2px 0 0", fontSize:FONT_SIZE["2xl"], fontWeight:FONT_WEIGHT.bold, color:k.color, lineHeight:1 }}>{k.value}</p>
-            </div>
-          </div>
+          <Paper
+            key={k.label}
+            withBorder
+            radius="xl"
+            shadow="sm"
+            p="md"
+            style={{ background: surface.cardBg, border: `1px solid ${surface.border}` }}
+          >
+            <Group gap="md">
+              <Box
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 12,
+                  background: k.bg,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <k.icon size={22} color={k.color} stroke={1.8}/>
+              </Box>
+              <Stack gap={2}>
+                <Text size="xs" fw={500} c={surface.subtext}>{k.label}</Text>
+                <Text fw={700} style={{ color: k.color, fontSize: "1.5rem", lineHeight: 1, marginTop: 2 }}>{k.value}</Text>
+              </Stack>
+            </Group>
+          </Paper>
         ))}
-      </div>
+      </Box>
 
       {/* Payslips list */}
-      <Card>
-        <div style={{ padding:`${SPACING[4]}px ${SPACING[5]}px`, borderBottom:`1px solid ${surface.border}` }}>
-          <p style={{ margin:0, fontSize:FONT_SIZE.md, fontWeight:FONT_WEIGHT.bold, color:surface.text }}>Payslip History</p>
-        </div>
-        <div style={{ overflowX:"auto" }}>
-          <table style={{ width:"100%", borderCollapse:"collapse" }}>
-            <thead>
-              <tr style={{ background:surface.theadBg }}>
+      <Paper withBorder radius="xl" shadow="sm" style={{ background: surface.cardBg, border: `1px solid ${surface.border}` }}>
+        <Box p="md" style={{ borderBottom: `1px solid ${surface.border}` }}>
+          <Text size="md" fw={700} c={surface.text}>Payslip History</Text>
+        </Box>
+        <Box style={{ overflowX: "auto" }}>
+          <Table>
+            <Table.Thead style={{ background: surface.theadBg }}>
+              <Table.Tr>
                 {["Month","Gross Salary","Deductions","Net Pay","Status","Actions"].map((h)=>(
-                  <th key={h} style={{ padding:PADDING.tableHeader, textAlign:"left", fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, color:surface.subtext, textTransform:"uppercase", letterSpacing:"0.05em", borderBottom:`1px solid ${surface.border}`, whiteSpace:"nowrap" }}>{h}</th>
+                  <Table.Th key={h}>
+                    <Text size="xs" fw={600} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</Text>
+                  </Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {MY_PAYSLIPS.map((slip,i,arr)=>{
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {MY_PAYSLIPS.map((slip)=>{
                 const gross  = slip.salary + (slip.bonus||0);
                 const isPaid = slip.status==="Paid";
                 return (
-                  <tr key={slip._id} style={{ borderBottom:i<arr.length-1?`1px solid ${surface.border}`:"none" }}
+                  <Table.Tr
+                    key={slip._id}
                     onMouseEnter={(e)=>(e.currentTarget.style.background=surface.rowHover)}
-                    onMouseLeave={(e)=>(e.currentTarget.style.background="transparent")}>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:GAP.sm }}>
-                        <div style={{ width:36, height:36, borderRadius:RADIUS.lg, background:isPaid?COLORS.successLight:COLORS.warningLight, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                    onMouseLeave={(e)=>(e.currentTarget.style.background="transparent")}
+                  >
+                    <Table.Td>
+                      <Group gap="sm">
+                        <Box
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 10,
+                            background: isPaid ? COLORS.successLight : COLORS.warningLight,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
                           <IconFileText size={17} color={isPaid?COLORS.success:COLORS.warning} stroke={2}/>
-                        </div>
-                        <div>
-                          <p style={{ margin:0, fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.semibold, color:surface.text }}>{slip.month} {slip.year}</p>
-                          <p style={{ margin:0, fontSize:FONT_SIZE.xs, color:surface.subtext }}>Paid on: {slip.paidOn}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding:PADDING.tableCell, fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.medium, color:surface.text }}>₹{gross.toLocaleString("en-IN")}</td>
-                    <td style={{ padding:PADDING.tableCell, fontSize:FONT_SIZE.sm, color:COLORS.danger }}>-₹{slip.deduction.toLocaleString("en-IN")}</td>
-                    <td style={{ padding:PADDING.tableCell, fontSize:FONT_SIZE.sm, fontWeight:FONT_WEIGHT.bold, color:COLORS.success }}>₹{slip.net.toLocaleString("en-IN")}</td>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <span style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:RADIUS.full, fontSize:FONT_SIZE.xs, fontWeight:FONT_WEIGHT.semibold, background:isPaid?COLORS.successLight:COLORS.warningLight, color:isPaid?COLORS.success:COLORS.warning }}>
-                        <span style={{ width:5,height:5,borderRadius:"50%",background:isPaid?COLORS.success:COLORS.warning,display:"inline-block" }}/>
+                        </Box>
+                        <Stack gap={0}>
+                          <Text size="sm" fw={600} c={surface.text}>{slip.month} {slip.year}</Text>
+                          <Text size="xs" c={surface.subtext}>Paid on: {slip.paidOn}</Text>
+                        </Stack>
+                      </Group>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={500} c={surface.text}>₹{gross.toLocaleString("en-IN")}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" c={COLORS.danger}>-₹{slip.deduction.toLocaleString("en-IN")}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={700} c={COLORS.success}>₹{slip.net.toLocaleString("en-IN")}</Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Box
+                        component="span"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          background: isPaid ? COLORS.successLight : COLORS.warningLight,
+                          color: isPaid ? COLORS.success : COLORS.warning,
+                        }}
+                      >
+                        <Box
+                          component="span"
+                          style={{ width: 5, height: 5, borderRadius: "50%", background: isPaid ? COLORS.success : COLORS.warning, display: "inline-block" }}
+                        />
                         {slip.status}
-                      </span>
-                    </td>
-                    <td style={{ padding:PADDING.tableCell }}>
-                      <div style={{ display:"flex", gap:GAP.xs }}>
-                        <button onClick={()=>setViewSlip(slip)} title="View" style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.primary }}>
+                      </Box>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <ActionIcon
+                          variant="default"
+                          size="sm"
+                          radius="md"
+                          onClick={()=>setViewSlip(slip)}
+                          title="View"
+                          style={{ color: COLORS.primary }}
+                        >
                           <IconEye size={14}/>
-                        </button>
+                        </ActionIcon>
                         {isPaid && (
-                          <button title="Download" onClick={()=>downloadPayslip(slip)} style={{ width:30,height:30,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
+                          <ActionIcon
+                            variant="default"
+                            size="sm"
+                            radius="md"
+                            title="Download"
+                            onClick={()=>downloadPayslip(slip)}
+                            style={{ color: COLORS.success }}
+                          >
                             <IconDownload size={14}/>
-                          </button>
+                          </ActionIcon>
                         )}
-                      </div>
-                    </td>
-                  </tr>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+            </Table.Tbody>
+          </Table>
+        </Box>
+      </Paper>
 
       {/* Payslip detail modal */}
       {viewSlip && bd && (
-        <div onClick={()=>setViewSlip(null)} style={{ position:"fixed",inset:0,background:"rgba(15,23,42,0.55)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}>
-          <div onClick={(e)=>e.stopPropagation()} style={{ background:surface.cardBg,borderRadius:RADIUS["2xl"],border:`1px solid ${surface.border}`,boxShadow:"0 25px 50px rgba(0,0,0,0.25)",width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto" }}>
+        <Modal
+          opened
+          onClose={()=>setViewSlip(null)}
+          size="lg"
+          radius="xl"
+          title={
+            <Group gap="sm">
+              <Box
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: COLORS.primaryMuted,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconFileText size={18} color={COLORS.primary} stroke={2}/>
+              </Box>
+              <Stack gap={0}>
+                <Text size="md" fw={700} c={surface.text}>Payslip — {viewSlip.month} {viewSlip.year}</Text>
+                <Text size="xs" c={surface.subtext}>{user?.name || "Employee"} · {me?.employeeId || ""}</Text>
+              </Stack>
+            </Group>
+          }
+          centered
+          styles={{
+            header: { background: surface.cardBg },
+            body: { background: surface.cardBg, padding: 20 },
+          }}
+          withCloseButton={false}
+        >
+          {/* Custom header actions */}
+          <Group justify="flex-end" gap="xs" mb="md">
+            <ActionIcon variant="default" size="sm" radius="md" title="Print" onClick={()=>printPayslip(viewSlip)} style={{ color: surface.subtext }}>
+              <IconPrinter size={15}/>
+            </ActionIcon>
+            <ActionIcon variant="default" size="sm" radius="md" title="Download" onClick={()=>downloadPayslip(viewSlip)} style={{ color: COLORS.success }}>
+              <IconDownload size={15}/>
+            </ActionIcon>
+            <ActionIcon variant="default" size="sm" radius="md" onClick={()=>setViewSlip(null)} style={{ color: surface.subtext }}>
+              <IconX size={15}/>
+            </ActionIcon>
+          </Group>
 
-            {/* Modal header */}
-            <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:`${SPACING[4]}px ${SPACING[5]}px`,borderBottom:`1px solid ${surface.border}`,position:"sticky",top:0,background:surface.cardBg,zIndex:1 }}>
-              <div style={{ display:"flex",alignItems:"center",gap:GAP.sm }}>
-                <div style={{ width:36,height:36,borderRadius:RADIUS.lg,background:COLORS.primaryMuted,display:"flex",alignItems:"center",justifyContent:"center" }}>
-                  <IconFileText size={18} color={COLORS.primary} stroke={2}/>
-                </div>
-                <div>
-                  <p style={{ margin:0,fontSize:FONT_SIZE.md,fontWeight:FONT_WEIGHT.bold,color:surface.text }}>Payslip — {viewSlip.month} {viewSlip.year}</p>
-                  <p style={{ margin:0,fontSize:FONT_SIZE.xs,color:surface.subtext }}>{user?.name || "Employee"} · {me?.employeeId || ""}</p>
-                </div>
-              </div>
-              <div style={{ display:"flex",gap:GAP.xs }}>
-                <button title="Print" onClick={()=>printPayslip(viewSlip)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:surface.subtext }}>
-                  <IconPrinter size={15}/>
-                </button>
-                <button title="Download" onClick={()=>downloadPayslip(viewSlip)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:COLORS.success }}>
-                  <IconDownload size={15}/>
-                </button>
-                <button onClick={()=>setViewSlip(null)} style={{ width:32,height:32,borderRadius:RADIUS.md,border:`1px solid ${surface.border}`,background:surface.inputBg,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:surface.subtext }}>
-                  <IconX size={15}/>
-                </button>
-              </div>
-            </div>
+          {/* Earnings */}
+          <Text size="xs" fw={600} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em", marginBottom: 8 }}>Earnings</Text>
+          {[
+            { label:"Basic Salary",       value:bd.basic     },
+            { label:"HRA",                value:bd.hra       },
+            { label:"Transport Allowance",value:bd.transport },
+            { label:"Special Allowance",  value:bd.special   },
+            ...(viewSlip.bonus>0?[{ label:"Bonus",value:viewSlip.bonus }]:[]),
+          ].map((r)=>(
+            <Group key={r.label} justify="space-between" style={{ borderBottom: `1px solid ${surface.border}`, padding: "8px 0" }}>
+              <Text size="sm" c={surface.subtext}>{r.label}</Text>
+              <Text size="sm" fw={500} c={surface.text}>₹{r.value.toLocaleString("en-IN")}</Text>
+            </Group>
+          ))}
+          <Group justify="space-between" style={{ padding: "10px 0", borderBottom: `2px solid ${surface.border}` }}>
+            <Text size="sm" fw={700} c={surface.text}>Gross Earnings</Text>
+            <Text size="sm" fw={700} c={COLORS.success}>₹{bd.gross.toLocaleString("en-IN")}</Text>
+          </Group>
 
-            <div style={{ padding:SPACING[5] }}>
-              {/* Earnings */}
-              <p style={{ margin:`0 0 ${SPACING[3]}px`,fontSize:FONT_SIZE.xs,fontWeight:FONT_WEIGHT.semibold,color:surface.subtext,textTransform:"uppercase",letterSpacing:"0.05em" }}>Earnings</p>
-              {[
-                { label:"Basic Salary",   value:bd.basic     },
-                { label:"HRA",            value:bd.hra       },
-                { label:"Transport Allowance",value:bd.transport },
-                { label:"Special Allowance",  value:bd.special   },
-                ...(viewSlip.bonus>0?[{ label:"Bonus",value:viewSlip.bonus }]:[]),
-              ].map((r)=>(
-                <div key={r.label} style={{ display:"flex",justifyContent:"space-between",borderBottom:`1px solid ${surface.border}`,padding:`${SPACING[2]}px 0` }}>
-                  <span style={{ fontSize:FONT_SIZE.sm,color:surface.subtext }}>{r.label}</span>
-                  <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.medium,color:surface.text }}>₹{r.value.toLocaleString("en-IN")}</span>
-                </div>
-              ))}
-              <div style={{ display:"flex",justifyContent:"space-between",padding:`${SPACING[3]}px 0`,borderBottom:`2px solid ${surface.border}` }}>
-                <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.bold,color:surface.text }}>Gross Earnings</span>
-                <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.bold,color:COLORS.success }}>₹{bd.gross.toLocaleString("en-IN")}</span>
-              </div>
+          {/* Deductions */}
+          <Text size="xs" fw={600} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em", marginBottom: 8, marginTop: 16 }}>Deductions</Text>
+          {[
+            { label:"Provident Fund (12%)", value:bd.pf      },
+            { label:"Professional Tax",     value:bd.profTax },
+            { label:"TDS",                  value:bd.tds     },
+          ].map((r)=>(
+            <Group key={r.label} justify="space-between" style={{ borderBottom: `1px solid ${surface.border}`, padding: "8px 0" }}>
+              <Text size="sm" c={surface.subtext}>{r.label}</Text>
+              <Text size="sm" fw={500} c={COLORS.danger}>-₹{r.value.toLocaleString("en-IN")}</Text>
+            </Group>
+          ))}
+          <Group justify="space-between" style={{ padding: "10px 0", borderBottom: `2px solid ${surface.border}` }}>
+            <Text size="sm" fw={700} c={surface.text}>Total Deductions</Text>
+            <Text size="sm" fw={700} c={COLORS.danger}>-₹{bd.totalDed.toLocaleString("en-IN")}</Text>
+          </Group>
 
-              {/* Deductions */}
-              <p style={{ margin:`${SPACING[4]}px 0 ${SPACING[3]}px`,fontSize:FONT_SIZE.xs,fontWeight:FONT_WEIGHT.semibold,color:surface.subtext,textTransform:"uppercase",letterSpacing:"0.05em" }}>Deductions</p>
-              {[
-                { label:"Provident Fund (12%)", value:bd.pf      },
-                { label:"Professional Tax",     value:bd.profTax },
-                { label:"TDS",                  value:bd.tds     },
-              ].map((r)=>(
-                <div key={r.label} style={{ display:"flex",justifyContent:"space-between",borderBottom:`1px solid ${surface.border}`,padding:`${SPACING[2]}px 0` }}>
-                  <span style={{ fontSize:FONT_SIZE.sm,color:surface.subtext }}>{r.label}</span>
-                  <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.medium,color:COLORS.danger }}>-₹{r.value.toLocaleString("en-IN")}</span>
-                </div>
-              ))}
-              <div style={{ display:"flex",justifyContent:"space-between",padding:`${SPACING[3]}px 0`,borderBottom:`2px solid ${surface.border}` }}>
-                <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.bold,color:surface.text }}>Total Deductions</span>
-                <span style={{ fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.bold,color:COLORS.danger }}>-₹{bd.totalDed.toLocaleString("en-IN")}</span>
-              </div>
-
-              {/* Net */}
-              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:SPACING[4],padding:`${SPACING[4]}px`,borderRadius:RADIUS.xl,background:COLORS.successLight,border:`1px solid ${COLORS.success}30` }}>
-                <span style={{ fontSize:FONT_SIZE.md,fontWeight:FONT_WEIGHT.bold,color:COLORS.success }}>Net Pay</span>
-                <span style={{ fontSize:FONT_SIZE.xl,fontWeight:FONT_WEIGHT.bold,color:COLORS.success }}>₹{bd.net.toLocaleString("en-IN")}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Net Pay */}
+          <Group
+            justify="space-between"
+            align="center"
+            mt="md"
+            p="md"
+            style={{ borderRadius: 12, background: COLORS.successLight, border: `1px solid ${COLORS.success}30` }}
+          >
+            <Text size="md" fw={700} c={COLORS.success}>Net Pay</Text>
+            <Text fw={700} c={COLORS.success} style={{ fontSize: "1.25rem" }}>₹{bd.net.toLocaleString("en-IN")}</Text>
+          </Group>
+        </Modal>
       )}
-    </div>
+    </Box>
   );
 };
 

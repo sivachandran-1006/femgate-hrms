@@ -4,7 +4,6 @@ import {
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
   Paper, Grid, ThemeIcon, ScrollArea, Divider, Switch,
   Stepper, SegmentedControl, Progress, NumberInput, MultiSelect,
-  Center, RingProgress,
 } from "@mantine/core";
 import {
   IconSitemap, IconPlus, IconSearch, IconPencil, IconTrash, IconEye,
@@ -439,7 +438,7 @@ function CreateWorkflowTab() {
           <Text c="dimmed" size="sm" mb="lg">Choose what event starts this workflow.</Text>
           <SimpleGrid cols={{ base:1, sm:2, md:3 }} spacing="sm">
             {TRIGGERS.map(t => (
-              <Paper key={t} withBorder p="md" radius="md" style={{ cursor:"pointer" }}
+              <Paper key={t} withBorder p="md" radius="md"
                 onClick={() => f("trigger")(t)}
                 style={{ cursor:"pointer", border: form.trigger===t?"1.5px solid var(--mantine-color-blue-5)":undefined, background: form.trigger===t?"var(--mantine-color-blue-0)":undefined }}>
                 <Group gap="xs">
@@ -581,7 +580,7 @@ function CreateWorkflowTab() {
                 <ActionIcon size="sm" variant="subtle" color="red"><IconTrash size={12} /></ActionIcon>
               </Group>
             ))}
-            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} style={{ alignSelf:"flex-start" }}>Add Condition</Button>
+            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} w="fit-content">Add Condition</Button>
           </Stack>
         </Paper>
       )}
@@ -612,7 +611,7 @@ function CreateWorkflowTab() {
                 </Group>
               </Paper>
             ))}
-            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} style={{ alignSelf:"flex-start" }}>Add Level</Button>
+            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} w="fit-content">Add Level</Button>
           </Stack>
         </Paper>
       )}
@@ -671,7 +670,7 @@ function CreateWorkflowTab() {
                 </Group>
               </Paper>
             ))}
-            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} style={{ alignSelf:"flex-start" }}>Add Rule</Button>
+            <Button size="xs" variant="light" leftSection={<IconPlus size={12} />} w="fit-content">Add Rule</Button>
           </Stack>
         </Paper>
       )}
@@ -914,10 +913,10 @@ function WorkflowHistoryTab() {
                 <ThemeIcon size={22} radius="xl" variant="light" color={s.done?"green":"gray"}>
                   {s.done ? <IconCheck size={11} /> : <IconClock size={11} />}
                 </ThemeIcon>
-                <div style={{ flex:1 }}>
+                <Box style={{ flex:1 }}>
                   <Text size="sm" fw={500}>{s.step}</Text>
                   <Text size="xs" c="dimmed">{s.time}</Text>
-                </div>
+                </Box>
               </Group>
             ))}
           </Stack>
@@ -965,7 +964,7 @@ function ApprovalMatrixTab() {
           </Table.Tbody>
         </Table>
       </Paper>
-      <Button variant="light" leftSection={<IconPlus size={14} />} style={{ alignSelf:"flex-start" }}>Add Approval Rule</Button>
+      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content">Add Approval Rule</Button>
     </Stack>
   );
 }
@@ -1016,7 +1015,7 @@ function EscalationRulesTab() {
           </Table.Tbody>
         </Table>
       </Paper>
-      <Button variant="light" leftSection={<IconPlus size={14} />} style={{ alignSelf:"flex-start" }}>Add Escalation Rule</Button>
+      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content">Add Escalation Rule</Button>
     </Stack>
   );
 }
@@ -1091,7 +1090,7 @@ export default function WorkflowBuilder({ darkMode }) {
       />
 
       <Tabs value={tab} onChange={setTab} keepMounted={false}>
-        <Tabs.List mb="md" style={{ flexWrap:"wrap" }}>
+        <Tabs.List mb="md">
           <Tabs.Tab value="dashboard"   leftSection={<IconChartBar size={14} />}>Dashboard</Tabs.Tab>
           <Tabs.Tab value="library"     leftSection={<IconList size={14} />}>Library</Tabs.Tab>
           <Tabs.Tab value="create"      leftSection={<IconPlus size={14} />}>Create Workflow</Tabs.Tab>

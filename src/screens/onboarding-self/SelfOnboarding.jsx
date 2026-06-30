@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Box, Text, Group, SimpleGrid, TextInput, Select, Progress } from "@mantine/core";
+import { Box, Text, Group, SimpleGrid, TextInput, Select, Progress, Button, Stack, Paper } from "@mantine/core";
 import {
   IconUser, IconPhone, IconCheck, IconAlertCircle,
-  IconBuildingBank, IconFileText, IconShieldCheck, IconUserCircle,
+  IconBuildingBank, IconFileText, IconShieldCheck,
 } from "@tabler/icons-react";
 import { fetchMyEmployee, updateMyProfile } from "../../api/approvalsApi";
 import { useCreateDocument } from "../../queries/useSelfService";
@@ -39,7 +39,7 @@ export default function SelfOnboarding({ darkMode }) {
   const [emergency, setEmergency] = useState({ name: "", relationship: "", phone: "", address: "" });
   const [bank, setBank] = useState({ bankName: "", accountHolder: "", accountNumber: "", ifsc: "", upi: "" });
   const [govt, setGovt] = useState({ pan: "", aadhaar: "", passport: "", uan: "", esi: "", drivingLicense: "" });
-  const [uploadedDocs, setUploadedDocs] = useState({});   // { docName: { fileName } }
+  const [uploadedDocs, setUploadedDocs] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(null);
 
   const { show } = useToast();
@@ -93,7 +93,7 @@ export default function SelfOnboarding({ darkMode }) {
   return (
     <Box style={{ background: page, minHeight: "100vh", padding: 0 }}>
       {/* Header */}
-      <Box style={{ background: "linear-gradient(135deg,#1e3a8a,#2563eb)", padding: "32px 32px 20px", marginBottom: 0 }}>
+      <Box style={{ background: "linear-gradient(135deg,#1e3a8a,#2563eb)", padding: "32px 32px 20px" }}>
         <Group justify="space-between" wrap="wrap" gap="md">
           <Box>
             <Text fz="xl" fw={800} c="#fff">Complete Your Profile</Text>
@@ -113,35 +113,41 @@ export default function SelfOnboarding({ darkMode }) {
         </Group>
 
         {/* Step tabs */}
-        <Box style={{ display: "flex", gap: 8, marginTop: 24, overflowX: "auto", paddingBottom: 4 }}>
+        <Group gap={8} mt={24} wrap="nowrap" style={{ overflowX: "auto", paddingBottom: 4 }}>
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = completion >= (i + 1) * 20;
             const active = step === i;
             return (
-              <button key={s.id} onClick={() => setStep(i)} style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "8px 16px",
-                borderRadius: 10, border: `1px solid ${active ? "#fff" : "rgba(255,255,255,0.3)"}`,
-                background: active ? "#fff" : "rgba(255,255,255,0.1)",
-                color: active ? "#1d4ed8" : "#fff", fontWeight: 600, fontSize: 13,
-                cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
-              }}>
-                {done ? <IconCheck size={14} stroke={2.5} /> : <Icon size={14} stroke={1.8} />}
+              <Button
+                key={s.id}
+                onClick={() => setStep(i)}
+                leftSection={done ? <IconCheck size={14} stroke={2.5} /> : <Icon size={14} stroke={1.8} />}
+                rightSection={<Text fz={11} fw={600} c={active ? "blue.7" : "rgba(255,255,255,0.7)"}>{s.pct}%</Text>}
+                styles={{
+                  root: {
+                    border: `1px solid ${active ? "#fff" : "rgba(255,255,255,0.3)"}`,
+                    background: active ? "#fff" : "rgba(255,255,255,0.1)",
+                    color: active ? "#1d4ed8" : "#fff",
+                    flexShrink: 0,
+                    whiteSpace: "nowrap",
+                  },
+                }}
+              >
                 {s.label}
-                <span style={{ fontSize: 11, opacity: 0.7 }}>{s.pct}%</span>
-              </button>
+              </Button>
             );
           })}
-        </Box>
+        </Group>
       </Box>
 
       <Box style={{ padding: 24, maxWidth: 800, margin: "0 auto" }}>
-        <Box style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 28 }}>
+        <Paper style={{ background: card, border: `1px solid ${border}` }} radius={20} p={28}>
 
           {/* Step 0 — Personal Info */}
           {step === 0 && (
-            <Box>
-              <Text fw={700} fz="lg" c={text} mb={20}>Personal Information</Text>
+            <Stack gap="md">
+              <Text fw={700} fz="lg" c={text}>Personal Information</Text>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <TextInput type="date" label="Date of Birth" value={personal.dob}
                   onChange={e => setPersonal(p => ({ ...p, dob: e.target.value }))} styles={inp(darkMode)} />
@@ -159,9 +165,9 @@ export default function SelfOnboarding({ darkMode }) {
                 <TextInput label="Postal Code" placeholder="600001" value={personal.postalCode}
                   onChange={e => setPersonal(p => ({ ...p, postalCode: e.target.value }))} styles={inp(darkMode)} />
               </SimpleGrid>
-              <TextInput label="Address" placeholder="123, Street Name" mt="md" value={personal.address}
+              <TextInput label="Address" placeholder="123, Street Name" value={personal.address}
                 onChange={e => setPersonal(p => ({ ...p, address: e.target.value }))} styles={inp(darkMode)} />
-              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md" mt="md">
+              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
                 <TextInput label="City" placeholder="Chennai" value={personal.city}
                   onChange={e => setPersonal(p => ({ ...p, city: e.target.value }))} styles={inp(darkMode)} />
                 <TextInput label="State" placeholder="Tamil Nadu" value={personal.state}
@@ -169,13 +175,13 @@ export default function SelfOnboarding({ darkMode }) {
                 <TextInput label="Country" placeholder="India" value={personal.country}
                   onChange={e => setPersonal(p => ({ ...p, country: e.target.value }))} styles={inp(darkMode)} />
               </SimpleGrid>
-            </Box>
+            </Stack>
           )}
 
           {/* Step 1 — Emergency Contact */}
           {step === 1 && (
-            <Box>
-              <Text fw={700} fz="lg" c={text} mb={20}>Emergency Contact</Text>
+            <Stack gap="md">
+              <Text fw={700} fz="lg" c={text}>Emergency Contact</Text>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <TextInput label="Contact Name" placeholder="Full name" value={emergency.name}
                   onChange={e => setEmergency(p => ({ ...p, name: e.target.value }))} styles={inp(darkMode)} />
@@ -187,13 +193,13 @@ export default function SelfOnboarding({ darkMode }) {
                 <TextInput label="Address" placeholder="Home address" value={emergency.address}
                   onChange={e => setEmergency(p => ({ ...p, address: e.target.value }))} styles={inp(darkMode)} />
               </SimpleGrid>
-            </Box>
+            </Stack>
           )}
 
           {/* Step 2 — Bank Info */}
           {step === 2 && (
-            <Box>
-              <Text fw={700} fz="lg" c={text} mb={20}>Bank Information</Text>
+            <Stack gap="md">
+              <Text fw={700} fz="lg" c={text}>Bank Information</Text>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <TextInput label="Bank Name" placeholder="State Bank of India" value={bank.bankName}
                   onChange={e => setBank(p => ({ ...p, bankName: e.target.value }))} styles={inp(darkMode)} />
@@ -206,13 +212,13 @@ export default function SelfOnboarding({ darkMode }) {
                 <TextInput label="UPI ID" placeholder="name@upi" value={bank.upi}
                   onChange={e => setBank(p => ({ ...p, upi: e.target.value }))} styles={inp(darkMode)} />
               </SimpleGrid>
-            </Box>
+            </Stack>
           )}
 
           {/* Step 3 — Govt IDs */}
           {step === 3 && (
-            <Box>
-              <Text fw={700} fz="lg" c={text} mb={20}>Government Information</Text>
+            <Stack gap="md">
+              <Text fw={700} fz="lg" c={text}>Government Information</Text>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                 <TextInput label="PAN Number" placeholder="ABCDE1234F" value={govt.pan}
                   onChange={e => setGovt(p => ({ ...p, pan: e.target.value.toUpperCase() }))} styles={inp(darkMode)} />
@@ -227,86 +233,88 @@ export default function SelfOnboarding({ darkMode }) {
                 <TextInput label="Driving License" placeholder="TN0120230000001" value={govt.drivingLicense}
                   onChange={e => setGovt(p => ({ ...p, drivingLicense: e.target.value.toUpperCase() }))} styles={inp(darkMode)} />
               </SimpleGrid>
-            </Box>
+            </Stack>
           )}
 
           {/* Step 4 — Documents */}
           {step === 4 && (
-            <Box>
-              <Text fw={700} fz="lg" c={text} mb={20}>Document Uploads</Text>
-              <Text fz="sm" c={sub} mb={16}>Upload your documents below. Supported: PDF, JPG, PNG (max 5MB each)</Text>
-              {[
-                "Profile Photo","PAN Copy","Aadhaar Copy","Passport",
-                "Resume","Education Certificates","Experience Certificates",
-                "Offer Letter","Relieving Letter",
-              ].map((doc) => (
-                <Group key={doc} justify="space-between" align="center"
-                  style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${uploadedDocs[doc] ? "#86efac" : border}`, marginBottom: 8, background: uploadedDocs[doc] ? "#f0fdf4" : "transparent" }}>
-                  <Group gap={10}>
-                    <IconFileText size={16} color={uploadedDocs[doc] ? "#16a34a" : sub} stroke={1.8} />
-                    <Box>
-                      <Text fz="sm" c={text} fw={500}>{doc}</Text>
-                      {uploadedDocs[doc] && <Text fz="xs" c="#16a34a">{uploadedDocs[doc].fileName}</Text>}
-                    </Box>
-                  </Group>
-                  {uploadedDocs[doc] ? (
-                    <Group gap={6}>
-                      <IconCheck size={14} color="#16a34a" stroke={2.5} />
-                      <Text fz="xs" fw={600} c="#16a34a">Uploaded</Text>
+            <Stack gap="md">
+              <Text fw={700} fz="lg" c={text}>Document Uploads</Text>
+              <Text fz="sm" c={sub}>Upload your documents below. Supported: PDF, JPG, PNG (max 5MB each)</Text>
+              <Stack gap={8}>
+                {[
+                  "Profile Photo","PAN Copy","Aadhaar Copy","Passport",
+                  "Resume","Education Certificates","Experience Certificates",
+                  "Offer Letter","Relieving Letter",
+                ].map((doc) => (
+                  <Group key={doc} justify="space-between" align="center"
+                    style={{ padding: "12px 16px", borderRadius: 10, border: `1px solid ${uploadedDocs[doc] ? "#86efac" : border}`, background: uploadedDocs[doc] ? "#f0fdf4" : "transparent" }}>
+                    <Group gap={10}>
+                      <IconFileText size={16} color={uploadedDocs[doc] ? "#16a34a" : sub} stroke={1.8} />
+                      <Box>
+                        <Text fz="sm" c={text} fw={500}>{doc}</Text>
+                        {uploadedDocs[doc] && <Text fz="xs" c="#16a34a">{uploadedDocs[doc].fileName}</Text>}
+                      </Box>
                     </Group>
-                  ) : (
-                    <label style={{
-                      padding: "6px 14px", borderRadius: 8, border: `1px solid ${border}`,
-                      background: "transparent", color: sub, fontSize: 12, fontWeight: 600,
-                      cursor: uploadingDoc === doc ? "wait" : "pointer", opacity: uploadingDoc === doc ? 0.6 : 1,
-                    }}>
-                      {uploadingDoc === doc ? "Uploading…" : "Upload"}
-                      <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }}
+                    {uploadedDocs[doc] ? (
+                      <Group gap={6}>
+                        <IconCheck size={14} color="#16a34a" stroke={2.5} />
+                        <Text fz="xs" fw={600} c="#16a34a">Uploaded</Text>
+                      </Group>
+                    ) : (
+                      <Button
+                        component="label"
+                        variant="outline"
+                        size="xs"
+                        color="gray"
                         disabled={uploadingDoc === doc}
-                        onChange={(e) => handleDocUpload(doc, e.target.files?.[0])} />
-                    </label>
-                  )}
-                </Group>
-              ))}
-              <Box style={{ background: "#eff6ff", borderRadius: 10, padding: "10px 14px", border: "1px solid #bfdbfe", marginTop: 16 }}>
+                        loading={uploadingDoc === doc}
+                      >
+                        {uploadingDoc === doc ? "Uploading…" : "Upload"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }}
+                          disabled={uploadingDoc === doc}
+                          onChange={(e) => handleDocUpload(doc, e.target.files?.[0])} />
+                      </Button>
+                    )}
+                  </Group>
+                ))}
+              </Stack>
+              <Paper style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }} radius={10} p="xs">
                 <Group gap={8}>
                   <IconAlertCircle size={14} color="#2563eb" stroke={2} />
                   <Text fz="xs" c="#1d4ed8">Uploaded documents are sent to HR for verification. Max 5MB each (PDF, JPG, PNG).</Text>
                 </Group>
-              </Box>
-            </Box>
+              </Paper>
+            </Stack>
           )}
 
           {/* Navigation */}
           <Group justify="space-between" mt="xl">
-            <button onClick={() => step > 0 && setStep(s => s - 1)} style={{
-              padding: "9px 20px", borderRadius: 8, border: `1px solid ${border}`,
-              background: "transparent", color: sub, fontWeight: 600, cursor: step === 0 ? "not-allowed" : "pointer",
-              opacity: step === 0 ? 0.4 : 1,
-            }}>Back</button>
+            <Button variant="outline" color="gray" onClick={() => step > 0 && setStep(s => s - 1)} disabled={step === 0}>
+              Back
+            </Button>
             <Group gap={10}>
-              <button onClick={handleSave} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "9px 20px", borderRadius: 8, border: "none",
-                background: saveMut.isPending ? "#94a3b8" : "#3b82f6",
-                color: "#fff", fontWeight: 600, cursor: "pointer",
-              }}>
-                {saved ? <><IconCheck size={14} stroke={2.5} /> Saved!</> : saveMut.isPending ? "Saving..." : "Save & Continue"}
-              </button>
+              <Button
+                leftSection={saved ? <IconCheck size={14} stroke={2.5} /> : undefined}
+                onClick={handleSave}
+                loading={saveMut.isPending}
+                color={saved ? "green" : "blue"}
+              >
+                {saved ? "Saved!" : "Save & Continue"}
+              </Button>
               {step < STEPS.length - 1 && (
-                <button onClick={() => setStep(s => s + 1)} style={{
-                  padding: "9px 20px", borderRadius: 8, border: `1px solid ${border}`,
-                  background: "transparent", color: text, fontWeight: 600, cursor: "pointer",
-                }}>Next</button>
+                <Button variant="outline" color="gray" onClick={() => setStep(s => s + 1)}>
+                  Next
+                </Button>
               )}
             </Group>
           </Group>
-        </Box>
+        </Paper>
 
         {/* Completion tracker */}
-        <Box style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 24, marginTop: 16 }}>
+        <Paper style={{ background: card, border: `1px solid ${border}` }} radius={20} p={24} mt={16}>
           <Text fw={700} fz="sm" c={text} mb={16}>Profile Completion Tracker</Text>
-          <Box style={{ display: "flex", gap: 8 }}>
+          <Group gap={8} wrap="nowrap">
             {STEPS.map((s, i) => {
               const done = completion >= (i + 1) * 20;
               return (
@@ -319,11 +327,11 @@ export default function SelfOnboarding({ darkMode }) {
                 </Box>
               );
             })}
-          </Box>
+          </Group>
           <Group justify="flex-end" mt={8}>
             <Text fz="sm" fw={700} c={completion >= 100 ? "#22c55e" : text}>{completion}% Complete</Text>
           </Group>
-        </Box>
+        </Paper>
       </Box>
     </Box>
   );

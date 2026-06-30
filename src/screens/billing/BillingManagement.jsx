@@ -1,19 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Stack, Group, Text, Paper, Badge, Button, Tabs, SimpleGrid,
   Table, ActionIcon, Modal, TextInput, Select, Textarea, NumberInput,
-  Progress, Grid, Box, ThemeIcon, Tooltip, Switch, Divider, Timeline,
-  ScrollArea, Card, RingProgress, Stepper,
+  Progress, Grid, Box, ThemeIcon, Tooltip, Switch, Divider,
+  ScrollArea, Stepper,
 } from "@mantine/core";
 import {
-  IconCreditCard, IconUsers, IconRefresh, IconPlus, IconDownload,
+  IconCreditCard, IconUsers, IconPlus, IconDownload,
   IconUpload, IconSearch, IconEye, IconPencil, IconTrash, IconCheck,
-  IconX, IconTrendingUp, IconTrendingDown, IconFileInvoice, IconReceipt,
-  IconCalendar, IconClock, IconAlertTriangle, IconCircleCheck,
+  IconX, IconTrendingUp, IconFileInvoice, IconReceipt,
+  IconClock, IconAlertTriangle, IconCircleCheck,
   IconCurrencyRupee, IconChartBar, IconSettings, IconPlugConnected,
-  IconGift, IconMail, IconBell, IconBuilding, IconArrowUpRight,
+  IconGift, IconBuilding,
   IconArrowDownRight, IconRotate, IconBan, IconSend, IconPrinter,
-  IconShieldCheck, IconDatabaseImport, IconChevronRight,
 } from "@tabler/icons-react";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -22,7 +21,7 @@ import {
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast } from "../../components/ui/Toast";
-import { KpiCard, ChartTooltip, fmtMoney, SPARK_HEX } from "../dashboard/components/DashboardKit";
+import { ChartTooltip, SPARK_HEX } from "../dashboard/components/DashboardKit";
 
 // Icon aliases (must be declared before use in component JSX)
 const IconLayoutDashboard2 = IconChartBar;
@@ -138,11 +137,11 @@ function StatCard({ label, value, sub, color = "blue", icon: Icon }) {
     <Paper withBorder p="md" radius="lg">
       <Group gap="md" align="flex-start">
         {Icon && <ThemeIcon size={40} radius={12} variant="light" color={color}><Icon size={20} /></ThemeIcon>}
-        <div>
+        <Stack gap={2}>
           <Text size="xs" c="dimmed" fw={500} tt="uppercase">{label}</Text>
           <Text fw={800} size="xl">{value}</Text>
-          {sub && <Text size="xs" c="dimmed" mt={2}>{sub}</Text>}
-        </div>
+          {sub && <Text size="xs" c="dimmed">{sub}</Text>}
+        </Stack>
       </Group>
     </Paper>
   );
@@ -238,7 +237,10 @@ function DashboardTab({ onAction }) {
             <Stack gap={4} mt="xs">
               {PLAN_DIST.map(d => (
                 <Group key={d.name} justify="space-between" gap="xs">
-                  <Group gap={6}><Box w={10} h={10} style={{ borderRadius: 2, background: d.color, flexShrink: 0 }} /><Text size="xs">{d.name}</Text></Group>
+                  <Group gap={6}>
+                    <Box w={10} h={10} style={{ borderRadius: 2, background: d.color, flexShrink: 0 }} />
+                    <Text size="xs">{d.name}</Text>
+                  </Group>
                   <Text size="xs" fw={600}>{d.value}</Text>
                 </Group>
               ))}
@@ -289,7 +291,10 @@ function DashboardTab({ onAction }) {
             <Stack gap="xs">
               {SUBSCRIPTIONS.slice(0, 4).map(s => (
                 <Group key={s.id} justify="space-between">
-                  <div><Text size="sm" fw={500}>{s.company}</Text><Text size="xs" c="dimmed">{s.plan} · {s.cycle}</Text></div>
+                  <Stack gap={2}>
+                    <Text size="sm" fw={500}>{s.company}</Text>
+                    <Text size="xs" c="dimmed">{s.plan} · {s.cycle}</Text>
+                  </Stack>
                   <Group gap="xs">
                     <Text size="sm" fw={600}>{fmtINR(s.amount)}</Text>
                     <Badge size="xs" color={STATUS_COLOR[s.status]} variant="light">{s.status}</Badge>
@@ -305,7 +310,10 @@ function DashboardTab({ onAction }) {
             <Stack gap="xs">
               {SUBSCRIPTIONS.filter(s => s.status === "Active").slice(0, 4).map(s => (
                 <Group key={s.id} justify="space-between">
-                  <div><Text size="sm" fw={500}>{s.company}</Text><Text size="xs" c="dimmed">{s.plan}</Text></div>
+                  <Stack gap={2}>
+                    <Text size="sm" fw={500}>{s.company}</Text>
+                    <Text size="xs" c="dimmed">{s.plan}</Text>
+                  </Stack>
                   <Text size="xs" c="dimmed">{fmtDate(s.renewal)}</Text>
                 </Group>
               ))}
@@ -805,10 +813,10 @@ function RenewalsTab() {
         : <Stack gap="sm">
             {items.map(s => (
               <Group key={s.id} justify="space-between">
-                <div>
+                <Stack gap={2}>
                   <Text size="sm" fw={500}>{s.company}</Text>
                   <Text size="xs" c="dimmed">{s.plan} · {fmtINR(s.amount)}</Text>
-                </div>
+                </Stack>
                 <Group gap="xs">
                   <Text size="xs" c="dimmed">{fmtDate(s.renewal)}</Text>
                   <Button size="xs" variant="light" color="green">Renew</Button>
@@ -982,10 +990,10 @@ function GatewaysTab({ toast }) {
                   style={{ background: g.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Text c="white" fw={800} size="lg">{g.logo}</Text>
                 </Paper>
-                <div>
+                <Stack gap={2}>
                   <Text fw={700}>{g.name}</Text>
                   <Text size="xs" c="dimmed">{g.txns} transactions</Text>
-                </div>
+                </Stack>
               </Group>
               <Badge color={STATUS_COLOR[g.status]} variant="light">{g.status}</Badge>
             </Group>
@@ -1071,13 +1079,13 @@ function RevenueTab() {
                 const planRev = planSubs.reduce((s, sub) => s + (sub.amount || 0), 0);
                 const pct = Math.round((planRev / (SUBSCRIPTIONS.reduce((s, sub) => s + sub.amount, 0) || 1)) * 100);
                 return (
-                  <div key={p.name}>
+                  <Box key={p.name}>
                     <Group justify="space-between" mb={3}>
                       <Text size="xs">{p.name}</Text>
                       <Text size="xs" fw={600}>{fmtINR(planRev)}</Text>
                     </Group>
                     <Progress value={pct} color={p.color.replace("#","")} size="sm" radius="xl" />
-                  </div>
+                  </Box>
                 );
               })}
             </Stack>
@@ -1227,7 +1235,7 @@ export default function BillingManagement() {
   ];
 
   return (
-    <Stack p="lg" gap="lg" style={{ minHeight: "100vh" }}>
+    <Stack p="lg" gap="lg" mih="100vh">
       <AppPageHeader
         title="Subscription & Billing"
         sub="Manage customer subscriptions, revenue and billing operations"

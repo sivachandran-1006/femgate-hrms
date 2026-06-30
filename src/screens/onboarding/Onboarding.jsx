@@ -160,7 +160,7 @@ const Onboarding = () => {
 
         {/* ── ACTIVE ONBOARDINGS ── */}
         <Tabs.Panel value="active">
-          <Group align="flex-start" gap="lg" wrap="nowrap" style={{ alignItems: "stretch" }}>
+          <Group align="stretch" gap="lg" wrap="nowrap">
             <Stack gap="md" style={{ flex: "1.6 1 0", minWidth: 0 }}>
               {active.length === 0 && (
                 <Paper withBorder radius="xl" p="xl">
@@ -269,10 +269,10 @@ const Onboarding = () => {
                                 key={key}
                                 gap="md"
                                 p="sm"
+                                bg={done ? "green.0" : "gray.0"}
                                 style={{
                                   borderRadius: 8,
                                   cursor: "pointer",
-                                  background: done ? "var(--mantine-color-green-0)" : "var(--mantine-color-gray-0)",
                                   border: `1px solid ${done ? "var(--mantine-color-green-2)" : "var(--mantine-color-gray-2)"}`,
                                 }}
                                 wrap="nowrap"
@@ -281,7 +281,7 @@ const Onboarding = () => {
                                 <Avatar size={32} radius="md" color={done ? "green" : "gray"} variant="light" style={{ flexShrink: 0 }}>
                                   <Icon size={15} color={done ? COLORS.success : color} />
                                 </Avatar>
-                                <Box style={{ flex: 1 }}>
+                                <Box style={{ flex: 1, minWidth: 0 }}>
                                   <Text size="sm" fw={500} c={done ? "green" : undefined}>{label}</Text>
                                   <Text size="xs" c="dimmed">Click to mark {done ? "incomplete" : "complete"}</Text>
                                 </Box>
@@ -302,7 +302,7 @@ const Onboarding = () => {
             {/* Right Panel */}
             <Stack gap="md" style={{ flex: "1 1 0", minWidth: 260 }}>
               <Paper radius="xl" p="md" style={{ background: `linear-gradient(135deg,${COLORS.primary},${COLORS.primaryHover})`, color: "#fff" }}>
-                <Text size="xs" fw={600} mb="md" style={{ opacity: 0.85, textTransform: "uppercase", letterSpacing: "0.08em" }}>Summary</Text>
+                <Text size="xs" fw={600} mb="md" tt="uppercase" style={{ opacity: 0.85, letterSpacing: "0.08em" }}>Summary</Text>
                 {[
                   { label: "Active Onboardings", value: active.length },
                   { label: "Fully Completed",    value: completedCount },
@@ -348,7 +348,7 @@ const Onboarding = () => {
                         <Text size="xs" fw={700}>{initials(j.name)}</Text>
                       </Avatar>
                       <Box style={{ flex: 1, minWidth: 0 }}>
-                        <Text size="xs" fw={600} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.name}</Text>
+                        <Text size="xs" fw={600} truncate>{j.name}</Text>
                         <Text size="xs" c="dimmed">{j.department}</Text>
                       </Box>
                       <Badge color={days <= 7 ? "yellow" : "blue"} variant="light" radius="xl" size="xs">{days}d</Badge>
@@ -488,7 +488,8 @@ const Onboarding = () => {
                               radius="xl"
                               color={emp.tasks[key] ? "green" : "gray"}
                               variant={emp.tasks[key] ? "filled" : "light"}
-                              style={{ margin: "0 auto", cursor: "pointer" }}
+                              mx="auto"
+                            style={{ cursor: "pointer" }}
                               onClick={() => handleToggleTask(emp, key)}
                             >
                               {emp.tasks[key]
@@ -498,7 +499,7 @@ const Onboarding = () => {
                             </Avatar>
                           </Table.Td>
                         ))}
-                        <Table.Td style={{ minWidth: 120 }}>
+                        <Table.Td miw={120}>
                           <Group gap="xs" wrap="nowrap">
                             <Progress
                               value={progress}

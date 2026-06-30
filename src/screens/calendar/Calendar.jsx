@@ -11,10 +11,17 @@ import {
   IconBriefcase as Briefcase,
   IconClock as Clock,
 } from "@tabler/icons-react";
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  ActionIcon,
+  Badge,
+  Table,
+} from "@mantine/core";
 import { COLORS } from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
-import { SPACING, GAP } from "../../theme/spacing";
-import { RADIUS, SHADOW } from "../../theme/sizes";
 
 // ── Event color map ────────────────────────────────────────────────────────────
 const EVENT_COLORS = {
@@ -25,7 +32,6 @@ const EVENT_COLORS = {
   hr:      { dot: "#f59e0b", bg: "#fef3c7", text: "#d97706", darkBg: "#78350f", darkText: "#fcd34d" },
   team:    { dot: "#0d9488", bg: "#ccfbf1", text: "#0f766e", darkBg: "#042f2e", darkText: "#5eead4" },
 };
-
 
 const KIND_BADGE = {
   National: { bg: "#fee2e2", text: "#dc2626", darkBg: "#7f1d1d", darkText: "#fca5a5" },
@@ -76,57 +82,54 @@ function upcomingEventsThisMonth(events, year, month) {
 function StatChip({ icon: Icon, label, value, color, darkMode }) {
   const th = darkMode ? COLORS.dark : COLORS.light;
   return (
-    <div
+    <Paper
+      withBorder
+      radius="xl"
+      p="sm"
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: GAP.sm,
-        background: darkMode ? COLORS.dark.cardBg : COLORS.light.cardBg,
-        border: `1px solid ${th.border}`,
-        borderRadius: RADIUS.xl,
-        padding: `${SPACING[3]}px ${SPACING[5]}px`,
-        boxShadow: SHADOW.sm,
         flex: "1 1 160px",
         minWidth: 150,
+        background: th.cardBg,
+        borderColor: th.border,
       }}
     >
-      <div
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: RADIUS.lg,
-          background: color + "22",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon size={18} color={color} strokeWidth={2} />
-      </div>
-      <div>
-        <div style={{ fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: th.text, lineHeight: 1.2 }}>
-          {value}
-        </div>
-        <div style={{ fontSize: FONT_SIZE.xs, color: th.subtext, marginTop: 2 }}>{label}</div>
-      </div>
-    </div>
+      <Group gap="sm" align="center" wrap="nowrap">
+        <Box
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 12,
+            background: color + "22",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={18} color={color} strokeWidth={2} />
+        </Box>
+        <Stack gap={2}>
+          <Text size="xl" fw={700} c={th.text} lh={1.2}>{value}</Text>
+          <Text size="xs" c={th.subtext}>{label}</Text>
+        </Stack>
+      </Group>
+    </Paper>
   );
 }
 
 function EventPill({ event, darkMode }) {
   const ec = EVENT_COLORS[event.type] || EVENT_COLORS.team;
   return (
-    <div
+    <Box
       style={{
         display: "flex",
         alignItems: "center",
-        gap: GAP.xs,
+        gap: 4,
         background: darkMode ? ec.darkBg : ec.bg,
-        borderRadius: RADIUS.full,
+        borderRadius: 9999,
         padding: "3px 10px",
-        fontSize: FONT_SIZE.xs,
-        fontWeight: FONT_WEIGHT.medium,
+        fontSize: 11,
+        fontWeight: 500,
         color: darkMode ? ec.darkText : ec.text,
         whiteSpace: "nowrap",
         overflow: "hidden",
@@ -138,14 +141,14 @@ function EventPill({ event, darkMode }) {
         style={{
           width: 7,
           height: 7,
-          borderRadius: RADIUS.full,
+          borderRadius: 9999,
           background: ec.dot,
           flexShrink: 0,
           display: "inline-block",
         }}
       />
       {event.title}
-    </div>
+    </Box>
   );
 }
 
@@ -153,51 +156,46 @@ function SidePanelEvent({ event, darkMode }) {
   const ec = EVENT_COLORS[event.type] || EVENT_COLORS.team;
   const th = darkMode ? COLORS.dark : COLORS.light;
   return (
-    <div
+    <Paper
+      withBorder
+      radius="md"
+      p="sm"
+      mb="sm"
       style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: GAP.sm,
-        padding: `${SPACING[3]}px ${SPACING[4]}px`,
-        borderRadius: RADIUS.lg,
         background: darkMode ? COLORS.dark.pageBg : COLORS.light.pageBg,
-        border: `1px solid ${th.border}`,
-        marginBottom: GAP.sm,
+        borderColor: th.border,
       }}
     >
-      <div
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: RADIUS.full,
-          background: ec.dot,
-          marginTop: 4,
-          flexShrink: 0,
-        }}
-      />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: th.text }}>
-          {event.title}
-        </div>
-        <div
+      <Group align="flex-start" gap="sm" wrap="nowrap">
+        <Box
+          mt={4}
           style={{
-            display: "inline-block",
-            marginTop: 4,
-            fontSize: FONT_SIZE.xs,
-            fontWeight: FONT_WEIGHT.medium,
-            background: darkMode ? ec.darkBg : ec.bg,
-            color: darkMode ? ec.darkText : ec.text,
-            borderRadius: RADIUS.full,
-            padding: "2px 8px",
+            width: 10,
+            height: 10,
+            borderRadius: 9999,
+            background: ec.dot,
+            flexShrink: 0,
           }}
-        >
-          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-        </div>
-        <div style={{ fontSize: FONT_SIZE.xs, color: th.subtext, marginTop: 3 }}>
-          {event.date}
-        </div>
-      </div>
-    </div>
+        />
+        <Box style={{ flex: 1 }}>
+          <Text size="sm" fw={600} c={th.text}>{event.title}</Text>
+          <Badge
+            mt={4}
+            radius="xl"
+            size="xs"
+            style={{
+              background: darkMode ? ec.darkBg : ec.bg,
+              color: darkMode ? ec.darkText : ec.text,
+              fontWeight: 500,
+              border: "none",
+            }}
+          >
+            {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+          </Badge>
+          <Text size="xs" c={th.subtext} mt={3}>{event.date}</Text>
+        </Box>
+      </Group>
+    </Paper>
   );
 }
 
@@ -271,127 +269,91 @@ export default function Calendar({ darkMode = false }) {
   for (let d = 1; d <= daysInMonth; d++) gridCells.push(d);
 
   return (
-    <div
+    <Box
+      p="xl"
       style={{
         minHeight: "100vh",
         background: th.pageBg,
-        padding: SPACING[6],
         fontFamily: "'Inter', sans-serif",
         boxSizing: "border-box",
       }}
     >
       {/* ── Page header ─────────────────────────────────────────────── */}
-      <div style={{ marginBottom: SPACING[6] }}>
-        <div style={{ display: "flex", alignItems: "center", gap: GAP.sm, marginBottom: 4 }}>
+      <Stack gap={4} mb="xl">
+        <Group gap="sm" align="center">
           <CalendarIcon size={22} color={COLORS.primary} strokeWidth={2} />
-          <h1
-            style={{
-              margin: 0,
-              fontSize: FONT_SIZE.xl,
-              fontWeight: FONT_WEIGHT.bold,
-              color: th.text,
-            }}
-          >
+          <Text size="xl" fw={700} c={th.text}>
             Calendar &amp; Holiday Planner
-          </h1>
-        </div>
-        <p style={{ margin: 0, fontSize: FONT_SIZE.sm, color: th.subtext }}>
+          </Text>
+        </Group>
+        <Text size="sm" c={th.subtext}>
           View company events, holidays, and team schedules
-        </p>
-      </div>
+        </Text>
+      </Stack>
 
       {/* ── Stat chips ──────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: GAP.md,
-          marginBottom: SPACING[6],
-        }}
-      >
-        <StatChip icon={Star}        label="Total Holidays This Year"    value={totalHolidays} color={COLORS.error}   darkMode={darkMode} />
-        <StatChip icon={Clock}       label="Upcoming Events This Month"  value={upcomingCount} color={COLORS.primary} darkMode={darkMode} />
-        <StatChip icon={Briefcase}   label="Working Days This Month"     value={workingDays}   color={COLORS.success} darkMode={darkMode} />
-      </div>
+      <Group gap="md" mb="xl" wrap="wrap">
+        <StatChip icon={Star}      label="Total Holidays This Year"   value={totalHolidays} color={COLORS.error}   darkMode={darkMode} />
+        <StatChip icon={Clock}     label="Upcoming Events This Month" value={upcomingCount} color={COLORS.primary} darkMode={darkMode} />
+        <StatChip icon={Briefcase} label="Working Days This Month"    value={workingDays}   color={COLORS.success} darkMode={darkMode} />
+      </Group>
 
       {/* ── Main layout: calendar + side panel ──────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          gap: GAP.lg,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          marginBottom: SPACING[6],
-        }}
-      >
+      <Group gap="lg" align="flex-start" wrap="wrap" mb="xl">
         {/* Calendar card */}
-        <div
+        <Paper
+          withBorder
+          radius="xl"
           style={{
             flex: "1 1 520px",
             background: th.cardBg,
-            borderRadius: RADIUS["2xl"],
-            border: `1px solid ${th.border}`,
-            boxShadow: SHADOW.md,
+            borderColor: th.border,
             overflow: "hidden",
           }}
         >
           {/* Month navigation header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: `${SPACING[4]}px ${SPACING[5]}px`,
-              borderBottom: `1px solid ${th.border}`,
-            }}
+          <Group
+            justify="space-between"
+            align="center"
+            px="lg"
+            py="md"
+            style={{ borderBottom: `1px solid ${th.border}` }}
           >
-            <button
+            <ActionIcon
               onClick={prevMonth}
+              variant="default"
+              radius="md"
+              size={34}
               style={{
                 background: darkMode ? COLORS.dark.pageBg : COLORS.gray100,
-                border: `1px solid ${th.border}`,
-                borderRadius: RADIUS.lg,
-                width: 34,
-                height: 34,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
+                borderColor: th.border,
                 color: th.text,
-                transition: "all 0.15s ease",
               }}
             >
               <ChevronLeft size={16} strokeWidth={2.5} />
-            </button>
+            </ActionIcon>
 
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: th.text }}>
-                {MONTH_NAMES[viewMonth]} {viewYear}
-              </div>
-            </div>
+            <Text size="lg" fw={700} c={th.text} ta="center">
+              {MONTH_NAMES[viewMonth]} {viewYear}
+            </Text>
 
-            <button
+            <ActionIcon
               onClick={nextMonth}
+              variant="default"
+              radius="md"
+              size={34}
               style={{
                 background: darkMode ? COLORS.dark.pageBg : COLORS.gray100,
-                border: `1px solid ${th.border}`,
-                borderRadius: RADIUS.lg,
-                width: 34,
-                height: 34,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
+                borderColor: th.border,
                 color: th.text,
-                transition: "all 0.15s ease",
               }}
             >
               <ChevronRight size={16} strokeWidth={2.5} />
-            </button>
-          </div>
+            </ActionIcon>
+          </Group>
 
           {/* Day-of-week header */}
-          <div
+          <Box
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
@@ -400,24 +362,22 @@ export default function Calendar({ darkMode = false }) {
             }}
           >
             {DAYS_OF_WEEK.map((d) => (
-              <div
+              <Text
                 key={d}
-                style={{
-                  textAlign: "center",
-                  padding: `${SPACING[2]}px 0`,
-                  fontSize: FONT_SIZE.xs,
-                  fontWeight: FONT_WEIGHT.semibold,
-                  color: d === "Sun" || d === "Sat" ? COLORS.error : th.subtext,
-                  letterSpacing: "0.05em",
-                }}
+                ta="center"
+                py="xs"
+                size="xs"
+                fw={600}
+                c={d === "Sun" || d === "Sat" ? COLORS.error : th.subtext}
+                style={{ letterSpacing: "0.05em" }}
               >
                 {d}
-              </div>
+              </Text>
             ))}
-          </div>
+          </Box>
 
           {/* Day cells grid */}
-          <div
+          <Box
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
@@ -427,7 +387,7 @@ export default function Calendar({ darkMode = false }) {
             {gridCells.map((day, idx) => {
               if (day === null) {
                 return (
-                  <div
+                  <Box
                     key={`empty-${idx}`}
                     style={{
                       minHeight: 80,
@@ -449,7 +409,7 @@ export default function Calendar({ darkMode = false }) {
               const isSelected = selectedDate === dateKey;
 
               return (
-                <div
+                <Box
                   key={day}
                   onClick={() => setSelectedDate(isSelected ? null : dateKey)}
                   style={{
@@ -469,252 +429,221 @@ export default function Calendar({ darkMode = false }) {
                   }}
                 >
                   {/* Date number */}
-                  <div
+                  <Box
+                    mb={4}
                     style={{
                       width: 26,
                       height: 26,
-                      borderRadius: RADIUS.full,
+                      borderRadius: 9999,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: FONT_SIZE.sm,
-                      fontWeight: isTodayCell ? FONT_WEIGHT.bold : FONT_WEIGHT.medium,
+                      fontSize: 13,
+                      fontWeight: isTodayCell ? 700 : 500,
                       color: isTodayCell
                         ? COLORS.white
                         : isWeekend
                         ? darkMode ? "#fca5a5" : COLORS.error
                         : th.text,
                       background: isTodayCell ? COLORS.primary : "transparent",
-                      marginBottom: 4,
                     }}
                   >
                     {day}
-                  </div>
+                  </Box>
 
-                  {/* Event dots */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {/* Event pills */}
+                  <Stack gap={2}>
                     {dayEvents.slice(0, 2).map((ev, i) => (
                       <EventPill key={i} event={ev} darkMode={darkMode} />
                     ))}
                     {dayEvents.length > 2 && (
-                      <div
-                        style={{
-                          fontSize: FONT_SIZE.xs,
-                          color: th.subtext,
-                          paddingLeft: 4,
-                          fontWeight: FONT_WEIGHT.medium,
-                        }}
-                      >
+                      <Text size="xs" c={th.subtext} fw={500} pl={4}>
                         +{dayEvents.length - 2} more
-                      </div>
+                      </Text>
                     )}
-                  </div>
-                </div>
+                  </Stack>
+                </Box>
               );
             })}
-          </div>
+          </Box>
 
           {/* Legend */}
-          <div
-            style={{
-              padding: `${SPACING[3]}px ${SPACING[5]}px`,
-              borderTop: `1px solid ${th.border}`,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: GAP.md,
-            }}
+          <Group
+            px="lg"
+            py="sm"
+            gap="md"
+            wrap="wrap"
+            style={{ borderTop: `1px solid ${th.border}` }}
           >
             {Object.entries(EVENT_COLORS).map(([key, ec]) => (
-              <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <Group key={key} gap={5} align="center" wrap="nowrap">
                 <span
                   style={{
                     width: 9,
                     height: 9,
-                    borderRadius: RADIUS.full,
+                    borderRadius: 9999,
                     background: ec.dot,
                     display: "inline-block",
                   }}
                 />
-                <span style={{ fontSize: FONT_SIZE.xs, color: th.subtext, textTransform: "capitalize" }}>
-                  {key}
-                </span>
-              </div>
+                <Text size="xs" c={th.subtext} tt="capitalize">{key}</Text>
+              </Group>
             ))}
-          </div>
-        </div>
+          </Group>
+        </Paper>
 
         {/* Side panel */}
-        <div
+        <Paper
+          withBorder
+          radius="xl"
           style={{
             flex: "0 0 280px",
             background: th.cardBg,
-            borderRadius: RADIUS["2xl"],
-            border: `1px solid ${th.border}`,
-            boxShadow: SHADOW.md,
+            borderColor: th.border,
             overflow: "hidden",
           }}
         >
           {/* Panel header */}
-          <div
+          <Box
+            px="lg"
+            py="md"
             style={{
-              padding: `${SPACING[4]}px ${SPACING[5]}px`,
               borderBottom: `1px solid ${th.border}`,
               background: darkMode ? COLORS.dark.pageBg : COLORS.gray50,
             }}
           >
-            <div style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold, color: th.text }}>
-              {panelTitle}
-            </div>
+            <Text size="sm" fw={700} c={th.text}>{panelTitle}</Text>
             {selectedDate && (
-              <button
+              <Text
+                size="xs"
+                c={COLORS.primary}
+                fw={500}
+                mt={4}
+                style={{ cursor: "pointer" }}
                 onClick={() => setSelectedDate(null)}
-                style={{
-                  marginTop: 4,
-                  fontSize: FONT_SIZE.xs,
-                  color: COLORS.primary,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  fontWeight: FONT_WEIGHT.medium,
-                }}
               >
                 ← Show all upcoming
-              </button>
+              </Text>
             )}
-          </div>
+          </Box>
 
           {/* Event list */}
-          <div style={{ padding: SPACING[4], overflowY: "auto", maxHeight: 480 }}>
+          <Box p="md" style={{ overflowY: "auto", maxHeight: 480 }}>
             {panelEvents.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: `${SPACING[8]}px 0`,
-                  color: th.subtext,
-                  fontSize: FONT_SIZE.sm,
-                }}
-              >
+              <Text ta="center" py="xl" c={th.subtext} size="sm">
                 No events on this day
-              </div>
+              </Text>
             ) : (
               panelEvents.map((ev, i) => (
                 <SidePanelEvent key={i} event={ev} darkMode={darkMode} />
               ))
             )}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Paper>
+      </Group>
 
       {/* ── Holiday table ────────────────────────────────────────────── */}
-      <div
+      <Paper
+        withBorder
+        radius="xl"
         style={{
           background: th.cardBg,
-          borderRadius: RADIUS["2xl"],
-          border: `1px solid ${th.border}`,
-          boxShadow: SHADOW.md,
+          borderColor: th.border,
           overflow: "hidden",
         }}
       >
         {/* Table header */}
-        <div
+        <Group
+          px="lg"
+          py="md"
+          gap="sm"
+          align="center"
           style={{
-            padding: `${SPACING[4]}px ${SPACING[5]}px`,
             borderBottom: `1px solid ${th.border}`,
-            display: "flex",
-            alignItems: "center",
-            gap: GAP.sm,
             background: darkMode ? COLORS.dark.pageBg : COLORS.gray50,
           }}
         >
           <CalendarIcon size={16} color={COLORS.primary} strokeWidth={2} />
-          <span style={{ fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: th.text }}>
+          <Text size="md" fw={700} c={th.text}>
             Public &amp; Company Holidays — 2026
-          </span>
-          <span
+          </Text>
+          <Badge
+            ml="auto"
+            radius="xl"
+            size="sm"
             style={{
-              marginLeft: "auto",
-              fontSize: FONT_SIZE.xs,
-              fontWeight: FONT_WEIGHT.semibold,
               background: darkMode ? COLORS.dark.border : COLORS.gray200,
               color: th.subtext,
-              borderRadius: RADIUS.full,
-              padding: "2px 10px",
+              border: "none",
+              fontWeight: 600,
             }}
           >
             {HOLIDAY_TABLE.length} holidays
-          </span>
-        </div>
+          </Badge>
+        </Group>
 
-        {/* Column headings */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "100px 1fr 130px",
-            padding: `${SPACING[3]}px ${SPACING[5]}px`,
-            borderBottom: `1px solid ${th.border}`,
-            background: darkMode ? COLORS.dark.theadBg : COLORS.gray50,
-          }}
-        >
-          {["Date", "Holiday Name", "Type"].map((h) => (
-            <div
-              key={h}
-              style={{
-                fontSize: FONT_SIZE.xs,
-                fontWeight: FONT_WEIGHT.semibold,
-                color: th.subtext,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
-              {h}
-            </div>
-          ))}
-        </div>
-
-        {/* Rows */}
-        {HOLIDAY_TABLE.map((row, i) => {
-          const badge = KIND_BADGE[row.kind] || KIND_BADGE.Optional;
-          return (
-            <div
-              key={i}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "100px 1fr 130px",
-                padding: `${SPACING[3]}px ${SPACING[5]}px`,
-                borderBottom: i < HOLIDAY_TABLE.length - 1 ? `1px solid ${th.border}` : "none",
-                alignItems: "center",
-                background: i % 2 === 0
-                  ? th.cardBg
-                  : darkMode ? "rgba(15,23,42,0.3)" : "rgba(248,250,252,0.6)",
-                transition: "background 0.15s ease",
-              }}
-            >
-              <div style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: COLORS.primary }}>
-                {row.date}
-              </div>
-              <div style={{ fontSize: FONT_SIZE.sm, color: th.text, fontWeight: FONT_WEIGHT.medium }}>
-                {row.name}
-              </div>
-              <div>
-                <span
+        {/* Table */}
+        <Table highlightOnHover>
+          <Table.Thead
+            style={{ background: darkMode ? COLORS.dark.theadBg : COLORS.gray50 }}
+          >
+            <Table.Tr>
+              {["Date", "Holiday Name", "Type"].map((h) => (
+                <Table.Th
+                  key={h}
                   style={{
-                    display: "inline-block",
-                    fontSize: FONT_SIZE.xs,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    background: darkMode ? badge.darkBg : badge.bg,
-                    color: darkMode ? badge.darkText : badge.text,
-                    borderRadius: RADIUS.full,
-                    padding: "3px 12px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: th.subtext,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    borderBottom: `1px solid ${th.border}`,
                   }}
                 >
-                  {row.kind}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+                  {h}
+                </Table.Th>
+              ))}
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {HOLIDAY_TABLE.map((row, i) => {
+              const badge = KIND_BADGE[row.kind] || KIND_BADGE.Optional;
+              return (
+                <Table.Tr
+                  key={i}
+                  style={{
+                    background: i % 2 === 0
+                      ? th.cardBg
+                      : darkMode ? "rgba(15,23,42,0.3)" : "rgba(248,250,252,0.6)",
+                    transition: "background 0.15s ease",
+                  }}
+                >
+                  <Table.Td>
+                    <Text size="sm" fw={500} c={COLORS.primary}>{row.date}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size="sm" fw={500} c={th.text}>{row.name}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      radius="xl"
+                      size="sm"
+                      style={{
+                        background: darkMode ? badge.darkBg : badge.bg,
+                        color: darkMode ? badge.darkText : badge.text,
+                        border: "none",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {row.kind}
+                    </Badge>
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Paper>
+    </Box>
   );
 }

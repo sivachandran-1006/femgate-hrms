@@ -4,11 +4,13 @@ import {
   IconPalette, IconAlertTriangle, IconLoader2,
 } from "@tabler/icons-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { COLORS }                                              from "../../theme/colors";
-import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT }                 from "../../theme/fonts";
-import { SPACING, PADDING, GAP, LAYOUT }                       from "../../theme/spacing";
-import { RADIUS, SHADOW, TRANSITION, ICON_SIZE, ICON_STROKE }  from "../../theme/sizes";
-import { useToast }                                            from "../../components/ui/Toast";
+import {
+  Box, Stack, Group, Text, Paper, SimpleGrid,
+  TextInput, Select, Button, UnstyledButton,
+} from "@mantine/core";
+import { COLORS }    from "../../theme/colors";
+import { RADIUS, TRANSITION, ICON_SIZE, ICON_STROKE } from "../../theme/sizes";
+import { useToast }  from "../../components/ui/Toast";
 import {
   getCompanySettings, updateCompanySettings,
   getNotificationSettings, updateNotificationSettings,
@@ -17,40 +19,64 @@ import { getSecuritySettings, updateSecuritySettings } from "../../api/securityA
 
 // The 4 page toggles map to notification-setting rows in the DB
 const NOTIF_DEFS = [
-  { id: "email_global",       label: "Email Notifications", sub: "Receive system emails for key events",     channel: "Email",          trigger: "Global email switch" },
+  { id: "email_global",       label: "Email Notifications", sub: "Receive system emails for key events",       channel: "Email",          trigger: "Global email switch" },
   { id: "leave_apply",        label: "Leave Alerts",        sub: "Notify when a leave is applied or approved", channel: "In-App + Email", trigger: "When employee applies leave" },
-  { id: "payroll_run",        label: "Payroll Alerts",      sub: "Notify on payroll run completion",          channel: "In-App",         trigger: "When payroll is generated" },
-  { id: "attendance_summary", label: "Attendance Alerts",   sub: "Daily attendance summary emails",           channel: "Email",          trigger: "Daily attendance digest" },
+  { id: "payroll_run",        label: "Payroll Alerts",      sub: "Notify on payroll run completion",           channel: "In-App",         trigger: "When payroll is generated" },
+  { id: "attendance_summary", label: "Attendance Alerts",   sub: "Daily attendance summary emails",            channel: "Email",          trigger: "Daily attendance digest" },
 ];
 
 const Toggle = ({ checked, onChange }) => (
-  <button
+  <UnstyledButton
     onClick={() => onChange(!checked)}
     style={{
       width: 44, height: 26, borderRadius: RADIUS.full,
       background: checked ? COLORS.primary : COLORS.gray300,
-      border: "none", cursor: "pointer", padding: GAP.xs,
+      cursor: "pointer", padding: 3,
       display: "flex", alignItems: "center",
       justifyContent: checked ? "flex-end" : "flex-start",
       transition: TRANSITION, flexShrink: 0,
     }}
   >
-    <div style={{ width: LAYOUT.avatar - 16, height: LAYOUT.avatar - 16, borderRadius: RADIUS.full, background: COLORS.white, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-  </button>
+    <Box style={{ width: 18, height: 18, borderRadius: RADIUS.full, background: COLORS.white, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+  </UnstyledButton>
 );
 
-const ToggleRow = ({ label, sub, checked, onChange, surface, isLast }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: `${SPACING[3]}px 0`, borderBottom: isLast ? "none" : `1px solid ${surface.border}` }}>
-    <div>
-      <p style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.text, margin: 0 }}>{label}</p>
-      {sub && <p style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.normal, color: surface.subtext, margin: `${GAP.xs - 1}px 0 0` }}>{sub}</p>}
-    </div>
+const ToggleRow = ({ label, sub, checked, onChange, isLast }) => (
+  <Group
+    justify="space-between"
+    align="center"
+    py="sm"
+    style={{ borderBottom: isLast ? "none" : "1px solid var(--mantine-color-default-border)" }}
+  >
+    <Box>
+      <Text fw={500}>{label}</Text>
+      {sub && <Text size="sm" c="dimmed" mt={2}>{sub}</Text>}
+    </Box>
     <Toggle checked={checked} onChange={onChange} />
-  </div>
+  </Group>
+);
+
+const SectionCard = ({ children, dangerBorder = false }) => (
+  <Paper
+    radius="xl"
+    withBorder
+    shadow="sm"
+    p="lg"
+    mb="md"
+    style={dangerBorder ? { borderColor: COLORS.dangerMuted } : undefined}
+  >
+    {children}
+  </Paper>
+);
+
+const SectionTitle = ({ icon: Icon, iconColor, children, color }) => (
+  <Group gap="xs" mb="md">
+    <Icon size={ICON_SIZE.sm} color={iconColor} stroke={ICON_STROKE.normal} />
+    <Text size="lg" fw={700} c={color}>{children}</Text>
+  </Group>
 );
 
 const Settings = ({ darkMode = false }) => {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
   const { show } = useToast();
   const queryClient = useQueryClient();
 
@@ -139,114 +165,92 @@ const Settings = ({ darkMode = false }) => {
 
   const setToggle = (id) => (v) => setToggles((t) => ({ ...t, [id]: v }));
 
-  const card = {
-    background: surface.cardBg, borderRadius: RADIUS["2xl"],
-    border: `1px solid ${surface.border}`, boxShadow: SHADOW.card,
-    padding: PADDING.card, marginBottom: GAP.lg,
-  };
-  const sectionTitle = {
-    fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: surface.text,
-    margin: `0 0 ${SPACING[4] + 2}px`, display: "flex", alignItems: "center", gap: GAP.md - 2,
-  };
-  const labelStyle = {
-    fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.subtext,
-    marginBottom: GAP.sm - 2, display: "block",
-  };
-  const inputStyle = {
-    border: `1px solid ${surface.border}`, borderRadius: RADIUS.lg, padding: PADDING.input,
-    fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.normal, background: surface.inputBg,
-    color: surface.text, fontFamily: FONT_FAMILY.base, outline: "none",
-    width: "100%", boxSizing: "border-box", height: LAYOUT.inputHeight,
-  };
-  const twoColRow = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.lg, marginBottom: SPACING[3] + 1 };
-
   return (
-    <div style={{ fontFamily: FONT_FAMILY.base, maxWidth: 820, color: surface.text }}>
+    <Box maw={820}>
       {/* Page Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: SPACING[6] }}>
-        <div>
-          <h1 style={{ fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: surface.text, margin: 0 }}>Settings</h1>
-          <p style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.normal, color: surface.subtext, margin: `${GAP.xs}px 0 0` }}>
-            Configure your HRMS preferences
-          </p>
-        </div>
-        <button
+      <Group justify="space-between" align="flex-start" mb="xl">
+        <Stack gap={4}>
+          <Text size="2xl" fw={700}>Settings</Text>
+          <Text c="dimmed">Configure your HRMS preferences</Text>
+        </Stack>
+        <Button
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          style={{
-            display: "flex", alignItems: "center", gap: GAP.sm,
-            background: saved ? COLORS.success : COLORS.primary, color: COLORS.white,
-            border: "none", borderRadius: RADIUS.lg, padding: PADDING.btn,
-            fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.semibold, fontFamily: FONT_FAMILY.base,
-            cursor: saveMutation.isPending ? "wait" : "pointer", transition: TRANSITION,
-            opacity: saveMutation.isPending ? 0.7 : 1,
-          }}
+          color={saved ? "green" : "blue"}
+          leftSection={
+            saveMutation.isPending
+              ? <IconLoader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+              : <IconDeviceFloppy size={16} stroke={2} />
+          }
+          loading={saveMutation.isPending}
         >
-          {saveMutation.isPending
-            ? <IconLoader2 size={FONT_SIZE.lg} style={{ animation: "spin 1s linear infinite" }} />
-            : <IconDeviceFloppy size={FONT_SIZE.lg} stroke={2} />}
           {saveMutation.isPending ? "Saving..." : saved ? "Saved!" : "Save Changes"}
-        </button>
-      </div>
+        </Button>
+      </Group>
 
       {/* Company Information */}
-      <div style={card}>
-        <p style={sectionTitle}>
-          <IconBuilding size={ICON_SIZE.sm} color={COLORS.primary} stroke={ICON_STROKE.normal} />
+      <SectionCard>
+        <SectionTitle icon={IconBuilding} iconColor={COLORS.primary}>
           Company Information
-        </p>
-        <div style={twoColRow}>
-          <div>
-            <label style={labelStyle}>Company Name</label>
-            <input style={inputStyle} value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Enter company name" />
-          </div>
-          <div>
-            <label style={labelStyle}>HR Email</label>
-            <input style={inputStyle} type="email" value={hrEmail} onChange={(e) => setHrEmail(e.target.value)} placeholder="hr@company.com" />
-          </div>
-        </div>
-        <div style={twoColRow}>
-          <div>
-            <label style={labelStyle}>Timezone</label>
-            <select style={{ ...inputStyle, cursor: "pointer" }} value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-              <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-              <option value="UTC">UTC</option>
-              <option value="America/New_York">America/New_York (EST)</option>
-              <option value="Europe/London">Europe/London (GMT)</option>
-              <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
-              <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Currency</label>
-            <select style={{ ...inputStyle, cursor: "pointer" }} value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              <option value="INR">INR — Indian Rupee (₹)</option>
-              <option value="USD">USD — US Dollar ($)</option>
-              <option value="EUR">EUR — Euro (€)</option>
-              <option value="GBP">GBP — British Pound (£)</option>
-              <option value="SGD">SGD — Singapore Dollar (S$)</option>
-              <option value="AUD">AUD — Australian Dollar (A$)</option>
-            </select>
-          </div>
-        </div>
-        <div style={{ maxWidth: "calc(50% - 8px)" }}>
-          <label style={labelStyle}>Language</label>
-          <select style={{ ...inputStyle, cursor: "pointer" }} value={language} onChange={(e) => setLanguage(e.target.value)}>
-            <option value="English">English</option>
-            <option value="Tamil">Tamil</option>
-            <option value="Hindi">Hindi</option>
-            <option value="Telugu">Telugu</option>
-            <option value="Kannada">Kannada</option>
-          </select>
-        </div>
-      </div>
+        </SectionTitle>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" mb="sm">
+          <TextInput
+            label="Company Name"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="Enter company name"
+          />
+          <TextInput
+            label="HR Email"
+            type="email"
+            value={hrEmail}
+            onChange={(e) => setHrEmail(e.target.value)}
+            placeholder="hr@company.com"
+          />
+        </SimpleGrid>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" mb="sm">
+          <Select
+            label="Timezone"
+            value={timezone}
+            onChange={setTimezone}
+            data={[
+              { value: "Asia/Kolkata",      label: "Asia/Kolkata (IST)" },
+              { value: "UTC",               label: "UTC" },
+              { value: "America/New_York",  label: "America/New_York (EST)" },
+              { value: "Europe/London",     label: "Europe/London (GMT)" },
+              { value: "Asia/Singapore",    label: "Asia/Singapore (SGT)" },
+              { value: "Australia/Sydney",  label: "Australia/Sydney (AEST)" },
+            ]}
+          />
+          <Select
+            label="Currency"
+            value={currency}
+            onChange={setCurrency}
+            data={[
+              { value: "INR", label: "INR — Indian Rupee (₹)" },
+              { value: "USD", label: "USD — US Dollar ($)" },
+              { value: "EUR", label: "EUR — Euro (€)" },
+              { value: "GBP", label: "GBP — British Pound (£)" },
+              { value: "SGD", label: "SGD — Singapore Dollar (S$)" },
+              { value: "AUD", label: "AUD — Australian Dollar (A$)" },
+            ]}
+          />
+        </SimpleGrid>
+        <Box style={{ maxWidth: "calc(50% - 8px)" }}>
+          <Select
+            label="Language"
+            value={language}
+            onChange={setLanguage}
+            data={["English","Tamil","Hindi","Telugu","Kannada"]}
+          />
+        </Box>
+      </SectionCard>
 
       {/* Notifications */}
-      <div style={card}>
-        <p style={sectionTitle}>
-          <IconBell size={ICON_SIZE.sm} color={COLORS.warning} stroke={ICON_STROKE.normal} />
+      <SectionCard>
+        <SectionTitle icon={IconBell} iconColor={COLORS.warning}>
           Notifications
-        </p>
+        </SectionTitle>
         {NOTIF_DEFS.map((d, i) => (
           <ToggleRow
             key={d.id}
@@ -254,94 +258,110 @@ const Settings = ({ darkMode = false }) => {
             sub={d.sub}
             checked={toggles[d.id]}
             onChange={setToggle(d.id)}
-            surface={surface}
             isLast={i === NOTIF_DEFS.length - 1}
           />
         ))}
-      </div>
+      </SectionCard>
 
       {/* Security */}
-      <div style={card}>
-        <p style={sectionTitle}>
-          <IconShield size={ICON_SIZE.sm} color={COLORS.danger} stroke={ICON_STROKE.normal} />
+      <SectionCard>
+        <SectionTitle icon={IconShield} iconColor={COLORS.danger}>
           Security
-        </p>
+        </SectionTitle>
         <ToggleRow
           label="Two-Factor Authentication"
           sub="Require OTP on every login"
           checked={twoFactor}
           onChange={setTwoFactor}
-          surface={surface}
         />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: GAP.lg, marginTop: GAP.lg }}>
-          <div>
-            <label style={labelStyle}>Session Timeout (minutes)</label>
-            <select style={{ ...inputStyle, cursor: "pointer" }} value={sessionTimeout} onChange={(e) => setSessionTimeout(e.target.value)}>
-              {["15", "30", "60", "120"].map((v) => <option key={v} value={v}>{v} min</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Password Expiry (days)</label>
-            <select style={{ ...inputStyle, cursor: "pointer" }} value={passwordExpiry} onChange={(e) => setPasswordExpiry(e.target.value)}>
-              {["30", "60", "90", "180", "Never"].map((v) => <option key={v} value={v}>{v}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" mt="md">
+          <Select
+            label="Session Timeout (minutes)"
+            value={sessionTimeout}
+            onChange={setSessionTimeout}
+            data={[
+              { value: "15",  label: "15 min" },
+              { value: "30",  label: "30 min" },
+              { value: "60",  label: "60 min" },
+              { value: "120", label: "120 min" },
+            ]}
+          />
+          <Select
+            label="Password Expiry (days)"
+            value={passwordExpiry}
+            onChange={setPasswordExpiry}
+            data={["30","60","90","180","Never"]}
+          />
+        </SimpleGrid>
+      </SectionCard>
 
       {/* Appearance */}
-      <div style={card}>
-        <p style={sectionTitle}>
-          <IconPalette size={ICON_SIZE.sm} color={COLORS.purple} stroke={ICON_STROKE.normal} />
+      <SectionCard>
+        <SectionTitle icon={IconPalette} iconColor={COLORS.purple}>
           Appearance
-        </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: `${SPACING[3]}px 0`, borderBottom: `1px solid ${surface.border}` }}>
-          <div>
-            <p style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.text, margin: 0 }}>Dark Mode</p>
-            <p style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.normal, color: surface.subtext, margin: `${GAP.xs - 1}px 0 0` }}>
-              Controlled by the sidebar toggle
-            </p>
-          </div>
-          <div style={{ width: 44, height: 26, borderRadius: RADIUS.full, background: darkMode ? COLORS.primary : COLORS.gray300, display: "flex", alignItems: "center", justifyContent: darkMode ? "flex-end" : "flex-start", padding: GAP.xs, opacity: 0.6, cursor: "not-allowed", flexShrink: 0 }}>
-            <div style={{ width: LAYOUT.avatar - 16, height: LAYOUT.avatar - 16, borderRadius: RADIUS.full, background: COLORS.white, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: `${SPACING[3]}px 0` }}>
-          <div>
-            <p style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.text, margin: 0 }}>Primary Color</p>
-            <p style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.normal, color: surface.subtext, margin: `${GAP.xs - 1}px 0 0` }}>
-              Set in Company Settings → Branding
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: GAP.md - 2 }}>
-            <div style={{ width: 26, height: 26, borderRadius: RADIUS.full, background: companyData?.branding?.primaryColor || COLORS.primary, border: `2px solid ${surface.border}`, flexShrink: 0 }} />
-            <span style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.subtext, fontFamily: "monospace" }}>
+        </SectionTitle>
+        {/* Dark Mode row */}
+        <Group
+          justify="space-between"
+          align="center"
+          py="sm"
+          style={{ borderBottom: "1px solid var(--mantine-color-default-border)" }}
+        >
+          <Box>
+            <Text fw={500}>Dark Mode</Text>
+            <Text size="sm" c="dimmed" mt={2}>Controlled by the sidebar toggle</Text>
+          </Box>
+          {/* read-only toggle — cursor not-allowed, no functional onChange */}
+          <Box
+            style={{
+              width: 44, height: 26, borderRadius: RADIUS.full,
+              background: darkMode ? COLORS.primary : COLORS.gray300,
+              display: "flex", alignItems: "center",
+              justifyContent: darkMode ? "flex-end" : "flex-start",
+              padding: 3, opacity: 0.6, cursor: "not-allowed", flexShrink: 0,
+            }}
+          >
+            <Box style={{ width: 18, height: 18, borderRadius: RADIUS.full, background: COLORS.white, boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+          </Box>
+        </Group>
+        {/* Primary Color row */}
+        <Group justify="space-between" align="center" py="sm">
+          <Box>
+            <Text fw={500}>Primary Color</Text>
+            <Text size="sm" c="dimmed" mt={2}>Set in Company Settings → Branding</Text>
+          </Box>
+          <Group gap="xs">
+            <Box
+              style={{
+                width: 26, height: 26, borderRadius: RADIUS.full,
+                background: companyData?.branding?.primaryColor || COLORS.primary,
+                border: "2px solid var(--mantine-color-default-border)", flexShrink: 0,
+              }}
+            />
+            <Text size="sm" fw={500} c="dimmed" ff="monospace">
               {companyData?.branding?.primaryColor || "#2563eb"}
-            </span>
-          </div>
-        </div>
-      </div>
+            </Text>
+          </Group>
+        </Group>
+      </SectionCard>
 
       {/* Danger Zone */}
-      <div style={{ ...card, border: `1px solid ${COLORS.dangerMuted}`, marginBottom: 0 }}>
-        <p style={{ ...sectionTitle, color: COLORS.danger }}>
-          <IconAlertTriangle size={ICON_SIZE.sm} color={COLORS.danger} stroke={ICON_STROKE.normal} />
+      <SectionCard dangerBorder>
+        <SectionTitle icon={IconAlertTriangle} iconColor={COLORS.danger} color="red">
           Danger Zone
-        </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <p style={{ fontSize: FONT_SIZE.base, fontWeight: FONT_WEIGHT.medium, color: surface.text, margin: 0 }}>Reset All Settings</p>
-            <p style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.normal, color: surface.subtext, margin: `${GAP.xs - 1}px 0 0` }}>
+        </SectionTitle>
+        <Group justify="space-between" align="center">
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            <Text fw={500}>Reset All Settings</Text>
+            <Text size="sm" c="dimmed" mt={2}>
               Restore all settings to factory defaults and save. This action cannot be undone.
-            </p>
-          </div>
-          <button
-            style={{
-              background: COLORS.dangerMuted, color: COLORS.danger, border: `1px solid ${COLORS.dangerMuted}`,
-              borderRadius: RADIUS.lg, padding: PADDING.btn, fontSize: FONT_SIZE.base,
-              fontWeight: FONT_WEIGHT.semibold, fontFamily: FONT_FAMILY.base, cursor: "pointer",
-              flexShrink: 0, marginLeft: SPACING[6],
-            }}
+            </Text>
+          </Box>
+          <Button
+            color="red"
+            variant="light"
+            ml="xl"
+            style={{ flexShrink: 0 }}
             onClick={() => {
               if (window.confirm("Reset all settings to factory defaults?")) {
                 setTimezone("Asia/Kolkata");
@@ -356,10 +376,10 @@ const Settings = ({ darkMode = false }) => {
             }}
           >
             Reset All Settings
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Group>
+      </SectionCard>
+    </Box>
   );
 };
 

@@ -202,7 +202,7 @@ export default function Recruitment() {
                     <Briefcase size={16} />
                   </Avatar>
                   <Box style={{ flex: 1, minWidth: 0 }}>
-                    <Text size="sm" fw={600} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.title}</Text>
+                    <Text size="sm" fw={600} truncate>{job.title}</Text>
                     <Group gap={6} wrap="nowrap">
                       <MapPin size={10} />
                       <Text size="xs" c="dimmed">{job.location}</Text>
@@ -266,7 +266,7 @@ export default function Recruitment() {
               data={["All", "IT", "HR", "Finance", "Management"].map((d) => ({ value: d, label: d === "All" ? "All Departments" : d }))}
               size="xs"
               radius="md"
-              style={{ width: 160 }}
+              w={160}
             />
           }>
             <ScrollArea>
@@ -329,12 +329,12 @@ export default function Recruitment() {
 
         {/* ── PIPELINE (Kanban) ── */}
         <Tabs.Panel value="pipeline">
-          <Group align="flex-start" gap="md" wrap="nowrap" style={{ overflowX: "auto", paddingBottom: 8 }}>
+          <Group align="flex-start" gap="md" wrap="nowrap" style={{ overflowX: "auto" }} pb={8}>
             {PIPELINE_STAGES.map((stage) => {
               const stageCandidates = MOCK_CANDIDATES.filter((c) => c.status === stage.key);
               return (
                 <Box key={stage.key} style={{ minWidth: 220, flex: "0 0 220px" }}>
-                  <Group justify="space-between" mb="sm" p="xs" style={{ background: `var(--mantine-color-${stage.color}-0)`, borderRadius: 8 }}>
+                  <Group justify="space-between" mb="sm" p="xs" bg={`${stage.color}.0`} style={{ borderRadius: 8 }}>
                     <Text size="sm" fw={700} c={`${stage.color}.7`}>{stage.label}</Text>
                     <Avatar size={22} radius="xl" color={stage.color} variant="filled">
                       <Text size="xs" fw={700}>{stageCandidates.length}</Text>
@@ -357,8 +357,8 @@ export default function Recruitment() {
                               <Text size="xs" fw={700}>{c.initials}</Text>
                             </Avatar>
                             <Box style={{ minWidth: 0 }}>
-                              <Text size="xs" fw={600} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</Text>
-                              <Text size="xs" c="dimmed" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.position}</Text>
+                              <Text size="xs" fw={600} truncate>{c.name}</Text>
+                              <Text size="xs" c="dimmed" truncate>{c.position}</Text>
                             </Box>
                           </Group>
                           <Group justify="space-between">
@@ -387,7 +387,8 @@ export default function Recruitment() {
                 leftSection={<Search size={15} />}
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                style={{ flex: 1, minWidth: 220 }}
+                style={{ flex: 1 }}
+                miw={220}
                 size="sm"
                 radius="md"
               />
@@ -397,7 +398,7 @@ export default function Recruitment() {
                 data={["All", "Applied", "Screening", "Interview", "Selected", "Rejected", "On Hold"].map((s) => ({ value: s, label: s === "All" ? "All Stages" : s }))}
                 size="sm"
                 radius="md"
-                style={{ width: 150 }}
+                w={150}
               />
               <Text size="sm" c="dimmed" ml="auto">{filteredCandidates.length} candidates</Text>
             </Group>
@@ -496,7 +497,7 @@ export default function Recruitment() {
           const av = getAvatarColor(viewCandidate.name);
           return (
             <Stack gap="md">
-              <Group gap="md" p="sm" style={{ background: "var(--mantine-color-gray-0)", borderRadius: 12 }} wrap="nowrap">
+              <Group gap="md" p="sm" bg="gray.0" style={{ borderRadius: 12 }} wrap="nowrap">
                 <Avatar size={56} radius="xl" style={{ background: av.bg, color: av.color, flexShrink: 0 }}>
                   <Text fw={700} size="xl">{viewCandidate.initials}</Text>
                 </Avatar>

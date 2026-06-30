@@ -13,18 +13,28 @@ import {
   IconUpload,
   IconFile,
 } from "@tabler/icons-react";
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  Button,
+  ActionIcon,
+  Table,
+  TextInput,
+  Select,
+  Modal,
+} from "@mantine/core";
 
 import { COLORS } from "../../theme/colors";
 import { useAllDocuments } from "../../queries/useHr";
 import { useDeleteDocument } from "../../queries/useSelfService";
 import { useToast } from "../../components/ui/Toast";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "../../api/axios";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { FONT_SIZE, FONT_WEIGHT } from "../../theme/fonts";
-import { SPACING, GAP, PADDING } from "../../theme/spacing";
-import { RADIUS, SHADOW } from "../../theme/sizes";
 
 const CATEGORIES = ["Identity", "Employment", "Financial", "Other"];
 
@@ -45,103 +55,87 @@ const CATEGORY_STYLE = {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-const StatCard = ({ icon: Icon, label, value, iconColor, iconBg, dark }) => (
-  <div style={{
-    flex:         "1 1 160px",
-    background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
-    borderRadius: RADIUS["2xl"],
-    border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-    boxShadow:    SHADOW.sm,
-    padding:      `${SPACING[5]}px`,
-    display:      "flex",
-    alignItems:   "center",
-    gap:          GAP.md,
-    minWidth:     0,
-  }}>
-    <div style={{
-      width:          48,
-      height:         48,
-      borderRadius:   RADIUS.xl,
-      background:     iconBg,
-      display:        "flex",
-      alignItems:     "center",
-      justifyContent: "center",
-      flexShrink:     0,
-    }}>
-      <Icon size={22} color={iconColor} stroke={1.8} />
-    </div>
-    <div style={{ minWidth: 0 }}>
-      <p style={{ margin: 0, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.medium, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}>{label}</p>
-      <p style={{ margin: `${GAP.xs / 2}px 0 0`, fontSize: FONT_SIZE["2xl"], fontWeight: FONT_WEIGHT.bold, color: dark ? COLORS.dark.text : COLORS.textLight, lineHeight: 1 }}>{value}</p>
-    </div>
-  </div>
-);
+const StatCard = ({ icon: Icon, label, value, iconColor, iconBg, dark }) => {
+  const surface = dark ? COLORS.dark : COLORS.light;
+  return (
+    <Paper
+      withBorder
+      radius="xl"
+      shadow="sm"
+      p="lg"
+      style={{
+        flex: "1 1 160px",
+        background: dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
+        border: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
+        minWidth: 0,
+      }}
+    >
+      <Group gap="md">
+        <Box
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 12,
+            background: iconBg,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon size={22} color={iconColor} stroke={1.8} />
+        </Box>
+        <Stack gap={4} style={{ minWidth: 0 }}>
+          <Text size="xs" fw={500} c={dark ? COLORS.dark.subtext : COLORS.textMutedLight}>{label}</Text>
+          <Text fw={700} c={dark ? COLORS.dark.text : COLORS.textLight} style={{ fontSize: "1.5rem", lineHeight: 1 }}>{value}</Text>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+};
 
-const Badge = ({ label, styleMap, dark }) => {
+const Badge = ({ label, styleMap }) => {
   const s = styleMap[label] || { bg: COLORS.gray200, color: COLORS.gray600 };
   return (
-    <span style={{
-      display:      "inline-block",
-      padding:      "3px 10px",
-      borderRadius: RADIUS.full,
-      background:   s.bg,
-      color:        s.color,
-      fontSize:     FONT_SIZE.xs,
-      fontWeight:   FONT_WEIGHT.semibold,
-      whiteSpace:   "nowrap",
-    }}>
+    <Box
+      component="span"
+      style={{
+        display: "inline-block",
+        padding: "3px 10px",
+        borderRadius: 999,
+        background: s.bg,
+        color: s.color,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+      }}
+    >
       {label}
-    </span>
+    </Box>
   );
 };
 
 const ActionBtn = ({ icon: Icon, color, onClick, title, hoverBg }) => {
   const [hovered, setHovered] = useState(false);
   return (
-    <button
+    <ActionIcon
       title={title}
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      size="sm"
+      radius="md"
       style={{
-        width:          30,
-        height:         30,
-        borderRadius:   RADIUS.md,
-        border:         "none",
-        background:     hovered ? hoverBg : "transparent",
-        cursor:         "pointer",
-        display:        "flex",
-        alignItems:     "center",
-        justifyContent: "center",
-        transition:     "background 0.15s ease",
-        padding:        0,
+        background: hovered ? hoverBg : "transparent",
+        border: "none",
+        color,
+        transition: "background 0.15s ease",
       }}
     >
-      <Icon size={16} color={color} stroke={2} />
-    </button>
+      <Icon size={16} stroke={2} />
+    </ActionIcon>
   );
 };
-
-const SelectInput = ({ value, onChange, options, dark }) => (
-  <select
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    style={{
-      padding:      "8px 12px",
-      borderRadius: RADIUS.lg,
-      border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-      background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
-      color:        dark ? COLORS.dark.text : COLORS.textLight,
-      fontSize:     FONT_SIZE.sm,
-      fontWeight:   FONT_WEIGHT.medium,
-      minWidth:     120,
-    }}
-  >
-    {options.map((o) => (
-      <option key={o} value={o}>{o}</option>
-    ))}
-  </select>
-);
 
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
 
@@ -176,157 +170,124 @@ const UploadModal = ({ onClose, dark, onUploaded }) => {
     }
   };
 
-  const overlayStyle = {
-    position:       "fixed",
-    inset:          0,
-    background:     "rgba(15,23,42,0.55)",
-    zIndex:         200,
-    display:        "flex",
-    alignItems:     "center",
-    justifyContent: "center",
-    padding:        SPACING.md,
-  };
-
-  const modalStyle = {
-    background:   dark ? COLORS.dark.cardBg : COLORS.surfaceLight,
-    borderRadius: RADIUS["2xl"],
-    border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-    boxShadow:    SHADOW.modal,
-    width:        "100%",
-    maxWidth:     480,
-    padding:      PADDING.modal,
-  };
-
-  const labelStyle = {
-    display:       "block",
-    fontSize:      FONT_SIZE.xs,
-    fontWeight:    FONT_WEIGHT.semibold,
-    color:         dark ? COLORS.dark.subtext : COLORS.textMutedLight,
-    marginBottom:  6,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  };
-
-  const inputStyle = {
-    width:        "100%",
-    padding:      "9px 12px",
-    borderRadius: RADIUS.lg,
-    border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-    background:   dark ? COLORS.dark.inputBg : COLORS.gray50,
-    color:        dark ? COLORS.dark.text : COLORS.textLight,
-    fontSize:     FONT_SIZE.sm,
-    outline:      "none",
-    boxSizing:    "border-box",
-  };
+  const employeeOptions = [
+    { value: "", label: "Select employee…" },
+    ...employees.map((e) => ({ value: String(e.id), label: `${e.name} (${e.employeeId})` })),
+  ];
+  const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: c }));
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: SPACING[5] }}>
-          <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-            <div style={{ width: 36, height: 36, borderRadius: RADIUS.lg, background: COLORS.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <IconUpload size={18} color={COLORS.primary} stroke={2} />
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: dark ? COLORS.dark.text : COLORS.textLight }}>Upload Document</h3>
-              <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}>Add a new document record</p>
-            </div>
-          </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: RADIUS.md, border: "none", background: dark ? COLORS.dark.border : COLORS.gray100, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <IconX size={16} color={dark ? COLORS.dark.subtext : COLORS.textMutedLight} />
-          </button>
-        </div>
+    <Modal
+      opened
+      onClose={onClose}
+      title={
+        <Group gap="sm">
+          <Box
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: COLORS.primaryMuted,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <IconUpload size={18} color={COLORS.primary} stroke={2} />
+          </Box>
+          <Stack gap={0}>
+            <Text size="md" fw={700} c={dark ? COLORS.dark.text : COLORS.textLight}>Upload Document</Text>
+            <Text size="xs" c={dark ? COLORS.dark.subtext : COLORS.textMutedLight}>Add a new document record</Text>
+          </Stack>
+        </Group>
+      }
+      centered
+      radius="xl"
+      size="md"
+    >
+      <Stack gap="md">
+        <Select
+          label="Employee *"
+          data={employeeOptions}
+          value={form.employeeId}
+          onChange={(v) => set("employeeId", v || "")}
+        />
 
-        {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: GAP.md }}>
-          {/* Employee */}
-          <div>
-            <label style={labelStyle}>Employee *</label>
-            <select value={form.employeeId} onChange={(e) => set("employeeId", e.target.value)} style={inputStyle}>
-              <option value="">Select employee…</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>{e.name} ({e.employeeId})</option>
-              ))}
-            </select>
-          </div>
+        <TextInput
+          label="Document Name *"
+          placeholder="e.g. Aadhaar Card"
+          value={form.name}
+          onChange={(e) => set("name", e.target.value)}
+        />
 
-          {/* Document Name */}
-          <div>
-            <label style={labelStyle}>Document Name *</label>
-            <input
-              type="text"
-              placeholder="e.g. Aadhaar Card"
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+        <Select
+          label="Category"
+          data={categoryOptions}
+          value={form.category}
+          onChange={(v) => set("category", v || CATEGORIES[0])}
+        />
 
-          {/* Category */}
-          <div>
-            <label style={labelStyle}>Category</label>
-            <select value={form.category} onChange={(e) => set("category", e.target.value)} style={inputStyle}>
-              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
+        {/* File picker — custom dashed drop zone */}
+        <Stack gap={4}>
+          <Text size="xs" fw={600} c={dark ? COLORS.dark.subtext : COLORS.textMutedLight} tt="uppercase" style={{ letterSpacing: "0.05em" }}>File</Text>
+          <Box
+            component="label"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "9px 12px",
+              borderRadius: 10,
+              border: `1.5px dashed ${dark ? COLORS.dark.border : COLORS.borderLight}`,
+              background: dark ? COLORS.dark.inputBg : COLORS.gray50,
+              cursor: "pointer",
+            }}
+          >
+            <Box
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                background: COLORS.primaryMuted,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <IconFile size={16} color={COLORS.primary} stroke={2} />
+            </Box>
+            <Text size="sm" c={dark ? COLORS.dark.subtext : COLORS.textMutedLight} style={{ flex: 1 }}>{fileName}</Text>
+            <Box
+              component="span"
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                color: COLORS.primary,
+                background: COLORS.primaryMuted,
+                padding: "4px 10px",
+                borderRadius: 999,
+              }}
+            >
+              Browse
+            </Box>
+            <input type="file" onChange={(e) => setFileName(e.target.files?.[0]?.name || "No file chosen")} style={{ display: "none" }} />
+          </Box>
+        </Stack>
 
-          {/* File */}
-          <div>
-            <label style={labelStyle}>File</label>
-            <label style={{
-              display:      "flex",
-              alignItems:   "center",
-              gap:          GAP.sm,
-              padding:      "9px 12px",
-              borderRadius: RADIUS.lg,
-              border:       `1.5px dashed ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-              background:   dark ? COLORS.dark.inputBg : COLORS.gray50,
-              cursor:       "pointer",
-            }}>
-              <div style={{ width: 30, height: 30, borderRadius: RADIUS.md, background: COLORS.primaryMuted, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <IconFile size={16} color={COLORS.primary} stroke={2} />
-              </div>
-              <span style={{ fontSize: FONT_SIZE.sm, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight, flex: 1 }}>{fileName}</span>
-              <span style={{ fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.primary, background: COLORS.primaryMuted, padding: "4px 10px", borderRadius: RADIUS.full }}>Browse</span>
-              <input type="file" onChange={(e) => setFileName(e.target.files?.[0]?.name || "No file chosen")} style={{ display: "none" }} />
-            </label>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: GAP.sm, marginTop: SPACING[6] }}>
-          <button onClick={onClose} style={{
-            padding:      "9px 20px",
-            borderRadius: RADIUS.lg,
-            border:       `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}`,
-            background:   "transparent",
-            color:        dark ? COLORS.dark.text : COLORS.textLight,
-            fontSize:     FONT_SIZE.sm,
-            fontWeight:   FONT_WEIGHT.medium,
-            cursor:       "pointer",
-          }}>
-            Cancel
-          </button>
-          <button onClick={handleUpload} disabled={saving} style={{
-            padding:      "9px 20px",
-            borderRadius: RADIUS.lg,
-            border:       "none",
-            background:   saving ? COLORS.gray400 : COLORS.primary,
-            color:        COLORS.white,
-            fontSize:     FONT_SIZE.sm,
-            fontWeight:   FONT_WEIGHT.semibold,
-            cursor:       saving ? "not-allowed" : "pointer",
-            display:      "flex",
-            alignItems:   "center",
-            gap:          6,
-          }}>
-            <IconUpload size={15} stroke={2} />
+        <Group justify="flex-end" gap="sm" mt="sm">
+          <Button variant="default" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={handleUpload}
+            disabled={saving}
+            loading={saving}
+            leftSection={<IconUpload size={15} stroke={2} />}
+          >
             {saving ? "Uploading…" : "Upload"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 };
 
@@ -385,122 +346,90 @@ const Documents = ({ darkMode: dark = false }) => {
     }
   };
 
-  // Styles
-  const pageBg    = dark ? COLORS.dark.pageBg   : COLORS.backgroundLight;
-  const cardBg    = dark ? COLORS.dark.cardBg   : COLORS.surfaceLight;
-  const border    = dark ? COLORS.dark.border   : COLORS.borderLight;
-  const textMain  = dark ? COLORS.dark.text     : COLORS.textLight;
-  const textMuted = dark ? COLORS.dark.subtext  : COLORS.textMutedLight;
-  const theadBg   = dark ? COLORS.dark.theadBg  : COLORS.gray50;
-  const rowHover  = dark ? COLORS.dark.rowHover : COLORS.gray100;
+  const textMain  = dark ? COLORS.dark.text    : COLORS.textLight;
+  const textMuted = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
+  const border    = dark ? COLORS.dark.border  : COLORS.borderLight;
+  const cardBg    = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
+  const theadBg   = dark ? COLORS.dark.theadBg : COLORS.gray50;
+  const rowHover  = dark ? COLORS.dark.rowHover: COLORS.gray100;
 
   return (
-    <div style={{ minHeight: "100vh", background: pageBg, padding: PADDING.container, fontFamily: "'Inter', sans-serif" }}>
+    <Box style={{ minHeight: "100vh", background: dark ? COLORS.dark.pageBg : COLORS.backgroundLight }} p="md">
 
       <AppPageHeader
         title="Documents"
         sub="Manage and verify employee documents"
-        action={<button onClick={() => setShowModal(true)} style={{ display:"flex",alignItems:"center",gap:GAP.sm,padding:"10px 18px",borderRadius:RADIUS.lg,border:"none",background:COLORS.primary,color:COLORS.white,fontSize:FONT_SIZE.sm,fontWeight:FONT_WEIGHT.semibold,cursor:"pointer",boxShadow:SHADOW.sm }}><IconPlus size={17} stroke={2.5} /> Upload Document</button>}
+        action={
+          <Button
+            leftSection={<IconPlus size={17} stroke={2.5} />}
+            onClick={() => setShowModal(true)}
+            shadow="sm"
+          >
+            Upload Document
+          </Button>
+        }
       />
 
-      {/* ── Stat Cards ── */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: GAP.md, marginBottom: SPACING[6] }}>
-        <StatCard dark={dark} icon={IconFileText}     label="Total Documents"      value={stats.total}    iconColor={COLORS.primary}  iconBg={COLORS.primaryMuted}  />
-        <StatCard dark={dark} icon={IconClock}        label="Pending Verification" value={stats.pending}  iconColor={COLORS.warning}  iconBg={COLORS.warningLight}  />
-        <StatCard dark={dark} icon={IconAlertTriangle}label="Expiring Soon"        value={stats.expiring} iconColor={COLORS.danger}   iconBg={COLORS.dangerMuted}   />
-        <StatCard dark={dark} icon={IconShieldCheck}  label="Verified"             value={stats.verified} iconColor={COLORS.success}  iconBg={COLORS.successLight}  />
-      </div>
+      {/* Stat Cards */}
+      <Group gap="md" mb="xl" wrap="wrap">
+        <StatCard dark={dark} icon={IconFileText}      label="Total Documents"      value={stats.total}    iconColor={COLORS.primary}  iconBg={COLORS.primaryMuted}  />
+        <StatCard dark={dark} icon={IconClock}         label="Pending Verification" value={stats.pending}  iconColor={COLORS.warning}  iconBg={COLORS.warningLight}  />
+        <StatCard dark={dark} icon={IconAlertTriangle} label="Expiring Soon"        value={stats.expiring} iconColor={COLORS.danger}   iconBg={COLORS.dangerMuted}   />
+        <StatCard dark={dark} icon={IconShieldCheck}   label="Verified"             value={stats.verified} iconColor={COLORS.success}  iconBg={COLORS.successLight}  />
+      </Group>
 
-      {/* ── Card: Filter + Table ── */}
-      <div style={{
-        background:   cardBg,
-        borderRadius: RADIUS["2xl"],
-        border:       `1px solid ${border}`,
-        boxShadow:    SHADOW.sm,
-        overflow:     "hidden",
-      }}>
-
+      {/* Card: Filter + Table */}
+      <Paper
+        withBorder
+        radius="xl"
+        shadow="sm"
+        style={{ background: cardBg, border: `1px solid ${border}`, overflow: "hidden" }}
+      >
         {/* Filter Bar */}
-        <div style={{
-          display:    "flex",
-          flexWrap:   "wrap",
-          alignItems: "center",
-          gap:        GAP.sm,
-          padding:    `${SPACING[4]}px ${SPACING[5]}px`,
-          borderBottom: `1px solid ${border}`,
-        }}>
-          {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 200px", minWidth: 0 }}>
-            <IconSearch size={16} color={textMuted} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-            <input
-              type="text"
-              placeholder="Search by name or employee…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width:        "100%",
-                padding:      "8px 12px 8px 36px",
-                borderRadius: RADIUS.lg,
-                border:       `1px solid ${border}`,
-                background:   dark ? COLORS.dark.inputBg : COLORS.gray50,
-                color:        textMain,
-                fontSize:     FONT_SIZE.sm,
-                outline:      "none",
-                boxSizing:    "border-box",
-              }}
-            />
-          </div>
-
-          {/* Category filter */}
-          <SelectInput
-            dark={dark}
+        <Group gap="sm" wrap="wrap" align="center" p="md" style={{ borderBottom: `1px solid ${border}` }}>
+          <TextInput
+            placeholder="Search by name or employee…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            leftSection={<IconSearch size={16} color={textMuted} />}
+            style={{ flex: "1 1 200px", minWidth: 0 }}
+          />
+          <Select
+            data={["All", "Identity", "Employment", "Financial", "Other"]}
             value={categoryFilter}
-            onChange={setCategoryFilter}
-            options={["All", "Identity", "Employment", "Financial", "Other"]}
+            onChange={(v) => setCategoryFilter(v || "All")}
+            style={{ minWidth: 130 }}
           />
-
-          {/* Status filter */}
-          <SelectInput
-            dark={dark}
+          <Select
+            data={["All", "Verified", "Pending", "Expired"]}
             value={statusFilter}
-            onChange={setStatusFilter}
-            options={["All", "Verified", "Pending", "Expired"]}
+            onChange={(v) => setStatusFilter(v || "All")}
+            style={{ minWidth: 120 }}
           />
-
-          <span style={{ fontSize: FONT_SIZE.xs, color: textMuted, marginLeft: "auto" }}>
+          <Text size="xs" c={textMuted} style={{ marginLeft: "auto" }}>
             {filtered.length} document{filtered.length !== 1 ? "s" : ""}
-          </span>
-        </div>
+          </Text>
+        </Group>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
-            <thead>
-              <tr style={{ background: theadBg }}>
+        <Box style={{ overflowX: "auto" }}>
+          <Table style={{ minWidth: 860 }}>
+            <Table.Thead style={{ background: theadBg }}>
+              <Table.Tr>
                 {["Document Name", "Employee", "Category", "Upload Date", "Expiry Date", "Status", "Actions"].map((col) => (
-                  <th key={col} style={{
-                    padding:    PADDING.tableHeader,
-                    textAlign:  col === "Actions" ? "center" : "left",
-                    fontSize:   FONT_SIZE.xs,
-                    fontWeight: FONT_WEIGHT.semibold,
-                    color:      textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    whiteSpace: "nowrap",
-                    borderBottom: `1px solid ${border}`,
-                  }}>
-                    {col}
-                  </th>
+                  <Table.Th key={col} style={{ textAlign: col === "Actions" ? "center" : "left" }}>
+                    <Text size="xs" fw={600} c={textMuted} tt="uppercase" style={{ letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{col}</Text>
+                  </Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
               {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ padding: `${SPACING[8]}px`, textAlign: "center", color: textMuted, fontSize: FONT_SIZE.sm }}>
-                    No documents found.
-                  </td>
-                </tr>
+                <Table.Tr>
+                  <Table.Td colSpan={7} style={{ textAlign: "center", padding: 48 }}>
+                    <Text size="sm" c={textMuted}>No documents found.</Text>
+                  </Table.Td>
+                </Table.Tr>
               ) : (
                 filtered.map((doc, idx) => (
                   <DocumentRow
@@ -518,10 +447,10 @@ const Documents = ({ darkMode: dark = false }) => {
                   />
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </Table.Tbody>
+          </Table>
+        </Box>
+      </Paper>
 
       {/* Upload Modal */}
       {showModal && (
@@ -534,95 +463,113 @@ const Documents = ({ darkMode: dark = false }) => {
 
       {/* View Document Modal */}
       {viewDoc && (
-        <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center" }}
-          onClick={() => setViewDoc(null)}>
-          <div style={{ background: dark ? COLORS.dark.cardBg : "#fff", borderRadius: RADIUS["2xl"], padding: SPACING[6], minWidth: 360, maxWidth: 480, boxShadow: SHADOW.lg }}
-            onClick={e => e.stopPropagation()}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom: SPACING[4] }}>
-              <span style={{ fontWeight: FONT_WEIGHT.bold, fontSize: FONT_SIZE.lg, color: dark ? COLORS.dark.text : COLORS.textLight }}>Document Details</span>
-              <button onClick={() => setViewDoc(null)} style={{ background:"none",border:"none",cursor:"pointer",color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}><IconX size={18} /></button>
-            </div>
-            {[["Name", viewDoc.name], ["Employee", viewDoc.employee], ["Category", viewDoc.category], ["Uploaded", viewDoc.uploadDate || "—"], ["Expiry", viewDoc.expiryDate === "N/A" ? "—" : viewDoc.expiryDate], ["Status", viewDoc.status]].map(([k, v]) => (
-              <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:`${SPACING[2]}px 0`, borderBottom:`1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
-                <span style={{ fontSize: FONT_SIZE.sm, color: dark ? COLORS.dark.subtext : COLORS.textMutedLight }}>{k}</span>
-                <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: dark ? COLORS.dark.text : COLORS.textLight }}>{v}</span>
-              </div>
+        <Modal
+          opened
+          onClose={() => setViewDoc(null)}
+          title={
+            <Text fw={700} size="lg" c={dark ? COLORS.dark.text : COLORS.textLight}>Document Details</Text>
+          }
+          centered
+          radius="xl"
+          size="sm"
+          styles={{
+            body: { background: dark ? COLORS.dark.cardBg : "#fff" },
+            header: { background: dark ? COLORS.dark.cardBg : "#fff" },
+          }}
+        >
+          <Stack gap={0}>
+            {[
+              ["Name",     viewDoc.name],
+              ["Employee", viewDoc.employee],
+              ["Category", viewDoc.category],
+              ["Uploaded", viewDoc.uploadDate || "—"],
+              ["Expiry",   viewDoc.expiryDate === "N/A" ? "—" : viewDoc.expiryDate],
+              ["Status",   viewDoc.status],
+            ].map(([k, v]) => (
+              <Group key={k} justify="space-between" style={{ padding: "8px 0", borderBottom: `1px solid ${dark ? COLORS.dark.border : COLORS.borderLight}` }}>
+                <Text size="sm" c={dark ? COLORS.dark.subtext : COLORS.textMutedLight}>{k}</Text>
+                <Text size="sm" fw={500} c={dark ? COLORS.dark.text : COLORS.textLight}>{v}</Text>
+              </Group>
             ))}
-          </div>
-        </div>
+          </Stack>
+        </Modal>
       )}
-    </div>
+    </Box>
   );
 };
 
 // ─── Document Row ─────────────────────────────────────────────────────────────
 
-const DocumentRow = ({ doc, dark, border, textMain, textMuted, rowHover, isLast, onView, onDownload, onDelete }) => {
+const DocumentRow = ({ doc, border, textMain, textMuted, rowHover, isLast, onView, onDownload, onDelete }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
-    <tr
+    <Table.Tr
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background:  hovered ? rowHover : "transparent",
-        transition:  "background 0.15s ease",
+        background: hovered ? rowHover : "transparent",
+        transition: "background 0.15s ease",
         borderBottom: isLast ? "none" : `1px solid ${border}`,
       }}
     >
       {/* Document Name */}
-      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-          <div style={{
-            width:          32,
-            height:         32,
-            borderRadius:   RADIUS.md,
-            background:     COLORS.primaryMuted,
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            flexShrink:     0,
-          }}>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Group gap="sm">
+          <Box
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: COLORS.primaryMuted,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
             <IconFileText size={16} color={COLORS.primary} stroke={1.8} />
-          </div>
-          <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: textMain }}>{doc.name}</span>
-        </div>
-      </td>
+          </Box>
+          <Text size="sm" fw={500} c={textMain}>{doc.name}</Text>
+        </Group>
+      </Table.Td>
 
       {/* Employee */}
-      <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.sm, color: textMain, fontWeight: FONT_WEIGHT.medium, whiteSpace: "nowrap" }}>
-        {doc.employee}
-      </td>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Text size="sm" fw={500} c={textMain}>{doc.employee}</Text>
+      </Table.Td>
 
       {/* Category */}
-      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-        <Badge label={doc.category} styleMap={CATEGORY_STYLE} dark={dark} />
-      </td>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Badge label={doc.category} styleMap={CATEGORY_STYLE} />
+      </Table.Td>
 
       {/* Upload Date */}
-      <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.sm, color: textMuted, whiteSpace: "nowrap" }}>
-        {formatDate(doc.uploadDate)}
-      </td>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Text size="sm" c={textMuted}>{formatDate(doc.uploadDate)}</Text>
+      </Table.Td>
 
       {/* Expiry Date */}
-      <td style={{ padding: PADDING.tableCell, fontSize: FONT_SIZE.sm, color: doc.expiryDate === "N/A" ? textMuted : (doc.status === "Expired" ? COLORS.danger : textMuted), whiteSpace: "nowrap" }}>
-        {doc.expiryDate === "N/A" ? "—" : formatDate(doc.expiryDate)}
-      </td>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Text size="sm" c={doc.expiryDate === "N/A" ? textMuted : (doc.status === "Expired" ? COLORS.danger : textMuted)}>
+          {doc.expiryDate === "N/A" ? "—" : formatDate(doc.expiryDate)}
+        </Text>
+      </Table.Td>
 
       {/* Status */}
-      <td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-        <Badge label={doc.status} styleMap={STATUS_STYLE} dark={dark} />
-      </td>
+      <Table.Td style={{ whiteSpace: "nowrap" }}>
+        <Badge label={doc.status} styleMap={STATUS_STYLE} />
+      </Table.Td>
 
       {/* Actions */}
-      <td style={{ padding: PADDING.tableCell }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: GAP.xs }}>
+      <Table.Td>
+        <Group gap="xs" justify="center">
           <ActionBtn icon={IconEye}      title="View"     color={COLORS.primary} hoverBg={COLORS.primaryMuted} onClick={onView} />
           <ActionBtn icon={IconDownload} title="Download" color={COLORS.success} hoverBg={COLORS.successLight} onClick={onDownload} />
           <ActionBtn icon={IconTrash}    title="Delete"   color={COLORS.danger}  hoverBg={COLORS.dangerMuted}  onClick={onDelete} />
-        </div>
-      </td>
-    </tr>
+        </Group>
+      </Table.Td>
+    </Table.Tr>
   );
 };
 

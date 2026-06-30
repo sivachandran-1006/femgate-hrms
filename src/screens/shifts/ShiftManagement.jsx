@@ -9,16 +9,24 @@ import {
   IconChevronLeft as ChevronLeft,
   IconChevronRight as ChevronRight,
   IconPlus as Plus,
-  IconX as X,
   IconClock as Clock,
   IconCheck as Check,
   IconCircleX as XCircle,
 } from "@tabler/icons-react";
+import {
+  Box,
+  Stack,
+  Group,
+  Paper,
+  Text,
+  Button,
+  ActionIcon,
+  Table,
+  Select,
+  Modal,
+} from "@mantine/core";
 
 import { COLORS }                        from "../../theme/colors";
-import { FONT_SIZE, FONT_WEIGHT }         from "../../theme/fonts";
-import { SPACING, GAP, PADDING }          from "../../theme/spacing";
-import { RADIUS, SHADOW }                 from "../../theme/sizes";
 import { useShifts, useSetShift }         from "../../queries/useHr";
 import { useFetchAllEmployees }           from "../../queries/useEmployees";
 import { useToast }                       from "../../components/ui/Toast";
@@ -130,20 +138,21 @@ const initials = (name = "") =>
 function ShiftBadge({ type, darkMode }) {
   const def = SHIFT_TYPES[type] || SHIFT_TYPES.Off;
   return (
-    <span
+    <Box
+      component="span"
       style={{
         display: "inline-block",
         padding: "3px 10px",
-        borderRadius: RADIUS.full,
-        fontSize: FONT_SIZE.xs,
-        fontWeight: FONT_WEIGHT.semibold,
+        borderRadius: 999,
+        fontSize: "0.75rem",
+        fontWeight: 600,
         background: darkMode ? def.darkBg : def.bg,
         color: darkMode ? def.darkColor : def.color,
         whiteSpace: "nowrap",
       }}
     >
       {def.label}
-    </span>
+    </Box>
   );
 }
 
@@ -151,197 +160,95 @@ function StatCard({ card, darkMode }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
   const Icon = card.icon;
   return (
-    <div
-      style={{
-        flex: "1 1 160px",
-        minWidth: 140,
-        background: surface.cardBg,
-        borderRadius: RADIUS.xl,
-        border: `1px solid ${surface.border}`,
-        boxShadow: SHADOW.sm,
-        padding: `${SPACING.md} ${SPACING.lg}`,
-        display: "flex",
-        flexDirection: "column",
-        gap: GAP.sm,
-      }}
+    <Paper
+      withBorder
+      radius="xl"
+      shadow="sm"
+      p="md"
+      style={{ flex: "1 1 160px", minWidth: 140, background: surface.cardBg, border: `1px solid ${surface.border}` }}
     >
-      <div
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: RADIUS.lg,
-          background: darkMode ? card.mutedDark : card.muted,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Icon size={20} color={card.accent} strokeWidth={2} />
-      </div>
-      <div
-        style={{
-          fontSize: FONT_SIZE["2xl"],
-          fontWeight: FONT_WEIGHT.bold,
-          color: surface.text,
-          lineHeight: 1,
-        }}
-      >
-        {card.value}
-      </div>
-      <div style={{ fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium }}>
-        {card.label}
-      </div>
-    </div>
+      <Stack gap="xs">
+        <Box
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            background: darkMode ? card.mutedDark : card.muted,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon size={20} color={card.accent} strokeWidth={2} />
+        </Box>
+        <Text fw={700} c={surface.text} style={{ fontSize: "1.5rem", lineHeight: 1 }}>
+          {card.value}
+        </Text>
+        <Text size="xs" fw={500} c={surface.subtext}>
+          {card.label}
+        </Text>
+      </Stack>
+    </Paper>
   );
 }
 
 // ── Assign Shift Modal ────────────────────────────────────────────────────────
 function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates = [] }) {
-  const surface = darkMode ? COLORS.dark : COLORS.light;
   const [employee, setEmployee] = useState(employees[0] || "");
-  const [dayIndex, setDayIndex] = useState(0);
+  const [dayIndex, setDayIndex] = useState("0");
   const [shift, setShift] = useState("Morning");
 
-  // When the employee list loads (async), default the selection to the first one
   useEffect(() => {
     if (!employee && employees.length) setEmployee(employees[0]);
   }, [employees, employee]);
 
-  const inputStyle = {
-    width: "100%",
-    padding: PADDING.input,
-    borderRadius: RADIUS.md,
-    border: `1px solid ${surface.inputBorder}`,
-    background: surface.inputBg,
-    color: surface.text,
-    fontSize: FONT_SIZE.sm,
-    outline: "none",
-    boxSizing: "border-box",
-  };
+  const employeeOptions = employees.map((emp) => ({ value: emp, label: emp }));
+  const dayOptions = WEEK_DAYS.map((day, i) => ({ value: String(i), label: `${day}, ${weekDates[i] || ""}` }));
+  const shiftOptions = Object.keys(SHIFT_TYPES).map((s) => ({ value: s, label: s }));
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 200,
-      }}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+    <Modal
+      opened
+      onClose={onClose}
+      title={
+        <Stack gap={2}>
+          <Text fw={700} size="lg">Assign Shift</Text>
+          <Text size="xs" c="dimmed">Week of Jun 2 – 8, 2026</Text>
+        </Stack>
+      }
+      centered
+      radius="xl"
     >
-      <div
-        style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS.xl,
-          padding: PADDING.modal,
-          width: 420,
-          maxWidth: "92vw",
-          boxShadow: SHADOW.modal,
-          border: `1px solid ${surface.border}`,
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: SPACING.lg }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>
-              Assign Shift
-            </h3>
-            <p style={{ margin: 0, fontSize: FONT_SIZE.xs, color: surface.subtext, marginTop: 2 }}>
-              Week of Jun 2 – 8, 2026
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: surface.subtext,
-              padding: 4,
-              borderRadius: RADIUS.md,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Fields */}
-        <div style={{ display: "flex", flexDirection: "column", gap: GAP.md }}>
-          <div>
-            <label style={{ display: "block", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, marginBottom: 6 }}>
-              Employee
-            </label>
-            <select value={employee} onChange={(e) => setEmployee(e.target.value)} style={inputStyle}>
-              {employees.map((emp) => (
-                <option key={emp} value={emp}>{emp}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, marginBottom: 6 }}>
-              Date
-            </label>
-            <select value={dayIndex} onChange={(e) => setDayIndex(Number(e.target.value))} style={inputStyle}>
-              {WEEK_DAYS.map((day, i) => (
-                <option key={day} value={i}>{day}, {weekDates[i]}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: surface.subtext, marginBottom: 6 }}>
-              Shift
-            </label>
-            <select value={shift} onChange={(e) => setShift(e.target.value)} style={inputStyle}>
-              {Object.keys(SHIFT_TYPES).map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: "flex", gap: GAP.sm, marginTop: SPACING.lg, justifyContent: "flex-end" }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: "9px 20px",
-              borderRadius: RADIUS.md,
-              border: `1px solid ${surface.border}`,
-              background: "transparent",
-              color: surface.subtext,
-              fontSize: FONT_SIZE.sm,
-              fontWeight: FONT_WEIGHT.medium,
-              cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-          <button
+      <Stack gap="md">
+        <Select
+          label="Employee"
+          data={employeeOptions}
+          value={employee}
+          onChange={(v) => setEmployee(v || "")}
+        />
+        <Select
+          label="Date"
+          data={dayOptions}
+          value={dayIndex}
+          onChange={(v) => setDayIndex(v || "0")}
+        />
+        <Select
+          label="Shift"
+          data={shiftOptions}
+          value={shift}
+          onChange={(v) => setShift(v || "Morning")}
+        />
+        <Group justify="flex-end" gap="sm" mt="sm">
+          <Button variant="default" onClick={onClose}>Cancel</Button>
+          <Button
             disabled={!employee}
-            onClick={() => { if (!employee) return; onSave(employee, dayIndex, shift); onClose(); }}
-            style={{
-              padding: "9px 20px",
-              borderRadius: RADIUS.md,
-              border: "none",
-              background: COLORS.primary,
-              color: COLORS.white,
-              fontSize: FONT_SIZE.sm,
-              fontWeight: FONT_WEIGHT.semibold,
-              cursor: "pointer",
-            }}
+            onClick={() => { if (!employee) return; onSave(employee, Number(dayIndex), shift); onClose(); }}
           >
             Save
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -350,145 +257,98 @@ function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates 
   const surface = darkMode ? COLORS.dark : COLORS.light;
   const [showModal, setShowModal] = useState(false);
 
-  const cellStyle = {
-    padding: "10px 8px",
-    textAlign: "center",
-    borderBottom: `1px solid ${surface.border}`,
-    borderRight: `1px solid ${surface.border}`,
-    whiteSpace: "nowrap",
-  };
-
-  const thStyle = {
-    ...cellStyle,
-    background: surface.theadBg,
-    fontSize: FONT_SIZE.xs,
-    fontWeight: FONT_WEIGHT.semibold,
-    color: surface.subtext,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  };
-
   return (
-    <div>
+    <Stack gap="md">
       {/* Week Navigator + Assign Button */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: SPACING.md, flexWrap: "wrap", gap: GAP.sm }}>
-        <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-          <button
-            style={{
-              width: 32, height: 32, borderRadius: RADIUS.md,
-              border: `1px solid ${surface.border}`,
-              background: surface.cardBg, color: surface.subtext,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
+      <Group justify="space-between" wrap="wrap" gap="sm">
+        <Group gap="sm">
+          <ActionIcon variant="default" size="md" radius="md">
             <ChevronLeft size={16} />
-          </button>
-          <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.semibold, color: surface.text }}>
-            Week: Jun 2 – 8, 2026
-          </span>
-          <button
-            style={{
-              width: 32, height: 32, borderRadius: RADIUS.md,
-              border: `1px solid ${surface.border}`,
-              background: surface.cardBg, color: surface.subtext,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
+          </ActionIcon>
+          <Text size="sm" fw={600} c={surface.text}>Week: Jun 2 – 8, 2026</Text>
+          <ActionIcon variant="default" size="md" radius="md">
             <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <button
-          onClick={() => setShowModal(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: GAP.xs,
-            padding: "8px 16px", borderRadius: RADIUS.md,
-            border: "none", background: COLORS.primary,
-            color: COLORS.white, fontSize: FONT_SIZE.sm,
-            fontWeight: FONT_WEIGHT.semibold, cursor: "pointer",
-          }}
-        >
-          <Plus size={16} />
+          </ActionIcon>
+        </Group>
+        <Button leftSection={<Plus size={16} />} onClick={() => setShowModal(true)}>
           Assign Shift
-        </button>
-      </div>
+        </Button>
+      </Group>
 
       {/* Roster Grid */}
-      <div
-        style={{
-          background: surface.cardBg,
-          borderRadius: RADIUS.xl,
-          border: `1px solid ${surface.border}`,
-          boxShadow: SHADOW.sm,
-          overflowX: "auto",
-        }}
+      <Paper
+        withBorder
+        radius="xl"
+        shadow="sm"
+        style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, overflowX: "auto" }}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
-          <thead>
-            <tr>
-              <th style={{ ...thStyle, textAlign: "left", paddingLeft: SPACING.md, minWidth: 140 }}>Employee</th>
+        <Table style={{ minWidth: 700 }}>
+          <Table.Thead style={{ background: surface.theadBg }}>
+            <Table.Tr>
+              <Table.Th style={{ minWidth: 140, textAlign: "left", paddingLeft: 16 }}>
+                <Text size="xs" fw={600} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em" }}>Employee</Text>
+              </Table.Th>
               {WEEK_DAYS.map((day, i) => (
-                <th key={day} style={{ ...thStyle, minWidth: 96 }}>
-                  <div style={{ fontWeight: FONT_WEIGHT.bold }}>{day}</div>
-                  <div style={{ fontWeight: FONT_WEIGHT.normal, fontSize: "0.65rem", marginTop: 2, opacity: 0.8 }}>{weekDates[i]}</div>
-                </th>
+                <Table.Th key={day} style={{ minWidth: 96, textAlign: "center" }}>
+                  <Text size="xs" fw={700} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em" }}>{day}</Text>
+                  <Text size="xs" c={surface.subtext} style={{ opacity: 0.8, marginTop: 2 }}>{weekDates[i]}</Text>
+                </Table.Th>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {employees.map((emp) => (
-              <tr key={emp}>
-                {/* Employee name + avatar */}
-                <td
-                  style={{
-                    ...cellStyle,
-                    textAlign: "left",
-                    paddingLeft: SPACING.md,
-                    background: surface.cardBg,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                    <div
+              <Table.Tr key={emp}>
+                <Table.Td style={{ textAlign: "left", paddingLeft: 16, background: surface.cardBg }}>
+                  <Group gap="sm">
+                    <Box
                       style={{
-                        width: 30, height: 30, borderRadius: RADIUS.full,
+                        width: 30,
+                        height: 30,
+                        borderRadius: 999,
                         background: COLORS.primaryLight,
                         color: COLORS.primary,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
                         flexShrink: 0,
                       }}
                     >
                       {initials(emp)}
-                    </div>
-                    <span style={{ fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.medium, color: surface.text }}>{emp}</span>
-                  </div>
-                </td>
+                    </Box>
+                    <Text size="sm" fw={500} c={surface.text}>{emp}</Text>
+                  </Group>
+                </Table.Td>
                 {(roster[emp] || []).map((shift, di) => (
-                  <td key={di} style={{ ...cellStyle, background: surface.cardBg }}>
+                  <Table.Td key={di} style={{ textAlign: "center", background: surface.cardBg }}>
                     <ShiftBadge type={shift} darkMode={darkMode} />
-                  </td>
+                  </Table.Td>
                 ))}
-              </tr>
+              </Table.Tr>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
       {/* Legend */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: GAP.md, marginTop: SPACING.md }}>
+      <Group gap="md" wrap="wrap">
         {Object.entries(SHIFT_TYPES).map(([key, def]) => (
-          <div key={key} style={{ display: "flex", alignItems: "center", gap: GAP.xs }}>
-            <span
+          <Group key={key} gap="xs">
+            <Box
               style={{
-                width: 10, height: 10, borderRadius: RADIUS.full,
+                width: 10,
+                height: 10,
+                borderRadius: 999,
                 background: darkMode ? def.darkColor : def.color,
                 display: "inline-block",
               }}
             />
-            <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium }}>{key}</span>
-          </div>
+            <Text size="xs" fw={500} c={surface.subtext}>{key}</Text>
+          </Group>
         ))}
-      </div>
+      </Group>
 
       {showModal && (
         <AssignShiftModal
@@ -499,7 +359,7 @@ function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates 
           weekDates={weekDates}
         />
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -508,67 +368,72 @@ function ShiftDefinitionsTab({ darkMode }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: GAP.lg }}>
+    <Group gap="lg" align="stretch" wrap="wrap">
       {SHIFT_DEFINITIONS.map((def) => {
         const Icon = def.icon;
         return (
-          <div
+          <Paper
             key={def.id}
+            withBorder
+            radius="xl"
+            shadow="sm"
             style={{
               flex: "1 1 280px",
               minWidth: 260,
               background: surface.cardBg,
-              borderRadius: RADIUS.xl,
               border: `1px solid ${surface.border}`,
-              boxShadow: SHADOW.sm,
               overflow: "hidden",
             }}
           >
-            {/* Accent bar */}
-            <div style={{ height: 4, background: def.accent }} />
+            {/* Accent bar — decorative top colour strip, no Mantine prop equivalent */}
+            <Box style={{ height: 4, background: def.accent }} />
 
-            <div style={{ padding: PADDING.card }}>
+            <Box p="md">
               {/* Title row */}
-              <div style={{ display: "flex", alignItems: "center", gap: GAP.md, marginBottom: SPACING.md }}>
-                <div
+              <Group gap="md" mb="md">
+                <Box
                   style={{
-                    width: 44, height: 44, borderRadius: RADIUS.lg,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 12,
                     background: darkMode ? def.accentMutedDark : def.accentMuted,
-                    display: "flex", alignItems: "center", justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     flexShrink: 0,
                   }}
                 >
                   <Icon size={22} color={def.accent} strokeWidth={2} />
-                </div>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: surface.text }}>{def.name}</h4>
-                  <div style={{ fontSize: FONT_SIZE.sm, color: def.accent, fontWeight: FONT_WEIGHT.semibold, marginTop: 2 }}>{def.time}</div>
-                </div>
-              </div>
+                </Box>
+                <Stack gap={2}>
+                  <Text size="md" fw={700} c={surface.text}>{def.name}</Text>
+                  <Text size="sm" fw={600} style={{ color: def.accent }}>{def.time}</Text>
+                </Stack>
+              </Group>
 
               {/* Details */}
-              <div style={{ display: "flex", flexDirection: "column", gap: GAP.sm }}>
-                <InfoRow icon={Calendar} label="Working Days" value={def.days} surface={surface} accent={def.accent} />
-                <InfoRow icon={Clock}    label="Grace Period"  value={def.grace} surface={surface} accent={def.accent} />
-                <InfoRow icon={Users}    label="Employees"     value={`${def.count} assigned`} surface={surface} accent={def.accent} />
-              </div>
-            </div>
-          </div>
+              <Stack gap="sm">
+                <InfoRow icon={Calendar} label="Working Days" value={def.days} surface={surface} />
+                <InfoRow icon={Clock}    label="Grace Period"  value={def.grace} surface={surface} />
+                <InfoRow icon={Users}    label="Employees"     value={`${def.count} assigned`} surface={surface} />
+              </Stack>
+            </Box>
+          </Paper>
         );
       })}
-    </div>
+    </Group>
   );
 }
 
-function InfoRow({ icon: Icon, label, value, surface, accent }) {
+function InfoRow({ icon: Icon, label, value, surface }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: GAP.xs }}>
+    <Group justify="space-between">
+      <Group gap="xs">
         <Icon size={14} color={surface.subtext} strokeWidth={2} />
-        <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext, fontWeight: FONT_WEIGHT.medium }}>{label}</span>
-      </div>
-      <span style={{ fontSize: FONT_SIZE.xs, color: surface.text, fontWeight: FONT_WEIGHT.semibold }}>{value}</span>
-    </div>
+        <Text size="xs" fw={500} c={surface.subtext}>{label}</Text>
+      </Group>
+      <Text size="xs" fw={600} c={surface.text}>{value}</Text>
+    </Group>
   );
 }
 
@@ -576,123 +441,115 @@ function InfoRow({ icon: Icon, label, value, surface, accent }) {
 function SwapRequestsTab({ darkMode, swapRequests, onUpdateStatus }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
 
-  const thStyle = {
-    padding: PADDING.tableHeader,
-    textAlign: "left",
-    background: surface.theadBg,
-    fontSize: FONT_SIZE.xs,
-    fontWeight: FONT_WEIGHT.semibold,
-    color: surface.subtext,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    whiteSpace: "nowrap",
-    borderBottom: `1px solid ${surface.border}`,
-  };
-
-  const tdStyle = {
-    padding: PADDING.tableCell,
-    fontSize: FONT_SIZE.sm,
-    color: surface.text,
-    borderBottom: `1px solid ${surface.border}`,
-    whiteSpace: "nowrap",
-  };
-
   return (
-    <div
-      style={{
-        background: surface.cardBg,
-        borderRadius: RADIUS.xl,
-        border: `1px solid ${surface.border}`,
-        boxShadow: SHADOW.sm,
-        overflowX: "auto",
-      }}
+    <Paper
+      withBorder
+      radius="xl"
+      shadow="sm"
+      style={{ background: surface.cardBg, border: `1px solid ${surface.border}`, overflowX: "auto" }}
     >
-      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 780 }}>
-        <thead>
-          <tr>
+      <Table style={{ minWidth: 780 }}>
+        <Table.Thead style={{ background: surface.theadBg }}>
+          <Table.Tr>
             {["Requested By", "With Employee", "Original Shift", "Swap Shift", "Date", "Reason", "Status", "Actions"].map((h) => (
-              <th key={h} style={thStyle}>{h}</th>
+              <Table.Th key={h}>
+                <Text size="xs" fw={600} c={surface.subtext} tt="uppercase" style={{ letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</Text>
+              </Table.Th>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
           {swapRequests.map((req) => {
             const sc = STATUS_COLORS[req.status] || STATUS_COLORS.Pending;
             return (
-              <tr key={req.id}>
-                <td style={tdStyle}>
-                  <div style={{ display: "flex", alignItems: "center", gap: GAP.sm }}>
-                    <div
+              <Table.Tr key={req.id}>
+                <Table.Td>
+                  <Group gap="sm">
+                    <Box
                       style={{
-                        width: 28, height: 28, borderRadius: RADIUS.full,
-                        background: COLORS.primaryLight, color: COLORS.primary,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, flexShrink: 0,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        background: COLORS.primaryLight,
+                        color: COLORS.primary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        flexShrink: 0,
                       }}
                     >
                       {initials(req.requestedBy)}
-                    </div>
-                    {req.requestedBy}
-                  </div>
-                </td>
-                <td style={tdStyle}>{req.withEmployee}</td>
-                <td style={tdStyle}><ShiftBadge type={req.originalShift} darkMode={darkMode} /></td>
-                <td style={tdStyle}><ShiftBadge type={req.swapShift} darkMode={darkMode} /></td>
-                <td style={{ ...tdStyle, color: surface.subtext }}>{req.date}</td>
-                <td style={{ ...tdStyle, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis" }}>{req.reason}</td>
-                <td style={tdStyle}>
-                  <span
+                    </Box>
+                    <Text size="sm" c={surface.text}>{req.requestedBy}</Text>
+                  </Group>
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm" c={surface.text}>{req.withEmployee}</Text>
+                </Table.Td>
+                <Table.Td><ShiftBadge type={req.originalShift} darkMode={darkMode} /></Table.Td>
+                <Table.Td><ShiftBadge type={req.swapShift} darkMode={darkMode} /></Table.Td>
+                <Table.Td>
+                  <Text size="sm" c={surface.subtext}>{req.date}</Text>
+                </Table.Td>
+                <Table.Td>
+                  <Text
+                    size="sm"
+                    c={surface.text}
+                    style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  >
+                    {req.reason}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Box
+                    component="span"
                     style={{
                       display: "inline-block",
                       padding: "3px 10px",
-                      borderRadius: RADIUS.full,
-                      fontSize: FONT_SIZE.xs,
-                      fontWeight: FONT_WEIGHT.semibold,
+                      borderRadius: 999,
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
                       background: darkMode ? sc.darkBg : sc.bg,
                       color: darkMode ? sc.darkColor : sc.color,
                     }}
                   >
                     {req.status}
-                  </span>
-                </td>
-                <td style={tdStyle}>
+                  </Box>
+                </Table.Td>
+                <Table.Td>
                   {req.status === "Pending" ? (
-                    <div style={{ display: "flex", gap: GAP.xs }}>
-                      <button
+                    <Group gap="xs">
+                      <ActionIcon
+                        size="sm"
+                        radius="md"
                         onClick={() => onUpdateStatus(req.id, "Approved")}
                         title="Approve"
-                        style={{
-                          width: 28, height: 28, borderRadius: RADIUS.md,
-                          border: "none", background: darkMode ? "#14532d" : COLORS.successLight,
-                          color: COLORS.success, cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
+                        style={{ background: darkMode ? "#14532d" : COLORS.successLight, border: "none", color: COLORS.success }}
                       >
                         <Check size={14} strokeWidth={2.5} />
-                      </button>
-                      <button
+                      </ActionIcon>
+                      <ActionIcon
+                        size="sm"
+                        radius="md"
                         onClick={() => onUpdateStatus(req.id, "Rejected")}
                         title="Reject"
-                        style={{
-                          width: 28, height: 28, borderRadius: RADIUS.md,
-                          border: "none", background: darkMode ? "#7f1d1d" : "#fee2e2",
-                          color: COLORS.error, cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
+                        style={{ background: darkMode ? "#7f1d1d" : "#fee2e2", border: "none", color: COLORS.error }}
                       >
                         <XCircle size={14} strokeWidth={2.5} />
-                      </button>
-                    </div>
+                      </ActionIcon>
+                    </Group>
                   ) : (
-                    <span style={{ fontSize: FONT_SIZE.xs, color: surface.subtext }}>—</span>
+                    <Text size="xs" c={surface.subtext}>—</Text>
                   )}
-                </td>
-              </tr>
+                </Table.Td>
+              </Table.Tr>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </Table.Tbody>
+      </Table>
+    </Paper>
   );
 }
 
@@ -764,70 +621,44 @@ const ShiftManagement = ({ darkMode = false }) => {
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: surface.pageBg,
-        padding: PADDING.container,
-        fontFamily: "'Inter', sans-serif",
-        boxSizing: "border-box",
-      }}
-    >
+    <Box style={{ minHeight: "100vh", background: surface.pageBg }} p="md">
       <AppPageHeader title="Shift Management" sub="Manage employee shifts, rosters, and swap requests" />
 
       {/* Stat Cards */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: GAP.md,
-          marginBottom: SPACING.lg,
-        }}
-      >
+      <Group gap="md" mb="lg" wrap="wrap">
         {STAT_CARDS.map((card) => (
           <StatCard key={card.label} card={card} darkMode={darkMode} />
         ))}
-      </div>
+      </Group>
 
       {/* Tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: 0,
-          borderBottom: `2px solid ${surface.border}`,
-          marginBottom: SPACING.lg,
-        }}
-      >
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: GAP.xs,
-                padding: "10px 20px",
-                background: "none",
-                border: "none",
-                borderBottom: active ? `2px solid ${COLORS.primary}` : "2px solid transparent",
-                marginBottom: -2,
-                color: active ? COLORS.primary : surface.subtext,
-                fontSize: FONT_SIZE.sm,
-                fontWeight: active ? FONT_WEIGHT.semibold : FONT_WEIGHT.medium,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <Icon size={15} strokeWidth={2} />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <Box style={{ borderBottom: `2px solid ${surface.border}` }} mb="lg">
+        <Group gap={0}>
+          {TABS.map((tab) => {
+            const active = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <Button
+                key={tab.id}
+                variant="subtle"
+                onClick={() => setActiveTab(tab.id)}
+                leftSection={<Icon size={15} strokeWidth={2} />}
+                style={{
+                  borderBottom: active ? `2px solid ${COLORS.primary}` : "2px solid transparent",
+                  marginBottom: -2,
+                  borderRadius: 0,
+                  color: active ? COLORS.primary : surface.subtext,
+                  fontWeight: active ? 600 : 500,
+                  background: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {tab.label}
+              </Button>
+            );
+          })}
+        </Group>
+      </Box>
 
       {/* Tab Content */}
       {activeTab === "roster" && (
@@ -849,7 +680,7 @@ const ShiftManagement = ({ darkMode = false }) => {
           onUpdateStatus={handleUpdateSwapStatus}
         />
       )}
-    </div>
+    </Box>
   );
 };
 

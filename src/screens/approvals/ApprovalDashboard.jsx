@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Box, Text, Group, Tabs, Badge, Modal } from "@mantine/core";
+import { Box, Text, Group, Tabs, Badge, Modal, Stack, Paper, Button, ActionIcon, Textarea, Progress } from "@mantine/core";
 import {
-  IconCalendarOff, IconClock, IconReceipt, IconUserCheck,
-  IconCheck, IconX, IconAlertCircle,
+  IconCalendarOff, IconReceipt, IconUserCheck,
+  IconCheck, IconX,
 } from "@tabler/icons-react";
 import { fetchApprovals, approveLeave, approveExpense, reviewOnboarding } from "../../api/approvalsApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -16,7 +16,7 @@ export default function ApprovalDashboard({ darkMode }) {
   const [modal, setModal] = useState(null); // { type, item }
   const [note, setNote] = useState("");
 
-  const { data: approvals, isLoading } = useQuery({
+  const { data: approvals } = useQuery({
     queryKey: ["approvals"],
     queryFn: () => fetchApprovals().then(r => r.data?.data ?? r.data),
   });
@@ -47,19 +47,20 @@ export default function ApprovalDashboard({ darkMode }) {
   const onboard  = approvals?.onboardingPending || [];
 
   const Row = ({ children }) => (
-    <Box style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 12, background: rowBg, border: `1px solid ${border}`, marginBottom: 8 }}>
+    <Group gap={12} align="center"
+      style={{ padding: "12px 16px", borderRadius: 12, background: rowBg, border: `1px solid ${border}`, marginBottom: 8 }}>
       {children}
-    </Box>
+    </Group>
   );
 
   const ApproveRejectBtns = ({ onApprove, onReject }) => (
     <Group gap={6} style={{ flexShrink: 0 }}>
-      <button onClick={onApprove} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-        <IconCheck size={14} color="#16a34a" stroke={2.5} />
-      </button>
-      <button onClick={onReject} style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-        <IconX size={14} color="#dc2626" stroke={2.5} />
-      </button>
+      <ActionIcon variant="light" color="green" size={32} radius={8} onClick={onApprove}>
+        <IconCheck size={14} stroke={2.5} />
+      </ActionIcon>
+      <ActionIcon variant="light" color="red" size={32} radius={8} onClick={onReject}>
+        <IconX size={14} stroke={2.5} />
+      </ActionIcon>
     </Group>
   );
 
@@ -76,19 +77,19 @@ export default function ApprovalDashboard({ darkMode }) {
               { label: "Expenses", count: expenses.length, color: "#f59e0b" },
               { label: "Onboard",  count: onboard.length,  color: "#8b5cf6" },
             ].map(b => (
-              <Box key={b.label} style={{ background: card, border: `1px solid ${border}`, borderRadius: 12, padding: "8px 16px", textAlign: "center" }}>
-                <Text fz="1.4rem" fw={900} c={b.color} lh={1}>{b.count}</Text>
-                <Text fz="xs" c={sub} fw={600}>{b.label}</Text>
-              </Box>
+              <Paper key={b.label} style={{ background: card, border: `1px solid ${border}` }} radius={12} px={16} py={8}>
+                <Text ta="center" fz="1.4rem" fw={900} c={b.color} lh={1}>{b.count}</Text>
+                <Text ta="center" fz="xs" c={sub} fw={600}>{b.label}</Text>
+              </Paper>
             ))}
           </Group>
         }
       />
 
-      <Box style={{ background: card, border: `1px solid ${border}`, borderRadius: 20, padding: 24 }}>
+      <Paper style={{ background: card, border: `1px solid ${border}` }} radius={20} p={24}>
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List mb="lg">
-            <Tabs.Tab value="leaves"   leftSection={<IconCalendarOff size={14} stroke={1.8} />}>
+            <Tabs.Tab value="leaves" leftSection={<IconCalendarOff size={14} stroke={1.8} />}>
               Leave Requests <Badge size="xs" color="blue" variant="light" ml={4}>{leaves.length}</Badge>
             </Tabs.Tab>
             <Tabs.Tab value="expenses" leftSection={<IconReceipt size={14} stroke={1.8} />}>
@@ -108,7 +109,7 @@ export default function ApprovalDashboard({ darkMode }) {
                 <Box style={{ flex: 1 }}>
                   <Text fz="sm" fw={700} c={text}>{lv.employee?.name || "Employee"}</Text>
                   <Text fz="xs" c={sub}>{lv.type} · {lv.days} day{lv.days !== 1 ? "s" : ""} · {fmt(lv.fromDate)} – {fmt(lv.toDate)}</Text>
-                  {lv.reason && <Text fz="xs" c={sub} mt={1} style={{ fontStyle: "italic" }}>"{lv.reason}"</Text>}
+                  {lv.reason && <Text fz="xs" c={sub} mt={1} fs="italic">"{lv.reason}"</Text>}
                 </Box>
                 <ApproveRejectBtns
                   onApprove={() => leaveMut.mutate({ id: lv.id, action: "Approved" })}
@@ -127,7 +128,7 @@ export default function ApprovalDashboard({ darkMode }) {
                 <Box style={{ flex: 1 }}>
                   <Text fz="sm" fw={700} c={text}>{ex.employee || "Employee"}</Text>
                   <Text fz="xs" c={sub}>{ex.category} · ₹{Number(ex.amount).toLocaleString("en-IN")} · {fmt(ex.date)}</Text>
-                  {ex.desc && <Text fz="xs" c={sub} mt={1} style={{ fontStyle: "italic" }}>"{ex.desc}"</Text>}
+                  {ex.desc && <Text fz="xs" c={sub} mt={1} fs="italic">"{ex.desc}"</Text>}
                 </Box>
                 <ApproveRejectBtns
                   onApprove={() => expenseMut.mutate({ id: ex.id, action: "Approved" })}
@@ -147,46 +148,54 @@ export default function ApprovalDashboard({ darkMode }) {
                   <Text fz="sm" fw={700} c={text}>{emp.name}</Text>
                   <Text fz="xs" c={sub}>{emp.department} · Joined {fmt(emp.joinDate)}</Text>
                   <Group gap={6} mt={4}>
-                    <Box style={{ width: 80, height: 4, borderRadius: 2, background: border, overflow: "hidden" }}>
-                      <Box style={{ width: `${emp.profileCompletion}%`, height: "100%", background: "#3b82f6", borderRadius: 2 }} />
-                    </Box>
+                    <Progress value={emp.profileCompletion} size={4} radius={2} w={80} color="blue" />
                     <Text fz={10} c={sub} fw={600}>{emp.profileCompletion}% complete</Text>
                   </Group>
                 </Box>
                 <Group gap={6} style={{ flexShrink: 0 }}>
-                  <button onClick={() => onboardMut.mutate({ id: emp.id, action: "Approved" })} style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#dcfce7", color: "#16a34a", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  <Button size="xs" color="green" variant="light" fw={600}
+                    onClick={() => onboardMut.mutate({ id: emp.id, action: "Approved" })}>
                     Approve
-                  </button>
-                  <button onClick={() => setModal({ type: "onboard", item: emp })} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${border}`, background: "transparent", color: sub, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                  </Button>
+                  <Button size="xs" variant="outline" color="gray" fw={600}
+                    onClick={() => setModal({ type: "onboard", item: emp })}>
                     Reject
-                  </button>
+                  </Button>
                 </Group>
               </Row>
             ))}
           </Tabs.Panel>
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Note Modal */}
-      <Modal opened={!!modal} onClose={() => { setModal(null); setNote(""); }}
+      <Modal
+        opened={!!modal}
+        onClose={() => { setModal(null); setNote(""); }}
         title={modal?.type === "leave" ? "Reject Leave Request" : "Reject Onboarding"}
-        centered radius="xl" size="sm"
-        styles={{ header: { background: card, borderBottom: `1px solid ${border}` }, body: { background: card } }}>
+        centered
+        radius="xl"
+        size="sm"
+        styles={{ header: { background: card, borderBottom: `1px solid ${border}` }, body: { background: card } }}
+      >
         <Text fz="sm" c={sub} mb={12}>Add a note (optional):</Text>
-        <textarea
+        <Textarea
           placeholder="Reason..."
-          value={note} onChange={e => setNote(e.target.value)}
+          value={note}
+          onChange={e => setNote(e.target.value)}
           rows={3}
-          style={{ width: "100%", borderRadius: 8, border: `1px solid ${border}`, background: darkMode ? "#0f172a" : "#f8fafc", color: text, padding: "10px 12px", fontSize: 13, resize: "vertical" }}
+          styles={{
+            input: { background: darkMode ? "#0f172a" : "#f8fafc", color: text, borderColor: border },
+          }}
         />
         <Group justify="flex-end" mt={16} gap={8}>
-          <button onClick={() => { setModal(null); setNote(""); }} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${border}`, background: "transparent", color: sub, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => {
+          <Button variant="outline" color="gray" onClick={() => { setModal(null); setNote(""); }}>Cancel</Button>
+          <Button color="red" fw={600} onClick={() => {
             if (modal.type === "leave") leaveMut.mutate({ id: modal.item.id, action: "Rejected" });
             else onboardMut.mutate({ id: modal.item.id, action: "Rejected" });
-          }} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#ef4444", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
+          }}>
             Confirm Reject
-          </button>
+          </Button>
         </Group>
       </Modal>
     </Box>

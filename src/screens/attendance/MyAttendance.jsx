@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import {
-  IconClock, IconCheck, IconX, IconCalendar,
-  IconCircleCheck, IconAlertTriangle, IconCalendarOff,
+  IconClock, IconCheck, IconX,
+  IconCircleCheck, IconAlertTriangle,
 } from "@tabler/icons-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
-import { 
-  Box, Group, Stack, Text, SimpleGrid, Badge, Button, Paper, Table 
+import {
+  Box, Group, Stack, Text, SimpleGrid, Badge, Button, Paper, Table, ThemeIcon,
 } from "@mantine/core";
 
 import { useAuth }              from "../../hooks/useAuth";
@@ -220,35 +220,35 @@ const MyAttendance = () => {
               </>
             ) : !checkedOut ? (
               <>
-                <Box
-                  h={120} w={120}
+                <Paper
+                  h={120} w={120} radius="xl"
                   style={{
-                    borderRadius: "50%",
                     background: "var(--mantine-color-green-0)",
                     border: "3px solid var(--mantine-color-green-5)",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                   }}
                 >
-                  <IconCircleCheck size={32} stroke={1.8} color="var(--mantine-color-green-6)" />
-                  <Text fz="xs" fw={700} c="green.7">WORKING</Text>
-                </Box>
+                  <Stack align="center" justify="center" h="100%" gap={6}>
+                    <IconCircleCheck size={32} stroke={1.8} color="var(--mantine-color-green-6)" />
+                    <Text fz="xs" fw={700} c="green.7">WORKING</Text>
+                  </Stack>
+                </Paper>
                 <AppButton color="red" leftSection={<IconClock size={15} />} onClick={() => setConfirmType("checkout")}>
                   CHECK OUT
                 </AppButton>
               </>
             ) : (
-              <Box
-                h={120} w={120}
+              <Paper
+                h={120} w={120} radius="xl"
                 style={{
-                  borderRadius: "50%",
                   background: "var(--mantine-color-blue-0)",
                   border: "3px solid var(--mantine-color-blue-5)",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >
-                <IconCircleCheck size={32} stroke={1.8} color="var(--mantine-color-blue-6)" />
-                <Text fz="xs" fw={700} c="blue.7">DONE</Text>
-              </Box>
+                <Stack align="center" justify="center" h="100%" gap={6}>
+                  <IconCircleCheck size={32} stroke={1.8} color="var(--mantine-color-blue-6)" />
+                  <Text fz="xs" fw={700} c="blue.7">DONE</Text>
+                </Stack>
+              </Paper>
             )}
           </Stack>
         </Group>
@@ -317,16 +317,13 @@ const MyAttendance = () => {
 
       <AppModal opened={!!confirmType} onClose={() => setConfirmType(null)} withCloseButton={false} size="sm">
         <Stack align="center" ta="center" gap="sm" p="sm">
-          <Box
-            w={64} h={64}
-            style={{
-              borderRadius: "50%",
-              background: confirmType === "checkin" ? "var(--mantine-color-green-0)" : "var(--mantine-color-red-0)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
+          <ThemeIcon
+            size={64} radius="xl"
+            color={confirmType === "checkin" ? "green" : "red"}
+            variant="light"
           >
-            <IconClock size={30} color={confirmType === "checkin" ? "var(--mantine-color-green-6)" : "var(--mantine-color-red-6)"} />
-          </Box>
+            <IconClock size={30} />
+          </ThemeIcon>
           <Text fz="lg" fw={700}>
             {confirmType === "checkin" ? "Confirm Check In" : "Confirm Check Out"}
           </Text>
@@ -336,10 +333,12 @@ const MyAttendance = () => {
           </Text>
 
           {confirmType === "checkin" && isLate() && (
-            <Group gap="xs" p="xs" style={{ background: "var(--mantine-color-yellow-0)", borderRadius: "var(--mantine-radius-md)" }}>
-              <IconAlertTriangle size={14} color="var(--mantine-color-yellow-6)" />
-              <Text fz="xs" c="yellow.8" fw={600}>You will be marked as Late</Text>
-            </Group>
+            <Paper p="xs" radius="md" bg="yellow.0" w="100%">
+              <Group gap="xs" justify="center">
+                <IconAlertTriangle size={14} color="var(--mantine-color-yellow-6)" />
+                <Text fz="xs" c="yellow.8" fw={600}>You will be marked as Late</Text>
+              </Group>
+            </Paper>
           )}
 
           <Text fz="sm" c="dimmed" mt="md" mb="xl">

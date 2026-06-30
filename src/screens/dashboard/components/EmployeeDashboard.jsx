@@ -1,4 +1,4 @@
-import { SimpleGrid, Box, Group, Text, Progress, Badge, Avatar, Loader, Center, Paper, RingProgress } from "@mantine/core";
+import { SimpleGrid, Box, Group, Text, Progress, Badge, Avatar, Loader, Center, Paper, RingProgress, Stack, UnstyledButton } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,7 +20,7 @@ const ramp         = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 // ── Quick Action Pill ─────────────────────────────────────────────────────────
 const QA = ({ icon: Icon, label, to, navigate }) => (
-  <Box
+  <UnstyledButton
     onClick={() => navigate(to)}
     style={{
       display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
@@ -34,15 +34,17 @@ const QA = ({ icon: Icon, label, to, navigate }) => (
   >
     <Icon size={22} color="#fff" stroke={1.8} />
     <Text fz="xs" fw={600} c="white" ta="center" style={{ lineHeight: 1.2, whiteSpace: "nowrap" }}>{label}</Text>
-  </Box>
+  </UnstyledButton>
 );
 
 // ── Section "View all" action ──────────────────────────────────────────────────
 const ViewAll = ({ navigate, to }) => (
-  <Box onClick={() => navigate(to)} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
-    <Text fz="xs" c="blue" fw={600}>View all</Text>
-    <IconChevronRight size={13} color="#3b82f6" stroke={2.5} />
-  </Box>
+  <UnstyledButton onClick={() => navigate(to)}>
+    <Group gap={4}>
+      <Text fz="xs" c="blue" fw={600}>View all</Text>
+      <IconChevronRight size={13} color="#3b82f6" stroke={2.5} />
+    </Group>
+  </UnstyledButton>
 );
 
 export const EmployeeDashboard = ({ user }) => {
@@ -99,7 +101,7 @@ export const EmployeeDashboard = ({ user }) => {
         background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 45%, #1d4ed8 75%, #2563eb 100%)",
         border: "none", overflow: "hidden", position: "relative",
       }}>
-        {/* decorative circles */}
+        {/* decorative circles — no Mantine prop equivalent for absolute positioned decoratives */}
         <Box style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
         <Box style={{ position: "absolute", bottom: -60, right: 80, width: 250, height: 250, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
 
@@ -112,6 +114,7 @@ export const EmployeeDashboard = ({ user }) => {
                   style={{ border: "3px solid rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.15)", fontSize: 26, fontWeight: 800, color: "#fff" }}>
                   {user?.name?.slice(0, 2).toUpperCase() || "ME"}
                 </Avatar>
+                {/* online indicator dot — absolute positioned, no Mantine prop equivalent */}
                 <Box style={{
                   position: "absolute", bottom: 2, right: 2,
                   width: 14, height: 14, borderRadius: "50%",
@@ -120,7 +123,7 @@ export const EmployeeDashboard = ({ user }) => {
                 }} />
               </Box>
 
-              <Box>
+              <Stack gap={0}>
                 <Text fz="xs" fw={600} c="rgba(255,255,255,0.55)" tt="uppercase" mb={4} style={{ letterSpacing: "0.08em" }}>{greeting}</Text>
                 <Text fz="1.5rem" fw={800} c="white" lh={1.15} mb={8}>
                   {user?.name?.split(" ")[0] || "Employee"} 👋
@@ -143,7 +146,7 @@ export const EmployeeDashboard = ({ user }) => {
                   )}
                 </Group>
 
-                {/* Today status pill */}
+                {/* Today status pill — inline-flex pill with rgba bg, no Mantine prop equivalent */}
                 <Box style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   padding: "6px 14px", borderRadius: 20,
@@ -156,11 +159,11 @@ export const EmployeeDashboard = ({ user }) => {
                     {todayRec?.checkOut ? ` → Out ${new Date(todayRec.checkOut).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}` : ""}
                   </Text>
                 </Box>
-              </Box>
+              </Stack>
             </Group>
 
             {/* RIGHT: quick actions */}
-            <Box>
+            <Stack gap={0}>
               <Text fz="xs" fw={600} c="rgba(255,255,255,0.5)" tt="uppercase" mb={10} style={{ letterSpacing: "0.08em" }}>Quick Actions</Text>
               <Group gap={8} wrap="wrap">
                 <QA icon={IconCalendarOff} label="Apply Leave"   to="/leave"        navigate={navigate} />
@@ -168,7 +171,7 @@ export const EmployeeDashboard = ({ user }) => {
                 <QA icon={IconDownload}    label="My Payslips"   to="/my-payslips"  navigate={navigate} />
                 <QA icon={IconLifebuoy}    label="Create Ticket" to="/helpdesk"     navigate={navigate} />
               </Group>
-            </Box>
+            </Stack>
           </Group>
         </Box>
       </Paper>
@@ -247,6 +250,7 @@ export const EmployeeDashboard = ({ user }) => {
                   {r.hoursWorked ? ` · ${r.hoursWorked}h` : ""}
                 </Text>
               </Box>
+              {/* status pill: rgba bg from statusBg fn, no Mantine prop equivalent */}
               <Box style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: statusBg(r.status) }}>
                 <Box style={{ width: 6, height: 6, borderRadius: "50%", background: statusColor(r.status) }} />
                 <Text fz="xs" fw={600} style={{ color: statusText(r.status) }}>{r.status}</Text>
@@ -315,9 +319,9 @@ export const EmployeeDashboard = ({ user }) => {
             <>
               <SimpleGrid cols={3} spacing="sm" mb="md">
                 {[
-                  { label: "Gross",      value: fmt(payslip.gross),      color: "#3b82f6", bg: "#eff6ff" },
+                  { label: "Gross",      value: fmt(payslip.gross),           color: "#3b82f6", bg: "#eff6ff" },
                   { label: "Deductions", value: `-${fmt(payslip.deductions)}`, color: "#ef4444", bg: "#fef2f2" },
-                  { label: "Net Pay",    value: fmt(payslip.net),         color: "#22c55e", bg: "#f0fdf4" },
+                  { label: "Net Pay",    value: fmt(payslip.net),              color: "#22c55e", bg: "#f0fdf4" },
                 ].map((s) => (
                   <Box key={s.label} style={{ textAlign: "center", padding: "14px 8px", borderRadius: 14, background: s.bg }}>
                     <Text fz="xs" c="dimmed" fw={600} tt="uppercase" mb={4} style={{ letterSpacing: "0.04em" }}>{s.label}</Text>
@@ -329,32 +333,35 @@ export const EmployeeDashboard = ({ user }) => {
                 <Badge color={payslip.status === "Paid" ? "green" : "yellow"} variant="light" leftSection={<IconCircleCheck size={11} />}>
                   {payslip.status}
                 </Badge>
-                <Box onClick={() => navigate("/my-payslips")} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", marginLeft: "auto" }}>
-                  <Text fz="xs" c="blue" fw={600}>Download PDF</Text>
-                  <IconArrowRight size={13} color="#3b82f6" stroke={2.5} />
-                </Box>
+                <UnstyledButton onClick={() => navigate("/my-payslips")} ml="auto">
+                  <Group gap={4}>
+                    <Text fz="xs" c="blue" fw={600}>Download PDF</Text>
+                    <IconArrowRight size={13} color="#3b82f6" stroke={2.5} />
+                  </Group>
+                </UnstyledButton>
               </Group>
             </>
           ) : (
-            <Box style={{ textAlign: "center", padding: "32px 0" }}>
+            <Stack align="center" py="xl" gap="sm">
               <IconWallet size={40} color="#cbd5e1" stroke={1.2} />
-              <Text c="dimmed" fz="sm" mt="sm">No payslip available yet</Text>
-            </Box>
+              <Text c="dimmed" fz="sm">No payslip available yet</Text>
+            </Stack>
           )}
         </PanelCard>
 
         {/* Announcements */}
         <PanelCard title="Announcements" sub="Latest company notices" action={<ViewAll navigate={navigate} to="/announcements" />}>
           {announcements.length === 0 ? (
-            <Box style={{ textAlign: "center", padding: "32px 0" }}>
+            <Stack align="center" py="xl" gap="sm">
               <IconAlertCircle size={40} color="#cbd5e1" stroke={1.2} />
-              <Text c="dimmed" fz="sm" mt="sm">No announcements</Text>
-            </Box>
+              <Text c="dimmed" fz="sm">No announcements</Text>
+            </Stack>
           ) : announcements.slice(0, 4).map((a, i, arr) => {
             const grad = PRIORITY_GRAD[a.priority] || "linear-gradient(135deg,#3b82f6,#6366f1)";
             return (
               <Group key={a.id} wrap="nowrap" pb="sm" align="flex-start"
                 style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none", marginBottom: i < arr.length - 1 ? 8 : 0 }}>
+                {/* gradient accent bar — no Mantine prop equivalent */}
                 <Box style={{ width: 4, alignSelf: "stretch", borderRadius: 4, background: grad, flexShrink: 0 }} />
                 <Box style={{ flex: 1, minWidth: 0 }}>
                   <Text fz="sm" fw={600} truncate>{a.title}</Text>
@@ -426,6 +433,7 @@ export const EmployeeDashboard = ({ user }) => {
             return (
               <Group key={e.id} gap="sm" py={8} wrap="nowrap"
                 style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
+                {/* mini calendar chip — flexDirection column, no Mantine Stack equivalent at this size */}
                 <Box style={{ width: 40, height: 40, borderRadius: 10, background: "var(--mantine-color-blue-0)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--mantine-color-blue-2)" }}>
                   <Text fz={8} fw={800} c="blue" tt="uppercase" lh={1}>{d.toLocaleDateString("en-IN", { month: "short" })}</Text>
                   <Text fz="md" fw={800} c="blue" lh={1.1}>{d.getDate()}</Text>

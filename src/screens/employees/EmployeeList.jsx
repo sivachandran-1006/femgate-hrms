@@ -9,7 +9,7 @@ import {
 import {
   Group, SimpleGrid, TextInput, Select, Avatar,
   Text, Paper, ScrollArea, Table, ActionIcon,
-  Pagination, Badge, Modal, Button, Stack, Box,
+  Pagination, Badge, Modal, Button, Stack, ThemeIcon,
 } from "@mantine/core";
 import EmployeeModal from "./EmployeeModal";
 
@@ -228,7 +228,7 @@ const EmployeeList = () => {
             value={deptFilter}
             onChange={(v) => { setDeptFilter(v || "All"); setCurrentPage(1); }}
             data={departments.map((d) => ({ value: d, label: d === "All" ? "All Departments" : d }))}
-            style={{ minWidth: 150 }}
+            miw={150}
           />
           <Select
             size="sm"
@@ -236,7 +236,7 @@ const EmployeeList = () => {
             value={statusFilter}
             onChange={(v) => { setStatusFilter(v || "All"); setCurrentPage(1); }}
             data={["All","Active","On Leave","Inactive"].map((s) => ({ value: s, label: s === "All" ? "All Status" : s }))}
-            style={{ minWidth: 130 }}
+            miw={130}
           />
           <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
             {filtered.length} result{filtered.length !== 1 ? "s" : ""}
@@ -261,18 +261,15 @@ const EmployeeList = () => {
                     key={key}
                     onClick={key !== "_actions" ? () => handleSort(key) : undefined}
                     style={{
-                      cursor:        key !== "_actions" ? "pointer" : "default",
-                      userSelect:    "none",
-                      fontSize:      11,
-                      fontWeight:    700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      color:         "var(--mantine-color-gray-6)",
-                      whiteSpace:    "nowrap",
+                      cursor:     key !== "_actions" ? "pointer" : "default",
+                      userSelect: "none",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     <Group gap={4} wrap="nowrap">
-                      {label}
+                      <Text fz={11} fw={700} tt="uppercase" style={{ letterSpacing: "0.06em" }} c="gray.6">
+                        {label}
+                      </Text>
                       {key !== "_actions" && <SortIcon col={key} />}
                     </Group>
                   </Table.Th>
@@ -302,10 +299,10 @@ const EmployeeList = () => {
                         >
                           {getInitials(emp.name)}
                         </Avatar>
-                        <div>
+                        <Stack gap={2}>
                           <Text size="sm" fw={600} lh={1.3}>{emp.name}</Text>
                           <Text size="xs" c="dimmed" lh={1.3}>{emp.email}</Text>
-                        </div>
+                        </Stack>
                       </Group>
                     </Table.Td>
 
@@ -411,15 +408,9 @@ const EmployeeList = () => {
         size="sm"
       >
         <Stack gap="md" align="center" ta="center">
-          <Box
-            w={56} h={56}
-            style={{
-              borderRadius: "50%", background: "var(--mantine-color-red-0)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <IconAlertTriangle size={26} color="var(--mantine-color-red-6)" />
-          </Box>
+          <ThemeIcon size={56} radius="xl" color="red" variant="light">
+            <IconAlertTriangle size={26} />
+          </ThemeIcon>
           <Text fz="sm">
             Are you sure you want to delete{" "}
             <Text span fw={700}>{deleteTarget?.name}</Text>?

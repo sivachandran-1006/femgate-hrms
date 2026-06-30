@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Modal, TextInput, Select, Group, Box, Text, SimpleGrid } from "@mantine/core";
+import {
+  Modal, TextInput, Select, Group, Box, Text, SimpleGrid,
+  Stack, Button, Paper,
+} from "@mantine/core";
 import {
   IconUser, IconMail, IconPhone,
   IconCheck, IconSend, IconDeviceFloppy,
@@ -116,8 +119,8 @@ const EmployeeModal = ({
         title:  { color: text, fontWeight: 800, fontSize: 18 },
       }}
     >
-      {/* Stepper */}
-      <Box style={{ display: "flex", gap: 0, marginBottom: 24 }}>
+      {/* Stepper — position:absolute connector line requires style */}
+      <Group gap={0} mb={24} align="flex-start">
         {steps.map((s, i) => (
           <Box key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
             {i < steps.length - 1 && (
@@ -125,7 +128,7 @@ const EmployeeModal = ({
             )}
             <Box style={{
               width: 28, height: 28, borderRadius: "50%", zIndex: 1,
-              background: i < active ? "#3b82f6" : i === active ? "#3b82f6" : border,
+              background: i <= active ? "#3b82f6" : border,
               display: "flex", alignItems: "center", justifyContent: "center",
               border: `2px solid ${i <= active ? "#3b82f6" : border}`,
             }}>
@@ -137,11 +140,11 @@ const EmployeeModal = ({
             <Text fz={11} fw={600} c={i === active ? "#3b82f6" : sub} mt={4}>{s}</Text>
           </Box>
         ))}
-      </Box>
+      </Group>
 
       {/* Step 0 — Basic Info */}
       {active === 0 && (
-        <Box style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Stack gap={14}>
           <SimpleGrid cols={2} spacing="sm">
             <TextInput label="First Name" placeholder="Ravi" required
               value={form.firstName} onChange={e => set("firstName", e.target.value)}
@@ -164,12 +167,12 @@ const EmployeeModal = ({
             styles={field(darkMode)} />
           <Select label="Role" value={form.role} onChange={v => set("role", v)}
             data={ROLES} styles={field(darkMode)} />
-        </Box>
+        </Stack>
       )}
 
       {/* Step 1 — Job Details */}
       {active === 1 && (
-        <Box style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <Stack gap={14}>
           <SimpleGrid cols={2} spacing="sm">
             <Select label="Department" placeholder="Select department"
               value={form.department} onChange={v => set("department", v)}
@@ -208,13 +211,13 @@ const EmployeeModal = ({
             onChange={v => set("reportingTo", v)}
             data={managers.map(e => ({ value: String(e.id), label: e.name }))}
             searchable clearable styles={field(darkMode)} />
-        </Box>
+        </Stack>
       )}
 
       {/* Step 2 — Review */}
       {active === 2 && (
-        <Box>
-          <Box style={{ background: darkMode ? "#0f172a" : "#f8fafc", borderRadius: 12, padding: 20, marginBottom: 16 }}>
+        <Stack gap="md">
+          <Paper p="md" radius="md" bg={darkMode ? "#0f172a" : "gray.0"}>
             <Text fz="sm" fw={700} c={text} mb={12}>Employee Summary</Text>
             {[
               ["Name",            `${form.firstName} ${form.lastName}`],
@@ -233,60 +236,52 @@ const EmployeeModal = ({
                 <Text fz="xs" c={text} fw={600}>{v}</Text>
               </Group>
             ))}
-          </Box>
+          </Paper>
           {!editingEmployee && (
-            <Box style={{ background: "#eff6ff", borderRadius: 10, padding: "10px 14px", border: "1px solid #bfdbfe" }}>
+            <Paper p="xs" radius="md" bg="blue.0" style={{ border: "1px solid var(--mantine-color-blue-2)" }}>
               <Group gap={8}>
-                <IconSend size={14} color="#3b82f6" stroke={2} />
-                <Text fz="xs" c="#1d4ed8" fw={600}>
+                <IconSend size={14} color="var(--mantine-color-blue-6)" stroke={2} />
+                <Text fz="xs" c="blue.8" fw={600}>
                   "Create & Send Invite" will send an activation email to {form.email}
                 </Text>
               </Group>
-            </Box>
+            </Paper>
           )}
-        </Box>
+        </Stack>
       )}
 
       {/* Navigation Buttons */}
       <Group justify="space-between" mt="xl">
-        <button
+        <Button
+          variant="default"
           onClick={() => active > 0 ? setActive(a => a - 1) : onClose()}
-          style={{ padding: "9px 20px", borderRadius: 8, border: `1px solid ${border}`, background: "transparent", color: sub, fontWeight: 600, cursor: "pointer" }}
         >
           {active === 0 ? "Cancel" : "Back"}
-        </button>
+        </Button>
         <Group gap={8}>
           {active < 2 ? (
-            <button
+            <Button
               onClick={() => setActive(a => a + 1)}
               disabled={active === 0 ? !isStep0Valid : !isStep1Valid}
-              style={{
-                padding: "9px 24px", borderRadius: 8, border: "none",
-                background: (active === 0 ? isStep0Valid : isStep1Valid) ? "#3b82f6" : "#94a3b8",
-                color: "#fff", fontWeight: 600, cursor: "pointer",
-              }}
             >
               Next
-            </button>
+            </Button>
           ) : (
             <>
-              <button onClick={handleSave} style={{
-                display: "flex", alignItems: "center", gap: 6,
-                padding: "9px 18px", borderRadius: 8, border: `1px solid ${border}`,
-                background: "transparent", color: text, fontWeight: 600, cursor: "pointer",
-              }}>
-                <IconDeviceFloppy size={15} stroke={2} />
+              <Button
+                variant="default"
+                leftSection={<IconDeviceFloppy size={15} stroke={2} />}
+                onClick={handleSave}
+              >
                 {editingEmployee ? "Update" : "Save Draft"}
-              </button>
+              </Button>
               {!editingEmployee && (
-                <button onClick={handleSaveInvite} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "9px 18px", borderRadius: 8, border: "none",
-                  background: "#3b82f6", color: "#fff", fontWeight: 600, cursor: "pointer",
-                }}>
-                  <IconSend size={15} stroke={2} />
+                <Button
+                  leftSection={<IconSend size={15} stroke={2} />}
+                  onClick={handleSaveInvite}
+                >
                   Create & Send Invite
-                </button>
+                </Button>
               )}
             </>
           )}

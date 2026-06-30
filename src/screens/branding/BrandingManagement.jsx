@@ -217,7 +217,7 @@ function DashboardTab({ onNav }) {
             <Text fw={600} mb="md">Theme Usage</Text>
             <Stack gap="sm">
               {PRESET_THEMES.slice(0, 5).map((t, i) => (
-                <div key={t.id}>
+                <Box key={t.id}>
                   <Group justify="space-between" mb={3}>
                     <Group gap="xs">
                       <Box w={12} h={12} style={{ borderRadius: 3, background: t.primary, flexShrink: 0 }} />
@@ -226,7 +226,7 @@ function DashboardTab({ onNav }) {
                     <Text size="xs" c="dimmed">{[3,2,4,1,2][i]} tenants</Text>
                   </Group>
                   <Progress value={[60,40,80,20,40][i]} color="violet" size="xs" radius="xl" />
-                </div>
+                </Box>
               ))}
             </Stack>
           </Paper>
@@ -270,7 +270,7 @@ function DashboardTab({ onNav }) {
               ].map((a, i) => (
                 <Group key={i} gap="sm">
                   <ThemeIcon size={28} radius={8} variant="light" color={a.color}><a.icon size={14} /></ThemeIcon>
-                  <div style={{ flex: 1 }}><Text size="sm">{a.text}</Text></div>
+                  <Text size="sm" style={{ flex: 1 }}>{a.text}</Text>
                   <Text size="xs" c="dimmed">{a.time}</Text>
                 </Group>
               ))}
@@ -885,10 +885,10 @@ function DocumentTemplatesTab({ toast }) {
         {selected ? (
           <Paper withBorder p="lg" radius="lg">
             <Group justify="space-between" mb="lg">
-              <div>
+              <Stack gap={2}>
                 <Text fw={700} size="lg">{selected.category}</Text>
                 <Text size="xs" c="dimmed">Last updated: {fmtDate(selected.lastUpdated)}</Text>
-              </div>
+              </Stack>
               <Group gap="sm">
                 <Button size="sm" variant="default" leftSection={<IconEye size={14} />}>Preview PDF</Button>
                 <Button size="sm" leftSection={<IconRocket size={14} />} onClick={() => toast?.show("Template published", "success")}>Publish</Button>

@@ -14,6 +14,7 @@ import { AppPageHeader }  from "../../components/ui/AppPageHeader";
 import { AppSection }     from "../../components/ui/AppSection";
 import { AppButton }      from "../../components/ui/AppButton";
 import { AppInput }       from "../../components/ui/AppInput";
+import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { useAuth }        from "../../hooks/useAuth";
 import { useMyProfile, useUpdateMyProfile } from "../../queries/useSelfService";
@@ -33,12 +34,18 @@ const FIELD = ({ label, value, icon: Icon, editable, editKey, form, onChange, re
         <AppInput type={type} value={form[editKey] ?? value} onChange={(e) => onChange(editKey, e.target.value)} size="sm" />
       )
     ) : (
-      <Group gap="sm" p="xs" wrap="nowrap"
-        style={{ borderRadius: 8, background: readOnly ? "var(--mantine-color-gray-0)" : "var(--mantine-color-gray-1)", border: "1px solid transparent" }}>
-        {Icon && <Icon size={15} color="#868e96" stroke={1.8} />}
-        <Text size="sm" c={readOnly ? "dimmed" : undefined} style={{ flex: 1 }}>{value || "—"}</Text>
-        {readOnly && <Badge size="xs" color="gray" variant="light" radius="xl" style={{ flexShrink: 0 }}>LOCKED</Badge>}
-      </Group>
+      <Paper
+        withBorder={false}
+        p="xs"
+        radius="md"
+        bg={readOnly ? "var(--mantine-color-gray-0)" : "var(--mantine-color-gray-1)"}
+      >
+        <Group gap="sm" wrap="nowrap">
+          {Icon && <Icon size={15} color="#868e96" stroke={1.8} />}
+          <Text size="sm" c={readOnly ? "dimmed" : undefined} style={{ flex: 1 }}>{value || "—"}</Text>
+          {readOnly && <Badge size="xs" color="gray" variant="light" radius="xl" style={{ flexShrink: 0 }}>LOCKED</Badge>}
+        </Group>
+      </Paper>
     )}
   </Stack>
 );
@@ -145,10 +152,12 @@ const MyProfile = () => {
   const headerAction = (
     <Group gap="sm" wrap="nowrap">
       {saved && (
-        <Group gap="xs" p="xs" style={{ background: "var(--mantine-color-green-0)", borderRadius: 8 }}>
-          <IconCheck size={15} stroke={2.5} color={COLORS.success} />
-          <Text size="sm" fw={600} c="green">Saved</Text>
-        </Group>
+        <Paper withBorder={false} p="xs" radius="md" bg="var(--mantine-color-green-0)">
+          <Group gap="xs">
+            <IconCheck size={15} stroke={2.5} color={COLORS.success} />
+            <Text size="sm" fw={600} c="green">Saved</Text>
+          </Group>
+        </Paper>
       )}
       {(activeTab === "personal" || activeTab === "bank" || activeTab === "emergency") && (
         editing ? (
@@ -167,27 +176,29 @@ const MyProfile = () => {
     <>
       <AppPageHeader title="My Profile" sub="View and manage your personal information" action={headerAction} />
 
-      <Group align="flex-start" gap="md" wrap="nowrap" style={{ alignItems: "stretch" }}>
+      <Group align="stretch" gap="md" wrap="nowrap">
         {/* ── Left column ── */}
         <Stack gap="md" style={{ width: 260, flexShrink: 0 }}>
-          <Paper withBorder radius="xl" p="md" style={{ textAlign: "center" }}>
-            <Box style={{ position: "relative", display: "inline-block", marginBottom: 16 }}>
-              <Avatar size={90} radius="xl" color="blue" variant="light"
-                style={{ margin: "0 auto", border: `3px solid ${COLORS.primaryLight}` }}>
-                <Text fw={700} style={{ fontSize: "2rem" }}>{emp.name.slice(0, 2).toUpperCase()}</Text>
-              </Avatar>
-              {editing && (
-                <Box style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%",
-                  background: COLORS.primary, border: "2px solid #fff",
-                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                  <IconCamera size={13} color="#fff" stroke={2} />
-                </Box>
-              )}
-            </Box>
-            <Text size="md" fw={700}>{emp.name}</Text>
-            <Text size="sm" c="dimmed" mt={3}>{emp.designation}</Text>
-            <Badge color="blue" variant="light" radius="xl" mt="xs">{emp.department}</Badge>
-            <Box mt="md" style={{ textAlign: "left" }}>
+          <Paper withBorder radius="xl" p="md">
+            <Stack align="center" gap={0}>
+              <Box style={{ position: "relative", display: "inline-block", marginBottom: 16 }}>
+                <Avatar size={90} radius="xl" color="blue" variant="light"
+                  style={{ margin: "0 auto", border: `3px solid ${COLORS.primaryLight}` }}>
+                  <Text fw={700} style={{ fontSize: "2rem" }}>{emp.name.slice(0, 2).toUpperCase()}</Text>
+                </Avatar>
+                {editing && (
+                  <Box style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%",
+                    background: COLORS.primary, border: "2px solid #fff",
+                    display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <IconCamera size={13} color="#fff" stroke={2} />
+                  </Box>
+                )}
+              </Box>
+              <Text size="md" fw={700}>{emp.name}</Text>
+              <Text size="sm" c="dimmed" mt={3}>{emp.designation}</Text>
+              <Badge color="blue" variant="light" radius="xl" mt="xs">{emp.department}</Badge>
+            </Stack>
+            <Box mt="md">
               <Group justify="space-between" mb={5}>
                 <Text size="xs" c="dimmed">Profile Completion</Text>
                 <Text size="xs" fw={700} c="blue">{emp.completionPct}%</Text>
@@ -261,11 +272,13 @@ const MyProfile = () => {
                       editable={false} readOnly={true} form={form} onChange={change} editKey={r.label} />
                   ))}
                 </SimpleGrid>
-                <Group gap="sm" mt="md" p="xs"
-                  style={{ background: "var(--mantine-color-blue-0)", border: "1px solid var(--mantine-color-blue-2)", borderRadius: 8 }}>
-                  <IconAlertCircle size={15} color={COLORS.primary} />
-                  <Text size="xs" c="blue.7" fw={500}>Employment details can only be changed by HR. Contact HR to update.</Text>
-                </Group>
+                <Paper withBorder={false} p="xs" radius="md" bg="var(--mantine-color-blue-0)" mt="md"
+                  style={{ border: "1px solid var(--mantine-color-blue-2)" }}>
+                  <Group gap="sm">
+                    <IconAlertCircle size={15} color={COLORS.primary} />
+                    <Text size="xs" c="blue.7" fw={500}>Employment details can only be changed by HR. Contact HR to update.</Text>
+                  </Group>
+                </Paper>
               </AppSection>
             </Tabs.Panel>
 
@@ -282,11 +295,13 @@ const MyProfile = () => {
                   <FIELD label="IFSC Code" value={form.ifsc} icon={IconId} editable={editing} readOnly={false} form={form} onChange={change} editKey="ifsc" />
                 </SimpleGrid>
                 {!editing && (
-                  <Group gap="sm" mt="md" p="xs"
-                    style={{ background: "var(--mantine-color-yellow-0)", border: "1px solid var(--mantine-color-yellow-2)", borderRadius: 8 }}>
-                    <IconShieldCheck size={16} color={COLORS.warning} stroke={2} />
-                    <Text size="xs" c="yellow.8" fw={500}>Sensitive fields are masked. Click Edit Profile to update.</Text>
-                  </Group>
+                  <Paper withBorder={false} p="xs" radius="md" bg="var(--mantine-color-yellow-0)" mt="md"
+                    style={{ border: "1px solid var(--mantine-color-yellow-2)" }}>
+                    <Group gap="sm">
+                      <IconShieldCheck size={16} color={COLORS.warning} stroke={2} />
+                      <Text size="xs" c="yellow.8" fw={500}>Sensitive fields are masked. Click Edit Profile to update.</Text>
+                    </Group>
+                  </Paper>
                 )}
               </AppSection>
             </Tabs.Panel>
@@ -299,11 +314,13 @@ const MyProfile = () => {
                   <FIELD label="Primary Emergency Contact" value={form.emergency} icon={IconPhone}
                     editable={editing} readOnly={false} form={form} onChange={change} editKey="emergency" />
                 </Box>
-                <Group gap="sm" p="xs"
-                  style={{ background: "var(--mantine-color-red-0)", border: "1px solid var(--mantine-color-red-2)", borderRadius: 8 }}>
-                  <IconAlertCircle size={15} color={COLORS.danger} />
-                  <Text size="xs" c="red.7" fw={500}>This contact will be reached in case of an emergency. Keep it up to date.</Text>
-                </Group>
+                <Paper withBorder={false} p="xs" radius="md" bg="var(--mantine-color-red-0)"
+                  style={{ border: "1px solid var(--mantine-color-red-2)" }}>
+                  <Group gap="sm">
+                    <IconAlertCircle size={15} color={COLORS.danger} />
+                    <Text size="xs" c="red.7" fw={500}>This contact will be reached in case of an emergency. Keep it up to date.</Text>
+                  </Group>
+                </Paper>
               </AppSection>
             </Tabs.Panel>
 
@@ -325,45 +342,54 @@ const MyProfile = () => {
                     onChange={(v) => setDocForm((f) => ({ ...f, category: v }))}
                     data={["Identity","Education","Employment","Financial","Other"]} size="sm" />
                 </SimpleGrid>
-                <Box mb="md">
-                  <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 14px",
-                    borderRadius: 10, border: "1.5px dashed var(--mantine-color-default-border)",
-                    background: "var(--mantine-color-gray-0)", cursor: "pointer" }}>
+
+                {/* File picker */}
+                <Paper
+                  component="label"
+                  withBorder
+                  p="sm"
+                  radius="md"
+                  mb="md"
+                  style={{ borderStyle: "dashed", cursor: "pointer" }}
+                  bg="var(--mantine-color-gray-0)"
+                >
+                  <Group gap="sm" wrap="nowrap">
                     <IconFolder size={16} color={COLORS.primary} stroke={2} />
                     <Text fz="sm" c="dimmed" style={{ flex: 1 }}>{docFileName}</Text>
-                    <Text fz="xs" fw={600} c="blue" style={{ background: "var(--mantine-color-blue-0)", padding: "3px 10px", borderRadius: 20 }}>Browse</Text>
+                    <Badge size="sm" variant="light" color="blue" radius="xl">Browse</Badge>
                     <input type="file" style={{ display: "none" }}
                       onChange={(e) => setDocFileName(e.target.files?.[0]?.name || "No file chosen")} />
-                  </label>
-                </Box>
+                  </Group>
+                </Paper>
 
                 {/* Documents list */}
                 {docs.length === 0 ? (
-                  <Text ta="center" c="dimmed" fz="sm" py="xl">No documents uploaded yet</Text>
+                  <AppEmptyState icon={<IconFolder size={22} />} message="No documents uploaded yet" sub="Upload your first document above." py={40} />
                 ) : (
                   <Stack gap="xs">
                     {docs.map((d) => (
-                      <Group key={d.id} justify="space-between" p="sm" wrap="nowrap"
-                        style={{ borderRadius: 10, border: "1px solid var(--mantine-color-default-border)" }}>
-                        <Group gap="sm" wrap="nowrap">
-                          <ThemeIcon size={34} radius="md" color="blue" variant="light">
-                            <IconFolder size={16} stroke={1.8} />
-                          </ThemeIcon>
-                          <Box>
-                            <Text fz="sm" fw={600}>{d.name}</Text>
-                            <Text fz="xs" c="dimmed">{d.category} · {d.date}</Text>
-                          </Box>
+                      <Paper key={d.id} withBorder p="sm" radius="md">
+                        <Group justify="space-between" wrap="nowrap">
+                          <Group gap="sm" wrap="nowrap">
+                            <ThemeIcon size={34} radius="md" color="blue" variant="light">
+                              <IconFolder size={16} stroke={1.8} />
+                            </ThemeIcon>
+                            <Stack gap={2}>
+                              <Text fz="sm" fw={600}>{d.name}</Text>
+                              <Text fz="xs" c="dimmed">{d.category} · {d.date}</Text>
+                            </Stack>
+                          </Group>
+                          <Group gap="xs" wrap="nowrap">
+                            <Badge size="xs" color={d.status === "Verified" ? "green" : "red"} variant="light">{d.status}</Badge>
+                            {d.status !== "Verified" && (
+                              <AppButton size="xs" variant="subtle" color="red"
+                                onClick={() => deleteDocMut.mutate(d.id)}>
+                                <IconX size={12} />
+                              </AppButton>
+                            )}
+                          </Group>
                         </Group>
-                        <Group gap="xs" wrap="nowrap">
-                          <Badge size="xs" color={d.status === "Verified" ? "green" : "red"} variant="light">{d.status}</Badge>
-                          {d.status !== "Verified" && (
-                            <AppButton size="xs" variant="subtle" color="red"
-                              onClick={() => deleteDocMut.mutate(d.id)}>
-                              <IconX size={12} />
-                            </AppButton>
-                          )}
-                        </Group>
-                      </Group>
+                      </Paper>
                     ))}
                   </Stack>
                 )}

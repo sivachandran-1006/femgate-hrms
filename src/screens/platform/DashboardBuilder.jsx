@@ -184,14 +184,14 @@ function DashboardHomeTab({ onNav }) {
             </Group>
             <Group gap={0} align="flex-end" style={{ height: 80 }}>
               {USAGE_TREND.map((v, i) => (
-                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <div style={{ width: "70%", height: `${(v / 130) * 72}px`, background: `var(--mantine-color-blue-${3 + (i % 4)})`, borderRadius: "4px 4px 0 0", transition: "height 0.3s" }} />
-                </div>
+                <Stack key={i} gap={4} align="center" style={{ flex: 1 }}>
+                  <Box style={{ width: "70%", height: `${(v / 130) * 72}px`, background: `var(--mantine-color-blue-${3 + (i % 4)})`, borderRadius: "4px 4px 0 0", transition: "height 0.3s" }} />
+                </Stack>
               ))}
             </Group>
             <Group gap={0} mt={4}>
               {["J","F","M","A","M","J","J","A","S","O","N","D"].map(m => (
-                <Text key={m} size="xs" c="dimmed" style={{ flex: 1, textAlign: "center" }}>{m}</Text>
+                <Text key={m} size="xs" c="dimmed" ta="center" style={{ flex: 1 }}>{m}</Text>
               ))}
             </Group>
           </Paper>
@@ -207,10 +207,10 @@ function DashboardHomeTab({ onNav }) {
                 { name: "Bar Chart",         pct: 65 },
                 { name: "Employee Count",    pct: 58 },
               ].map((w) => (
-                <div key={w.name}>
-                  <Group justify="space-between" mb={3}><Text size="xs">{w.name}</Text><Text size="xs" c="dimmed">{w.pct}%</Text></Group>
+                <Stack key={w.name} gap={3}>
+                  <Group justify="space-between"><Text size="xs">{w.name}</Text><Text size="xs" c="dimmed">{w.pct}%</Text></Group>
                   <Progress value={w.pct} size="sm" radius="xl" color="blue" />
-                </div>
+                </Stack>
               ))}
             </Stack>
           </Paper>
@@ -455,11 +455,11 @@ function CreateDashboardTab() {
                 <Text size="sm" fw={600}>{l.label}</Text>
                 <Text size="xs" c="dimmed" mt={2}>{l.desc}</Text>
                 {/* Mini preview */}
-                <Box mt="sm" style={{ background:"var(--mantine-color-gray-1)", borderRadius:6, padding:6, display:"flex", gap:4, flexWrap:"wrap" }}>
+                <Group mt="sm" gap={4} wrap="wrap" p={6} style={{ background:"var(--mantine-color-gray-1)", borderRadius:6 }}>
                   {Array.from({ length: l.id === "1col" ? 1 : l.id === "2col" ? 2 : l.id === "3col" ? 3 : 4 }, (_, i) => (
                     <Box key={i} style={{ flex:1, minWidth:10, height:18, background:"var(--mantine-color-gray-3)", borderRadius:3 }} />
                   ))}
-                </Box>
+                </Group>
               </Paper>
             ))}
           </SimpleGrid>
@@ -470,16 +470,16 @@ function CreateDashboardTab() {
       {step === 2 && (
         <Paper withBorder p="xl" radius="lg">
           <Group justify="space-between" mb="lg">
-            <div>
+            <Stack gap={2}>
               <Text fw={700} size="lg">Widget Library</Text>
               <Text c="dimmed" size="sm">Click widgets to add them to your dashboard</Text>
-            </div>
+            </Stack>
             <Badge size="md" variant="light" color="blue">{selectedWidgets.length} selected</Badge>
           </Group>
           <Stack gap="md">
             {Object.entries(WIDGET_CATEGORIES).map(([cat, widgets]) => (
-              <div key={cat}>
-                <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb="xs" style={{ letterSpacing: "0.06em" }}>{cat}</Text>
+              <Stack key={cat} gap="xs">
+                <Text size="xs" fw={700} c="dimmed" tt="uppercase" style={{ letterSpacing: "0.06em" }}>{cat}</Text>
                 <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="xs">
                   {widgets.map(w => {
                     const Icon = w.icon;
@@ -496,7 +496,7 @@ function CreateDashboardTab() {
                     );
                   })}
                 </SimpleGrid>
-              </div>
+              </Stack>
             ))}
           </Stack>
         </Paper>
@@ -565,10 +565,10 @@ function CreateDashboardTab() {
       {step === 4 && (
         <Paper withBorder p="xl" radius="lg">
           <Group justify="space-between" mb="lg">
-            <div>
+            <Stack gap={2}>
               <Text fw={700} size="lg">Drag & Drop Layout</Text>
               <Text c="dimmed" size="sm">Arrange widgets by dragging. Click ⊞ to resize, ✕ to remove.</Text>
-            </div>
+            </Stack>
             <Badge variant="light" color="blue">{selectedWidgets.length} widgets</Badge>
           </Group>
           {selectedWidgets.length === 0 ? (
@@ -617,16 +617,18 @@ function CreateDashboardTab() {
               { role: "Manager",        perm: "View Only",       color: "green"  },
               { role: "Employee",       perm: "Personal Only",   color: "gray"   },
             ].map(r => (
-              <Group key={r.role} justify="space-between" p="sm" style={{ border:"1px solid var(--mantine-color-default-border)", borderRadius:8 }}>
-                <Group gap="xs">
-                  <ThemeIcon size={26} radius={6} variant="light" color={r.color}><IconUsers size={13} /></ThemeIcon>
-                  <Text size="sm" fw={500}>{r.role}</Text>
+              <Paper key={r.role} withBorder p="sm" radius="md">
+                <Group justify="space-between">
+                  <Group gap="xs">
+                    <ThemeIcon size={26} radius={6} variant="light" color={r.color}><IconUsers size={13} /></ThemeIcon>
+                    <Text size="sm" fw={500}>{r.role}</Text>
+                  </Group>
+                  <Group gap="sm">
+                    <Badge size="sm" variant="light" color={r.color}>{r.perm}</Badge>
+                    <Select size="xs" data={["Full Access","Create & Manage","View & Edit","View Only","No Access"]} defaultValue={r.perm} radius="md" w={150} />
+                  </Group>
                 </Group>
-                <Group gap="sm">
-                  <Badge size="sm" variant="light" color={r.color}>{r.perm}</Badge>
-                  <Select size="xs" data={["Full Access","Create & Manage","View & Edit","View Only","No Access"]} defaultValue={r.perm} radius="md" w={150} />
-                </Group>
-              </Group>
+              </Paper>
             ))}
             <Divider label="Advanced" labelPosition="center" />
             <Group grow gap="sm">
@@ -641,17 +643,17 @@ function CreateDashboardTab() {
       {step === 6 && (
         <Paper withBorder p="xl" radius="lg">
           <Group justify="space-between" mb="lg">
-            <div>
+            <Stack gap={2}>
               <Text fw={700} size="lg">Preview</Text>
               <Text c="dimmed" size="sm">See how your dashboard looks across devices.</Text>
-            </div>
+            </Stack>
             <SegmentedControl
               value={preview}
               onChange={setPreview}
               data={[
-                { label: <Group gap={4}><IconDeviceDesktop size={14} /><span>Desktop</span></Group>, value: "desktop" },
-                { label: <Group gap={4}><IconDeviceTablet size={14} /><span>Tablet</span></Group>,  value: "tablet"  },
-                { label: <Group gap={4}><IconDeviceMobile size={14} /><span>Mobile</span></Group>,  value: "mobile"  },
+                { label: <Group gap={4}><IconDeviceDesktop size={14} /><Text size="sm">Desktop</Text></Group>, value: "desktop" },
+                { label: <Group gap={4}><IconDeviceTablet size={14} /><Text size="sm">Tablet</Text></Group>,  value: "tablet"  },
+                { label: <Group gap={4}><IconDeviceMobile size={14} /><Text size="sm">Mobile</Text></Group>,  value: "mobile"  },
               ]}
             />
           </Group>
@@ -705,7 +707,8 @@ function CreateDashboardTab() {
                   ["Widgets",     `${selectedWidgets.length} selected`],
                   ["Visibility",  form.visibility || "All"],
                 ].map(([k, v]) => (
-                  <Group key={k} justify="space-between" p="xs" style={{ borderBottom:"1px solid var(--mantine-color-default-border)" }}>
+                  <Group key={k} justify="space-between" py="xs"
+                    style={{ borderBottom:"1px solid var(--mantine-color-default-border)" }}>
                     <Text size="sm" c="dimmed">{k}</Text>
                     <Text size="sm" fw={500}>{v}</Text>
                   </Group>
@@ -714,7 +717,8 @@ function CreateDashboardTab() {
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Stack gap="sm">
-                <Paper withBorder p="md" radius="md" style={{ background:"var(--mantine-color-green-0)", border:"1.5px solid var(--mantine-color-green-3)" }}>
+                <Paper withBorder p="md" radius="md" bg="var(--mantine-color-green-0)"
+                  style={{ border:"1.5px solid var(--mantine-color-green-3)" }}>
                   <Group gap="xs" mb={6}><IconCheck size={16} color="var(--mantine-color-green-6)" /><Text size="sm" fw={600} c="green">Ready to Publish</Text></Group>
                   <Text size="xs" c="dimmed">All required fields are complete. Your dashboard will be immediately visible to the assigned role.</Text>
                 </Paper>
@@ -819,29 +823,29 @@ function MyDashboardsTab() {
 
   return (
     <Stack gap="xl">
-      <div>
-        <Group gap="xs" mb="sm"><IconStarFilled size={16} color="var(--mantine-color-yellow-5)" /><Text fw={600}>Favorites</Text></Group>
+      <Stack gap="sm">
+        <Group gap="xs"><IconStarFilled size={16} color="var(--mantine-color-yellow-5)" /><Text fw={600}>Favorites</Text></Group>
         {starred.length === 0
           ? <AppEmptyState icon={<IconStar size={20} />} message="No favorites yet" sub="Star a dashboard from the Library." py={30} />
           : <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">{starred.map(d => <DashCard key={d.id} d={d} />)}</SimpleGrid>}
-      </div>
+      </Stack>
       <Divider />
-      <div>
-        <Group gap="xs" mb="sm"><IconClock size={16} /><Text fw={600}>Recently Opened</Text></Group>
+      <Stack gap="sm">
+        <Group gap="xs"><IconClock size={16} /><Text fw={600}>Recently Opened</Text></Group>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">{recent.map(d => <DashCard key={d.id} d={d} />)}</SimpleGrid>
-      </div>
+      </Stack>
       <Divider />
-      <div>
-        <Group gap="xs" mb="sm"><IconBookmark size={16} /><Text fw={600}>Pinned</Text></Group>
+      <Stack gap="sm">
+        <Group gap="xs"><IconBookmark size={16} /><Text fw={600}>Pinned</Text></Group>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">{pinned.map(d => <DashCard key={d.id} d={d} />)}</SimpleGrid>
-      </div>
+      </Stack>
       {drafts.length > 0 && (
         <>
           <Divider />
-          <div>
-            <Group gap="xs" mb="sm"><IconPencil size={16} /><Text fw={600}>Drafts</Text></Group>
+          <Stack gap="sm">
+            <Group gap="xs"><IconPencil size={16} /><Text fw={600}>Drafts</Text></Group>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">{drafts.map(d => <DashCard key={d.id} d={d} />)}</SimpleGrid>
-          </div>
+          </Stack>
         </>
       )}
     </Stack>
