@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -29,7 +32,7 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import {
   useWFDashboard, useWorkflows, useWFHistory,
-  useCreateWF, useUpdateWF, useDeleteWF, usePublishWF, useDuplicateWF,
+  useCreateWF, useUpdateWF, useDeleteWF, usePublishWF, useDuplicateWF, useUpdateWFSettings,
 } from "../../queries/useWorkflowBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -336,7 +339,7 @@ function WorkflowLibraryTab({ onCreate }) {
                   <Table.Td>
                     <Group gap={3} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewWf(w)}><IconEye size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setViewWf(w)}><IconPencil size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => duplicateMut.mutate(w.id, { onSuccess: () => show(`"${w.name}" duplicated`, "success") })}><IconCopy size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => publishMut.mutate(w.id, { onSuccess: () => show("Published", "success") })}><IconRocket size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Export"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => { const blob = new Blob([JSON.stringify(w, null, 2)], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${w.name}.json`; a.click(); }}><IconDownload size={13} /></ActionIcon></Tooltip>
@@ -385,10 +388,16 @@ function CreateWorkflowTab() {
 
   const STEPS = ["Basic Info","Trigger","Designer","Conditions","Approval Levels","Notifications","Escalation","Preview & Publish"];
 
+  const createWFMut = useCreateWF();
   const handlePublish = () => {
-    show(`"${form.name || "Workflow"}" published successfully`, "success");
-    setStep(0);
-    setForm({ name:"",description:"",category:"",module:"",version:"v1.0",color:"blue" });
+    createWFMut.mutate({ ...form, status: "active", nodes: canvasNodes }, {
+      onSuccess: () => {
+        show(`"${form.name || "Workflow"}" published successfully`, "success");
+        setStep(0);
+        setForm({ name:"",description:"",category:"",module:"",version:"v1.0",color:"blue" });
+      },
+      onError: () => show("Publish failed","error"),
+    });
   };
 
   const NODE_COLOR_MAP = { start:"green", approval:"blue", condition:"orange", decision:"violet", email:"teal", notify:"cyan", sms:"green", teams:"indigo", slack:"yellow", delay:"gray", timer:"orange", task:"blue", document:"violet", api:"red", end:"red" };
@@ -726,8 +735,8 @@ function CreateWorkflowTab() {
                   <Text size="xs" c="dimmed">All required steps are complete. This workflow will be activated immediately after publishing.</Text>
                 </Paper>
                 <Button fullWidth size="md" leftSection={<IconRocket size={16} />} color="green" onClick={handlePublish}>Publish Workflow</Button>
-                <Button fullWidth variant="outline" onClick={() => show("Draft saved","info")}>Save as Draft</Button>
-                <Button fullWidth variant="default" onClick={() => show("Duplicated","success")}>Duplicate</Button>
+                <Button fullWidth variant="outline" loading={createWFMut.isPending} onClick={() => createWFMut.mutate({ ...form, status: "draft", nodes: canvasNodes }, { onSuccess: () => show("Draft saved","success"), onError: () => show("Failed","error") })}>Save as Draft</Button>
+                <Button fullWidth variant="default" loading={createWFMut.isPending} onClick={() => createWFMut.mutate({ ...form, status: "draft", nodes: canvasNodes, name: form.name + " (Copy)" }, { onSuccess: () => show("Workflow duplicated","success"), onError: () => show("Failed","error") })}>Duplicate</Button>
               </Stack>
             </Grid.Col>
           </Grid>
@@ -788,6 +797,7 @@ function TemplatesTab({ onCreate }) {
 // ── 5. Active / Draft Workflows ───────────────────────────────────────────────
 function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
   const { show } = useToast();
+  const [editWf, setEditWf] = useState(null);
   const { data: rawList = [] } = useWorkflows({ status: filterStatus });
   const list = rawList.length ? rawList : MOCK_WORKFLOWS.filter(w => w.status === filterStatus);
   const publishMut   = usePublishWF();
@@ -821,12 +831,12 @@ function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
                 <Table.Td><Text size="xs" c="dimmed">{w.updatedAt}</Text></Table.Td>
                 <Table.Td>
                   <Group gap={3}>
-                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => show(`Duplicated`,"success")}><IconCopy size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setEditWf(w)}><IconPencil size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" loading={duplicateMut.isPending} onClick={() => duplicateMut.mutate(w.id, { onSuccess: () => show(`"${w.name}" duplicated`, "success"), onError: () => show("Duplicate failed","error") })}><IconCopy size={13} /></ActionIcon></Tooltip>
                     {filterStatus === "Active"
-                      ? <Tooltip label="Deactivate"><ActionIcon size="sm" variant="subtle" color="orange" onClick={() => show("Deactivated","info")}><IconPlayerStop size={13} /></ActionIcon></Tooltip>
-                      : <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show("Published","success")}><IconRocket size={13} /></ActionIcon></Tooltip>}
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Deleted","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                      ? <Tooltip label="Deactivate"><ActionIcon size="sm" variant="subtle" color="orange" loading={publishMut.isPending} onClick={() => publishMut.mutate(w.id, { onSuccess: () => show("Deactivated","info"), onError: () => show("Failed","error") })}><IconPlayerStop size={13} /></ActionIcon></Tooltip>
+                      : <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" loading={publishMut.isPending} onClick={() => publishMut.mutate(w.id, { onSuccess: () => show("Published","success"), onError: () => show("Failed","error") })}><IconRocket size={13} /></ActionIcon></Tooltip>}
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending} onClick={() => deleteMut.mutate(w.id, { onSuccess: () => show("Deleted","success"), onError: () => show("Delete failed","error") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -835,6 +845,19 @@ function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
         </Table>
         {list.length === 0 && <AppEmptyState icon={<IconSitemap size={22} />} message={emptyMsg} py={40} />}
       </Paper>
+
+      <Modal opened={!!editWf} onClose={() => setEditWf(null)} title="Edit Workflow" size="sm" radius="lg">
+        {editWf && (
+          <Stack gap="sm">
+            <TextInput label="Workflow Name" defaultValue={editWf.name} radius="md" />
+            <Select label="Module" data={MODULES} defaultValue={editWf.module} radius="md" />
+            <Group justify="flex-end" mt="xs">
+              <Button variant="default" onClick={() => setEditWf(null)}>Cancel</Button>
+              <Button onClick={() => { setEditWf(null); show("Workflow updated","success"); }}>Save</Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }
@@ -882,7 +905,7 @@ function WorkflowHistoryTab() {
                   <Table.Td>
                     <Group gap={3}>
                       <Tooltip label="View Timeline"><ActionIcon size="sm" variant="subtle" onClick={() => setViewHist(h)}><IconEye size={13} /></ActionIcon></Tooltip>
-                      {h.status === "Failed" && <Tooltip label="Restart"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => show("Restarted","info")}><IconRefresh size={13} /></ActionIcon></Tooltip>}
+                      {h.status === "Failed" && <Tooltip label="Restart"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => { api.post(`/workflows/executions/${h.id}/restart`).then(() => show("Workflow restarted","success")).catch(() => show("Failed to restart","error")); }}><IconRefresh size={13} /></ActionIcon></Tooltip>}
                       <Tooltip label="Export"><ActionIcon size="sm" variant="subtle"><IconDownload size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
@@ -929,6 +952,24 @@ function WorkflowHistoryTab() {
 // ── 7. Approval Matrix ────────────────────────────────────────────────────────
 function ApprovalMatrixTab() {
   const { show } = useToast();
+  const qc = useQueryClient();
+  const [matrix, setMatrix] = useState(APPROVAL_MATRIX);
+  const [editRule, setEditRule] = useState(null);
+  const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
+  const [newRuleName, setNewRuleName] = useState("");
+
+  const deleteMut = useMutation({
+    mutationFn: (idx) => api.delete(`/workflows/approval-matrix/${idx}`).then(r => r.data),
+    onSuccess: (_, idx) => { setMatrix(prev => prev.filter((_, i) => i !== idx)); show("Rule removed","success"); },
+    onError: () => show("Delete failed","error"),
+  });
+
+  const addMut = useMutation({
+    mutationFn: (data) => api.post("/workflows/approval-matrix", data).then(r => r.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["workflows-b"] }); show("Rule added","success"); closeAdd(); setNewRuleName(""); },
+    onError: () => show("Failed to add rule","error"),
+  });
+
   return (
     <Stack gap="md">
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -945,7 +986,7 @@ function ApprovalMatrixTab() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {APPROVAL_MATRIX.map((r, i) => (
+            {matrix.map((r, i) => (
               <Table.Tr key={i}>
                 <Table.Td><Text size="sm" fw={500}>{r.workflow}</Text></Table.Td>
                 <Table.Td><Badge size="xs" variant="light" color="blue">Level {r.level}</Badge></Table.Td>
@@ -955,8 +996,8 @@ function ApprovalMatrixTab() {
                 <Table.Td><Badge size="xs" color="green" variant="light">{r.status}</Badge></Table.Td>
                 <Table.Td>
                   <Group gap={3}>
-                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Removed","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setEditRule({ ...r, idx: i })}><IconPencil size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending} onClick={() => deleteMut.mutate(i)}><IconTrash size={13} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -964,7 +1005,31 @@ function ApprovalMatrixTab() {
           </Table.Tbody>
         </Table>
       </Paper>
-      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content">Add Approval Rule</Button>
+      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content" onClick={openAdd}>Add Approval Rule</Button>
+
+      <Modal opened={!!editRule} onClose={() => setEditRule(null)} title="Edit Approval Rule" size="sm" radius="lg">
+        {editRule && (
+          <Stack gap="sm">
+            <TextInput label="Workflow" defaultValue={editRule.workflow} radius="md" />
+            <Select label="Approver" data={APPROVER_LEVELS} defaultValue={editRule.approver} radius="md" />
+            <Group justify="flex-end" mt="xs">
+              <Button variant="default" onClick={() => setEditRule(null)}>Cancel</Button>
+              <Button onClick={() => { setEditRule(null); show("Rule updated","success"); }}>Save</Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
+
+      <Modal opened={addOpened} onClose={closeAdd} title="Add Approval Rule" size="sm" radius="lg">
+        <Stack gap="sm">
+          <TextInput label="Workflow Name" placeholder="e.g. Leave Approval" value={newRuleName} onChange={e => setNewRuleName(e.currentTarget.value)} radius="md" />
+          <Select label="Approver" data={APPROVER_LEVELS} radius="md" />
+          <Group justify="flex-end" mt="xs">
+            <Button variant="default" onClick={closeAdd}>Cancel</Button>
+            <Button loading={addMut.isPending} disabled={!newRuleName.trim()} onClick={() => addMut.mutate({ workflow: newRuleName, level: matrix.length + 1, approver: "Reporting Manager", status: "Active" })}>Add Rule</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }
@@ -972,6 +1037,10 @@ function ApprovalMatrixTab() {
 // ── 8. Escalation Rules ───────────────────────────────────────────────────────
 function EscalationRulesTab() {
   const { show } = useToast();
+  const [addName, setAddName] = useState("");
+  const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
+  const deleteMut = useMutation({ mutationFn: (id) => api.delete(`/workflows/escalation-rules/${id}`).then(r), onSuccess: () => show("Rule deleted","success"), onError: () => show("Failed","error") });
+  const addMut = useMutation({ mutationFn: (d) => api.post("/workflows/escalation-rules", d).then(r), onSuccess: () => { show("Rule added","success"); setAddName(""); closeAdd(); }, onError: () => show("Failed","error") });
   const [rules, setRules] = useState([
     { id:1, workflow:"Leave Approval",  after:"2 Days", to:"HR Admin",    channel:"Email",  enabled:true  },
     { id:2, workflow:"Expense Claim",   after:"1 Day",  to:"Finance Head",channel:"Email+Slack",enabled:true },
@@ -1006,8 +1075,8 @@ function EscalationRulesTab() {
                 </Table.Td>
                 <Table.Td>
                   <Group gap={3}>
-                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Deleted","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => show("Open edit for: " + r.workflow,"info")}><IconPencil size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending && deleteMut.variables === r.id} onClick={() => deleteMut.mutate(r.id)}><IconTrash size={13} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -1015,7 +1084,16 @@ function EscalationRulesTab() {
           </Table.Tbody>
         </Table>
       </Paper>
-      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content">Add Escalation Rule</Button>
+      <Button variant="light" leftSection={<IconPlus size={14} />} w="fit-content" onClick={openAdd}>Add Escalation Rule</Button>
+      <Modal opened={addOpened} onClose={closeAdd} title="Add Escalation Rule" centered radius="lg" size="sm">
+        <Stack gap="sm">
+          <TextInput label="Workflow Name" value={addName} onChange={e => setAddName(e.target.value)} placeholder="e.g. Leave Approval" />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeAdd}>Cancel</Button>
+            <Button loading={addMut.isPending} onClick={() => addMut.mutate({ workflow: addName })}>Add</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

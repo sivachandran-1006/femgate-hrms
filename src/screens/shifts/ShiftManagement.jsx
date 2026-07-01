@@ -12,6 +12,8 @@ import {
   IconClock as Clock,
   IconCheck as Check,
   IconCircleX as XCircle,
+  IconPencil as Pencil,
+  IconTrash as Trash,
 } from "@tabler/icons-react";
 import {
   Box,
@@ -24,10 +26,22 @@ import {
   Table,
   Select,
   Modal,
+  TextInput,
+  NumberInput,
+  Loader,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 
 import { COLORS }                        from "../../theme/colors";
-import { useShifts, useSetShift }         from "../../queries/useHr";
+import { useShifts as useHrShifts, useSetShift } from "../../queries/useHr";
+import {
+  useShifts,
+  useCreateShift,
+  useUpdateShift,
+  useDeleteShift,
+  useChangeRequests,
+  useReviewChangeRequest,
+} from "../../queries/useRoster";
 import { useFetchAllEmployees }           from "../../queries/useEmployees";
 import { useToast }                       from "../../components/ui/Toast";
 import { AppPageHeader }                  from "../../components/ui/AppPageHeader";
@@ -43,15 +57,16 @@ const SHIFT_TYPES = {
   Leave:   { label: "Leave",   bg: "#fef9c3", color: "#a16207", darkBg: "#713f12", darkColor: "#fde047" },
 };
 
-const SHIFT_DEFINITIONS = [
+// Mock fallback for shift definitions
+const MOCK_SHIFT_DEFINITIONS = [
   {
     id: "morning",
     name: "Morning Shift",
-    time: "09:00 AM – 06:00 PM",
-    days: "Mon – Fri",
-    grace: "15 min",
-    count: 5,
-    icon: Sun,
+    startTime: "09:00",
+    endTime: "18:00",
+    workingDays: "Mon – Fri",
+    gracePeriod: 15,
+    employeeCount: 5,
     accent: "#2563eb",
     accentMuted: "#dbeafe",
     accentMutedDark: "#1e3a8a",
@@ -59,11 +74,11 @@ const SHIFT_DEFINITIONS = [
   {
     id: "evening",
     name: "Evening Shift",
-    time: "02:00 PM – 11:00 PM",
-    days: "Mon – Sat",
-    grace: "10 min",
-    count: 3,
-    icon: Sunset,
+    startTime: "14:00",
+    endTime: "23:00",
+    workingDays: "Mon – Sat",
+    gracePeriod: 10,
+    employeeCount: 3,
     accent: "#ea580c",
     accentMuted: "#ffedd5",
     accentMutedDark: "#7c2d12",
@@ -71,18 +86,19 @@ const SHIFT_DEFINITIONS = [
   {
     id: "night",
     name: "Night Shift",
-    time: "10:00 PM – 07:00 AM",
-    days: "Mon – Sun",
-    grace: "20 min",
-    count: 2,
-    icon: Moon,
+    startTime: "22:00",
+    endTime: "07:00",
+    workingDays: "Mon – Sun",
+    gracePeriod: 20,
+    employeeCount: 2,
     accent: "#7c3aed",
     accentMuted: "#ede9fe",
     accentMutedDark: "#3b0764",
   },
 ];
 
-const SWAP_REQUESTS_INITIAL = [
+// Mock fallback for swap/change requests
+const MOCK_CHANGE_REQUESTS = [
   {
     id: "sw1",
     requestedBy: "Aravinth",
@@ -130,8 +146,27 @@ const STATUS_COLORS = {
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+const r = (res) => res.data?.data ?? res.data ?? res;
+
 const initials = (name = "") =>
   name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+// Derive a display-friendly time string from startTime/endTime fields
+const formatShiftTime = (def) => {
+  if (def.time) return def.time;
+  if (def.startTime && def.endTime) return `${def.startTime} – ${def.endTime}`;
+  return "—";
+};
+
+// Pick accent colours — fallback to blue for unknown shifts
+const ACCENT_PALETTE = [
+  { accent: "#2563eb", accentMuted: "#dbeafe", accentMutedDark: "#1e3a8a" },
+  { accent: "#ea580c", accentMuted: "#ffedd5", accentMutedDark: "#7c2d12" },
+  { accent: "#7c3aed", accentMuted: "#ede9fe", accentMutedDark: "#3b0764" },
+  { accent: "#16a34a", accentMuted: "#dcfce7", accentMutedDark: "#14532d" },
+  { accent: "#d97706", accentMuted: "#fef3c7", accentMutedDark: "#713f12" },
+];
+const paletteFor = (idx) => ACCENT_PALETTE[idx % ACCENT_PALETTE.length];
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
@@ -363,65 +398,266 @@ function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates 
   );
 }
 
+// ── Shift Definition Form Modal ───────────────────────────────────────────────
+const EMPTY_FORM = { name: "", startTime: "", endTime: "", workingDays: "", gracePeriod: 15 };
+
+function ShiftDefModal({ opened, onClose, initial, onSave, saving }) {
+  const [form, setForm] = useState(initial || EMPTY_FORM);
+
+  useEffect(() => {
+    setForm(initial || EMPTY_FORM);
+  }, [initial, opened]);
+
+  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const isEdit = !!initial?.id;
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<Text fw={700} size="lg">{isEdit ? "Edit Shift" : "Add Shift"}</Text>}
+      centered
+      radius="xl"
+    >
+      <Stack gap="md">
+        <TextInput
+          label="Shift Name"
+          placeholder="e.g. Morning Shift"
+          value={form.name}
+          onChange={(e) => set("name")(e.currentTarget.value)}
+          required
+        />
+        <Group grow>
+          <TextInput
+            label="Start Time"
+            placeholder="09:00"
+            value={form.startTime}
+            onChange={(e) => set("startTime")(e.currentTarget.value)}
+          />
+          <TextInput
+            label="End Time"
+            placeholder="18:00"
+            value={form.endTime}
+            onChange={(e) => set("endTime")(e.currentTarget.value)}
+          />
+        </Group>
+        <TextInput
+          label="Working Days"
+          placeholder="e.g. Mon – Fri"
+          value={form.workingDays}
+          onChange={(e) => set("workingDays")(e.currentTarget.value)}
+        />
+        <NumberInput
+          label="Grace Period (minutes)"
+          min={0}
+          max={60}
+          value={form.gracePeriod}
+          onChange={set("gracePeriod")}
+        />
+        <Group justify="flex-end" gap="sm" mt="sm">
+          <Button variant="default" onClick={onClose} disabled={saving}>Cancel</Button>
+          <Button
+            loading={saving}
+            disabled={!form.name.trim()}
+            onClick={() => onSave(form)}
+          >
+            {isEdit ? "Save Changes" : "Add Shift"}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
+  );
+}
+
 // ── Shift Definitions Tab ─────────────────────────────────────────────────────
 function ShiftDefinitionsTab({ darkMode }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
+  const { show } = useToast();
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const { data: raw, isLoading } = useShifts();
+  const definitions = raw?.length ? raw : MOCK_SHIFT_DEFINITIONS;
+
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const createMutation = useCreateShift();
+  const updateMutation = useUpdateShift();
+  const deleteMutation = useDeleteShift();
+
+  // ── Form modal ────────────────────────────────────────────────────────────
+  const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
+  const [editTarget, setEditTarget] = useState(null); // null = add, object = edit
+
+  const handleOpenAdd = () => { setEditTarget(null); openForm(); };
+  const handleOpenEdit = (def) => { setEditTarget(def); openForm(); };
+
+  const handleSave = (form) => {
+    if (editTarget?.id) {
+      updateMutation.mutate(
+        { id: editTarget.id, ...form },
+        {
+          onSuccess: () => { show("Shift updated", "success"); closeForm(); },
+          onError:   () => show("Failed to update shift", "error"),
+        }
+      );
+    } else {
+      createMutation.mutate(form, {
+        onSuccess: () => { show("Shift created", "success"); closeForm(); },
+        onError:   () => show("Failed to create shift", "error"),
+      });
+    }
+  };
+
+  // ── Delete confirm modal ──────────────────────────────────────────────────
+  const [delOpened, { open: openDel, close: closeDel }] = useDisclosure(false);
+  const [delId, setDelId] = useState(null);
+  const [delName, setDelName] = useState("");
+
+  const handleRequestDelete = (def) => {
+    setDelId(def.id);
+    setDelName(def.name);
+    openDel();
+  };
+
+  const handleConfirmDelete = () => {
+    deleteMutation.mutate(delId, {
+      onSuccess: () => { show("Shift deleted", "success"); closeDel(); },
+      onError:   () => show("Failed to delete shift", "error"),
+    });
+  };
+
+  const saving = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Group gap="lg" align="stretch" wrap="wrap">
-      {SHIFT_DEFINITIONS.map((def) => {
-        const Icon = def.icon;
-        return (
-          <Paper
-            key={def.id}
-            withBorder
-            radius="xl"
-            shadow="sm"
-            style={{
-              flex: "1 1 280px",
-              minWidth: 260,
-              background: surface.cardBg,
-              border: `1px solid ${surface.border}`,
-              overflow: "hidden",
-            }}
-          >
-            {/* Accent bar — decorative top colour strip, no Mantine prop equivalent */}
-            <Box style={{ height: 4, background: def.accent }} />
+    <>
+      {/* Toolbar */}
+      <Group justify="flex-end" mb="md">
+        <Button leftSection={<Plus size={16} />} onClick={handleOpenAdd}>
+          Add Shift
+        </Button>
+      </Group>
 
-            <Box p="md">
-              {/* Title row */}
-              <Group gap="md" mb="md">
-                <Box
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 12,
-                    background: darkMode ? def.accentMutedDark : def.accentMuted,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon size={22} color={def.accent} strokeWidth={2} />
+      {isLoading ? (
+        <Group justify="center" py="xl"><Loader size="sm" /></Group>
+      ) : (
+        <Group gap="lg" align="stretch" wrap="wrap">
+          {definitions.map((def, idx) => {
+            const palette = def.accent ? def : paletteFor(idx);
+            const accent         = palette.accent;
+            const accentMuted    = palette.accentMuted;
+            const accentMutedDark = palette.accentMutedDark;
+            const timeStr = formatShiftTime(def);
+            const daysStr = def.workingDays || def.days || "—";
+            const grace   = def.gracePeriod != null ? `${def.gracePeriod} min` : (def.grace || "—");
+            const count   = def.employeeCount ?? def.count ?? 0;
+
+            return (
+              <Paper
+                key={def.id}
+                withBorder
+                radius="xl"
+                shadow="sm"
+                style={{
+                  flex: "1 1 280px",
+                  minWidth: 260,
+                  background: surface.cardBg,
+                  border: `1px solid ${surface.border}`,
+                  overflow: "hidden",
+                }}
+              >
+                {/* Accent bar — decorative top colour strip, no Mantine prop equivalent */}
+                <Box style={{ height: 4, background: accent }} />
+
+                <Box p="md">
+                  {/* Title row with Edit/Delete */}
+                  <Group justify="space-between" gap="md" mb="md" wrap="nowrap">
+                    <Group gap="md" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                      <Box
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 12,
+                          background: darkMode ? accentMutedDark : accentMuted,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Clock size={22} color={accent} strokeWidth={2} />
+                      </Box>
+                      <Stack gap={2} style={{ minWidth: 0 }}>
+                        <Text size="md" fw={700} c={surface.text} truncate>{def.name}</Text>
+                        <Text size="sm" fw={600} style={{ color: accent }}>{timeStr}</Text>
+                      </Stack>
+                    </Group>
+                    <Group gap="xs" wrap="nowrap">
+                      <ActionIcon
+                        variant="subtle"
+                        size="sm"
+                        radius="md"
+                        onClick={() => handleOpenEdit(def)}
+                        title="Edit shift"
+                        color="blue"
+                      >
+                        <Pencil size={14} strokeWidth={2} />
+                      </ActionIcon>
+                      <ActionIcon
+                        variant="subtle"
+                        size="sm"
+                        radius="md"
+                        onClick={() => handleRequestDelete(def)}
+                        title="Delete shift"
+                        color="red"
+                      >
+                        <Trash size={14} strokeWidth={2} />
+                      </ActionIcon>
+                    </Group>
+                  </Group>
+
+                  {/* Details */}
+                  <Stack gap="sm">
+                    <InfoRow icon={Calendar} label="Working Days" value={daysStr}  surface={surface} />
+                    <InfoRow icon={Clock}    label="Grace Period"  value={grace}    surface={surface} />
+                    <InfoRow icon={Users}    label="Employees"     value={`${count} assigned`} surface={surface} />
+                  </Stack>
                 </Box>
-                <Stack gap={2}>
-                  <Text size="md" fw={700} c={surface.text}>{def.name}</Text>
-                  <Text size="sm" fw={600} style={{ color: def.accent }}>{def.time}</Text>
-                </Stack>
-              </Group>
+              </Paper>
+            );
+          })}
+        </Group>
+      )}
 
-              {/* Details */}
-              <Stack gap="sm">
-                <InfoRow icon={Calendar} label="Working Days" value={def.days} surface={surface} />
-                <InfoRow icon={Clock}    label="Grace Period"  value={def.grace} surface={surface} />
-                <InfoRow icon={Users}    label="Employees"     value={`${def.count} assigned`} surface={surface} />
-              </Stack>
-            </Box>
-          </Paper>
-        );
-      })}
-    </Group>
+      {/* Add / Edit modal */}
+      <ShiftDefModal
+        opened={formOpened}
+        onClose={closeForm}
+        initial={editTarget}
+        onSave={handleSave}
+        saving={saving}
+      />
+
+      {/* Delete confirm modal */}
+      <Modal
+        opened={delOpened}
+        onClose={closeDel}
+        title={<Text fw={700} size="lg">Delete Shift</Text>}
+        centered
+        radius="xl"
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            Are you sure you want to delete <Text component="span" fw={600} c="red">{delName}</Text>? This cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeDel} disabled={deleteMutation.isPending}>Cancel</Button>
+            <Button color="red" loading={deleteMutation.isPending} onClick={handleConfirmDelete}>
+              Delete
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </>
   );
 }
 
@@ -438,8 +674,24 @@ function InfoRow({ icon: Icon, label, value, surface }) {
 }
 
 // ── Swap Requests Tab ─────────────────────────────────────────────────────────
-function SwapRequestsTab({ darkMode, swapRequests, onUpdateStatus }) {
+function SwapRequestsTab({ darkMode }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
+  const { show } = useToast();
+
+  const { data: rawRequests } = useChangeRequests();
+  const swapRequests = rawRequests?.length ? rawRequests : MOCK_CHANGE_REQUESTS;
+
+  const reviewMutation = useReviewChangeRequest();
+
+  const handleUpdateStatus = (id, status) => {
+    reviewMutation.mutate(
+      { id, status },
+      {
+        onSuccess: () => show(`Request ${status.toLowerCase()}`, "success"),
+        onError:   () => show("Failed to update request", "error"),
+      }
+    );
+  };
 
   return (
     <Paper
@@ -524,7 +776,7 @@ function SwapRequestsTab({ darkMode, swapRequests, onUpdateStatus }) {
                       <ActionIcon
                         size="sm"
                         radius="md"
-                        onClick={() => onUpdateStatus(req.id, "Approved")}
+                        onClick={() => handleUpdateStatus(req.id, "Approved")}
                         title="Approve"
                         style={{ background: darkMode ? "#14532d" : COLORS.successLight, border: "none", color: COLORS.success }}
                       >
@@ -533,7 +785,7 @@ function SwapRequestsTab({ darkMode, swapRequests, onUpdateStatus }) {
                       <ActionIcon
                         size="sm"
                         radius="md"
-                        onClick={() => onUpdateStatus(req.id, "Rejected")}
+                        onClick={() => handleUpdateStatus(req.id, "Rejected")}
                         title="Reject"
                         style={{ background: darkMode ? "#7f1d1d" : "#fee2e2", border: "none", color: COLORS.error }}
                       >
@@ -559,9 +811,8 @@ const ShiftManagement = ({ darkMode = false }) => {
 
   const [activeTab, setActiveTab] = useState("roster");
   const [roster, setRoster] = useState({});
-  const [swapRequests, setSwapRequests] = useState(SWAP_REQUESTS_INITIAL);
 
-  const { data: shiftsData } = useShifts();
+  const { data: shiftsData } = useHrShifts();
   const { data: allEmployees = [] } = useFetchAllEmployees();
   const setShiftMutation = useSetShift();
   const { show } = useToast();
@@ -577,7 +828,7 @@ const ShiftManagement = ({ darkMode = false }) => {
   // unioned with anyone already in the roster.
   const employees = useMemo(() => {
     const fromApi = (allEmployees || []).map((e) => e.name).filter(Boolean);
-    const fromRoster = shiftsData?.roster ? shiftsData.roster.map((r) => r.employeeName) : [];
+    const fromRoster = shiftsData?.roster ? shiftsData.roster.map((row) => row.employeeName) : [];
     return [...new Set([...fromApi, ...fromRoster])];
   }, [allEmployees, shiftsData]);
 
@@ -606,12 +857,6 @@ const ShiftManagement = ({ darkMode = false }) => {
       .mutateAsync({ employeeName: employee, weekStart: shiftsData.weekStart, dayIndex, shift })
       .then(() => show(`Shift updated for ${employee}`, "success"))
       .catch(() => show(`Failed to update shift for ${employee}`, "error"));
-  };
-
-  const handleUpdateSwapStatus = (id, status) => {
-    setSwapRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
   };
 
   const TABS = [
@@ -674,11 +919,7 @@ const ShiftManagement = ({ darkMode = false }) => {
         <ShiftDefinitionsTab darkMode={darkMode} />
       )}
       {activeTab === "swaps" && (
-        <SwapRequestsTab
-          darkMode={darkMode}
-          swapRequests={swapRequests}
-          onUpdateStatus={handleUpdateSwapStatus}
-        />
+        <SwapRequestsTab darkMode={darkMode} />
       )}
     </Box>
   );

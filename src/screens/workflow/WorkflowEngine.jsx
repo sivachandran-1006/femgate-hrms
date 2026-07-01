@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Textarea, NumberInput, MultiSelect } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconClipboard, IconCheck, IconX, IconClock, IconArrowRight, IconAlertCircle } from "@tabler/icons-react";
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
 import { useWorkflowDashboard, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useApprovalInbox, useApproveRequest, useRejectRequest, useEscalateRequest, useWorkflowAnalytics } from "../../queries/useWorkflow";
@@ -92,34 +93,45 @@ function WorkflowsTab() {
     workflowType: "Custom",
     steps: [{ approverRole: "Manager", escalationHours: 24 }],
   });
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const { data: result = {}, isLoading } = useWorkflows({ search, module, page, limit: 25 });
   const create = useCreateWorkflow();
+  const update = useUpdateWorkflow();
   const delete_ = useDeleteWorkflow();
 
-  const handleCreate = async () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.module || form.steps.length === 0) {
       show("Name, module, and steps required", "error");
       return;
     }
     try {
-      await create.mutateAsync(form);
-      show("Workflow created", "success");
+      if (selectedRecord?.id) {
+        await update.mutateAsync([selectedRecord.id, form]);
+        show("Workflow updated", "success");
+      } else {
+        await create.mutateAsync(form);
+        show("Workflow created", "success");
+      }
       setModalOpened(false);
+      setSelectedRecord(null);
       setForm({ name: "", module: "", description: "", workflowType: "Custom", steps: [{ approverRole: "Manager", escalationHours: 24 }] });
     } catch (e) {
       show(e.message || "Failed", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Delete workflow?")) {
-      try {
-        await delete_.mutateAsync(id);
-        show("Workflow deleted", "success");
-      } catch (e) {
-        show(e.message || "Failed", "error");
-      }
+  const handleDeleteClick = (id) => { setDeleteId(id); openDeleteModal(); };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await delete_.mutateAsync(deleteId);
+      show("Workflow deleted", "success");
+      closeDeleteModal();
+      setDeleteId(null);
+    } catch (e) {
+      show(e.message || "Failed", "error");
     }
   };
 
@@ -172,7 +184,7 @@ function WorkflowsTab() {
                 <Table.Td>
                   <Group gap={4}>
                     <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => { setSelectedRecord(w); setForm(w); setModalOpened(true); }}><IconPencil size={14} /></ActionIcon></Tooltip>
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDelete(w.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDeleteClick(w.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -233,9 +245,17 @@ function WorkflowsTab() {
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => { setModalOpened(false); setSelectedRecord(null); }}>Cancel</Button>
-            <Button onClick={handleCreate} loading={create.isPending}>{selectedRecord ? "Update" : "Create"}</Button>
+            <Button onClick={handleSubmit} loading={create.isPending || update.isPending}>{selectedRecord ? "Update" : "Create"}</Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Workflow" size="sm" centered>
+        <Text size="sm" mb="lg">Are you sure you want to delete this workflow? This cannot be undone.</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
+          <Button color="red" onClick={handleDeleteConfirm} loading={delete_.isPending}>Delete</Button>
+        </Group>
       </Modal>
     </Stack>
   );

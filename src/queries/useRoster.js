@@ -5,6 +5,7 @@ import {
   getAssignments, createAssignment, bulkAssign, deleteAssignment,
   getChangeRequests, createChangeRequest, reviewChangeRequest,
   getOvertime, requestOvertime, reviewOvertime,
+  getSwapRequests, createSwapRequest, updateSwapStatus,
 } from "../api/rosterApi";
 
 const KEY = ["roster"];
@@ -31,3 +32,7 @@ export const useReviewChangeRequest = () => { const qc = useQueryClient(); retur
 export const useOvertime = () => useQuery({ queryKey: [...KEY, "overtime"], queryFn: getOvertime });
 export const useRequestOvertime = () => { const qc = useQueryClient(); return useMutation({ mutationFn: requestOvertime, onSuccess: () => inv(qc) }); };
 export const useReviewOvertime = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, status }) => reviewOvertime(id, status), onSuccess: () => inv(qc) }); };
+
+export const useSwapRequests = () => useQuery({ queryKey: [...KEY, "swaps"], queryFn: getSwapRequests });
+export const useCreateSwapRequest = () => { const qc = useQueryClient(); return useMutation({ mutationFn: createSwapRequest, onSuccess: () => inv(qc) }); };
+export const useUpdateSwapStatus = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, status }) => updateSwapStatus(id, status), onSuccess: () => inv(qc) }); };

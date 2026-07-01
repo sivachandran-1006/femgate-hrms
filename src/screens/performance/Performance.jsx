@@ -28,6 +28,11 @@ import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { COLORS }               from "../../theme/colors";
 import { getAvatarColor }       from "../../utils/helpers";
 import { usePerformance }       from "../../queries/useHr";
+import {
+  useCreateGoal, useUpdateGoal, useDeleteGoal,
+  useCreateAppraisal, useUpdateAppraisal, useDeleteAppraisal,
+} from "../../queries/usePerformance";
+import { useToast } from "../../components/ui/Toast";
 
 const statusColor = (s) =>
   s === "Completed" || s === "Reviewed" ? "green" :
@@ -71,6 +76,7 @@ export default function Performance({ darkMode: dark }) {
 
   const [saved, setSaved] = useState(false);
 
+  const { show } = useToast();
   const { data: perfData } = usePerformance();
   const ratingDistribution    = perfData?.ratingDistribution    || [];
   const departmentPerformance = perfData?.departmentPerformance || [];
@@ -80,40 +86,71 @@ export default function Performance({ darkMode: dark }) {
   const goalsList = goals ?? (perfData?.goals || []).map(g => ({ ...g, targetDate: (g.targetDate||"").split("T")[0] }));
   const apprList  = appraisals ?? (perfData?.appraisals || []);
 
+  // Mutations
+  const createGoalMutation  = useCreateGoal();
+  const updateGoalMutation  = useUpdateGoal();
+  const deleteGoalMutation  = useDeleteGoal();
+  const createApprMutation  = useCreateAppraisal();
+  const updateApprMutation  = useUpdateAppraisal();
+  const deleteApprMutation  = useDeleteAppraisal();
+
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   // Goal handlers
   const openAddGoal  = () => { setGoalForm(EMPTY_GOAL); setGoalModal("add"); };
   const openEditGoal = (g) => { setGoalForm({ ...g }); setGoalModal(g); };
-  const saveGoal = () => {
+  const saveGoal = async () => {
     if (!goalForm.employee || !goalForm.goal) return;
-    if (goalModal === "add") {
-      setGoals([...goalsList, { ...goalForm, id: Date.now() }]);
-    } else {
-      setGoals(goalsList.map(g => g.id === goalModal.id ? { ...goalForm } : g));
+    try {
+      if (goalModal === "add") {
+        const created = await createGoalMutation.mutateAsync(goalForm);
+        // optimistic fallback
+        setGoals([...goalsList, { ...goalForm, id: created?.id || Date.now() }]);
+      } else {
+        await updateGoalMutation.mutateAsync({ id: goalModal.id, ...goalForm });
+        setGoals(goalsList.map(g => g.id === goalModal.id ? { ...goalForm, id: goalModal.id } : g));
+      }
+      setGoalModal(null); showSaved();
+    } catch (e) {
+      show(e.message || "Failed to save goal", "error");
     }
-    setGoalModal(null); showSaved();
   };
-  const confirmDeleteGoal = () => {
-    setGoals(goalsList.filter(g => g.id !== deleteGoal.id));
-    setDeleteGoal(null);
+  const confirmDeleteGoal = async () => {
+    try {
+      await deleteGoalMutation.mutateAsync(deleteGoal.id);
+      setGoals(goalsList.filter(g => g.id !== deleteGoal.id));
+      setDeleteGoal(null);
+    } catch (e) {
+      show(e.message || "Failed to delete goal", "error");
+    }
   };
 
   // Appraisal handlers
   const openAddAppr  = () => { setApprForm(EMPTY_APPRAISAL); setApprModal("add"); };
   const openEditAppr = (a) => { setApprForm({ ...a }); setApprModal(a); };
-  const saveAppr = () => {
+  const saveAppr = async () => {
     if (!apprForm.employee || !apprForm.reviewer) return;
-    if (apprModal === "add") {
-      setAppraisals([...apprList, { ...apprForm, id: Date.now() }]);
-    } else {
-      setAppraisals(apprList.map(a => a.id === apprModal.id ? { ...apprForm } : a));
+    try {
+      if (apprModal === "add") {
+        const created = await createApprMutation.mutateAsync(apprForm);
+        setAppraisals([...apprList, { ...apprForm, id: created?.id || Date.now() }]);
+      } else {
+        await updateApprMutation.mutateAsync({ id: apprModal.id, ...apprForm });
+        setAppraisals(apprList.map(a => a.id === apprModal.id ? { ...apprForm, id: apprModal.id } : a));
+      }
+      setApprModal(null); showSaved();
+    } catch (e) {
+      show(e.message || "Failed to save appraisal", "error");
     }
-    setApprModal(null); showSaved();
   };
-  const confirmDeleteAppr = () => {
-    setAppraisals(apprList.filter(a => a.id !== deleteAppr.id));
-    setDeleteAppr(null);
+  const confirmDeleteAppr = async () => {
+    try {
+      await deleteApprMutation.mutateAsync(deleteAppr.id);
+      setAppraisals(apprList.filter(a => a.id !== deleteAppr.id));
+      setDeleteAppr(null);
+    } catch (e) {
+      show(e.message || "Failed to delete appraisal", "error");
+    }
   };
 
   return (
@@ -139,10 +176,10 @@ export default function Performance({ darkMode: dark }) {
       )}
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} mb="lg">
-        <AppStatCard icon={<PlayCircle size={22} />}   label="Active Reviews"           value={apprList.filter(a=>a.status==="Pending").length||"24"}    color="violet" />
-        <AppStatCard icon={<CheckCircle size={22} />}  label="Completed Reviews"         value={apprList.filter(a=>a.status==="Reviewed"||a.status==="Completed").length||"61"}    color="green"  />
+        <AppStatCard icon={<PlayCircle size={22} />}   label="Active Reviews"           value={apprList.filter(a=>a.status==="Pending").length}    color="violet" />
+        <AppStatCard icon={<CheckCircle size={22} />}  label="Completed Reviews"         value={apprList.filter(a=>a.status==="Reviewed"||a.status==="Completed").length}    color="green"  />
         <AppStatCard icon={<Star size={22} />}         label="Avg Rating"                value="4.1/5" color="yellow" />
-        <AppStatCard icon={<Clock size={22} />}        label="Pending Self-Appraisals"   value={apprList.filter(a=>a.status==="Submitted").length||"9"}     color="red"    />
+        <AppStatCard icon={<Clock size={22} />}        label="Pending Self-Appraisals"   value={apprList.filter(a=>a.status==="Submitted").length}     color="red"    />
       </SimpleGrid>
 
       <Tabs value={activeTab} onChange={setActiveTab}>

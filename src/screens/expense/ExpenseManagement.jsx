@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
   NumberInput, Loader, Center,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import {
   IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash,
   IconCheck, IconX, IconClock, IconAlertCircle, IconCreditCard,
@@ -106,17 +107,22 @@ function ExpenseListTab() {
   const [formOpen, setFormOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [viewExp, setViewExp] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
   const { data: result = {}, isLoading } = useExpenses({ search, status, category, page, limit });
   const deleteExp = useDeleteExpense();
 
   const openNew = () => { setEditId(null); setFormOpen(true); };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
+  const handleDeleteClick = (id) => { setDeleteId(id); openDeleteModal(); };
+
+  const handleDeleteConfirm = async () => {
     try {
-      await deleteExp.mutateAsync(id);
+      await deleteExp.mutateAsync(deleteId);
       show("Expense deleted", "success");
+      closeDeleteModal();
+      setDeleteId(null);
     } catch (e) {
       show(e.message, "error");
     }
@@ -180,7 +186,7 @@ function ExpenseListTab() {
                   <Group gap={4}>
                     <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewExp(e)}><IconEye size={14} /></ActionIcon></Tooltip>
                     {e.status === "Draft" && <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => { setEditId(e.id); setFormOpen(true); }}><IconPencil size={14} /></ActionIcon></Tooltip>}
-                    {e.status === "Draft" && <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDelete(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>}
+                    {e.status === "Draft" && <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => handleDeleteClick(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>}
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -199,6 +205,14 @@ function ExpenseListTab() {
       </Group>
 
       <ExpenseFormModal opened={formOpen} onClose={() => setFormOpen(false)} expenseId={editId} />
+
+      <Modal opened={deleteModalOpened} onClose={closeDeleteModal} title="Delete Expense" size="sm" centered>
+        <Text size="sm" mb="lg">Are you sure you want to delete this expense? This cannot be undone.</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={closeDeleteModal}>Cancel</Button>
+          <Button color="red" onClick={handleDeleteConfirm} loading={deleteExp.isPending}>Delete</Button>
+        </Group>
+      </Modal>
 
       <Modal opened={!!viewExp} onClose={() => setViewExp(null)} title="Expense Details" size="md" radius="lg">
         {viewExp && (
@@ -234,6 +248,10 @@ function ExpenseFormModal({ opened, onClose, expenseId }) {
   const { data: expense } = useExpense(expenseId);
   const create = useCreateExpense();
   const update = useUpdateExpense();
+
+  useEffect(() => {
+    if (expense) setForm(expense);
+  }, [expense]);
 
   const f = (k) => (v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -280,39 +298,40 @@ function ApprovalsTab() {
   const { show } = useToast();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(25);
+  const [actionTarget, setActionTarget] = useState(null); // { id, type: "approve"|"reject"|"clarify" }
+  const [actionComment, setActionComment] = useState("");
+  const [actionModalOpened, { open: openActionModal, close: closeActionModal }] = useDisclosure(false);
 
   const { data: result = {}, isLoading } = useExpenses({ status: "Pending Approval", page, limit });
   const approve = useApproveExpense();
   const reject = useRejectExpense();
   const clarify = useClarifyExpense();
 
-  const handleApprove = async (id) => {
-    const comment = prompt("Approval comment (optional):");
-    try {
-      await approve.mutateAsync({ id, comment });
-      show("Approved", "success");
-    } catch (e) {
-      show(e.message, "error");
-    }
-  };
+  const openAction = (id, type) => { setActionTarget({ id, type }); setActionComment(""); openActionModal(); };
 
-  const handleReject = async (id) => {
-    const comment = prompt("Rejection reason (required):");
-    if (!comment) return;
-    try {
-      await reject.mutateAsync({ id, comment });
-      show("Rejected", "success");
-    } catch (e) {
-      show(e.message, "error");
-    }
-  };
+  const ACTION_LABELS = { approve: "Approve", reject: "Reject", clarify: "Request Clarification" };
+  const ACTION_COLORS = { approve: "green", reject: "red", clarify: "orange" };
 
-  const handleClarify = async (id) => {
-    const comment = prompt("Clarification request:");
-    if (!comment) return;
+  const handleActionConfirm = async () => {
+    if (!actionTarget) return;
+    const { id, type } = actionTarget;
+    if ((type === "reject" || type === "clarify") && !actionComment.trim()) {
+      show("Comment is required", "error");
+      return;
+    }
     try {
-      await clarify.mutateAsync({ id, comment });
-      show("Clarification sent", "success");
+      if (type === "approve") {
+        await approve.mutateAsync({ id, comment: actionComment });
+        show("Approved", "success");
+      } else if (type === "reject") {
+        await reject.mutateAsync({ id, comment: actionComment });
+        show("Rejected", "success");
+      } else {
+        await clarify.mutateAsync({ id, comment: actionComment });
+        show("Clarification sent", "success");
+      }
+      closeActionModal();
+      setActionTarget(null);
     } catch (e) {
       show(e.message, "error");
     }
@@ -350,17 +369,17 @@ function ApprovalsTab() {
                   <Table.Td>
                     <Group gap={4}>
                       <Tooltip label="Approve">
-                        <ActionIcon size="sm" color="green" variant="light" onClick={() => handleApprove(e.id)} loading={approve.isPending}>
+                        <ActionIcon size="sm" color="green" variant="light" onClick={() => openAction(e.id, "approve")}>
                           <IconCheck size={14} />
                         </ActionIcon>
                       </Tooltip>
                       <Tooltip label="Reject">
-                        <ActionIcon size="sm" color="red" variant="light" onClick={() => handleReject(e.id)} loading={reject.isPending}>
+                        <ActionIcon size="sm" color="red" variant="light" onClick={() => openAction(e.id, "reject")}>
                           <IconX size={14} />
                         </ActionIcon>
                       </Tooltip>
                       <Tooltip label="Clarify">
-                        <ActionIcon size="sm" color="orange" variant="light" onClick={() => handleClarify(e.id)} loading={clarify.isPending}>
+                        <ActionIcon size="sm" color="orange" variant="light" onClick={() => openAction(e.id, "clarify")}>
                           <IconAlertCircle size={14} />
                         </ActionIcon>
                       </Tooltip>
@@ -381,6 +400,33 @@ function ApprovalsTab() {
           </Group>
         </>
       )}
+
+      <Modal
+        opened={actionModalOpened}
+        onClose={closeActionModal}
+        title={actionTarget ? ACTION_LABELS[actionTarget.type] : ""}
+        size="sm"
+        centered
+      >
+        <Stack gap="sm">
+          <TextInput
+            label={actionTarget?.type === "approve" ? "Comment (optional)" : "Reason (required)"}
+            placeholder={actionTarget?.type === "approve" ? "Add an approval comment..." : actionTarget?.type === "reject" ? "Enter rejection reason..." : "Describe the clarification needed..."}
+            value={actionComment}
+            onChange={(e) => setActionComment(e.target.value)}
+          />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeActionModal}>Cancel</Button>
+            <Button
+              color={actionTarget ? ACTION_COLORS[actionTarget.type] : "blue"}
+              onClick={handleActionConfirm}
+              loading={approve.isPending || reject.isPending || clarify.isPending}
+            >
+              {actionTarget ? ACTION_LABELS[actionTarget.type] : "Confirm"}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }

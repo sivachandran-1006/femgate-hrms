@@ -131,6 +131,7 @@ function CoursesTab() {
   const [modal, setModal]       = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm]         = useState({});
+  const [delId, setDelId]       = useState(null);
 
   const params = { search: search || undefined, category: filterCat || undefined, status: filterStatus || undefined };
   const { data: courses = [], isLoading, refetch } = useCourses(params);
@@ -166,12 +167,14 @@ function CoursesTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm("Delete this course?")) return;
+    if (!id) return;
     try {
       await deleteCourse.mutateAsync(id);
       show("Course deleted", "success");
+      setDelId(null);
     } catch (e) {
       show(e.message, "error");
+      setDelId(null);
     }
   };
 
@@ -232,7 +235,7 @@ function CoursesTab() {
                 <Table.Td>
                   <Group gap={4}>
                     <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => openEdit(c)}><IconPencil size={14} /></ActionIcon></Tooltip>
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => del(c.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => setDelId(c.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -276,6 +279,14 @@ function CoursesTab() {
           </Group>
         </Stack>
       </Modal>
+
+      <Modal opened={!!delId} onClose={() => setDelId(null)} title="Delete Course" centered radius="lg" size="sm">
+        <Text size="sm" mb="lg">Are you sure you want to delete this course?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDelId(null)}>Cancel</Button>
+          <Button color="red" loading={deleteCourse.isPending} onClick={() => del(delId)}>Delete</Button>
+        </Group>
+      </Modal>
     </Stack>
   );
 }
@@ -288,6 +299,7 @@ function EnrollmentsTab() {
   const [modal, setModal]   = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm]     = useState({});
+  const [delId, setDelId]   = useState(null);
 
   const params = { employeeName: search || undefined, status: filterStatus || undefined };
   const { data: enrollments = [], isLoading } = useEnrollments(params);
@@ -316,8 +328,8 @@ function EnrollmentsTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm("Remove enrollment?")) return;
-    try { await remove.mutateAsync(id); show("Enrollment removed", "success"); } catch (e) { show(e.message, "error"); }
+    if (!id) return;
+    try { await remove.mutateAsync(id); show("Enrollment removed", "success"); setDelId(null); } catch (e) { show(e.message, "error"); setDelId(null); }
   };
 
   const f = (k) => (v) => setForm((p) => ({ ...p, [k]: v }));
@@ -378,7 +390,7 @@ function EnrollmentsTab() {
                 <Table.Td>
                   <Group gap={4}>
                     <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => openEdit(e)}><IconPencil size={14} /></ActionIcon></Tooltip>
-                    <Tooltip label="Remove"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => del(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
+                    <Tooltip label="Remove"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => setDelId(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -414,6 +426,14 @@ function EnrollmentsTab() {
           </Group>
         </Stack>
       </Modal>
+
+      <Modal opened={!!delId} onClose={() => setDelId(null)} title="Remove Enrollment" centered radius="lg" size="sm">
+        <Text size="sm" mb="lg">Are you sure you want to remove this enrollment?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDelId(null)}>Cancel</Button>
+          <Button color="red" loading={remove.isPending} onClick={() => del(delId)}>Remove</Button>
+        </Group>
+      </Modal>
     </Stack>
   );
 }
@@ -424,6 +444,7 @@ function CertificatesTab() {
   const [search, setSearch]   = useState("");
   const [modal, setModal]     = useState(false);
   const [form, setForm]       = useState({});
+  const [delId, setDelId]     = useState(null);
 
   const { data: certs = [], isLoading } = useCertificates({ employeeName: search || undefined });
   const { data: courses = [] } = useCourses({});
@@ -446,8 +467,8 @@ function CertificatesTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm("Revoke certificate?")) return;
-    try { await remove.mutateAsync(id); show("Certificate revoked", "success"); } catch (e) { show(e.message, "error"); }
+    if (!id) return;
+    try { await remove.mutateAsync(id); show("Certificate revoked", "success"); setDelId(null); } catch (e) { show(e.message, "error"); setDelId(null); }
   };
 
   const f = (k) => (v) => setForm((p) => ({ ...p, [k]: v }));
@@ -497,7 +518,7 @@ function CertificatesTab() {
                 <Table.Td><Text size="sm">{c.issuedBy || "—"}</Text></Table.Td>
                 <Table.Td><Badge color={c.status === "Active" ? "green" : c.status === "Expired" ? "orange" : "red"} size="sm">{c.status}</Badge></Table.Td>
                 <Table.Td>
-                  <Tooltip label="Revoke"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => del(c.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
+                  <Tooltip label="Revoke"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => setDelId(c.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                 </Table.Td>
               </Table.Tr>
             ))}
@@ -529,6 +550,14 @@ function CertificatesTab() {
             <Button onClick={save} loading={create.isPending}>Issue</Button>
           </Group>
         </Stack>
+      </Modal>
+
+      <Modal opened={!!delId} onClose={() => setDelId(null)} title="Revoke Certificate" centered radius="lg" size="sm">
+        <Text size="sm" mb="lg">Are you sure you want to revoke this certificate?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDelId(null)}>Cancel</Button>
+          <Button color="red" loading={remove.isPending} onClick={() => del(delId)}>Revoke</Button>
+        </Group>
       </Modal>
     </Stack>
   );
@@ -567,8 +596,8 @@ function AssessmentsTab() {
   };
 
   const del = async (id) => {
-    if (!window.confirm("Delete assessment?")) return;
-    try { await remove.mutateAsync(id); show("Deleted", "success"); } catch (e) { show(e.message, "error"); }
+    if (!id) return;
+    try { await remove.mutateAsync(id); show("Deleted", "success"); setDelId(null); } catch (e) { show(e.message, "error"); setDelId(null); }
   };
 
   const f = (k) => (v) => setForm((p) => ({ ...p, [k]: v }));
@@ -606,7 +635,7 @@ function AssessmentsTab() {
                 <Table.Td>
                   <Group gap={4}>
                     <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => openEdit(a)}><IconPencil size={14} /></ActionIcon></Tooltip>
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => del(a.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => setDelId(a.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -636,6 +665,13 @@ function AssessmentsTab() {
             <Button onClick={save} loading={create.isPending || update.isPending}>{editItem ? "Update" : "Create"}</Button>
           </Group>
         </Stack>
+      </Modal>
+      <Modal opened={!!delId} onClose={() => setDelId(null)} title="Delete Assessment" centered radius="lg" size="sm">
+        <Text size="sm" mb="lg">Are you sure you want to delete this assessment?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDelId(null)}>Cancel</Button>
+          <Button color="red" loading={remove?.isPending} onClick={() => del(delId)}>Delete</Button>
+        </Group>
       </Modal>
     </Stack>
   );

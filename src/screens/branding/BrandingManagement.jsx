@@ -20,7 +20,8 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../api/axios";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
@@ -32,6 +33,9 @@ import {
   useVerifyDomain,
 } from "../../queries/useBranding";
 import { getCompanies } from "../../api/multiCompanyApi";
+
+// ── API response unwrapper ────────────────────────────────────────────────────
+const r = res => res.data?.data ?? res.data ?? res;
 
 // ── Mock fallback data ────────────────────────────────────────────────────────
 
@@ -70,7 +74,7 @@ const MOCK_BRAND_DASHBOARD = {
 const THEMES_LIST = ["Light", "Dark", "System", "Corporate Blue", "Modern Green", "Purple", "Custom"];
 const FONTS       = ["Inter", "Roboto", "Poppins", "Open Sans", "Lato", "Montserrat"];
 
-const BRAND_PROFILES = [
+const MOCK_BRAND_PROFILES = [
   { id: 1, company: "Mgate Technologies",  tenant: "mgate",    theme: "Corporate Blue", color: "#1d4ed8", domain: "hr.mgate.com",     status: "Published" },
   { id: 2, company: "Nexgen Solutions",    tenant: "nexgen",   theme: "Modern Green",   color: "#059669", domain: "nexgen.hrpluse.com",status: "Published" },
   { id: 3, company: "Infospark Pvt Ltd",   tenant: "infospark",theme: "Purple",         color: "#7c3aed", domain: "—",                 status: "Draft"     },
@@ -95,7 +99,7 @@ const PORTAL_TYPES = [
   { id: "superadmin", label: "Super Admin Portal", color: "red"    },
 ];
 
-const SMS_TEMPLATES = [
+const MOCK_SMS_TEMPLATES = [
   { id: 1, type: "OTP",        body: "Your HRPLUSE OTP is {{otp}}. Valid for 5 minutes.", status: "Active" },
   { id: 2, type: "Attendance", body: "Hi {{name}}, your attendance for {{date}} has been marked.", status: "Active" },
   { id: 3, type: "Leave",      body: "Hi {{name}}, your leave request has been {{status}}.", status: "Active" },
@@ -104,7 +108,7 @@ const SMS_TEMPLATES = [
   { id: 6, type: "Notification",body: "HRPLUSE: {{message}}", status: "Active" },
 ];
 
-const DOC_TEMPLATES = [
+const MOCK_DOC_TEMPLATES = [
   { id: 1, category: "Offer Letter",        lastUpdated: "2026-06-10", status: "Published" },
   { id: 2, category: "Appointment Letter",  lastUpdated: "2026-05-22", status: "Published" },
   { id: 3, category: "Salary Slip",         lastUpdated: "2026-06-01", status: "Published" },
@@ -114,14 +118,14 @@ const DOC_TEMPLATES = [
   { id: 7, category: "Certificate",         lastUpdated: "2026-02-10", status: "Draft"     },
 ];
 
-const DOMAINS = [
+const MOCK_DOMAINS = [
   { id: 1, domain: "hr.mgate.com",      tenant: "mgate",    ssl: "Active",  status: "Verified",  expiry: "2027-06-01" },
   { id: 2, domain: "nexgen.hrpluse.com",tenant: "nexgen",   ssl: "Active",  status: "Verified",  expiry: "2027-03-15" },
   { id: 3, domain: "hr.zenith.in",      tenant: "zenith",   ssl: "Pending", status: "Pending",   expiry: "—"          },
   { id: 4, domain: "bwave.hrpluse.com", tenant: "bwave",    ssl: "Active",  status: "Verified",  expiry: "2026-09-30" },
 ];
 
-const BRAND_ASSETS = [
+const MOCK_BRAND_ASSETS = [
   { id: 1, name: "mgate-logo.png",       folder: "Logos",         size: "42 KB", type: "image/png" },
   { id: 2, name: "nexgen-logo.svg",      folder: "Logos",         size: "12 KB", type: "image/svg" },
   { id: 3, name: "hero-bg.jpg",          folder: "Backgrounds",   size: "820 KB",type: "image/jpeg"},
@@ -130,7 +134,7 @@ const BRAND_ASSETS = [
   { id: 6, name: "Inter-Regular.woff2",  folder: "Fonts",         size: "64 KB", type: "font"      },
 ];
 
-const ADOPTION_TREND = ["Jan","Feb","Mar","Apr","May","Jun"].map((m, i) => ({
+const MOCK_ADOPTION_TREND = ["Jan","Feb","Mar","Apr","May","Jun"].map((m, i) => ({
   month: m, branded: 4 + i, total: 8 + i,
 }));
 
@@ -204,22 +208,22 @@ function LivePreview({ form, viewport = "desktop" }) {
 function DashboardTab({ onNav }) {
   const { data: dashRaw, isLoading } = useBrandDashboard();
   const dash = dashRaw ?? MOCK_BRAND_DASHBOARD;
-  const brandedCount = BRAND_PROFILES.filter(b => b.status === "Published").length;
-  const domainCount  = DOMAINS.filter(x => x.status === "Verified").length;
+  const brandedCount = MOCK_BRAND_PROFILES.filter(b => b.status === "Published").length;
+  const domainCount  = MOCK_DOMAINS.filter(x => x.status === "Verified").length;
 
   if (isLoading) return <Center h={200}><Loader /></Center>;
 
   return (
     <Stack gap="lg">
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-        <Kpi label="Total Tenants"    value={BRAND_PROFILES.length}  icon={IconBuildingStore} color="blue"   sub="All companies"         onClick={() => onNav("profiles")} />
+        <Kpi label="Total Tenants"    value={MOCK_BRAND_PROFILES.length}  icon={IconBuildingStore} color="blue"   sub="All companies"         onClick={() => onNav("profiles")} />
         <Kpi label="Branded Tenants"  value={brandedCount}           icon={IconPalette}       color="violet" sub="Published brand"       onClick={() => onNav("profiles")} />
         <Kpi label="Custom Domains"   value={domainCount}            icon={IconWorld}         color="teal"   sub="Verified + active"     onClick={() => onNav("domains")}  />
         <Kpi label="Published Themes" value={PRESET_THEMES.length}   icon={IconColorSwatch}   color="pink"   sub="Active theme configs"  onClick={() => onNav("themes")}   />
         <Kpi label="Email Templates"  value={dash.customEmailTemplates ?? 7} icon={IconMail}  color="orange" sub="Configured templates"  onClick={() => onNav("email")}    />
         <Kpi label="Login Pages"      value={brandedCount}           icon={IconLogin2}        color="cyan"   sub="Custom login screens"  onClick={() => onNav("login")}    />
-        <Kpi label="Brand Assets"     value={BRAND_ASSETS.length}    icon={IconPhoto}         color="indigo" sub="Logos, icons, fonts"   onClick={() => onNav("assets")}   />
-        <Kpi label="Pending Changes"  value={BRAND_PROFILES.filter(b => b.status === "Draft").length} icon={IconAlertTriangle} color="red" sub="Unpublished drafts" onClick={() => onNav("profiles")} />
+        <Kpi label="Brand Assets"     value={MOCK_BRAND_ASSETS.length}    icon={IconPhoto}         color="indigo" sub="Logos, icons, fonts"   onClick={() => onNav("assets")}   />
+        <Kpi label="Pending Changes"  value={MOCK_BRAND_PROFILES.filter(b => b.status === "Draft").length} icon={IconAlertTriangle} color="red" sub="Unpublished drafts" onClick={() => onNav("profiles")} />
       </SimpleGrid>
 
       <Grid>
@@ -227,7 +231,7 @@ function DashboardTab({ onNav }) {
           <Paper withBorder p="lg" radius="lg">
             <Text fw={600} mb="md">Brand Adoption Trend</Text>
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={ADOPTION_TREND}>
+              <AreaChart data={MOCK_ADOPTION_TREND}>
                 <defs>
                   <linearGradient id="brdGradBranded" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={SPARK_HEX.violet} stopOpacity={0.3} />
@@ -317,13 +321,34 @@ function DashboardTab({ onNav }) {
 
 // ═══ 2. Brand Profiles ═══
 function BrandProfilesTab({ toast }) {
+  const { show } = useToast();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [viewBrand, setViewBrand] = useState(null);
+  const [editProfile, setEditProfile] = useState(null);
 
   const { data: companiesResult, isLoading } = useQuery({
     queryKey: ["companies-branding"],
     queryFn: () => getCompanies({}),
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: (id) => api.post(`/branding/profiles/${id}/duplicate`).then(r),
+    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile duplicated", "success"); },
+    onError: () => show("Failed to duplicate profile", "error"),
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: (id) => api.post(`/branding/profiles/${id}/publish`).then(r),
+    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile published", "success"); },
+    onError: () => show("Failed to publish profile", "error"),
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: (id) => api.post(`/branding/profiles/${id}/archive`).then(r),
+    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile archived", "info"); },
+    onError: () => show("Failed to archive profile", "error"),
   });
 
   // API returns { data: [...] } or { companies: [...] } or bare array
@@ -348,7 +373,7 @@ function BrandProfilesTab({ toast }) {
           employees: c.employeeCount ?? c.totalEmployees ?? "—",
         };
       })
-    : BRAND_PROFILES;
+    : MOCK_BRAND_PROFILES;
 
   const filtered = companies.filter(b =>
     b.company.toLowerCase().includes(search.toLowerCase()) ||
@@ -396,11 +421,11 @@ function BrandProfilesTab({ toast }) {
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewBrand(b)}><IconEye size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle"><IconCopy size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Preview"><ActionIcon size="sm" variant="subtle" color="blue"><IconDeviceDesktop size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green"><IconRocket size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange"><IconArchive size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setEditProfile(b)}><IconPencil size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => duplicateMutation.mutate(b.id)}><IconCopy size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Preview"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => show("Opening preview...", "info")}><IconDeviceDesktop size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => publishMutation.mutate(b.id)}><IconRocket size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" onClick={() => archiveMutation.mutate(b.id)}><IconArchive size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -412,7 +437,7 @@ function BrandProfilesTab({ toast }) {
 
       <Modal opened={showCreate} onClose={() => setShowCreate(false)} title="Create Brand Profile" size="md" radius="lg">
         <Stack gap="md">
-          <Select label="Company / Tenant" data={BRAND_PROFILES.map(b => b.company)} placeholder="Select tenant" radius="md" />
+          <Select label="Company / Tenant" data={MOCK_BRAND_PROFILES.map(b => b.company)} placeholder="Select tenant" radius="md" />
           <Select label="Base Theme" data={THEMES_LIST} placeholder="Choose starting theme" radius="md" />
           <ColorInput label="Primary Color" defaultValue="#1d4ed8" radius="md" />
           <Group justify="flex-end" gap="sm">
@@ -858,7 +883,7 @@ function SmsTemplatesTab({ toast }) {
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-        {SMS_TEMPLATES.map(t => (
+        {MOCK_SMS_TEMPLATES.map(t => (
           <Paper key={t.id} withBorder p="lg" radius="lg">
             <Group justify="space-between" mb="sm">
               <Badge size="sm" variant="light" color={t.status === "Active" ? "green" : "gray"}>{t.type}</Badge>
@@ -892,7 +917,7 @@ function SmsTemplatesTab({ toast }) {
 
 // ═══ 9. Document Templates ═══
 function DocumentTemplatesTab({ toast }) {
-  const [selected, setSelected] = useState(DOC_TEMPLATES[0]);
+  const [selected, setSelected] = useState(MOCK_DOC_TEMPLATES[0]);
 
   return (
     <Grid>
@@ -900,7 +925,7 @@ function DocumentTemplatesTab({ toast }) {
         <Paper withBorder p="md" radius="lg">
           <Text fw={600} mb="md">Template Categories</Text>
           <Stack gap="xs">
-            {DOC_TEMPLATES.map(t => (
+            {MOCK_DOC_TEMPLATES.map(t => (
               <Paper key={t.id} withBorder p="sm" radius="md"
                 style={{ cursor: "pointer", background: selected?.id === t.id ? "var(--mantine-color-blue-0)" : "" }}
                 onClick={() => setSelected(t)}>
@@ -983,9 +1008,9 @@ function CustomDomainsTab() {
   const [showAdd, setShowAdd] = useState(false);
   const { data: settings } = useBrandSettings();
 
-  const verified   = DOMAINS.filter(d => d.status === "Verified").length;
-  const pending    = DOMAINS.filter(d => d.status === "Pending").length;
-  const sslActive  = DOMAINS.filter(d => d.ssl === "Active").length;
+  const verified   = MOCK_DOMAINS.filter(d => d.status === "Verified").length;
+  const pending    = MOCK_DOMAINS.filter(d => d.status === "Pending").length;
+  const sslActive  = MOCK_DOMAINS.filter(d => d.ssl === "Active").length;
 
   return (
     <Stack gap="md">
@@ -1025,7 +1050,7 @@ function CustomDomainsTab() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {DOMAINS.map(d => (
+            {MOCK_DOMAINS.map(d => (
               <Table.Tr key={d.id}>
                 <Table.Td><Text size="sm" fw={500} ff="monospace">{d.domain}</Text></Table.Td>
                 <Table.Td><Text size="xs" c="dimmed">{d.tenant}</Text></Table.Td>
@@ -1053,7 +1078,7 @@ function CustomDomainsTab() {
 
       <Modal opened={showAdd} onClose={() => setShowAdd(false)} title="Add Custom Domain" size="sm" radius="lg">
         <Stack gap="md">
-          <Select label="Tenant" data={BRAND_PROFILES.map(b => b.company)} placeholder="Select company" radius="md" />
+          <Select label="Tenant" data={MOCK_BRAND_PROFILES.map(b => b.company)} placeholder="Select company" radius="md" />
           <TextInput label="Domain" placeholder="hr.company.com" value={newDomain} onChange={e => setNewDomain(e.currentTarget.value)} radius="md" />
           <Paper withBorder p="sm" radius="md" bg="blue.0">
             <Text size="xs" c="blue.7" fw={500}>After adding, point your DNS CNAME record to:<br /><Text span ff="monospace">cname.hrpluse.com</Text></Text>
@@ -1075,7 +1100,7 @@ function CustomDomainsTab() {
 function BrandAssetsTab({ toast }) {
   const [folder, setFolder] = useState("All");
   const FOLDERS = ["All", "Logos", "Icons", "Illustrations", "Backgrounds", "Documents", "Fonts"];
-  const filtered = folder === "All" ? BRAND_ASSETS : BRAND_ASSETS.filter(a => a.folder === folder);
+  const filtered = folder === "All" ? MOCK_BRAND_ASSETS : MOCK_BRAND_ASSETS.filter(a => a.folder === folder);
   const [dragging, setDragging] = useState(false);
 
   const iconFor = (type) => {

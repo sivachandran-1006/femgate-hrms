@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box, Stack, Group, Paper, SimpleGrid, Text, Button,
@@ -17,6 +17,9 @@ import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, use
 import { AppLoader }                                   from "../../components/ui/AppLoader";
 import { COLORS }                                      from "../../theme/colors";
 import { getAvatarColor, getInitials, formatCurrency } from "../../utils/helpers";
+import { useToast }                                    from "../../components/ui/Toast";
+import { useMutation, useQueryClient }                 from "@tanstack/react-query";
+import api                                             from "../../api/axios";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -492,6 +495,20 @@ const DocumentsTab = ({ dark, empId }) => {
 
   const { data: docs = MOCK_DOCUMENTS } = useEmpDocuments(empId);
 
+  const { show } = useToast();
+  const uploadRef = useRef(null);
+  const qc = useQueryClient();
+  const uploadMut = useMutation({
+    mutationFn: ({ empId, file }) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("name", file.name);
+      return api.post(`/employees/${empId}/documents`, fd, { headers: { "Content-Type": "multipart/form-data" } });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["emp-documents"] }); show("Document uploaded", "success"); },
+    onError: () => show("Upload failed", "error"),
+  });
+
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
       {docs.map((doc) => {
@@ -526,13 +543,24 @@ const DocumentsTab = ({ dark, empId }) => {
               )}
               <Group gap="xs" mt={4}>
                 {isUploaded ? (
-                  <Button size="xs" variant="default" leftSection={<IconEye size={13} />}>
+                  <Button size="xs" variant="default" leftSection={<IconEye size={13} />}
+                    onClick={() => { if (doc.url) { window.open(doc.url, "_blank"); } else { show("Document URL not available", "info"); } }}>
                     View
                   </Button>
                 ) : (
-                  <Button size="xs" variant="light" leftSection={<IconUpload size={13} />}>
-                    Upload
-                  </Button>
+                  <>
+                    <Button size="xs" variant="light" leftSection={<IconUpload size={13} />}
+                      onClick={() => uploadRef.current?.click()}
+                      loading={uploadMut.isPending}>
+                      Upload
+                    </Button>
+                    <input
+                      ref={uploadRef}
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadMut.mutate({ empId, file: f }); }}
+                    />
+                  </>
                 )}
               </Group>
             </Stack>

@@ -241,17 +241,19 @@ export default function Recruitment() {
               </Stack>
               <Box mt="md" pt="md" style={{ borderTop: "1px solid var(--mantine-color-gray-2)" }}>
                 <Text size="xs" c="dimmed" fw={600} mb="sm" tt="uppercase">Recent Activity</Text>
-                {[
-                  { text: "Liam O'Brien selected for DevOps",  time: "2h ago", color: "green"  },
-                  { text: "Priya Nair interview scheduled",     time: "5h ago", color: "yellow" },
-                  { text: "3 new applications for SE role",     time: "1d ago", color: "blue"   },
-                ].map((item, i) => (
-                  <Group key={i} gap="sm" mt="xs" wrap="nowrap">
-                    <Box style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${item.color}-6)`, flexShrink: 0 }} />
-                    <Text size="xs" style={{ flex: 1 }}>{item.text}</Text>
-                    <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>{item.time}</Text>
-                  </Group>
-                ))}
+                {(MOCK_CANDIDATES.slice(0, 5)).map((c, i) => {
+                  const colorMap = { Selected: "green", Interview: "yellow", Applied: "blue", Rejected: "red", Screening: "cyan" };
+                  const color = colorMap[c.status] ?? "gray";
+                  const text = `${c.name} — ${c.status}${c.jobTitle ? ` for ${c.jobTitle}` : ""}`;
+                  const time = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : "Recently";
+                  return (
+                    <Group key={c.id ?? i} gap="sm" mt="xs" wrap="nowrap">
+                      <Box style={{ width: 8, height: 8, borderRadius: "50%", background: `var(--mantine-color-${color}-6)`, flexShrink: 0 }} />
+                      <Text size="xs" style={{ flex: 1 }}>{text}</Text>
+                      <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>{time}</Text>
+                    </Group>
+                  );
+                })}
               </Box>
             </AppSection>
           </Group>

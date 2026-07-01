@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getPerformance, getPerfDashboard, getPerfAnalytics,
-  createGoal, updateGoal, patchGoalProgress,
+  createGoal, updateGoal, patchGoalProgress, deleteGoal,
   getKpis, createKpi, updateKpi, deleteKpi,
   getReviews, createReview, updateReview,
-  createAppraisal, updateAppraisal, appraiseAppraisal,
+  createAppraisal, updateAppraisal, appraiseAppraisal, deleteAppraisal,
   getPips, createPip, updatePip,
   getRecognitions, createRecognition, deleteRecognition,
 } from "../api/performanceApi";
@@ -35,3 +35,5 @@ export const useCreatePip = () => { const qc = useQueryClient(); return useMutat
 export const useUpdatePip = () => { const qc = useQueryClient(); return useMutation({ mutationFn: ({ id, ...d }) => updatePip(id, d), onSuccess: () => inv(qc) }); };
 export const useCreateRecognition = () => { const qc = useQueryClient(); return useMutation({ mutationFn: createRecognition, onSuccess: () => inv(qc) }); };
 export const useDeleteRecognition = () => { const qc = useQueryClient(); return useMutation({ mutationFn: (id) => deleteRecognition(id), onSuccess: () => inv(qc) }); };
+export const useDeleteGoal = () => { const qc = useQueryClient(); return useMutation({ mutationFn: (id) => deleteGoal(id), onSuccess: () => inv(qc) }); };
+export const useDeleteAppraisal = () => { const qc = useQueryClient(); return useMutation({ mutationFn: (id) => deleteAppraisal(id), onSuccess: () => inv(qc) }); };

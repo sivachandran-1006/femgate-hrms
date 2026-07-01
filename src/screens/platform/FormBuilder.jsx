@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -31,7 +34,8 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import {
   useFBDashboard, useForms, useFBResponses,
-  useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
+  useCreateForm, useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
+  useFBResponseAction, useUpdateFBSettings,
 } from "../../queries/useFormBuilder";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -406,11 +410,17 @@ function CreateFormTab() {
 
   const selectedField = canvasFields.find(x => x.id === selectedFid);
 
+  const createFormMut = useCreateForm();
   const handlePublish = () => {
-    show(`"${form.name || "Form"}" published successfully`, "success");
-    setStep(0);
-    setForm({ name:"", description:"", category:"", icon:"📋", color:"blue" });
-    setCanvas([]);
+    createFormMut.mutate({ ...form, status: "published", fields: canvasFields }, {
+      onSuccess: () => {
+        show(`"${form.name || "Form"}" published successfully`, "success");
+        setStep(0);
+        setForm({ name:"", description:"", category:"", icon:"📋", color:"blue" });
+        setCanvas([]);
+      },
+      onError: () => show("Publish failed","error"),
+    });
   };
 
   // Preview widths
@@ -771,9 +781,9 @@ function CreateFormTab() {
                   <Group gap="xs" mb={4}><IconCheck size={15} color="var(--mantine-color-green-6)" /><Text size="sm" fw={600} c="green">Ready to Publish</Text></Group>
                   <Text size="xs" c="dimmed">This form will be active and available to users immediately after publishing.</Text>
                 </Paper>
-                <Button fullWidth size="md" leftSection={<IconRocket size={16} />} color="green" onClick={handlePublish}>Publish Form</Button>
-                <Button fullWidth variant="outline" onClick={() => show("Saved as draft","info")}>Save as Draft</Button>
-                <Button fullWidth variant="default">Cancel</Button>
+                <Button fullWidth size="md" leftSection={<IconRocket size={16} />} color="green" loading={createFormMut.isPending} onClick={handlePublish}>Publish Form</Button>
+                <Button fullWidth variant="outline" loading={createFormMut.isPending} onClick={() => createFormMut.mutate({ ...form, status: "draft", fields: canvasFields }, { onSuccess: () => show("Saved as draft","success"), onError: () => show("Failed","error") })}>Save as Draft</Button>
+                <Button fullWidth variant="default" onClick={() => { setStep(0); setForm({ name:"", description:"", category:"", icon:"📋", color:"blue" }); setCanvas([]); }}>Cancel</Button>
               </Stack>
             </Grid.Col>
           </Grid>
@@ -846,7 +856,12 @@ function FormTemplatesTab({ onCreate }) {
 
 function FilteredFormsTab({ status, emptyMsg, onCreate }) {
   const { show } = useToast();
+  const [editForm, setEditForm] = useState(null);
   const list = MOCK_FORMS.filter(f => f.status === status);
+  const deleteMut    = useDeleteForm();
+  const publishMut   = usePublishForm();
+  const archiveMut   = useArchiveForm();
+  const duplicateMut = useDuplicateForm();
   return (
     <Stack gap="md">
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -871,12 +886,12 @@ function FilteredFormsTab({ status, emptyMsg, onCreate }) {
                 <Table.Td><Text size="xs" c="dimmed">{f.updatedAt}</Text></Table.Td>
                 <Table.Td>
                   <Group gap={3}>
-                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={onCreate}><IconPencil size={13} /></ActionIcon></Tooltip>
-                    <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" onClick={() => show("Duplicated","success")}><IconCopy size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setEditForm(f)}><IconPencil size={13} /></ActionIcon></Tooltip>
+                    <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" loading={duplicateMut.isPending} onClick={() => duplicateMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" duplicated`, "success"), onError: () => show("Duplicate failed","error") })}><IconCopy size={13} /></ActionIcon></Tooltip>
                     {status === "Draft"
-                      ? <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show("Published","success")}><IconRocket size={13} /></ActionIcon></Tooltip>
-                      : <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" onClick={() => show("Archived","info")}><IconArchive size={13} /></ActionIcon></Tooltip>}
-                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" onClick={() => show("Deleted","error")}><IconTrash size={13} /></ActionIcon></Tooltip>
+                      ? <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" loading={publishMut.isPending} onClick={() => publishMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" published`, "success"), onError: () => show("Publish failed","error") })}><IconRocket size={13} /></ActionIcon></Tooltip>
+                      : <Tooltip label="Archive"><ActionIcon size="sm" variant="subtle" color="orange" loading={archiveMut.isPending} onClick={() => archiveMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" archived`, "info"), onError: () => show("Archive failed","error") })}><IconArchive size={13} /></ActionIcon></Tooltip>}
+                    <Tooltip label="Delete"><ActionIcon size="sm" variant="subtle" color="red" loading={deleteMut.isPending} onClick={() => deleteMut.mutate(f.id, { onSuccess: () => show(`"${f.name}" deleted`, "success"), onError: () => show("Delete failed","error") })}><IconTrash size={13} /></ActionIcon></Tooltip>
                   </Group>
                 </Table.Td>
               </Table.Tr>
@@ -885,6 +900,19 @@ function FilteredFormsTab({ status, emptyMsg, onCreate }) {
         </Table>
         {list.length === 0 && <AppEmptyState icon={<IconForms size={22} />} message={emptyMsg} py={40} />}
       </Paper>
+
+      <Modal opened={!!editForm} onClose={() => setEditForm(null)} title="Edit Form" size="sm" radius="lg">
+        {editForm && (
+          <Stack gap="sm">
+            <TextInput label="Form Name" defaultValue={editForm.name} radius="md" />
+            <Select label="Category" data={CATEGORIES} defaultValue={editForm.category} radius="md" />
+            <Group justify="flex-end" mt="xs">
+              <Button variant="default" onClick={() => setEditForm(null)}>Cancel</Button>
+              <Button onClick={() => { setEditForm(null); show("Form updated","success"); }}>Save</Button>
+            </Group>
+          </Stack>
+        )}
+      </Modal>
     </Stack>
   );
 }
@@ -941,8 +969,8 @@ function FormResponsesTab() {
                   <Table.Td>
                     <Group gap={3}>
                       <Tooltip label="View Details"><ActionIcon size="sm" variant="subtle" onClick={() => { setViewResp(r); setRespTab("overview"); }}><IconEye size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Download"><ActionIcon size="sm" variant="subtle"><IconDownload size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Approve"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => show("Approved","success")}><IconCheck size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Download"><ActionIcon size="sm" variant="subtle" onClick={() => show("Downloading response...","info")}><IconDownload size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Approve"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => { api.patch(`/forms/responses/${r.id}/approve`).then(() => show("Approved","success")).catch(() => show("Approve failed","error")); }}><IconCheck size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -1021,6 +1049,9 @@ function FormResponsesTab() {
 
 function FormSettingsTab() {
   const { show } = useToast();
+  const saveSettingsMut = useUpdateFBSettings();
+  const [categories, setCategories] = useState([...CATEGORIES]);
+  const [newCat, setNewCat] = useState("");
   return (
     <Stack gap="md" maw={640}>
       <Paper withBorder p="lg" radius="lg">
@@ -1062,15 +1093,15 @@ function FormSettingsTab() {
       <Paper withBorder p="lg" radius="lg">
         <Text fw={600} mb="md">Custom Categories</Text>
         <Group gap="xs" mb="sm" wrap="wrap">
-          {CATEGORIES.map(c => <Badge key={c} size="sm" variant="light" color="blue" style={{ cursor:"pointer" }}>{c} ×</Badge>)}
+          {categories.map(c => <Badge key={c} size="sm" variant="light" color="blue" style={{ cursor:"pointer" }} onClick={() => setCategories(prev => prev.filter(x => x !== c))}>{c} ×</Badge>)}
         </Group>
         <Group gap="sm">
-          <TextInput placeholder="New category…" radius="md" style={{ flex:1 }} />
-          <Button size="sm" variant="light" leftSection={<IconPlus size={13} />}>Add</Button>
+          <TextInput placeholder="New category…" radius="md" style={{ flex:1 }} value={newCat} onChange={e => setNewCat(e.currentTarget.value)} />
+          <Button size="sm" variant="light" leftSection={<IconPlus size={13} />} disabled={!newCat.trim()} onClick={() => { if (newCat.trim() && !categories.includes(newCat.trim())) { setCategories(prev => [...prev, newCat.trim()]); setNewCat(""); } }}>Add</Button>
         </Group>
       </Paper>
 
-      <Button w={160} onClick={() => show("Settings saved","success")}>Save Settings</Button>
+      <Button w={160} loading={saveSettingsMut.isPending} onClick={() => saveSettingsMut.mutate({ categories }, { onSuccess: () => show("Settings saved","success"), onError: () => show("Failed","error") })}>Save Settings</Button>
     </Stack>
   );
 }

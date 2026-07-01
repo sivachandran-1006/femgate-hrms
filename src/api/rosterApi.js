@@ -27,3 +27,8 @@ export const reviewChangeRequest = (id, status) => api.patch(`/roster/change-req
 export const getOvertime    = () => api.get("/roster/overtime").then(unwrap);
 export const requestOvertime = (d) => api.post("/roster/overtime", d).then(unwrap);
 export const reviewOvertime = (id, status) => api.patch(`/roster/overtime/${id}`, { status }).then(unwrap);
+
+// Swap Requests
+export const getSwapRequests   = () => api.get("/roster/swaps").then(unwrap);
+export const createSwapRequest = (d) => api.post("/roster/swaps", d).then(unwrap);
+export const updateSwapStatus  = (id, status) => api.patch(`/roster/swaps/${id}/status`, { status }).then(unwrap);

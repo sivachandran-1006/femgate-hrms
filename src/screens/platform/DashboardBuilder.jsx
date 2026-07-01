@@ -1,4 +1,7 @@
 import { useState, useCallback } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -25,8 +28,8 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import {
   useDBBuilderDashboard, useDashboards, useSharedDashboards,
-  useCreateDashboard, useDeleteDashboard, usePublishDashboard,
-  useArchiveDashboard, useDuplicateDashboard, useUnshare,
+  useCreateDashboard, useUpdateDashboard, useDeleteDashboard, usePublishDashboard,
+  useArchiveDashboard, useDuplicateDashboard, useUnshare, useUpdateDBSettings,
 } from "../../queries/useDashboardBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
@@ -287,7 +290,11 @@ function DashboardLibraryTab({ onCreate }) {
       && (!status || d.status === status);
   });
 
-  const toggleStar = () => {};
+  const starMut = useMutation({
+    mutationFn: (id) => api.patch(`/dashboards/${id}/star`).then(r => r.data),
+    onError: () => show("Failed","error"),
+  });
+  const toggleStar = (id) => starMut.mutate(id);
 
   return (
     <Stack gap="md">
@@ -335,7 +342,7 @@ function DashboardLibraryTab({ onCreate }) {
                   <Table.Td>
                     <Group gap={4} wrap="nowrap">
                       <Tooltip label="View"><ActionIcon size="sm" variant="subtle" onClick={() => setViewDash(d)}><IconEye size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle"><IconPencil size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Edit"><ActionIcon size="sm" variant="subtle" onClick={() => setViewDash(d)}><IconPencil size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Duplicate"><ActionIcon size="sm" variant="subtle" loading={duplicateMut.isPending} onClick={() => duplicateMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" duplicated`, "success"), onError: () => show("Duplicate failed","error") })}><IconCopy size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Publish"><ActionIcon size="sm" variant="subtle" color="green" loading={publishMut.isPending} onClick={() => publishMut.mutate(d.id, { onSuccess: () => show(`"${d.name}" published`, "success"), onError: () => show("Publish failed","error") })}><IconRocket size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Share"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => show("Share link copied", "info")}><IconShare size={13} /></ActionIcon></Tooltip>
@@ -397,11 +404,19 @@ function CreateDashboardTab() {
     return true;
   };
 
+  const createDBMut = useCreateDashboard();
+
   const handlePublish = () => {
-    show(`"${form.name || "Dashboard"}" published successfully`, "success");
-    setStep(0);
-    setForm({ name:"",description:"",category:"",department:"",role:"",icon:"",color:"blue",visibility:"All" });
-    setSelectedWidgets([]);
+    const payload = { ...form, status: "published", widgets: selectedWidgets, layout: selectedLayout };
+    createDBMut.mutate(payload, {
+      onSuccess: () => {
+        show(`"${form.name || "Dashboard"}" published successfully`, "success");
+        setStep(0);
+        setForm({ name:"",description:"",category:"",department:"",role:"",icon:"",color:"blue",visibility:"All" });
+        setSelectedWidgets([]);
+      },
+      onError: () => show("Failed to publish dashboard","error"),
+    });
   };
 
   return (
@@ -723,7 +738,7 @@ function CreateDashboardTab() {
                   <Text size="xs" c="dimmed">All required fields are complete. Your dashboard will be immediately visible to the assigned role.</Text>
                 </Paper>
                 <Button fullWidth size="md" leftSection={<IconRocket size={16} />} color="green" onClick={handlePublish}>Publish Dashboard</Button>
-                <Button fullWidth variant="outline" onClick={() => show("Draft saved", "info")}>Save as Draft</Button>
+                <Button fullWidth variant="outline" loading={createDBMut.isPending} onClick={() => createDBMut.mutate({ ...form, status: "draft", widgets: selectedWidgets, layout: selectedLayout }, { onSuccess: () => show("Draft saved","success"), onError: () => show("Failed","error") })}>Save as Draft</Button>
                 <Button fullWidth variant="default">Duplicate</Button>
               </Stack>
             </Grid.Col>
@@ -996,6 +1011,7 @@ function AnalyticsWidgetsTab() {
 // ── 9. Dashboard Settings ─────────────────────────────────────────────────────
 function DashboardSettingsTab() {
   const { show } = useToast();
+  const saveSettingsMut = useUpdateDBSettings();
   const { data: rawDash = [] } = useDashboards();
   const dashNames = (rawDash.length ? rawDash : MOCK_DASHBOARDS).map(d => d.name);
   const [settings, setSettings] = useState({
@@ -1042,7 +1058,7 @@ function DashboardSettingsTab() {
         </Stack>
       </Paper>
 
-      <Button w={160} onClick={() => show("Settings saved", "success")}>Save Settings</Button>
+      <Button w={160} loading={saveSettingsMut.isPending} onClick={() => saveSettingsMut.mutate(settings, { onSuccess: () => show("Settings saved","success"), onError: () => show("Failed","error") })}>Save Settings</Button>
     </Stack>
   );
 }

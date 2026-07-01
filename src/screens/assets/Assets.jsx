@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Stack,
@@ -91,6 +92,7 @@ const EMPTY_FORM = {
 
 export default function Assets({ darkMode = false }) {
   const can = usePermission();
+  const navigate = useNavigate();
   const { show } = useToast();
   const { data: assetsData = [], isLoading } = useAssets();
   const createAsset = useCreateAsset();
@@ -429,7 +431,7 @@ export default function Assets({ darkMode = false }) {
                         <Text c={surface.subtext}>{asset.purchaseDate}</Text>
                       </Table.Td>
                       <Table.Td style={{ padding: PADDING.tableCell, whiteSpace: "nowrap" }}>
-                        <Button variant="outline" size="xs" color="gray">
+                        <Button variant="outline" size="xs" color="gray" onClick={() => navigate(`/assets/${asset.id}`)}>
                           View
                         </Button>
                       </Table.Td>

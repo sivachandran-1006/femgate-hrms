@@ -11,6 +11,7 @@ export const getPerfAudit       = () => api.get("/performance/audit").then(unwra
 export const createGoal = (data)   => api.post("/performance/goals", data).then(unwrap);
 export const updateGoal = (id, d)  => api.put(`/performance/goals/${id}`, d).then(unwrap);
 export const patchGoalProgress = (id, progress) => api.patch(`/performance/goals/${id}`, { progress }).then(unwrap);
+export const deleteGoal = (id)     => api.delete(`/performance/goals/${id}`).then(unwrap);
 
 // KPIs
 export const getKpis    = ()       => api.get("/performance/kpis").then(unwrap);
@@ -27,6 +28,7 @@ export const updateReview = (id, d)  => api.patch(`/performance/reviews/${id}`, 
 export const createAppraisal = (data) => api.post("/performance/appraisals", data).then(unwrap);
 export const updateAppraisal = (id, d) => api.patch(`/performance/appraisals/${id}`, d).then(unwrap);
 export const appraiseAppraisal = (id, d) => api.patch(`/performance/appraisals/${id}/appraise`, d).then(unwrap);
+export const deleteAppraisal = (id)   => api.delete(`/performance/appraisals/${id}`).then(unwrap);
 
 // PIP
 export const getPips    = ()      => api.get("/performance/pips").then(unwrap);

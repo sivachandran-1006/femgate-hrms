@@ -183,6 +183,14 @@ const EmployeeList = () => {
               variant="default"
               leftSection={<IconFileSpreadsheet size={15} />}
               size="sm"
+              onClick={() => {
+                const rows = employees.map(e => [e.name, e.email, e.designation, e.department, e.status, e.joinDate].join(","));
+                const csv = ["Name,Email,Designation,Department,Status,Join Date", ...rows].join("\n");
+                const a = document.createElement("a");
+                a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+                a.download = "employees.csv";
+                a.click();
+              }}
             >
               Export Excel
             </AppButton>

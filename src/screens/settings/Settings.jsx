@@ -6,7 +6,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box, Stack, Group, Text, Paper, SimpleGrid,
-  TextInput, Select, Button, UnstyledButton,
+  TextInput, Select, Button, UnstyledButton, Modal,
 } from "@mantine/core";
 import { COLORS }    from "../../theme/colors";
 import { RADIUS, TRANSITION, ICON_SIZE, ICON_STROKE } from "../../theme/sizes";
@@ -193,6 +193,7 @@ const Settings = ({ darkMode = false }) => {
   });
 
   const [saved, setSaved] = useState(false);
+  const [resetModal, setResetModal] = useState(false);
   const handleSave = () => saveMutation.mutate();
 
   const setToggle = (id) => (v) => setToggles((t) => ({ ...t, [id]: v }));
@@ -394,23 +395,38 @@ const Settings = ({ darkMode = false }) => {
             variant="light"
             ml="xl"
             style={{ flexShrink: 0 }}
-            onClick={() => {
-              if (window.confirm("Reset all settings to factory defaults?")) {
-                setTimezone("Asia/Kolkata");
-                setCurrency("INR");
-                setLanguage("English");
-                setToggles({ email_global: true, leave_apply: true, payroll_run: true, attendance_summary: true });
-                setTwoFactor(false);
-                setSessionTimeout("30");
-                setPasswordExpiry("90");
-                show("Defaults restored — click Save Changes to apply", "info");
-              }
-            }}
+            onClick={() => setResetModal(true)}
           >
             Reset All Settings
           </Button>
         </Group>
       </SectionCard>
+      <Modal
+        opened={resetModal}
+        onClose={() => setResetModal(false)}
+        title="Reset All Settings"
+        size="sm"
+        radius="lg"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">Restore all settings to factory defaults? This will overwrite your current settings when you click Save Changes.</Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setResetModal(false)}>Cancel</Button>
+            <Button color="red" onClick={() => {
+              setTimezone("Asia/Kolkata");
+              setCurrency("INR");
+              setLanguage("English");
+              setToggles({ email_global: true, leave_apply: true, payroll_run: true, attendance_summary: true });
+              setTwoFactor(false);
+              setSessionTimeout("30");
+              setPasswordExpiry("90");
+              setResetModal(false);
+              show("Defaults restored — click Save Changes to apply", "info");
+            }}>Reset</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 };

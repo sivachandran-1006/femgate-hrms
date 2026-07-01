@@ -25,7 +25,7 @@ import { exportDocuments } from "../../api/documentApi";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import {
   useDocuments, useDocDashboard, useDocAnalytics, useDocRequests,
-  useUploadDocument, useArchiveDocument, useVerifyDocument, useCreateDocRequest, useFulfilDocRequest,
+  useUploadDocument, useUpdateDocument, useArchiveDocument, useVerifyDocument, useCreateDocRequest, useFulfilDocRequest,
 } from "../../queries/useDocuments";
 
 const CATEGORIES = ["Employee Documents", "Company Documents", "Compliance Documents", "Payroll Documents", "Recruitment Documents", "Asset Documents", "Training Documents"];
@@ -163,6 +163,58 @@ function UploadModal({ open, onClose, toast }) {
   );
 }
 
+function EditModal({ open, onClose, doc, toast }) {
+  const { data: employees = [] } = useFetchAllEmployees();
+  const updateMut = useUpdateDocument();
+  // Initialised from doc — component is remounted via key={doc.id} so this is always fresh
+  const [form, setForm] = useState({
+    name:        doc?.name        || "",
+    docType:     doc?.docType     || "Resume",
+    category:    doc?.category    || "Employee Documents",
+    employeeId:  doc?.employeeId  ? String(doc.employeeId) : "",
+    description: doc?.description || "",
+    expiryDate:  doc?.expiryDate  ? doc.expiryDate.split("T")[0] : "",
+    tags:        Array.isArray(doc?.tags) ? doc.tags.join(", ") : (doc?.tags || ""),
+    fileUrl:     doc?.fileUrl     || "",
+    fileSize:    doc?.fileSize    || "",
+    mimeType:    doc?.mimeType    || "application/pdf",
+  });
+
+  const save = async () => {
+    if (!form.name.trim()) { toast("Document Name is required", "error"); return; }
+    try {
+      await updateMut.mutateAsync({ id: doc.id, ...form, employeeId: form.employeeId || undefined });
+      toast("Document updated", "success"); onClose();
+    } catch (e) { toast(e?.response?.data?.message || "Update failed", "error"); }
+  };
+
+  return (
+    <AppModal opened={open} onClose={onClose} title="Edit Document" icon={<IconPencil size={16} color="#3b82f6" />} iconColor="#3b82f6" size="lg">
+      <Stack gap="md">
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <AppInput label="Document Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <AppInput type="select" label="Document Type *" searchable data={DOC_TYPES} value={form.docType} onChange={(v) => setForm({ ...form, docType: v })} />
+        </SimpleGrid>
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <AppInput type="select" label="Category" data={CATEGORIES} value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
+          <AppInput type="select" label="Employee (optional)" searchable clearable placeholder="Company document if blank"
+            data={employees.map((e) => ({ value: String(e.id), label: e.name }))} value={form.employeeId} onChange={(v) => setForm({ ...form, employeeId: v || "" })} />
+        </SimpleGrid>
+        <AppInput type="textarea" label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <AppInput type="date" label="Expiry Date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} />
+          <AppInput label="Tags" placeholder="comma,separated" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+        </SimpleGrid>
+        <AppInput label="Attachment URL" placeholder="https://… (PDF/DOCX/JPG/PNG)" value={form.fileUrl} onChange={(e) => setForm({ ...form, fileUrl: e.target.value })} />
+        <Group justify="flex-end" gap="sm">
+          <AppButton variant="default" onClick={onClose}>Cancel</AppButton>
+          <AppButton loading={updateMut.isPending} onClick={save}>Save Changes</AppButton>
+        </Group>
+      </Stack>
+    </AppModal>
+  );
+}
+
 function RepositoryTab({ toast }) {
   const navigate = useNavigate();
   const { data: docs = [], isLoading } = useDocuments();
@@ -172,6 +224,7 @@ function RepositoryTab({ toast }) {
   const [catF, setCatF] = useState("All");
   const [statusF, setStatusF] = useState("All");
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
   const [delTarget, setDelTarget] = useState(null);
 
   const filtered = useMemo(() => docs.filter((d) => {
@@ -214,6 +267,7 @@ function RepositoryTab({ toast }) {
                     <Table.Td>
                       <Group gap="xs" wrap="nowrap">
                         <ActionIcon variant="light" color="gray" size="sm" title="View" onClick={() => navigate(`/documents/${d.id}`)}><IconEye size={13} /></ActionIcon>
+                        <ActionIcon variant="light" color="blue" size="sm" title="Edit" onClick={() => setEditTarget(d)}><IconPencil size={13} /></ActionIcon>
                         <ActionIcon variant="light" color="red" size="sm" title="Archive" onClick={() => setDelTarget(d)}><IconTrash size={13} /></ActionIcon>
                       </Group>
                     </Table.Td>
@@ -224,6 +278,9 @@ function RepositoryTab({ toast }) {
         </ScrollArea>
       </AppSection>
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} toast={toast} />
+      {editTarget && (
+        <EditModal key={editTarget.id} open={!!editTarget} onClose={() => setEditTarget(null)} doc={editTarget} toast={toast} />
+      )}
       <AppModal opened={!!delTarget} onClose={() => setDelTarget(null)} title="Archive Document" icon={<IconAlertTriangle size={16} color="#ef4444" />} iconColor="#ef4444">
         <Stack gap="md">
           <Text size="sm">Archive <Text span fw={700}>{delTarget?.name}</Text>?</Text>

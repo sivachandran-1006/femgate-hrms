@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../api/axios";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Textarea, Textarea as MantineTextarea } from "@mantine/core";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconBell, IconCalendar, IconAward, IconClipboard, IconCake, IconCheck, IconX, IconSpeakerphone, IconCalendarEvent, IconClipboardList, IconConfetti } from "@tabler/icons-react";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
@@ -57,6 +59,7 @@ function AnnouncementsTab() {
   const [page, setPage] = useState(1);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -78,23 +81,29 @@ function AnnouncementsTab() {
       return;
     }
     try {
-      await create.mutateAsync(form);
-      show("Announcement created", "success");
+      if (selectedRecord?.id) {
+        await update.mutateAsync([selectedRecord.id, form]);
+        show("Announcement updated", "success");
+      } else {
+        await create.mutateAsync(form);
+        show("Announcement created", "success");
+      }
       setModalOpened(false);
+      setSelectedRecord(null);
       setForm({ title: "", category: "", description: "", audience: "All Employees", publishDate: new Date().toISOString().split("T")[0], expiryDate: "", priority: "Medium" });
     } catch (e) {
       show(e.message || "Failed", "error");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Delete this announcement?")) {
-      try {
-        await delete_.mutateAsync(id);
-        show("Announcement deleted", "success");
-      } catch (e) {
-        show(e.message || "Failed", "error");
-      }
+  const handleDelete = (id) => setDeleteId(id);
+  const handleConfirmDelete = async () => {
+    try {
+      await delete_.mutateAsync(deleteId);
+      show("Announcement deleted", "success");
+      setDeleteId(null);
+    } catch (e) {
+      show(e.message || "Failed", "error");
     }
   };
 
@@ -171,7 +180,17 @@ function AnnouncementsTab() {
           <Select label="Priority" data={PRIORITIES} value={form.priority} onChange={(v) => setForm((p) => ({ ...p, priority: v }))} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => { setModalOpened(false); setSelectedRecord(null); }}>Cancel</Button>
-            <Button onClick={handleCreate} loading={create.isPending}>{selectedRecord ? "Update" : "Create"}</Button>
+            <Button onClick={handleCreate} loading={create.isPending || update.isPending}>{selectedRecord ? "Update" : "Create"}</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={!!deleteId} onClose={() => setDeleteId(null)} title="Delete Announcement" size="sm" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="sm">Are you sure you want to delete this announcement? This cannot be undone.</Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button color="red" onClick={handleConfirmDelete} loading={delete_.isPending} leftSection={<IconTrash size={14} />}>Delete</Button>
           </Group>
         </Stack>
       </Modal>
@@ -185,6 +204,7 @@ function EventsTab() {
   const [page, setPage] = useState(1);
   const [modalOpened, setModalOpened] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [deleteEventId, setDeleteEventId] = useState(null);
   const [form, setForm] = useState({
     eventName: "",
     description: "",
@@ -234,7 +254,7 @@ function EventsTab() {
                   <Text size="sm">{e.location || e.meetingLink || "—"}</Text>
                 </Stack>
                 <Group gap={4}>
-                  <Tooltip label="Delete"><ActionIcon size="sm" color="red" onClick={() => { if (window.confirm("Delete?")) delete_.mutate(e.id); }}><IconTrash size={14} /></ActionIcon></Tooltip>
+                  <Tooltip label="Delete"><ActionIcon size="sm" color="red" onClick={() => setDeleteEventId(e.id)}><IconTrash size={14} /></ActionIcon></Tooltip>
                 </Group>
               </Group>
             </Card>
@@ -257,6 +277,16 @@ function EventsTab() {
           </Group>
         </Stack>
       </Modal>
+
+      <Modal opened={!!deleteEventId} onClose={() => setDeleteEventId(null)} title="Delete Event" size="sm" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="sm">Are you sure you want to delete this event?</Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setDeleteEventId(null)}>Cancel</Button>
+            <Button color="red" onClick={() => { delete_.mutate(deleteEventId); setDeleteEventId(null); }} loading={delete_.isPending} leftSection={<IconTrash size={14} />}>Delete</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   );
 }
@@ -266,6 +296,9 @@ function RecognitionsTab() {
   const { show } = useToast();
   const [page, setPage] = useState(1);
   const [modalOpened, setModalOpened] = useState(false);
+  const [deleteRecogId, setDeleteRecogId] = useState(null);
+  const [editRecog, setEditRecog] = useState(null);
+  const [editForm, setEditForm] = useState({ employeeName: "", awardType: "Employee of the Month", description: "" });
   const [form, setForm] = useState({
     employeeName: "",
     awardType: "Employee of the Month",
@@ -274,6 +307,17 @@ function RecognitionsTab() {
 
   const { data: result = {}, isLoading } = useRecognitions({ page, limit: 25 });
   const create = useCreateRecognition();
+  const qc = useQueryClient();
+  const updateRecogMut = useMutation({
+    mutationFn: ({ id, ...d }) => api.put(`/communications/recognitions/${id}`, d),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["communications"] }); show("Recognition updated", "success"); setEditRecog(null); },
+    onError: () => show("Failed to update", "error"),
+  });
+  const deleteRecogMut = useMutation({
+    mutationFn: (id) => api.delete(`/communications/recognitions/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["communications"] }); show("Recognition deleted", "success"); setDeleteRecogId(null); },
+    onError: () => show("Failed to delete", "error"),
+  });
 
   const handleCreate = async () => {
     if (!form.employeeName || !form.awardType) {
@@ -303,8 +347,22 @@ function RecognitionsTab() {
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           {(result.recognitions || []).map((r) => (
             <Card key={r.id} withBorder p="md" bg="yellow.0">
-              <Stack gap={2}>
+              <Group justify="space-between" mb={4}>
                 <Badge color="yellow" variant="light">{r.awardType}</Badge>
+                <Group gap={4}>
+                  <Tooltip label="Edit">
+                    <ActionIcon size="sm" variant="subtle" onClick={() => { setEditRecog(r); setEditForm({ employeeName: r.employeeName, awardType: r.awardType, description: r.description }); }}>
+                      <IconPencil size={13} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <Tooltip label="Delete">
+                    <ActionIcon size="sm" variant="subtle" color="red" onClick={() => setDeleteRecogId(r.id)}>
+                      <IconTrash size={13} />
+                    </ActionIcon>
+                  </Tooltip>
+                </Group>
+              </Group>
+              <Stack gap={2}>
                 <Text fw={600}>{r.employeeName}</Text>
                 <Text size="sm">{r.description}</Text>
                 <Text size="xs" c="dimmed">Recognized by {r.recognizedBy}</Text>
@@ -322,6 +380,30 @@ function RecognitionsTab() {
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setModalOpened(false)}>Cancel</Button>
             <Button onClick={handleCreate} loading={create.isPending}>Award</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal opened={!!editRecog} onClose={() => setEditRecog(null)} title="Edit Recognition" size="md">
+        <Stack gap="sm">
+          <TextInput label="Employee Name" required value={editForm.employeeName} onChange={(e) => setEditForm((p) => ({ ...p, employeeName: e.target.value }))} />
+          <Select label="Award Type" required data={AWARD_TYPES} value={editForm.awardType} onChange={(v) => setEditForm((p) => ({ ...p, awardType: v }))} />
+          <Textarea label="Description" value={editForm.description} onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))} rows={3} />
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={() => setEditRecog(null)}>Cancel</Button>
+            <Button onClick={() => updateRecogMut.mutate({ id: editRecog.id, ...editForm })} loading={updateRecogMut.isPending}>Update</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Delete Confirm Modal */}
+      <Modal opened={!!deleteRecogId} onClose={() => setDeleteRecogId(null)} title="Delete Recognition" size="sm" radius="lg" centered>
+        <Stack gap="md">
+          <Text size="sm">Are you sure you want to delete this recognition?</Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setDeleteRecogId(null)}>Cancel</Button>
+            <Button color="red" onClick={() => deleteRecogMut.mutate(deleteRecogId)} loading={deleteRecogMut.isPending} leftSection={<IconTrash size={14} />}>Delete</Button>
           </Group>
         </Stack>
       </Modal>

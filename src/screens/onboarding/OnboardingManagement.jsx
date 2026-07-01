@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Progress, Checkbox, Textarea, NumberInput } from "@mantine/core";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconChartLine, IconClipboard, IconFileText, IconBox, IconServer, IconCheck, IconX, IconLogout, IconDoorExit } from "@tabler/icons-react";
-import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateOnboarding, useChecklists, useTasks, useOffboardingDashboard, useOffboardings, useCreateOffboarding, useUpdateOffboarding, useCreateClearance, useUpdateAssetReturn, useCreateExitInterview, useCreateSettlement } from "../../queries/useOnboarding";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateOnboarding, useChecklists, useTasks, useOffboardingDashboard, useOffboardings, useOffboarding, useCreateOffboarding, useUpdateOffboarding, useUpdateAssetReturn, useCreateExitInterview, useCreateSettlement } from "../../queries/useOnboarding";
 import { useToast } from "../../components/ui/Toast";
+import api from "../../api/axios";
 import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -236,15 +238,19 @@ function NewJoinersTab() {
 
 function ChecklistsTab() {
   const { show } = useToast();
+  const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
   const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
   const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
   const { data: checklists = [], isLoading } = useChecklists(firstId);
 
-  const handleMarkComplete = (itemId) => {
-    show(`Marked checklist item #${itemId} as complete`, "success");
-  };
+  const markChecklistMut = useMutation({
+    mutationFn: (itemId) => api.patch(`/onboarding/checklist/${itemId}/complete`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["onboarding"] }); show("Checklist item marked complete", "success"); },
+    onError: () => show("Failed to mark complete", "error"),
+  });
+  const handleMarkComplete = (itemId) => markChecklistMut.mutate(itemId);
 
   return (
     <Stack gap="md">
@@ -283,15 +289,19 @@ function ChecklistsTab() {
 
 function TasksTab() {
   const { show } = useToast();
+  const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
   const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
   const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
   const { data: tasks = [], isLoading } = useTasks(firstId);
 
-  const handleCompleteTask = (id, title) => {
-    show(`Task '${title}' marked as complete`, "success");
-  };
+  const completeTaskMut = useMutation({
+    mutationFn: (id) => api.patch(`/onboarding/tasks/${id}/complete`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["onboarding"] }); show("Task marked complete", "success"); },
+    onError: () => show("Failed to mark complete", "error"),
+  });
+  const handleCompleteTask = (id) => completeTaskMut.mutate(id);
 
   return (
     <Stack gap="md">
@@ -484,15 +494,37 @@ function OffboardingListTab() {
   );
 }
 
+const DEFAULT_CLEARANCE_TYPES = ["Manager Clearance", "HR Clearance", "IT Clearance", "Finance Clearance", "Admin Clearance"];
+
 function ClearanceTrackerTab() {
   const { show } = useToast();
+  const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
+  const [approvingType, setApprovingType] = useState(null);
   const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
-  const { data: exit = {} } = useOffboardings({ limit: 1 });
+  const { data: offboarding = {} } = useOffboarding(firstId);
+  const clearanceTypes = (offboarding?.clearances?.length ? offboarding.clearances.map((c) => c.type) : null) ?? DEFAULT_CLEARANCE_TYPES;
 
-  const clearanceTypes = ["Manager Clearance", "HR Clearance", "IT Clearance", "Finance Clearance", "Admin Clearance"];
+  const approveClearanceMut = useMutation({
+    mutationFn: ({ offboardingId, type }) => api.patch(`/onboarding/offboarding/${offboardingId}/clearance/approve`, { type, status: "Approved" }),
+    onSuccess: (_, { type }) => {
+      qc.invalidateQueries({ queryKey: ["offboarding"] });
+      show(`${type} approved`, "success");
+      setApprovingType(null);
+    },
+    onError: () => {
+      show("Failed to approve clearance", "error");
+      setApprovingType(null);
+    },
+  });
+
+  const handleApprove = (ct) => {
+    if (!firstId) { show("Select an employee first", "error"); return; }
+    setApprovingType(ct);
+    approveClearanceMut.mutate({ offboardingId: firstId, type: ct });
+  };
 
   return (
     <Stack gap="md">
@@ -513,7 +545,12 @@ function ClearanceTrackerTab() {
                 <Text fw={500} size="sm">{ct}</Text>
                 <Text size="xs" c="dimmed">Approve from {ct.split(" ")[0]} team</Text>
               </Stack>
-              <Button size="sm" variant="light" onClick={() => show(`${ct} approved`, "success")}>Approve</Button>
+              <Button
+                size="sm"
+                variant="light"
+                loading={approveClearanceMut.isPending && approvingType === ct}
+                onClick={() => handleApprove(ct)}
+              >Approve</Button>
             </Group>
           </Card>
         ))}
@@ -522,18 +559,42 @@ function ClearanceTrackerTab() {
   );
 }
 
+const MOCK_ASSETS = [
+  { id: "LAPTOP-001", type: "Laptop", condition: "Good", status: "Pending" },
+  { id: "MONITOR-001", type: "Monitor", condition: "Good", status: "Pending" },
+  { id: "CARD-001", type: "Access Card", condition: "Good", status: "Pending" },
+];
+
 function AssetReturnTab() {
   const { show } = useToast();
+  const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
+  const [returningId, setReturningId] = useState(null);
   const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
+  const { data: offboarding = {} } = useOffboarding(firstId);
+  const assets = offboarding?.assets?.length ? offboarding.assets : MOCK_ASSETS;
 
-  const assets = [
-    { id: "LAPTOP-001", type: "Laptop", condition: "Good", status: "Pending" },
-    { id: "MONITOR-001", type: "Monitor", condition: "Good", status: "Pending" },
-    { id: "CARD-001", type: "Access Card", condition: "Good", status: "Pending" },
-  ];
+  const markReturnedMut = useMutation({
+    mutationFn: ({ offboardingId, asset }) =>
+      api.patch(`/onboarding/offboarding/${offboardingId}/asset-return/${asset.id}`, { status: "Returned" }),
+    onSuccess: (_, { asset }) => {
+      qc.invalidateQueries({ queryKey: ["offboarding"] });
+      show(`${asset.type} marked as returned`, "success");
+      setReturningId(null);
+    },
+    onError: () => {
+      show("Failed to mark asset as returned", "error");
+      setReturningId(null);
+    },
+  });
+
+  const handleMarkReturned = (asset) => {
+    if (!firstId) { show("Select an employee first", "error"); return; }
+    setReturningId(asset.id);
+    markReturnedMut.mutate({ offboardingId: firstId, asset });
+  };
 
   return (
     <Stack gap="md">
@@ -564,7 +625,14 @@ function AssetReturnTab() {
               <Table.Td><Badge color="green">{a.condition}</Badge></Table.Td>
               <Table.Td><Badge color={a.status === "Pending" ? "yellow" : "green"}>{a.status}</Badge></Table.Td>
               <Table.Td>
-                <Button size="xs" variant="light" onClick={() => show(`${a.type} marked as returned`, "success")}>Mark Returned</Button>
+                {a.status !== "Returned" && (
+                  <Button
+                    size="xs"
+                    variant="light"
+                    loading={markReturnedMut.isPending && returningId === a.id}
+                    onClick={() => handleMarkReturned(a)}
+                  >Mark Returned</Button>
+                )}
               </Table.Td>
             </Table.Tr>
           ))}

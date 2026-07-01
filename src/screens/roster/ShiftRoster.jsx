@@ -2,12 +2,12 @@ import { useState } from "react";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Loader, Center, ColorInput,
-  NumberInput, Tooltip, Progress, RingProgress,
+  NumberInput, Progress, RingProgress,
 } from "@mantine/core";
 import {
   IconClock, IconCalendarTime, IconUsers, IconMoon, IconRotateClockwise,
   IconClockHour4, IconArrowsExchange, IconChartBar, IconPlus, IconPencil, IconTrash,
-  IconCheck, IconX, IconCalendarEvent,
+  IconCheck, IconX, IconChevronLeft, IconChevronRight, IconSwitchHorizontal,
 } from "@tabler/icons-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
@@ -20,13 +20,25 @@ import {
   useAssignments, useCreateAssignment, useDeleteAssignment,
   useChangeRequests, useCreateChangeRequest, useReviewChangeRequest,
   useOvertime, useRequestOvertime, useReviewOvertime,
+  useSwapRequests, useCreateSwapRequest, useUpdateSwapStatus,
 } from "../../queries/useRoster";
+
+const r = (res) => res.data?.data ?? res.data ?? res;
 
 const SHIFT_TYPES = ["General Shift", "Morning Shift", "Evening Shift", "Night Shift", "Split Shift", "Flexible Shift", "Rotational Shift", "Custom Shift"];
 const SHIFT_STATUS = ["Active", "Inactive", "Archived"];
 const WEEKLY_OFF = ["Saturday & Sunday", "Sunday Only", "Rotating Weekly Off", "Custom Weekly Off"];
 const STATUS_COLOR = { Active: "green", Inactive: "gray", Archived: "dark", Pending: "orange", Approved: "green", Rejected: "red" };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+
+const MOCK_SHIFTS = [];
+const MOCK_ASSIGNMENTS = [];
+const MOCK_CHANGE_REQUESTS = [];
+const MOCK_OVERTIME = [];
+const MOCK_SWAP_REQUESTS = [
+  { id: 1, requester: "Arjun Mehta", requestedWith: "Priya Sharma", requesterShift: "Morning Shift", requestedShift: "Evening Shift", date: "2026-07-05", reason: "Family commitment", status: "Pending" },
+  { id: 2, requester: "Lakshmi Nair", requestedWith: "Ravi Kumar", requesterShift: "Night Shift", requestedShift: "General Shift", date: "2026-07-08", reason: "Medical appointment", status: "Pending" },
+];
 
 const useEmployeeOptions = () => {
   const { data: employees = [] } = useFetchAllEmployees();
@@ -97,7 +109,8 @@ function DashboardTab() {
 // ═══ Shifts ═══
 function ShiftsTab({ canManage }) {
   const { show } = useToast();
-  const { data: shifts = [], isLoading } = useShifts();
+  const { data: raw, isLoading } = useShifts();
+  const shifts = raw?.length ? raw : MOCK_SHIFTS;
   const create = useCreateShift();
   const update = useUpdateShift();
   const del = useDeleteShift();
@@ -178,25 +191,46 @@ function ShiftsTab({ canManage }) {
 // ═══ Roster / Assignments ═══
 function RosterTab({ canManage }) {
   const { show } = useToast();
-  const { data: assignments = [], isLoading } = useAssignments();
-  const { data: shifts = [] } = useShifts({ status: "Active" });
+  const { data: rawAssignments, isLoading } = useAssignments();
+  const assignments = rawAssignments?.length ? rawAssignments : MOCK_ASSIGNMENTS;
+  const { data: rawShifts } = useShifts({ status: "Active" });
+  const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
   const { options: empOptions, byName } = useEmployeeOptions();
   const create = useCreateAssignment();
   const del = useDeleteAssignment();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ shiftId: "", employee: "", date: "" });
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1 + weekOffset * 7);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  const weekLabel = `${weekStart.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })} – ${weekEnd.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`;
 
   const submit = async () => {
     if (!form.shiftId || !form.employee || !form.date) return show("Shift, employee and date are required", "error");
     const emp = byName[form.employee];
-    try { await create.mutateAsync({ ...form, shiftId: Number(form.shiftId), employeeId: emp?.id, department: emp?.department }); show("Shift assigned", "success"); setOpen(false); setForm({ shiftId: "", employee: "", date: "" }); }
-    catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
+    try {
+      await create.mutateAsync({ ...form, shiftId: Number(form.shiftId), employeeId: emp?.id, department: emp?.department });
+      show("Shift assigned", "success");
+      setOpen(false);
+      setForm({ shiftId: "", employee: "", date: "" });
+    } catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
   };
 
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
     <Stack gap="md">
-      {canManage && <Group justify="flex-end"><Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Assign Shift</Button></Group>}
+      <Group justify="space-between">
+        <Group gap="sm">
+          <ActionIcon variant="default" onClick={() => setWeekOffset((o) => o - 1)}><IconChevronLeft size={16} /></ActionIcon>
+          <Text size="sm" fw={500}>{weekLabel}</Text>
+          <ActionIcon variant="default" onClick={() => setWeekOffset((o) => o + 1)}><IconChevronRight size={16} /></ActionIcon>
+        </Group>
+        {canManage && <Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Assign Shift</Button>}
+      </Group>
       <Table striped highlightOnHover>
         <Table.Thead><Table.Tr><Table.Th>Employee</Table.Th><Table.Th>Shift</Table.Th><Table.Th>Date</Table.Th><Table.Th>Timing</Table.Th><Table.Th>Department</Table.Th><Table.Th /></Table.Tr></Table.Thead>
         <Table.Tbody>
@@ -229,8 +263,10 @@ function RosterTab({ canManage }) {
 // ═══ Change Requests ═══
 function ChangeRequestsTab({ canManage }) {
   const { show } = useToast();
-  const { data: reqs = [], isLoading } = useChangeRequests();
-  const { data: shifts = [] } = useShifts({ status: "Active" });
+  const { data: rawReqs, isLoading } = useChangeRequests();
+  const reqs = rawReqs?.length ? rawReqs : MOCK_CHANGE_REQUESTS;
+  const { data: rawShifts } = useShifts({ status: "Active" });
+  const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
   const create = useCreateChangeRequest();
   const review = useReviewChangeRequest();
   const [open, setOpen] = useState(false);
@@ -238,8 +274,12 @@ function ChangeRequestsTab({ canManage }) {
 
   const submit = async () => {
     if (!form.requestedShift) return show("Requested shift is required", "error");
-    try { await create.mutateAsync(form); show("Request submitted", "success"); setOpen(false); setForm({ currentShift: "", requestedShift: "", reason: "", effectiveDate: "" }); }
-    catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
+    try {
+      await create.mutateAsync(form);
+      show("Request submitted", "success");
+      setOpen(false);
+      setForm({ currentShift: "", requestedShift: "", reason: "", effectiveDate: "" });
+    } catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
   };
 
   if (isLoading) return <Center h={200}><Loader /></Center>;
@@ -250,17 +290,17 @@ function ChangeRequestsTab({ canManage }) {
         <Table.Thead><Table.Tr><Table.Th>Employee</Table.Th><Table.Th>Current</Table.Th><Table.Th>Requested</Table.Th><Table.Th>Reason</Table.Th><Table.Th>Effective</Table.Th><Table.Th>Status</Table.Th><Table.Th /></Table.Tr></Table.Thead>
         <Table.Tbody>
           {reqs.length === 0 && <Table.Tr><Table.Td colSpan={7}><AppEmptyState icon={<IconArrowsExchange size={24} />} message="No shift change requests" sub="Requests to change shifts will appear here." action={<Button leftSection={<IconArrowsExchange size={14} />} onClick={() => setOpen(true)}>Request Change</Button>} /></Table.Td></Table.Tr>}
-          {reqs.map((r) => (
-            <Table.Tr key={r.id}>
-              <Table.Td fw={500}>{r.employee}</Table.Td>
-              <Table.Td><Text size="xs">{r.currentShift || "—"}</Text></Table.Td>
-              <Table.Td><Text size="xs">{r.requestedShift}</Text></Table.Td>
-              <Table.Td><Text size="xs">{r.reason || "—"}</Text></Table.Td>
-              <Table.Td><Text size="xs">{fmtDate(r.effectiveDate)}</Text></Table.Td>
-              <Table.Td><Badge color={STATUS_COLOR[r.status] || "gray"} variant="light">{r.status}</Badge></Table.Td>
-              <Table.Td>{canManage && r.status === "Pending" && <Group gap={4}>
-                <ActionIcon size="sm" variant="light" color="green" onClick={async () => { await review.mutateAsync({ id: r.id, status: "Approved" }); show("Approved", "success"); }}><IconCheck size={13} /></ActionIcon>
-                <ActionIcon size="sm" variant="light" color="red" onClick={async () => { await review.mutateAsync({ id: r.id, status: "Rejected" }); show("Rejected", "error"); }}><IconX size={13} /></ActionIcon>
+          {reqs.map((req) => (
+            <Table.Tr key={req.id}>
+              <Table.Td fw={500}>{req.employee}</Table.Td>
+              <Table.Td><Text size="xs">{req.currentShift || "—"}</Text></Table.Td>
+              <Table.Td><Text size="xs">{req.requestedShift}</Text></Table.Td>
+              <Table.Td><Text size="xs">{req.reason || "—"}</Text></Table.Td>
+              <Table.Td><Text size="xs">{fmtDate(req.effectiveDate)}</Text></Table.Td>
+              <Table.Td><Badge color={STATUS_COLOR[req.status] || "gray"} variant="light">{req.status}</Badge></Table.Td>
+              <Table.Td>{canManage && req.status === "Pending" && <Group gap={4}>
+                <ActionIcon size="sm" variant="light" color="green" onClick={async () => { await review.mutateAsync({ id: req.id, status: "Approved" }); show("Approved", "success"); }}><IconCheck size={13} /></ActionIcon>
+                <ActionIcon size="sm" variant="light" color="red" onClick={async () => { await review.mutateAsync({ id: req.id, status: "Rejected" }); show("Rejected", "error"); }}><IconX size={13} /></ActionIcon>
               </Group>}</Table.Td>
             </Table.Tr>
           ))}
@@ -283,7 +323,8 @@ function ChangeRequestsTab({ canManage }) {
 // ═══ Overtime ═══
 function OvertimeTab({ canManage }) {
   const { show } = useToast();
-  const { data: records = [], isLoading } = useOvertime();
+  const { data: rawRecords, isLoading } = useOvertime();
+  const records = rawRecords?.length ? rawRecords : MOCK_OVERTIME;
   const request = useRequestOvertime();
   const review = useReviewOvertime();
   const [open, setOpen] = useState(false);
@@ -291,8 +332,12 @@ function OvertimeTab({ canManage }) {
 
   const submit = async () => {
     if (!form.date || !form.hours) return show("Date and hours are required", "error");
-    try { await request.mutateAsync(form); show("Overtime requested", "success"); setOpen(false); setForm({ date: "", hours: 1, reason: "" }); }
-    catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
+    try {
+      await request.mutateAsync(form);
+      show("Overtime requested", "success");
+      setOpen(false);
+      setForm({ date: "", hours: 1, reason: "" });
+    } catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
   };
 
   if (isLoading) return <Center h={200}><Loader /></Center>;
@@ -331,6 +376,131 @@ function OvertimeTab({ canManage }) {
   );
 }
 
+// ═══ Swap Requests ═══
+function SwapRequestsTab({ canManage }) {
+  const { show } = useToast();
+  const { data: rawSwaps, isLoading } = useSwapRequests();
+  const swaps = rawSwaps?.length ? rawSwaps : MOCK_SWAP_REQUESTS;
+  const { data: rawShifts } = useShifts({ status: "Active" });
+  const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
+  const { options: empOptions } = useEmployeeOptions();
+  const createSwap = useCreateSwapRequest();
+  const updateStatus = useUpdateSwapStatus();
+  const [open, setOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ opened: false, id: null, status: null, label: "" });
+  const [form, setForm] = useState({ requestedWith: "", requesterShift: "", requestedShift: "", date: "", reason: "" });
+
+  const handleUpdateSwapStatus = (id, status) => {
+    setConfirmModal({ opened: true, id, status, label: status === "Approved" ? "Approve" : "Reject" });
+  };
+
+  const confirmStatusUpdate = async () => {
+    const { id, status } = confirmModal;
+    setConfirmModal({ opened: false, id: null, status: null, label: "" });
+    await updateStatus.mutateAsync({ id, status });
+    show(status === "Approved" ? "Swap approved" : "Swap rejected", status === "Approved" ? "success" : "error");
+  };
+
+  const submit = async () => {
+    if (!form.requestedWith || !form.requestedShift || !form.date) return show("Swap partner, requested shift and date are required", "error");
+    try {
+      await createSwap.mutateAsync(form);
+      show("Swap request submitted", "success");
+      setOpen(false);
+      setForm({ requestedWith: "", requesterShift: "", requestedShift: "", date: "", reason: "" });
+    } catch (e) { show(e?.response?.data?.message || "Failed", "error"); }
+  };
+
+  if (isLoading) return <Center h={200}><Loader /></Center>;
+  return (
+    <Stack gap="md">
+      <Group justify="flex-end"><Button leftSection={<IconSwitchHorizontal size={14} />} onClick={() => setOpen(true)}>Request Swap</Button></Group>
+      <Table striped highlightOnHover>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>Requester</Table.Th>
+            <Table.Th>Swap With</Table.Th>
+            <Table.Th>From Shift</Table.Th>
+            <Table.Th>To Shift</Table.Th>
+            <Table.Th>Date</Table.Th>
+            <Table.Th>Reason</Table.Th>
+            <Table.Th>Status</Table.Th>
+            <Table.Th />
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {swaps.length === 0 && (
+            <Table.Tr>
+              <Table.Td colSpan={8}>
+                <AppEmptyState
+                  icon={<IconSwitchHorizontal size={24} />}
+                  message="No swap requests"
+                  sub="Shift swap requests will appear here."
+                  action={<Button leftSection={<IconSwitchHorizontal size={14} />} onClick={() => setOpen(true)}>Request Swap</Button>}
+                />
+              </Table.Td>
+            </Table.Tr>
+          )}
+          {swaps.map((s) => (
+            <Table.Tr key={s.id}>
+              <Table.Td fw={500}>{s.requester}</Table.Td>
+              <Table.Td>{s.requestedWith}</Table.Td>
+              <Table.Td><Text size="xs">{s.requesterShift || "—"}</Text></Table.Td>
+              <Table.Td><Text size="xs">{s.requestedShift}</Text></Table.Td>
+              <Table.Td><Text size="xs">{fmtDate(s.date)}</Text></Table.Td>
+              <Table.Td><Text size="xs">{s.reason || "—"}</Text></Table.Td>
+              <Table.Td><Badge color={STATUS_COLOR[s.status] || "gray"} variant="light">{s.status}</Badge></Table.Td>
+              <Table.Td>
+                {canManage && s.status === "Pending" && (
+                  <Group gap={4}>
+                    <ActionIcon size="sm" variant="light" color="green" onClick={() => handleUpdateSwapStatus(s.id, "Approved")}><IconCheck size={13} /></ActionIcon>
+                    <ActionIcon size="sm" variant="light" color="red" onClick={() => handleUpdateSwapStatus(s.id, "Rejected")}><IconX size={13} /></ActionIcon>
+                  </Group>
+                )}
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+
+      <Modal opened={open} onClose={() => setOpen(false)} title="Request Shift Swap" size="md">
+        <Stack gap="sm">
+          <Select label="Swap With (Employee)" placeholder="Select employee to swap with" required searchable data={empOptions} value={form.requestedWith} onChange={(v) => setForm({ ...form, requestedWith: v })} nothingFoundMessage="No employee found" />
+          <Select label="Your Current Shift" placeholder="Select your shift" data={shifts.map((s) => s.name)} value={form.requesterShift} onChange={(v) => setForm({ ...form, requesterShift: v })} searchable clearable nothingFoundMessage="No shifts configured" />
+          <Select label="Requested Shift" required placeholder="Shift you want to take" data={shifts.map((s) => s.name)} value={form.requestedShift} onChange={(v) => setForm({ ...form, requestedShift: v })} searchable nothingFoundMessage="No shifts configured" />
+          <TextInput type="date" label="Date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          <Textarea label="Reason" placeholder="Reason for swap request" minRows={2} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={submit} loading={createSwap.isPending}>Submit</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal
+        opened={confirmModal.opened}
+        onClose={() => setConfirmModal({ opened: false, id: null, status: null, label: "" })}
+        title={`Confirm ${confirmModal.label}`}
+        size="sm"
+      >
+        <Stack gap="md">
+          <Text size="sm">Are you sure you want to {confirmModal.label?.toLowerCase()} this swap request?</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setConfirmModal({ opened: false, id: null, status: null, label: "" })}>Cancel</Button>
+            <Button
+              color={confirmModal.status === "Approved" ? "green" : "red"}
+              onClick={confirmStatusUpdate}
+              loading={updateStatus.isPending}
+            >
+              {confirmModal.label}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </Stack>
+  );
+}
+
 // ═══ Main ═══
 export default function ShiftRoster() {
   const { user } = useAuth();
@@ -348,6 +518,7 @@ export default function ShiftRoster() {
           <Tabs.Tab value="roster" leftSection={<IconCalendarTime size={14} />}>Roster</Tabs.Tab>
           <Tabs.Tab value="changes" leftSection={<IconArrowsExchange size={14} />}>Change Requests</Tabs.Tab>
           <Tabs.Tab value="overtime" leftSection={<IconClockHour4 size={14} />}>Overtime</Tabs.Tab>
+          <Tabs.Tab value="swaps" leftSection={<IconSwitchHorizontal size={14} />}>Swap Requests</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="dashboard"><DashboardTab /></Tabs.Panel>
@@ -355,6 +526,7 @@ export default function ShiftRoster() {
         <Tabs.Panel value="roster"><RosterTab canManage={canManage} /></Tabs.Panel>
         <Tabs.Panel value="changes"><ChangeRequestsTab canManage={canManage} /></Tabs.Panel>
         <Tabs.Panel value="overtime"><OvertimeTab canManage={canManage} /></Tabs.Panel>
+        <Tabs.Panel value="swaps"><SwapRequestsTab canManage={canManage} /></Tabs.Panel>
       </Tabs>
     </Box>
   );

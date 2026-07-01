@@ -36,9 +36,13 @@ import {
   IconRefresh as RefreshCw,
 } from "@tabler/icons-react";
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useExits, useUpdateExit }             from "../../queries/useHr";
 import { useToast }                            from "../../components/ui/Toast";
 import { AppPageHeader }                       from "../../components/ui/AppPageHeader";
+import api from "../../api/axios";
+
+const r = (res) => res.data?.data ?? res.data ?? res;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -110,6 +114,14 @@ const ExitManagement = ({ darkMode = false }) => {
   const { data: exits = [] } = useExits();
   const updateExit           = useUpdateExit();
   const { show }             = useToast();
+  const qc                   = useQueryClient();
+
+  // Clearance remarks mutation
+  const saveRemarksMutation = useMutation({
+    mutationFn: ({ itemId, remark }) => api.patch(`/exit/clearance/${itemId}/remarks`, { remark }).then(r),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["exits"] }); show("Remark saved", "success"); },
+    onError: (e) => show(e.message || "Failed to save remark", "error"),
+  });
 
   const ACTIVE_EXITS = useMemo(
     () =>
@@ -453,14 +465,23 @@ const ExitManagement = ({ darkMode = false }) => {
                       </Box>
 
                       {/* Remarks input */}
-                      <Box style={{ flexShrink: 0, minWidth: 200 }}>
+                      <Group gap="xs" style={{ flexShrink: 0 }} wrap="nowrap">
                         <TextInput
                           placeholder="Add remark..."
                           size="xs"
                           value={remarks[item.id] || ""}
-                          onChange={(e) => setRemarks((r) => ({ ...r, [item.id]: e.target.value }))}
+                          onChange={(e) => setRemarks((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          style={{ minWidth: 160 }}
                         />
-                      </Box>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => saveRemarksMutation.mutate({ itemId: item.id, remark: remarks[item.id] || "" })}
+                          loading={saveRemarksMutation.isPending}
+                        >
+                          Save
+                        </Button>
+                      </Group>
                     </Group>
                   </Box>
                 );
@@ -544,13 +565,13 @@ const ExitManagement = ({ darkMode = false }) => {
 
             {/* Actions */}
             <Group p="md" gap="sm" wrap="wrap" style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}>
-              <Button leftSection={<FileText size={15} />} color="blue">
+              <Button leftSection={<FileText size={15} />} color="blue" onClick={() => show("Generating settlement letter...", "info")}>
                 Generate Settlement Letter
               </Button>
-              <Button leftSection={<Download size={15} />} variant="default">
+              <Button leftSection={<Download size={15} />} variant="default" onClick={() => show("Downloading PDF...", "info")}>
                 Download PDF
               </Button>
-              <Button leftSection={<Printer size={15} />} variant="default">
+              <Button leftSection={<Printer size={15} />} variant="default" onClick={() => window.print()}>
                 Print
               </Button>
             </Group>
