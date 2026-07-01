@@ -10,6 +10,24 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+// ── Mock fallback data ────────────────────────────────────────────────────────
+const MOCK_APPROVALS = {
+  leaves: [
+    { id: "al1", employee: { name: "Arjun Kumar"   }, type: "Casual Leave", days: 2, fromDate: "2026-07-03", toDate: "2026-07-04", reason: "Personal work"  },
+    { id: "al2", employee: { name: "Rahul Verma"   }, type: "Annual Leave", days: 5, fromDate: "2026-07-10", toDate: "2026-07-14", reason: "Family vacation" },
+    { id: "al3", employee: { name: "Ananya Pillai" }, type: "Casual Leave", days: 1, fromDate: "2026-07-07", toDate: "2026-07-07", reason: "Doctor visit"    },
+  ],
+  expenses: [
+    { id: "ae1", employee: "Priya Sharma",  category: "Travel",        amount: 4500,  date: "2026-06-30", desc: "Client visit to Bangalore"  },
+    { id: "ae2", employee: "Vikram Singh",  category: "Office Supplies", amount: 1200, date: "2026-06-28", desc: "Stationery for the quarter" },
+    { id: "ae3", employee: "Sneha Nair",    category: "Training",      amount: 8000,  date: "2026-06-25", desc: "Online certification course" },
+  ],
+  onboardingPending: [
+    { id: "ob1", name: "Kiran Patel",    department: "Engineering", joinDate: "2026-06-20", profileCompletion: 75 },
+    { id: "ob2", name: "Divya Krishnan", department: "Sales",       joinDate: "2026-06-25", profileCompletion: 60 },
+  ],
+};
+
 export default function ApprovalDashboard({ darkMode }) {
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState("leaves");
@@ -42,9 +60,10 @@ export default function ApprovalDashboard({ darkMode }) {
   const sub    = darkMode ? "#94a3b8" : "#64748b";
   const rowBg  = darkMode ? "#0f172a" : "#f8fafc";
 
-  const leaves   = approvals?.leaves           || [];
-  const expenses = approvals?.expenses         || [];
-  const onboard  = approvals?.onboardingPending || [];
+  const raw      = approvals ?? {};
+  const leaves   = raw.leaves?.length            ? raw.leaves            : MOCK_APPROVALS.leaves;
+  const expenses = raw.expenses?.length          ? raw.expenses          : MOCK_APPROVALS.expenses;
+  const onboard  = raw.onboardingPending?.length ? raw.onboardingPending : MOCK_APPROVALS.onboardingPending;
 
   const Row = ({ children }) => (
     <Group gap={12} align="center"

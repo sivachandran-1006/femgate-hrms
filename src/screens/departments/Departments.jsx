@@ -35,6 +35,18 @@ const EMPTY_FORM = {
 
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 
+// ── Mock fallback data ────────────────────────────────────────────────────────
+const MOCK_DEPARTMENTS = [
+  { id: "d1", name: "Engineering",  code: "ENG",  headName: "Arjun Kumar",   branch: { name: "Chennai HQ" }, branchId: "b1", employeeCount: 16, status: "Active",   createdAt: "2024-01-15T00:00:00Z" },
+  { id: "d2", name: "Sales",        code: "SLS",  headName: "Rahul Verma",   branch: { name: "Bangalore"  }, branchId: "b2", employeeCount: 9,  status: "Active",   createdAt: "2024-01-20T00:00:00Z" },
+  { id: "d3", name: "HR",           code: "HR",   headName: "Priya Sharma",  branch: { name: "Chennai HQ" }, branchId: "b1", employeeCount: 5,  status: "Active",   createdAt: "2024-02-01T00:00:00Z" },
+  { id: "d4", name: "Finance",      code: "FIN",  headName: "Sneha Nair",    branch: { name: "Mumbai"     }, branchId: "b3", employeeCount: 6,  status: "Active",   createdAt: "2024-02-10T00:00:00Z" },
+  { id: "d5", name: "Operations",   code: "OPS",  headName: "Vikram Singh",  branch: { name: "Chennai HQ" }, branchId: "b1", employeeCount: 6,  status: "Active",   createdAt: "2024-03-05T00:00:00Z" },
+  { id: "d6", name: "Marketing",    code: "MKT",  headName: "Deepika Rao",   branch: { name: "Bangalore"  }, branchId: "b2", employeeCount: 4,  status: "Active",   createdAt: "2024-03-12T00:00:00Z" },
+  { id: "d7", name: "Legal",        code: "LGL",  headName: null,            branch: { name: "Mumbai"     }, branchId: "b3", employeeCount: 2,  status: "Inactive", createdAt: "2024-04-01T00:00:00Z" },
+  { id: "d8", name: "IT Support",   code: "ITS",  headName: "Arun Prakash",  branch: { name: "Chennai HQ" }, branchId: "b1", employeeCount: 3,  status: "Active",   createdAt: "2024-04-15T00:00:00Z" },
+];
+
 // ─── Add / Edit Drawer-style Modal ────────────────────────────────────────────
 const DeptModal = ({ open, onClose, onSave, editData, saving, branches, heads }) => {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -153,7 +165,8 @@ const Departments = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: departments = [], isLoading, isError } = useDepartments();
+  const { data: rawDepartments, isLoading, isError } = useDepartments();
+  const departments = rawDepartments?.length ? rawDepartments : MOCK_DEPARTMENTS;
   const { data: heads = [] } = useDeptHeads();
   const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
   const branches = branchesRes || [];

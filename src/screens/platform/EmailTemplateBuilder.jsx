@@ -6,7 +6,7 @@ import {
   Switch, Accordion, Timeline, RingProgress, Avatar,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
+import { useToast } from "../../components/ui/Toast";
 import {
   IconMail, IconTemplate, IconPlus, IconCategory, IconVariable,
   IconLayout, IconHistory, IconFile, IconSend, IconSettings,
@@ -25,6 +25,7 @@ import {
   useCreateTemplate, useUpdateTemplate, useDeleteTemplate,
   useDuplicateTemplate, usePublishTemplate, useArchiveTemplate,
   useSendTestEmail, useUpdateEmailSettings,
+  useCreateCategory, useDeleteCategory,
 } from "../../queries/useEmailTemplate";
 
 // ── mock fallback data ────────────────────────────────────────────────────────
@@ -99,10 +100,6 @@ const MOCK_HISTORY = [
 
 const STATUS_COLOR = { Published: "green", Draft: "yellow", Archived: "gray" };
 const DELIVERY_COLOR = { Delivered: "green", Failed: "red", Pending: "yellow" };
-
-function show(msg, type = "success") {
-  notifications.show({ message: msg, color: type === "success" ? "green" : type === "error" ? "red" : "blue", autoClose: 3000 });
-}
 
 // ── KPI Card ─────────────────────────────────────────────────────────────────
 function KpiCard({ icon: Icon, label, value, color = "blue", sub }) {
@@ -187,6 +184,7 @@ function DashboardTab() {
 
 // ── Template Library Tab ──────────────────────────────────────────────────────
 function TemplateLibraryTab({ onEdit }) {
+  const { show } = useToast();
   const [search, setSearch]   = useState("");
   const [catF,   setCatF]     = useState("");
   const [statusF,setStatusF]  = useState("");
@@ -277,6 +275,7 @@ function TemplateLibraryTab({ onEdit }) {
 
 // ── Create Template (7-step wizard) ──────────────────────────────────────────
 function CreateTemplateTab({ editTemplate, onDone }) {
+  const { show } = useToast();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     name: editTemplate?.name ?? "",
@@ -296,6 +295,7 @@ function CreateTemplateTab({ editTemplate, onDone }) {
 
   const createMut = useCreateTemplate();
   const updateMut = useUpdateTemplate();
+  const testMut   = useSendTestEmail();
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -519,7 +519,15 @@ function CreateTemplateTab({ editTemplate, onDone }) {
           <Stack gap="md" maw={480}>
             <TextInput label="Recipient" placeholder="test@company.com" value={form.testRecipient} onChange={e => set("testRecipient", e.target.value)} />
             <TextInput label="CC (optional)" placeholder="cc@company.com" value={form.testCc} onChange={e => set("testCc", e.target.value)} />
-            <Button leftSection={<IconSend size={15} />} loading={createMut.isPending} onClick={() => show("Test email sent!", "info")}>
+            <Button
+              leftSection={<IconSend size={15} />}
+              loading={testMut.isPending}
+              disabled={!form.testRecipient}
+              onClick={() => testMut.mutate(
+                { id: editTemplate?.id, to: form.testRecipient, cc: form.testCc || undefined, subject: form.subject, body: form.bodyHtml },
+                { onSuccess: () => show("Test email sent!", "success"), onError: () => show("Failed to send test email", "error") }
+              )}
+            >
               Send Test Email
             </Button>
           </Stack>
@@ -566,10 +574,21 @@ function CreateTemplateTab({ editTemplate, onDone }) {
 
 // ── Categories Tab ────────────────────────────────────────────────────────────
 function CategoriesTab() {
+  const { show } = useToast();
   const { data: raw = [] } = useEmailCategories();
   const cats = raw.length ? raw : MOCK_CATEGORIES;
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState("");
+  const createCatMut = useCreateCategory();
+  const deleteCatMut = useDeleteCategory();
+
+  const handleAdd = () => {
+    if (!name.trim()) return;
+    createCatMut.mutate({ name: name.trim() }, {
+      onSuccess: () => { show("Category added!", "success"); setName(""); close(); },
+      onError:   () => show("Failed to add category", "error"),
+    });
+  };
 
   return (
     <Stack gap="md">
@@ -584,17 +603,29 @@ function CategoriesTab() {
                 <Text fw={700} size="sm">{c.name}</Text>
                 <Text size="xs" c="dimmed">{c.count} templates</Text>
               </Stack>
-              <ThemeIcon size={36} radius="md" color="blue" variant="light"><IconCategory size={18} /></ThemeIcon>
+              <Group gap={4}>
+                <ThemeIcon size={36} radius="md" color="blue" variant="light"><IconCategory size={18} /></ThemeIcon>
+                <ActionIcon
+                  size="sm" variant="subtle" color="red"
+                  loading={deleteCatMut.isPending && deleteCatMut.variables === c.id}
+                  onClick={() => deleteCatMut.mutate(c.id, {
+                    onSuccess: () => show("Category deleted", "info"),
+                    onError:   () => show("Failed to delete", "error"),
+                  })}
+                >
+                  <IconTrash size={13} />
+                </ActionIcon>
+              </Group>
             </Group>
           </Paper>
         ))}
       </SimpleGrid>
       <Modal opened={opened} onClose={close} title="Add Category" centered radius="lg" size="sm">
         <Stack gap="sm">
-          <TextInput label="Category Name" value={name} onChange={e => setName(e.target.value)} />
+          <TextInput label="Category Name" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && handleAdd()} />
           <Group justify="flex-end">
             <Button variant="default" onClick={close}>Cancel</Button>
-            <Button onClick={() => { show("Category added!"); setName(""); close(); }}>Add</Button>
+            <Button loading={createCatMut.isPending} onClick={handleAdd}>Add</Button>
           </Group>
         </Stack>
       </Modal>
@@ -604,6 +635,7 @@ function CategoriesTab() {
 
 // ── Variable Library Tab ──────────────────────────────────────────────────────
 function VariableLibraryTab() {
+  const { show } = useToast();
   const { data: raw } = useEmailVariables();
   const [search, setSearch] = useState("");
 
@@ -785,6 +817,7 @@ function VersionHistoryTab() {
 
 // ── Settings Tab ──────────────────────────────────────────────────────────────
 function SettingsTab() {
+  const { show } = useToast();
   const { data: raw } = useEmailSettings();
   const updateMut = useUpdateEmailSettings();
   const [settings, setSettings] = useState({

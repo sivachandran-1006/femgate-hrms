@@ -1,6 +1,6 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","marketplace","monitoring","backup","releases","feature-flags","subscriptions","dashboard-builder","workflow-builder","form-builder","email-template-builder"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","marketplace","monitoring","backup","releases","feature-flags","subscriptions","dashboard-builder","workflow-builder","form-builder","email-template-builder","letter-template-builder"],
   ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","branding"],
   HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation"],
   MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement","compliance","visitors","shift-roster","benefits"],
@@ -23,7 +23,7 @@ export const SIDEBAR_SECTIONS = [
   { title: "COMPLIANCE",   items: ["compliance", "workflows", "audit-logs", "security"] },
   { title: "ANALYTICS",    items: ["analytics", "reports", "communications", "announcements", "notifications"] },
   { title: "ADMINISTRATION", items: ["user-management", "roles-permissions", "settings", "integrations", "company-settings"] },
-  { title: "PLATFORM",     items: ["companies", "billing", "branding", "subscriptions", "dashboard-builder", "workflow-builder", "form-builder", "email-template-builder", "marketplace", "monitoring", "backup", "releases", "feature-flags"] },
+  { title: "PLATFORM",     items: ["companies", "billing", "branding", "subscriptions", "dashboard-builder", "workflow-builder", "form-builder", "email-template-builder", "letter-template-builder", "marketplace", "monitoring", "backup", "releases", "feature-flags"] },
   { title: "ME",           items: ["my-profile"] },
 ];
 
@@ -81,7 +81,8 @@ export const ROLE_SIDEBAR = {
     { id: "dashboard-builder",   label: "Dashboard Builder",      icon: "IconLayoutDashboard"   },
     { id: "workflow-builder",    label: "Workflow Builder",        icon: "IconSitemap"            },
     { id: "form-builder",              label: "Form Builder",            icon: "IconForms"              },
-    { id: "email-template-builder",   label: "Email Template Builder",  icon: "IconMail"               },
+    { id: "email-template-builder",    label: "Email Template Builder",  icon: "IconMail"               },
+    { id: "letter-template-builder",   label: "Letter Template Builder", icon: "IconFileText"            },
     { id: "marketplace",         label: "Marketplace",            icon: "IconBuildingStore"     },
     { id: "monitoring",        label: "Platform Monitoring",    icon: "IconActivityHeartbeat" },
     { id: "backup",            label: "Backup & Recovery",      icon: "IconDatabaseExport"    },

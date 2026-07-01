@@ -30,6 +30,79 @@ const STATUS_COLOR = {
   Present: "green", Late: "orange", Absent: "red", HalfDay: "yellow",
   OnLeave: "yellow", WFH: "grape", Weekend: "gray", Holiday: "blue",
 };
+
+// ── Mock fallback data ────────────────────────────────────────────────────────
+const MOCK_DASH = {
+  cards: {
+    totalEmployees: 42, presentToday: 35, absentToday: 4, onLeave: 2,
+    workFromHome: 3, lateArrivals: 5, attendancePercentage: 88, overtimeHours: 14,
+  },
+};
+
+const MOCK_TRENDS = {
+  trend: [
+    { date: "2026-06-25", present: 38, wfh: 3, leave: 2, absent: 2 },
+    { date: "2026-06-26", present: 36, wfh: 4, leave: 2, absent: 3 },
+    { date: "2026-06-27", present: 37, wfh: 3, leave: 3, absent: 2 },
+    { date: "2026-06-28", present: 34, wfh: 5, leave: 2, absent: 4 },
+    { date: "2026-06-29", present: 33, wfh: 4, leave: 3, absent: 3 },
+    { date: "2026-06-30", present: 35, wfh: 3, leave: 2, absent: 4 },
+    { date: "2026-07-01", present: 35, wfh: 3, leave: 2, absent: 4 },
+  ],
+};
+
+const MOCK_BREAKDOWN = {
+  byDepartment: [
+    { name: "Engineering", present: 14, total: 16 },
+    { name: "Sales",       present: 8,  total: 9  },
+    { name: "HR",          present: 4,  total: 5  },
+    { name: "Finance",     present: 5,  total: 6  },
+    { name: "Operations",  present: 4,  total: 6  },
+  ],
+  byBranch: [
+    { name: "Chennai HQ", present: 22, total: 25 },
+    { name: "Bangalore",  present: 8,  total: 10 },
+    { name: "Mumbai",     present: 5,  total: 7  },
+  ],
+};
+
+const MOCK_RECORDS = [
+  { id: "r1", employee: { employeeId: "EMP001", name: "Arjun Kumar",   department: "Engineering" }, date: "2026-07-01T00:00:00Z", checkIn: "2026-07-01T09:02:00Z", checkOut: "2026-07-01T18:10:00Z", hoursWorked: 9.1, status: "Present" },
+  { id: "r2", employee: { employeeId: "EMP002", name: "Priya Sharma",  department: "HR"          }, date: "2026-07-01T00:00:00Z", checkIn: "2026-07-01T09:45:00Z", checkOut: "2026-07-01T18:00:00Z", hoursWorked: 8.2, status: "Late" },
+  { id: "r3", employee: { employeeId: "EMP003", name: "Rahul Verma",   department: "Sales"       }, date: "2026-07-01T00:00:00Z", checkIn: null,                  checkOut: null,                  hoursWorked: null, status: "Absent" },
+  { id: "r4", employee: { employeeId: "EMP004", name: "Sneha Nair",    department: "Finance"     }, date: "2026-07-01T00:00:00Z", checkIn: "2026-07-01T09:00:00Z", checkOut: "2026-07-01T18:00:00Z", hoursWorked: 9,   status: "WFH" },
+  { id: "r5", employee: { employeeId: "EMP005", name: "Vikram Singh",  department: "Engineering" }, date: "2026-07-01T00:00:00Z", checkIn: "2026-07-01T09:10:00Z", checkOut: "2026-07-01T17:55:00Z", hoursWorked: 8.7, status: "Present" },
+  { id: "r6", employee: { employeeId: "EMP006", name: "Ananya Pillai", department: "Operations"  }, date: "2026-07-01T00:00:00Z", checkIn: null,                  checkOut: null,                  hoursWorked: null, status: "OnLeave" },
+];
+
+const MOCK_LATE = [
+  { id: "l1", name: "Priya Sharma", date: "2026-07-01T00:00:00Z", expected: "09:00", actual: "09:45", delay: "45 min" },
+  { id: "l2", name: "Rohan Das",    date: "2026-06-30T00:00:00Z", expected: "09:00", actual: "09:32", delay: "32 min" },
+  { id: "l3", name: "Kavya Menon",  date: "2026-06-29T00:00:00Z", expected: "09:00", actual: "09:20", delay: "20 min" },
+];
+
+const MOCK_OT = {
+  totalHours: 14,
+  records: [
+    { id: "o1", name: "Arjun Kumar",  date: "2026-06-30T00:00:00Z", hours: 2.5 },
+    { id: "o2", name: "Vikram Singh", date: "2026-06-28T00:00:00Z", hours: 3.0 },
+    { id: "o3", name: "Sneha Nair",   date: "2026-06-27T00:00:00Z", hours: 2.0 },
+    { id: "o4", name: "Arun Prakash", date: "2026-06-26T00:00:00Z", hours: 3.5 },
+    { id: "o5", name: "Deepika Rao",  date: "2026-06-25T00:00:00Z", hours: 3.0 },
+  ],
+};
+
+const MOCK_WFH = [
+  { id: "w1", name: "Sneha Nair",   date: "2026-07-01T00:00:00Z", status: "WFH" },
+  { id: "w2", name: "Arun Prakash", date: "2026-06-30T00:00:00Z", status: "WFH" },
+  { id: "w3", name: "Meera Iyer",   date: "2026-06-29T00:00:00Z", status: "WFH" },
+];
+
+const MOCK_REGULARIZATIONS = [
+  { id: "rg1", employeeName: "Rahul Verma", date: "2026-06-28T00:00:00Z", type: "Missing Punch", reason: "Forgot to check out",  status: "Pending" },
+  { id: "rg2", employeeName: "Kavya Menon", date: "2026-06-27T00:00:00Z", type: "Early Exit",    reason: "Doctor appointment",   status: "Approved" },
+  { id: "rg3", employeeName: "Rohan Das",   date: "2026-06-26T00:00:00Z", type: "Late Entry",    reason: "Traffic delay",        status: "Pending" },
+];
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const fmtTime = (d) => d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—";
 
@@ -47,10 +120,15 @@ export default function Attendance() {
   const { show: toast } = useToast();
   const [range, setRange] = useState("weekly");
 
-  const { data: dash } = useAttDashboard();
-  const { data: trends } = useAttTrends(range);
-  const { data: breakdown } = useAttBreakdown();
-  const { data: records = [], isLoading } = useAttendanceRecords();
+  const { data: rawDash } = useAttDashboard();
+  const { data: rawTrends } = useAttTrends(range);
+  const { data: rawBreakdown } = useAttBreakdown();
+  const { data: rawRecords, isLoading } = useAttendanceRecords();
+
+  const dash      = rawDash      ?? MOCK_DASH;
+  const trends    = rawTrends?.trend?.length    ? rawTrends    : MOCK_TRENDS;
+  const breakdown = rawBreakdown?.byDepartment?.length ? rawBreakdown : MOCK_BREAKDOWN;
+  const records   = rawRecords?.length ? rawRecords : MOCK_RECORDS;
   const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
   const branches = branchesRes || [];
 
@@ -203,9 +281,13 @@ function AttendanceList({ records, isLoading }) {
 }
 
 function ReportsTab() {
-  const { data: late = [] } = useLateReport();
-  const { data: ot } = useOvertime();
-  const { data: wfh = [] } = useWFH();
+  const { data: rawLate } = useLateReport();
+  const { data: rawOt }   = useOvertime();
+  const { data: rawWfh }  = useWFH();
+
+  const late = rawLate?.length ? rawLate : MOCK_LATE;
+  const ot   = rawOt?.records?.length  ? rawOt  : MOCK_OT;
+  const wfh  = rawWfh?.length  ? rawWfh  : MOCK_WFH;
   return (
     <Stack gap="md">
       <AppSection noPadding title="Late Entry Report" sub={`${late.length} late entries`}>
@@ -261,7 +343,8 @@ function ReportsTab() {
 
 function RegularizationTab({ toast }) {
   const [statusF, setStatusF] = useState("All");
-  const { data: list = [] } = useRegularizations(statusF);
+  const { data: rawList } = useRegularizations(statusF);
+  const list = rawList?.length ? rawList : MOCK_REGULARIZATIONS;
   const reviewMut = useReviewRegularization();
   const review = async (id, status) => {
     try { await reviewMut.mutateAsync({ id, status }); toast(`Request ${status.toLowerCase()}`, status === "Approved" ? "success" : "info"); }

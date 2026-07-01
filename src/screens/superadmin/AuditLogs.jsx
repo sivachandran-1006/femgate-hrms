@@ -16,6 +16,23 @@ import { getAuditLogs, getAuditStats, exportAuditLogs } from "../../api/auditLog
 
 const SEV_COLOR = { Critical: "red", Warning: "yellow", Info: "blue" };
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_LOGS = [
+  { id: "log1",  ts: "2026-07-01 09:12:34", actor: "arjun.sharma@mgate.in", action: "User login successful",               module: "Security",     ip: "203.0.113.10",  sev: "Info",     detail: { userId: "u1", method: "password" } },
+  { id: "log2",  ts: "2026-07-01 09:05:11", actor: "priya.nair@mgate.in",   action: "Role updated: EMPLOYEE → MANAGER",    module: "User Actions", ip: "203.0.113.21",  sev: "Warning",  detail: { targetUser: "u4", oldRole: "EMPLOYEE", newRole: "MANAGER" } },
+  { id: "log3",  ts: "2026-06-30 18:42:00", actor: "rohit.verma@mgate.in",  action: "New employee record created",         module: "User Actions", ip: "192.168.1.55",  sev: "Info",     detail: { employeeId: "EMP042", name: "Suresh Kumar" } },
+  { id: "log4",  ts: "2026-06-30 15:30:22", actor: "arjun.sharma@mgate.in", action: "Security settings updated (MFA on)", module: "Security",     ip: "203.0.113.10",  sev: "Critical", detail: { changed: ["mfaEnabled"], mfaEnabled: true } },
+  { id: "log5",  ts: "2026-06-30 12:01:05", actor: "sneha.pillai@mgate.in", action: "Payroll batch processed",             module: "System",       ip: "10.0.0.14",     sev: "Info",     detail: { month: "June 2026", count: 134 } },
+  { id: "log6",  ts: "2026-06-29 23:14:48", actor: "system",                action: "Automated backup completed",          module: "System",       ip: "127.0.0.1",     sev: "Info",     detail: { size: "1.2 GB", duration: "4m 32s" } },
+  { id: "log7",  ts: "2026-06-29 14:55:30", actor: "kiran.reddy@mgate.in",  action: "Invoice INV-2026-061 downloaded",     module: "User Actions", ip: "192.168.2.100", sev: "Info",     detail: { invoiceId: "INV-2026-061", amount: 45000 } },
+  { id: "log8",  ts: "2026-06-28 11:30:12", actor: "unknown",               action: "Failed login attempt (3rd attempt)",  module: "Security",     ip: "45.33.32.156",  sev: "Critical", detail: { email: "admin@mgate.in", attempts: 3 } },
+  { id: "log9",  ts: "2026-06-28 09:00:00", actor: "arjun.sharma@mgate.in", action: "IP 203.0.113.99 added to whitelist",  module: "Security",     ip: "203.0.113.10",  sev: "Warning",  detail: { ip: "203.0.113.99" } },
+  { id: "log10", ts: "2026-06-27 16:22:44", actor: "priya.nair@mgate.in",   action: "Company settings updated",            module: "System",       ip: "203.0.113.21",  sev: "Warning",  detail: { fields: ["timezone", "currency"] } },
+];
+
+const MOCK_AUDIT_STATS = { total: 247, security: 38, system: 82, userActions: 127 };
+
 const MOD_ICON = {
   Security:       <IconShield size={13} />,
   System:         <IconSettings size={13} />,
@@ -50,7 +67,8 @@ export default function AuditLogs({ userRole = "SUPER_ADMIN" }) {
     queryFn:  getAuditStats,
   });
 
-  const logs = data?.data?.logs || data?.logs || [];
+  const rawLogs = data?.data?.logs || data?.logs || [];
+  const logs = rawLogs.length ? rawLogs : MOCK_LOGS;
 
   // Build actor options from returned logs for the current query (or keep "All" only when loading)
   const actorOptions = [
@@ -58,7 +76,8 @@ export default function AuditLogs({ userRole = "SUPER_ADMIN" }) {
     ...Array.from(new Set(logs.map(l => l.actor))),
   ];
 
-  const s = stats?.data || stats || {};
+  const rawStats = stats?.data || stats || null;
+  const s = rawStats ?? MOCK_AUDIT_STATS;
   const statCards = [
     { label: "Total Events",    value: s.total        != null ? String(s.total)        : "—", color: "blue"   },
     { label: "Security Events", value: s.security     != null ? String(s.security)     : "—", color: "red"    },

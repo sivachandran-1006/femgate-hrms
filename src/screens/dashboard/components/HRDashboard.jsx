@@ -14,6 +14,56 @@ import { getDashboardSummary, getAttendanceSummary, getAnnouncements } from "../
 import { KpiCard, PanelCard, ChartTooltip, fmtMoney, initials } from "./DashboardKit";
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
+
+const MOCK_SUMMARY = {
+  totalEmployees: 134,
+  pendingLeaves: 8,
+  departments: [
+    { name: "Engineering",  count: 42 },
+    { name: "Sales",        count: 28 },
+    { name: "HR",           count: 14 },
+    { name: "Finance",      count: 18 },
+    { name: "Operations",   count: 32 },
+  ],
+};
+
+const MOCK_ATTEND = {
+  days: [
+    { day: "Mon", present: 118, absent: 10, onLeave: 6 },
+    { day: "Tue", present: 122, absent: 7,  onLeave: 5 },
+    { day: "Wed", present: 115, absent: 12, onLeave: 7 },
+    { day: "Thu", present: 120, absent: 8,  onLeave: 6 },
+    { day: "Fri", present: 119, absent: 9,  onLeave: 6 },
+  ],
+};
+
+const MOCK_ANNOUNCE = {
+  announcements: [
+    { id: 1, title: "Q3 All-Hands Meeting — 15 Jul 2026",          type: "info",    date: "10 Jul 2026", body: "Join us for the company-wide town hall." },
+    { id: 2, title: "Updated Leave Policy effective August 2026",   type: "hr",      date: "8 Jul 2026",  body: "New casual leave limits apply from Aug 1." },
+    { id: 3, title: "Payroll processed for June 2026",              type: "finance", date: "5 Jul 2026",  body: "Salaries credited by 5 Jul EOD." },
+    { id: 4, title: "Office closed on 17 Jul — National Holiday",   type: "info",    date: "3 Jul 2026",  body: "Work from home optional on adjacent days." },
+  ],
+};
+
+const MOCK_EMPLOYEES = [
+  { id: "E001", name: "Arjun Mehta",      department: "Engineering",  designation: "Sr. Engineer",     salary: 95000, status: "Active", joinDate: "2024-03-10", dob: "1991-07-15" },
+  { id: "E002", name: "Priya Sharma",     department: "HR",           designation: "HR Manager",       salary: 72000, status: "Active", joinDate: "2024-04-01", dob: "1988-07-22" },
+  { id: "E003", name: "Rahul Nair",       department: "Sales",        designation: "Sales Lead",       salary: 68000, status: "Active", joinDate: "2024-05-15", dob: "1993-08-05" },
+  { id: "E004", name: "Sneha Iyer",       department: "Finance",      designation: "Finance Analyst",  salary: 74000, status: "Active", joinDate: "2024-06-01", dob: "1990-07-30" },
+  { id: "E005", name: "Kiran Patel",      department: "Operations",   designation: "Ops Coordinator",  salary: 58000, status: "Active", joinDate: "2024-06-20", dob: "1995-09-11" },
+  { id: "E006", name: "Divya Krishnan",   department: "Engineering",  designation: "Frontend Dev",     salary: 82000, status: "Active", joinDate: "2024-07-01", dob: "1992-08-18" },
+];
+
+const MOCK_LEAVES = [
+  { id: "L001", employeeId: "E001", leaveType: "Casual",  status: "Approved",  startDate: "2026-07-03", endDate: "2026-07-04" },
+  { id: "L002", employeeId: "E003", leaveType: "Medical", status: "Pending",   startDate: "2026-07-08", endDate: "2026-07-09" },
+  { id: "L003", employeeId: "E005", leaveType: "Earned",  status: "Approved",  startDate: "2026-07-10", endDate: "2026-07-12" },
+  { id: "L004", employeeId: "E002", leaveType: "Casual",  status: "Pending",   startDate: "2026-07-14", endDate: "2026-07-14" },
+  { id: "L005", employeeId: "E006", leaveType: "Medical", status: "Approved",  startDate: "2026-07-17", endDate: "2026-07-18" },
+  { id: "L006", employeeId: "E004", leaveType: "Earned",  status: "Rejected",  startDate: "2026-07-21", endDate: "2026-07-22" },
+];
+
 const QUICK_ACTIONS = [
   { label: "Add Employee", icon: IconUserPlus, color: "blue", route: "/employees" },
   { label: "Apply Leave", icon: IconCalendarOff, color: "green", route: "/leave" },
@@ -22,7 +72,7 @@ const QUICK_ACTIONS = [
   { label: "Create Announcement", icon: IconSpeakerphone, color: "pink", route: "/announcements" },
 ];
 
-export const HRDashboard = ({ employees = [], leaves = [] }) => {
+export const HRDashboard = ({ employees: empProp = [], leaves: leavesProp = [] }) => {
   const navigate = useNavigate();
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
   const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],  queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
@@ -30,20 +80,24 @@ export const HRDashboard = ({ employees = [], leaves = [] }) => {
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
-  const summary = summaryData || {};
+  const employees = empProp.length ? empProp : MOCK_EMPLOYEES;
+  const leaves    = leavesProp.length ? leavesProp : MOCK_LEAVES;
+  const summary = summaryData ?? MOCK_SUMMARY;
   const total = summary.totalEmployees || employees.length || 0;
   const pendingLeaves = summary.pendingLeaves || 0;
   const depts = summary.departments || [];
   const deptCount = depts.length || new Set(employees.map((e) => e.department).filter(Boolean)).size;
 
-  const attendDays = attendData?.days || [];
+  const rawAttend   = attendData ?? MOCK_ATTEND;
+  const attendDays  = rawAttend?.days || [];
   const todayAttend = attendDays[attendDays.length - 1] || {};
   const present = todayAttend.present || 0;
   const attendPct = total > 0 ? Math.round((present / total) * 100) : 0;
   const onLeave = leaves.filter((l) => l.status === "Approved").length;
   const totalPayroll = employees.reduce((s, e) => s + (Number(e.salary) || 0), 0);
 
-  const announcements = announceData?.announcements || [];
+  const rawAnnounce   = announceData ?? MOCK_ANNOUNCE;
+  const announcements = rawAnnounce?.announcements || [];
 
   // Attendance line series (present/absent/onleave per day)
   const attendSeries = attendDays.map((d) => ({ day: d.day, Present: d.present || 0, Absent: d.absent || 0, "On Leave": d.onLeave || d.leave || 0 }));

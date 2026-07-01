@@ -31,6 +31,20 @@ const CATEGORIES = ["All", "Communication", "HR", "Productivity", "Security"];
 const CATEGORY_COLORS = { Productivity: "blue", Communication: "violet", HR: "green", Security: "orange" };
 const STATUS_COLORS = { Connected: "green", Available: "gray", Error: "red" };
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_INTEGRATIONS = [
+  { id: "microsoft365",    name: "Microsoft 365",    category: "Productivity",  connected: true,  error: null,  lastSync: "2026-07-01T08:00:00", description: "Email, calendar and Office apps for all users." },
+  { id: "slack",           name: "Slack",            category: "Communication", connected: true,  error: null,  lastSync: "2026-07-01T09:00:00", description: "Team messaging and notifications." },
+  { id: "google_workspace",name: "Google Workspace", category: "Productivity",  connected: false, error: null,  lastSync: null,                  description: "Gmail, Drive and Meet for collaboration." },
+  { id: "zoom",            name: "Zoom",             category: "Communication", connected: false, error: null,  lastSync: null,                  description: "Video conferencing for remote teams." },
+  { id: "okta",            name: "Okta",             category: "Security",      connected: true,  error: null,  lastSync: "2026-06-30T22:00:00", description: "Single Sign-On and identity management." },
+  { id: "azure_ad",        name: "Azure AD",         category: "Security",      connected: false, error: "Token expired — reconnection required.", lastSync: "2026-06-20T10:00:00", description: "Active Directory sync for user provisioning." },
+  { id: "freshservice",    name: "Freshservice",     category: "HR",            connected: false, error: null,  lastSync: null,                  description: "ITSM and asset management platform." },
+  { id: "workday",         name: "Workday",          category: "HR",            connected: true,  error: null,  lastSync: "2026-06-30T18:00:00", description: "HR data sync and workforce management." },
+  { id: "jira",            name: "Jira",             category: "Productivity",  connected: false, error: null,  lastSync: null,                  description: "Issue tracking and project management." },
+];
+
 export default function Integrations({ userRole = "SUPER_ADMIN" }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -47,7 +61,8 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
     queryFn: getIntegrations,
   });
 
-  const integrations = (data?.data?.integrations || []).map(i => ({
+  const rawIntegrations = data?.data?.integrations?.length ? data.data.integrations : MOCK_INTEGRATIONS;
+  const integrations = rawIntegrations.map(i => ({
     ...i,
     status:   i.error ? "Error" : i.connected ? "Connected" : "Available",
     lastSync: i.lastSync ? new Date(i.lastSync).toLocaleString() : (i.error || null),

@@ -20,6 +20,36 @@ const COST_LABEL = { 8000: "8,000", 28000: "28,000", 45000: "45,000" };
 
 const EMPTY_FORM = { name: "", industry: "Technology", adminEmail: "", adminPassword: "", adminName: "", plan: "Pro", city: "", country: "India" };
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_COMPANIES = [
+  {
+    id: "c1", name: "Annz Technologies",   industry: "Technology",  plan: "Enterprise",
+    status: "Active",    adminName: "Arjun Sharma",  adminEmail: "arjun@annztech.com",
+    city: "Bengaluru",  country: "India",  employees: 134, createdAt: "2022-06-01T00:00:00",
+  },
+  {
+    id: "c2", name: "Mgate Solutions",     industry: "Software",    plan: "Pro",
+    status: "Active",    adminName: "Priya Nair",    adminEmail: "priya@mgate.io",
+    city: "Chennai",    country: "India",  employees: 52,  createdAt: "2023-01-15T00:00:00",
+  },
+  {
+    id: "c3", name: "Horizon Consulting",  industry: "Consulting",  plan: "Pro",
+    status: "Trial",     adminName: "Vikash Patel",  adminEmail: "vikash@horizonconsulting.in",
+    city: "Mumbai",     country: "India",  employees: 28,  createdAt: "2026-05-20T00:00:00",
+  },
+  {
+    id: "c4", name: "FinEdge Capital",     industry: "Finance",     plan: "Starter",
+    status: "Active",    adminName: "Ritu Agarwal",  adminEmail: "ritu@finedge.in",
+    city: "Delhi",      country: "India",  employees: 19,  createdAt: "2024-03-10T00:00:00",
+  },
+  {
+    id: "c5", name: "MedCare Health",      industry: "Healthcare",  plan: "Enterprise",
+    status: "Suspended", adminName: "Sunil Menon",   adminEmail: "sunil@medcarehealth.in",
+    city: "Hyderabad",  country: "India",  employees: 87,  createdAt: "2023-09-01T00:00:00",
+  },
+];
+
 export default function MultiCompany() {
   const [search, setSearch]           = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -41,7 +71,8 @@ export default function MultiCompany() {
     }),
   });
 
-  const companies = data?.data?.companies || [];
+  const rawCompanies = data?.data?.companies || [];
+  const companies = rawCompanies.length ? rawCompanies : MOCK_COMPANIES;
 
   // ── Computed stats ────────────────────────────────────────────────────────
   const totalEmployees = companies.reduce((s, c) => s + (c._count?.employees ?? c.employees ?? 0), 0);

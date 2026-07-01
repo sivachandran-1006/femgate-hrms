@@ -25,6 +25,17 @@ import {
 
 const CATEGORIES = ["All", "HR", "Payroll", "Security", "System", "Assets", "Leave"];
 
+const MOCK_NOTIFICATIONS = [
+  { id: 1,  title: "New Employee Joined",          body: "Ravi Kumar has completed onboarding and is now active.",           category: "HR",       severity: "info",     read: false, time: "10 min ago"  },
+  { id: 2,  title: "Payroll Processed",            body: "June 2026 payroll has been processed for 248 employees.",          category: "Payroll",  severity: "info",     read: false, time: "1 hr ago"    },
+  { id: 3,  title: "Failed Login Attempt",         body: "5 consecutive failed login attempts detected for admin@mgate.com.",category: "Security", severity: "critical", read: false, time: "2 hr ago"    },
+  { id: 4,  title: "Leave Request Pending",        body: "3 leave requests are awaiting your approval.",                     category: "HR",       severity: "warning",  read: false, time: "3 hr ago"    },
+  { id: 5,  title: "Asset Due for Return",         body: "Laptop SN-20241 assigned to Priya Sharma is due for return.",      category: "Assets",   severity: "warning",  read: true,  time: "Yesterday"   },
+  { id: 6,  title: "System Backup Completed",      body: "Nightly database backup completed successfully.",                  category: "System",   severity: "info",     read: true,  time: "Yesterday"   },
+  { id: 7,  title: "Salary Revision Approved",     body: "Q2 salary revisions have been approved and will be effective July 1.", category: "Payroll", severity: "info",  read: true,  time: "2 days ago"  },
+  { id: 8,  title: "New Policy Published",         body: "Work From Home policy v2.0 has been published to all employees.",  category: "HR",       severity: "info",     read: true,  time: "3 days ago"  },
+];
+
 const CAT_CONFIG = {
   HR:       { color: "violet", icon: <IconUsers size={16} /> },
   Payroll:  { color: "green",  icon: <IconCreditCard size={16} /> },
@@ -61,7 +72,8 @@ export default function NotificationCenter() {
     queryKey: ["notifications"],
     queryFn: getNotifications,
   });
-  const notifications = data?.data?.notifications ?? [];
+  const rawNotifications = data?.data?.notifications ?? data?.notifications ?? [];
+  const notifications = rawNotifications.length ? rawNotifications : MOCK_NOTIFICATIONS;
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications"] });
 

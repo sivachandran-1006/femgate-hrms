@@ -65,6 +65,21 @@ const STATUS_FILTER_OPTIONS = [
 
 const EMPTY_NEW_USER = { name: "", email: "", password: "", confirmPassword: "", role: "EMPLOYEE" };
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_USERS = [
+  { id: "u1",  name: "Arjun Sharma",  email: "arjun.sharma@mgate.in",  role: "SUPER_ADMIN", status: "Active",    lastLogin: "2026-07-01T09:15:00", joined: "2023-01-10", dept: "Engineering", phone: "+91 9876543210" },
+  { id: "u2",  name: "Priya Nair",    email: "priya.nair@mgate.in",    role: "ADMIN",       status: "Active",    lastLogin: "2026-06-30T18:42:00", joined: "2023-03-22", dept: "Operations",  phone: "+91 9845678901" },
+  { id: "u3",  name: "Rohit Verma",   email: "rohit.verma@mgate.in",   role: "HR",          status: "Active",    lastLogin: "2026-07-01T08:55:00", joined: "2023-06-15", dept: "HR",          phone: "+91 9812345678" },
+  { id: "u4",  name: "Sneha Pillai",  email: "sneha.pillai@mgate.in",  role: "MANAGER",     status: "Active",    lastLogin: "2026-06-29T14:30:00", joined: "2023-09-01", dept: "Engineering", phone: "+91 9801234567" },
+  { id: "u5",  name: "Kiran Reddy",   email: "kiran.reddy@mgate.in",   role: "FINANCE",     status: "Active",    lastLogin: "2026-06-28T11:00:00", joined: "2024-01-05", dept: "Finance",     phone: "+91 9876012345" },
+  { id: "u6",  name: "Ananya Iyer",   email: "ananya.iyer@mgate.in",   role: "EMPLOYEE",    status: "Active",    lastLogin: "2026-06-27T16:20:00", joined: "2024-04-20", dept: "Design",      phone: "+91 9823456789" },
+  { id: "u7",  name: "Vikram Singh",  email: "vikram.singh@mgate.in",  role: "EMPLOYEE",    status: "Suspended", lastLogin: "2026-05-10T09:00:00", joined: "2023-11-12", dept: "Sales",       phone: "+91 9867890123" },
+  { id: "u8",  name: "Divya Menon",   email: "divya.menon@mgate.in",   role: "MANAGER",     status: "Active",    lastLogin: "2026-07-01T07:45:00", joined: "2024-02-14", dept: "Product",     phone: "+91 9856789012" },
+  { id: "u9",  name: "Suresh Kumar",  email: "suresh.kumar@mgate.in",  role: "EMPLOYEE",    status: "Pending",   lastLogin: null,                  joined: "2026-06-25", dept: "Support",     phone: "+91 9834567890" },
+  { id: "u10", name: "Meera Joshi",   email: "meera.joshi@mgate.in",   role: "HR",          status: "Active",    lastLogin: "2026-06-30T10:30:00", joined: "2023-08-08", dept: "HR",          phone: "+91 9890123456" },
+];
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function initials(name = "") {
@@ -97,7 +112,7 @@ export default function UserManagement() {
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  const { data: users = [], isLoading, isError } = useQuery({
+  const { data: rawUsers = [], isLoading, isError } = useQuery({
     queryKey: ["users", search, roleFilter, statusFilter],
     queryFn: () => getUsers({
       search: search || undefined,
@@ -107,6 +122,8 @@ export default function UserManagement() {
     select: (res) => res?.data?.users ?? res?.data ?? res ?? [],
     keepPreviousData: true,
   });
+
+  const users = rawUsers.length ? rawUsers : MOCK_USERS;
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 

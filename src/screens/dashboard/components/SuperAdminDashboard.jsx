@@ -20,6 +20,58 @@ import { useFetchAllEmployees } from "../../../queries/useEmployees";
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
+
+const MOCK_SUMMARY = {
+  totalEmployees: 134,
+  activeEmployees: 121,
+  pendingLeaves: 8,
+  totalSalary: 9820000,
+  avgSalary: 73284,
+  departments: [
+    { name: "Engineering",  count: 42 },
+    { name: "Sales",        count: 28 },
+    { name: "HR",           count: 14 },
+    { name: "Finance",      count: 18 },
+    { name: "Operations",   count: 32 },
+  ],
+};
+
+const MOCK_ATTEND = {
+  days: [
+    { day: "Mon", present: 118, absent: 10, onLeave: 6 },
+    { day: "Tue", present: 122, absent: 7,  onLeave: 5 },
+    { day: "Wed", present: 115, absent: 12, onLeave: 7 },
+    { day: "Thu", present: 120, absent: 8,  onLeave: 6 },
+    { day: "Fri", present: 119, absent: 9,  onLeave: 6 },
+  ],
+};
+
+const MOCK_ANNOUNCE = {
+  announcements: [
+    { id: 1, title: "Q3 All-Hands Meeting — 15 Jul 2026",          type: "info",    date: "10 Jul 2026" },
+    { id: 2, title: "Updated Leave Policy effective August 2026",   type: "hr",      date: "8 Jul 2026"  },
+    { id: 3, title: "Payroll processed for June 2026",              type: "finance", date: "5 Jul 2026"  },
+    { id: 4, title: "Office closed on 17 Jul — National Holiday",   type: "info",    date: "3 Jul 2026"  },
+    { id: 5, title: "New security awareness training mandatory",    type: "high",    date: "1 Jul 2026"  },
+  ],
+};
+
+const MOCK_PAYROLL = {
+  months: [
+    { label: "Feb", net: 9200000, gross: 10120000 },
+    { label: "Mar", net: 9380000, gross: 10300000 },
+    { label: "Apr", net: 9510000, gross: 10450000 },
+    { label: "May", net: 9640000, gross: 10580000 },
+    { label: "Jun", net: 9820000, gross: 10790000 },
+  ],
+};
+
+const MOCK_HEALTH = {
+  apiUptime:  { value: 99 },
+  dbHealth:   { value: 98 },
+  storage:    { value: 47 },
+  license:    { value: 63 },
+};
 const PIE_COLORS = ["#228be6", "#40c057", "#fab005", "#7950f2", "#fa5252"];
 const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
@@ -44,7 +96,7 @@ export const SuperAdminDashboard = ({ employees: empProp = [] }) => {
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
   const employees = allEmployees.length ? allEmployees : empProp;
-  const summary       = summaryData || {};
+  const summary       = summaryData ?? MOCK_SUMMARY;
   const total         = summary.totalEmployees  || employees.length || 0;
   const active        = summary.activeEmployees || employees.filter((e) => e.status === "Active").length || 0;
   const pendingLeaves = summary.pendingLeaves   || 0;
@@ -52,17 +104,20 @@ export const SuperAdminDashboard = ({ employees: empProp = [] }) => {
   const depts         = summary.departments     || [];
   const deptCount     = depts.length || new Set(employees.map((e) => e.department).filter(Boolean)).size;
 
-  const attendDays  = attendData?.days || [];
+  const rawAttend   = attendData ?? MOCK_ATTEND;
+  const attendDays  = rawAttend?.days || [];
   const todayAttend = attendDays[attendDays.length - 1] || {};
   const present     = todayAttend.present || 0;
   const attendPct   = total > 0 ? Math.round((present / total) * 100) : 0;
 
   const onboardData        = Array.isArray(onboardResp) ? onboardResp : (onboardResp.onboardings || []);
   const activeOnboardings  = onboardData.filter((o) => o.status === "Pending" || o.status === "In Progress").length;
-  const payrollMonths      = (payrollData?.months || []).map((m) => ({ month: m.label, payroll: m.net }));
+  const rawPayroll         = payrollData ?? MOCK_PAYROLL;
+  const payrollMonths      = (rawPayroll?.months || []).map((m) => ({ month: m.label, payroll: m.net }));
   const payrollSpark       = payrollMonths.length > 1 ? payrollMonths.slice(-5).map((m) => m.payroll) : ramp(totalSalary);
   const presentSpark       = attendDays.length > 1 ? attendDays.slice(-5).map((d) => d.present || 0) : ramp(present);
-  const announcements      = announceData?.announcements || [];
+  const rawAnnounce        = announceData ?? MOCK_ANNOUNCE;
+  const announcements      = rawAnnounce?.announcements || [];
 
   // Attendance area series
   const attendSeries = attendDays.map((d) => ({
@@ -102,11 +157,12 @@ export const SuperAdminDashboard = ({ employees: empProp = [] }) => {
     .slice(0, 6);
 
   // System health
-  const systemHealth = healthData ? [
-    { label: "API Uptime",    value: healthData.apiUptime?.value ?? 99, color: "green"  },
-    { label: "DB Health",     value: healthData.dbHealth?.value  ?? 98, color: "blue"   },
-    { label: "Storage Used",  value: healthData.storage?.value   ?? 45, color: "yellow" },
-    { label: "License Usage", value: healthData.license?.value   ?? 60, color: "violet" },
+  const rawHealth    = healthData ?? MOCK_HEALTH;
+  const systemHealth = rawHealth ? [
+    { label: "API Uptime",    value: rawHealth.apiUptime?.value ?? 99, color: "green"  },
+    { label: "DB Health",     value: rawHealth.dbHealth?.value  ?? 98, color: "blue"   },
+    { label: "Storage Used",  value: rawHealth.storage?.value   ?? 45, color: "yellow" },
+    { label: "License Usage", value: rawHealth.license?.value   ?? 60, color: "violet" },
   ] : [];
 
   return (

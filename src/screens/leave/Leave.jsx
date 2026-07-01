@@ -31,6 +31,23 @@ const LEAVE_TYPE_COLORS = {
 
 const STATUS_COLORS = { Approved: "green", Pending: "yellow", Rejected: "red" };
 
+// ── Mock fallback data ────────────────────────────────────────────────────────
+const MOCK_LEAVES = [
+  { _id: "lv1", employee: "Arjun Kumar",   leaveType: "Casual Leave", fromDate: "2026-07-03", toDate: "2026-07-04", days: 2, reason: "Personal work",       status: "Pending",  notify: [] },
+  { _id: "lv2", employee: "Priya Sharma",  leaveType: "Sick Leave",   fromDate: "2026-06-28", toDate: "2026-06-28", days: 1, reason: "Fever",               status: "Approved", notify: ["@All"] },
+  { _id: "lv3", employee: "Rahul Verma",   leaveType: "Annual Leave", fromDate: "2026-07-10", toDate: "2026-07-14", days: 5, reason: "Family vacation",      status: "Pending",  notify: [] },
+  { _id: "lv4", employee: "Sneha Nair",    leaveType: "Earned Leave", fromDate: "2026-06-20", toDate: "2026-06-21", days: 2, reason: "Travel",               status: "Approved", notify: [] },
+  { _id: "lv5", employee: "Vikram Singh",  leaveType: "Sick Leave",   fromDate: "2026-06-15", toDate: "2026-06-15", days: 1, reason: "Headache",             status: "Rejected", notify: [] },
+  { _id: "lv6", employee: "Ananya Pillai", leaveType: "Casual Leave", fromDate: "2026-07-07", toDate: "2026-07-07", days: 1, reason: "Personal appointment", status: "Pending",  notify: [] },
+];
+
+const MOCK_BALANCE = [
+  { label: "Casual Leave", total: 12, used: 3, color: "yellow" },
+  { label: "Sick Leave",   total: 10, used: 2, color: "red"    },
+  { label: "Annual Leave", total: 18, used: 5, color: "blue"   },
+  { label: "Earned Leave", total: 15, used: 4, color: "violet" },
+];
+
 const Leave = ({ embedded = false } = {}) => {
   const { user } = useAuth();
   const { show } = useToast();
@@ -98,8 +115,11 @@ const Leave = ({ embedded = false } = {}) => {
 
   // ── Derived ───────────────────────────────────────────────────────────────────
 
-  const leaves  = Array.isArray(leavesRaw)  ? leavesRaw  : [];
-  const balance = Array.isArray(balanceRaw) ? balanceRaw : [];
+  const leavesArr  = Array.isArray(leavesRaw)  ? leavesRaw  : [];
+  const balanceArr = Array.isArray(balanceRaw) ? balanceRaw : [];
+
+  const leaves  = leavesArr.length  ? leavesArr  : MOCK_LEAVES;
+  const balance = balanceArr.length ? balanceArr : MOCK_BALANCE;
 
   const total    = leaves.length;
   const approved = leaves.filter(l => l.status === "Approved").length;

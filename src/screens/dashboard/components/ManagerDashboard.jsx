@@ -14,6 +14,46 @@ import { getAnnouncements, getUpcomingEvents, getDashboardSummary, getAttendance
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 const PIE = ["#6d28d9", "#2563eb", "#16a34a", "#f59e0b", "#ef4444"];
+
+const MOCK_SUMMARY = { pendingLeaves: 4 };
+
+const MOCK_ATTEND = {
+  days: [
+    { day: "Mon", present: 11, absent: 2, onLeave: 1 },
+    { day: "Tue", present: 12, absent: 1, onLeave: 1 },
+    { day: "Wed", present: 10, absent: 2, onLeave: 2 },
+    { day: "Thu", present: 12, absent: 1, onLeave: 1 },
+    { day: "Fri", present: 11, absent: 2, onLeave: 1 },
+  ],
+};
+
+const MOCK_ANNOUNCE = {
+  announcements: [
+    { id: 1, title: "Q3 All-Hands Meeting — 15 Jul 2026",        type: "info",    date: "10 Jul 2026" },
+    { id: 2, title: "Updated Leave Policy effective August 2026", type: "hr",      date: "8 Jul 2026"  },
+    { id: 3, title: "Payroll processed for June 2026",            type: "finance", date: "5 Jul 2026"  },
+    { id: 4, title: "Office closed on 17 Jul — National Holiday", type: "info",    date: "3 Jul 2026"  },
+    { id: 5, title: "New security awareness training mandatory",  type: "high",    date: "1 Jul 2026"  },
+  ],
+};
+
+const MOCK_EMPLOYEES = [
+  { id: "E001", name: "Arjun Mehta",    department: "Engineering", designation: "Sr. Engineer",    salary: 95000, status: "Active",   joinDate: "2024-03-10" },
+  { id: "E002", name: "Priya Sharma",   department: "Engineering", designation: "Frontend Dev",    salary: 82000, status: "Active",   joinDate: "2024-04-01" },
+  { id: "E003", name: "Rahul Nair",     department: "Engineering", designation: "Backend Dev",     salary: 78000, status: "Present",  joinDate: "2024-05-15" },
+  { id: "E004", name: "Sneha Iyer",     department: "Engineering", designation: "QA Engineer",     salary: 70000, status: "Present",  joinDate: "2024-06-01" },
+  { id: "E005", name: "Kiran Patel",    department: "Engineering", designation: "DevOps Engineer", salary: 88000, status: "On Leave", joinDate: "2024-06-20" },
+  { id: "E006", name: "Divya Krishnan", department: "Engineering", designation: "Tech Lead",       salary: 105000, status: "Active",  joinDate: "2024-07-01" },
+];
+
+const MOCK_LEAVES = [
+  { id: "L001", employeeId: "E001", leaveType: "Casual",  status: "Pending",  startDate: "2026-07-08", endDate: "2026-07-09" },
+  { id: "L002", employeeId: "E003", leaveType: "Medical", status: "Approved", startDate: "2026-07-10", endDate: "2026-07-11" },
+  { id: "L003", employeeId: "E005", leaveType: "Earned",  status: "Approved", startDate: "2026-07-14", endDate: "2026-07-16" },
+  { id: "L004", employeeId: "E002", leaveType: "Casual",  status: "Pending",  startDate: "2026-07-17", endDate: "2026-07-17" },
+  { id: "L005", employeeId: "E006", leaveType: "Medical", status: "Pending",  startDate: "2026-07-21", endDate: "2026-07-22" },
+];
+
 const QUICK = [
   { label: "Approve Leave", icon: IconClipboardCheck, color: "violet", route: "/approvals" },
   { label: "Team Attendance", icon: IconUserCheck, color: "green", route: "/attendance" },
@@ -21,7 +61,7 @@ const QUICK = [
   { label: "View My Team", icon: IconUsers, color: "blue", route: "/my-team" },
 ];
 
-export const ManagerDashboard = ({ employees = [], leaves = [] }) => {
+export const ManagerDashboard = ({ employees: empProp = [], leaves: leavesProp = [] }) => {
   const navigate = useNavigate();
   const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
   const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],   queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
@@ -29,16 +69,21 @@ export const ManagerDashboard = ({ employees = [], leaves = [] }) => {
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 
+  const employees = empProp.length ? empProp : MOCK_EMPLOYEES;
+  const leaves    = leavesProp.length ? leavesProp : MOCK_LEAVES;
   const teamTotal   = employees.length;
   const teamPresent = employees.filter((e) => e.status === "Present" || e.status === "Active").length;
   const teamOnLeave = employees.filter((e) => e.status === "Leave" || e.status === "On Leave").length;
-  const pendingLeaves = (summaryData?.pendingLeaves) || leaves.filter((l) => l.status === "Pending").length;
+  const rawSummary    = summaryData ?? MOCK_SUMMARY;
+  const pendingLeaves = rawSummary?.pendingLeaves || leaves.filter((l) => l.status === "Pending").length;
   const attendPct = teamTotal > 0 ? Math.round((teamPresent / teamTotal) * 100) : 0;
 
-  const announcements = announceData?.announcements || [];
+  const rawAnnounce   = announceData ?? MOCK_ANNOUNCE;
+  const announcements = rawAnnounce?.announcements || [];
 
   // Attendance area series
-  const attendDays = attendData?.days || [];
+  const rawAttend    = attendData ?? MOCK_ATTEND;
+  const attendDays   = rawAttend?.days || [];
   const attendSeries = attendDays.map((d) => ({ day: d.day, Present: d.present || 0, Absent: d.absent || 0, "On Leave": d.onLeave || d.leave || 0 }));
   const presentSpark = attendSeries.length ? attendSeries.map((d) => d.Present) : [teamTotal * 0.7, teamTotal * 0.85, teamTotal * 0.8, teamTotal * 0.9, teamPresent];
   const teamSpark = [teamTotal * 0.9, teamTotal * 0.93, teamTotal * 0.96, teamTotal];

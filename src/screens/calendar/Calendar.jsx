@@ -23,6 +23,38 @@ import {
 } from "@mantine/core";
 import { COLORS } from "../../theme/colors";
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_HOLIDAYS = [
+  { date: "2026-01-01", name: "New Year's Day",       type: "National", optional: false },
+  { date: "2026-01-14", name: "Pongal",               type: "Regional", optional: false },
+  { date: "2026-01-26", name: "Republic Day",         type: "National", optional: false },
+  { date: "2026-03-25", name: "Holi",                 type: "National", optional: false },
+  { date: "2026-04-14", name: "Tamil New Year",       type: "Regional", optional: true  },
+  { date: "2026-04-18", name: "Good Friday",          type: "National", optional: false },
+  { date: "2026-05-01", name: "Labour Day",           type: "National", optional: false },
+  { date: "2026-08-15", name: "Independence Day",     type: "National", optional: false },
+  { date: "2026-09-02", name: "Ganesh Chaturthi",     type: "National", optional: false },
+  { date: "2026-10-02", name: "Gandhi Jayanti",       type: "National", optional: false },
+  { date: "2026-10-20", name: "Diwali",               type: "National", optional: false },
+  { date: "2026-11-14", name: "Diwali Holiday",       type: "National", optional: true  },
+  { date: "2026-12-25", name: "Christmas",            type: "National", optional: false },
+  { date: "2026-06-17", name: "Eid Al-Adha",          type: "National", optional: false },
+  { date: "2026-07-10", name: "Muharram",             type: "National", optional: true  },
+];
+
+const MOCK_ONBOARDING = [
+  { joiningDate: "2026-07-01", name: "Ananya Pillai"   },
+  { joiningDate: "2026-07-15", name: "Kiran Subramani" },
+  { joiningDate: "2026-08-01", name: "Nithya Suresh"   },
+];
+
+const MOCK_LEAVES = [
+  { status: "Approved", fromDate: "2026-07-03", employee: "Kavitha Rajan", leaveType: "Casual Leave"  },
+  { status: "Approved", fromDate: "2026-07-14", employee: "Arjun Mehta",   leaveType: "Sick Leave"    },
+  { status: "Pending",  fromDate: "2026-07-20", employee: "Priya Sharma",  leaveType: "Annual Leave"  },
+];
+
 // ── Event color map ────────────────────────────────────────────────────────────
 const EVENT_COLORS = {
   join:    { dot: "#16a34a", bg: "#dcfce7", text: "#15803d", darkBg: "#14532d", darkText: "#86efac" },
@@ -201,13 +233,17 @@ function SidePanelEvent({ event, darkMode }) {
 
 // ── Main Calendar component ────────────────────────────────────────────────────
 export default function Calendar({ darkMode = false }) {
-  const { data: holidaysRaw = [] } = useHolidays();
-  const { data: onboardRaw = [] }  = useOnboarding();
-  const { data: leavesRaw = [] }   = useQuery({
+  const { data: holidaysRawData = [] } = useHolidays();
+  const { data: onboardRawData = [] }  = useOnboarding();
+  const { data: leavesRawData = [] }   = useQuery({
     queryKey: ["leaves"],
     queryFn: () => fetchLeaves(),
     select: (r) => r?.data ?? r ?? [],
   });
+
+  const holidaysRaw = holidaysRawData.length ? holidaysRawData : MOCK_HOLIDAYS;
+  const onboardRaw  = onboardRawData.length  ? onboardRawData  : MOCK_ONBOARDING;
+  const leavesRaw   = leavesRawData.length   ? leavesRawData   : MOCK_LEAVES;
 
   const leaves = Array.isArray(leavesRaw) ? leavesRaw : [];
 

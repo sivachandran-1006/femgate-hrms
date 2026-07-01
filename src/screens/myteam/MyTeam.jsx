@@ -8,6 +8,36 @@ import { fetchMyTeam, fetchApprovals, approveLeave } from "../../api/approvalsAp
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { getInitials, getAvatarColor } from "../../utils/helpers";
 
+const MOCK_TEAM = [
+  { id: 1, name: "Priya Sharma",    designation: "Senior Developer",    department: "Engineering",    employeeId: "EMP001", status: "Active"   },
+  { id: 2, name: "Arjun Mehta",     designation: "UI/UX Designer",      department: "Design",         employeeId: "EMP002", status: "Active"   },
+  { id: 3, name: "Kavitha Rajan",   designation: "QA Engineer",         department: "Quality",        employeeId: "EMP003", status: "On Leave" },
+  { id: 4, name: "Suresh Babu",     designation: "Backend Developer",   department: "Engineering",    employeeId: "EMP004", status: "Active"   },
+  { id: 5, name: "Deepa Krishnan",  designation: "Business Analyst",    department: "Product",        employeeId: "EMP005", status: "Active"   },
+  { id: 6, name: "Rahul Verma",     designation: "DevOps Engineer",     department: "Infrastructure", employeeId: "EMP006", status: "Active"   },
+];
+
+const MOCK_PENDING_LEAVES = [
+  {
+    id: 101,
+    employee: { name: "Kavitha Rajan" },
+    type: "Casual Leave",
+    days: 2,
+    fromDate: "2026-07-03",
+    toDate: "2026-07-04",
+    reason: "Family function",
+  },
+  {
+    id: 102,
+    employee: { name: "Arjun Mehta" },
+    type: "Sick Leave",
+    days: 1,
+    fromDate: "2026-07-07",
+    toDate: "2026-07-07",
+    reason: "Medical appointment",
+  },
+];
+
 const statusColor = (s) => s === "Active" ? "green" : s === "On Leave" ? "yellow" : "gray";
 
 export default function MyTeam({ darkMode }) {
@@ -15,17 +45,19 @@ export default function MyTeam({ darkMode }) {
   const [leaveModal, setLeaveModal] = useState(null);
   const [note, setNote] = useState("");
 
-  const { data: team = [] } = useQuery({
+  const { data: teamRaw = [] } = useQuery({
     queryKey: ["my-team"],
     queryFn: () => fetchMyTeam().then(r => r.data?.data ?? r.data ?? []),
   });
+  const team = teamRaw.length ? teamRaw : MOCK_TEAM;
 
   const { data: approvals } = useQuery({
     queryKey: ["approvals"],
     queryFn: () => fetchApprovals().then(r => r.data?.data ?? r.data),
   });
 
-  const pendingLeaves = approvals?.leaves || [];
+  const pendingLeavesRaw = approvals?.leaves || [];
+  const pendingLeaves = pendingLeavesRaw.length ? pendingLeavesRaw : MOCK_PENDING_LEAVES;
 
   const approveMut = useMutation({
     mutationFn: ({ id, action }) => approveLeave(id, { action, note }),

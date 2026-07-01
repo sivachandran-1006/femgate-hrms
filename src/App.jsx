@@ -72,6 +72,7 @@ import DashboardBuilder       from "./screens/platform/DashboardBuilder";
 import WorkflowBuilder        from "./screens/platform/WorkflowBuilder";
 import FormBuilder            from "./screens/platform/FormBuilder";
 import EmailTemplateBuilder   from "./screens/platform/EmailTemplateBuilder";
+import LetterTemplateBuilder  from "./screens/platform/LetterTemplateBuilder";
 
 // Super Admin screens
 import RoleManagement from "./screens/roles/RoleManagement";
@@ -554,6 +555,11 @@ export default function App() {
           <Route path="/email-template-builder" element={
             <RoleGuard routeId="email-template-builder" userRole={userRole}>
               <ScreenWrapper darkMode={dark}><EmailTemplateBuilder darkMode={dark} /></ScreenWrapper>
+            </RoleGuard>
+          } />
+          <Route path="/letter-template-builder" element={
+            <RoleGuard routeId="letter-template-builder" userRole={userRole}>
+              <ScreenWrapper darkMode={dark}><LetterTemplateBuilder darkMode={dark} /></ScreenWrapper>
             </RoleGuard>
           } />
           <Route path="/companies" element={

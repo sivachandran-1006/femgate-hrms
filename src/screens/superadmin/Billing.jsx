@@ -32,6 +32,37 @@ const PLAN_FEATURES = [
 
 const PLAN_OPTIONS = ["Starter", "Pro", "Enterprise"];
 
+// ── Mock fallback data ─────────────────────────────────────────────────────────
+
+const MOCK_BILLING_PLAN = {
+  plan:           "Enterprise",
+  status:         "active",
+  amount:         45000,
+  currency:       "INR",
+  billingCycle:   "month",
+  nextBillingDate:"2026-08-01T00:00:00",
+  billingEmail:   "billing@annztech.com",
+};
+
+const MOCK_INVOICES = [
+  { id: "INV-2026-007", date: "2026-07-01T00:00:00", amount: 45000, status: "Paid" },
+  { id: "INV-2026-006", date: "2026-06-01T00:00:00", amount: 45000, status: "Paid" },
+  { id: "INV-2026-005", date: "2026-05-01T00:00:00", amount: 45000, status: "Paid" },
+  { id: "INV-2026-004", date: "2026-04-01T00:00:00", amount: 45000, status: "Paid" },
+  { id: "INV-2026-003", date: "2026-03-01T00:00:00", amount: 45000, status: "Paid" },
+];
+
+const MOCK_USAGE = {
+  employees: { used: 134, limit: 200 },
+  storage:   { used: 18,  limit: 50 },
+  apiCalls:  { used: 24820, limit: 100000 },
+};
+
+const MOCK_PAYMENT_METHODS = [
+  { id: "pm1", cardBrand: "Visa",       cardLast4: "4242", expiry: "08/28", isDefault: true  },
+  { id: "pm2", cardBrand: "Mastercard", cardLast4: "1234", expiry: "03/27", isDefault: false },
+];
+
 export default function Billing() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -98,10 +129,12 @@ export default function Billing() {
     upgradeMutation.mutate(selectedPlan);
   };
 
-  const plan     = planData?.data    || {};
-  const invoices = invoicesData?.data?.invoices || [];
-  const usage    = usageData?.data   || {};
-  const cards    = cardsData?.data?.methods || [];
+  const plan     = planData?.data    || planData    || MOCK_BILLING_PLAN;
+  const rawInvoices = invoicesData?.data?.invoices || [];
+  const invoices = rawInvoices.length ? rawInvoices : MOCK_INVOICES;
+  const usage    = usageData?.data   || usageData   || MOCK_USAGE;
+  const rawCards = cardsData?.data?.methods || [];
+  const cards    = rawCards.length ? rawCards : MOCK_PAYMENT_METHODS;
 
   const usageBars = [
     {

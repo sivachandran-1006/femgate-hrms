@@ -38,6 +38,21 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const CATEGORIES = ["Identity", "Employment", "Financial", "Other"];
 
+const MOCK_DOCUMENTS = [
+  { id: 1,  employee: { name: "Priya Sharma"   }, name: "Aadhaar Card",          category: "Identity",   createdAt: "2026-01-10T00:00:00Z", expiryDate: null },
+  { id: 2,  employee: { name: "Priya Sharma"   }, name: "PAN Card",              category: "Identity",   createdAt: "2026-01-10T00:00:00Z", expiryDate: null },
+  { id: 3,  employee: { name: "Arjun Mehta"    }, name: "Offer Letter",          category: "Employment", createdAt: "2025-06-15T00:00:00Z", expiryDate: null },
+  { id: 4,  employee: { name: "Arjun Mehta"    }, name: "Salary Slip — Jun 2026",category: "Financial",  createdAt: "2026-06-30T00:00:00Z", expiryDate: null },
+  { id: 5,  employee: { name: "Kavitha Rajan"  }, name: "Aadhaar Card",          category: "Identity",   createdAt: "2026-02-05T00:00:00Z", expiryDate: null },
+  { id: 6,  employee: { name: "Kavitha Rajan"  }, name: "Experience Letter",     category: "Employment", createdAt: "2026-03-20T00:00:00Z", expiryDate: "2028-03-20T00:00:00Z" },
+  { id: 7,  employee: { name: "Suresh Babu"    }, name: "Form 16",               category: "Financial",  createdAt: "2026-05-01T00:00:00Z", expiryDate: null },
+  { id: 8,  employee: { name: "Deepa Krishnan" }, name: "Appointment Letter",    category: "Employment", createdAt: "2025-09-01T00:00:00Z", expiryDate: null },
+  { id: 9,  employee: { name: "Deepa Krishnan" }, name: "Passport Copy",         category: "Identity",   createdAt: "2026-04-12T00:00:00Z", expiryDate: "2026-09-30T00:00:00Z" },
+  { id: 10, employee: { name: "Rahul Verma"    }, name: "Relieving Letter",      category: "Employment", createdAt: "2026-06-01T00:00:00Z", expiryDate: null },
+  { id: 11, employee: { name: "Rahul Verma"    }, name: "Bank Details",          category: "Financial",  createdAt: "2026-01-20T00:00:00Z", expiryDate: null },
+  { id: 12, employee: { name: "Ananya Pillai"  }, name: "NDA Agreement",         category: "Other",      createdAt: "2026-07-01T00:00:00Z", expiryDate: null },
+];
+
 // ─── Style Helpers ───────────────────────────────────────────────────────────
 
 const STATUS_STYLE = {
@@ -302,7 +317,8 @@ const Documents = ({ darkMode: dark = false }) => {
 
   const { show } = useToast();
   const qc = useQueryClient();
-  const { data: docsRaw = [] } = useAllDocuments();
+  const { data: docsRawApi = [] } = useAllDocuments();
+  const docsRaw = docsRawApi.length ? docsRawApi : MOCK_DOCUMENTS;
   const deleteMut = useDeleteDocument();
 
   const docs = docsRaw.map((d) => ({

@@ -17,6 +17,34 @@ import {
 } from "../../api/companyApi";
 import { getSecuritySettings, updateSecuritySettings } from "../../api/securityApi";
 
+const MOCK_COMPANY_DATA = {
+  profile: {
+    name:     "Mgate Technologies",
+    email:    "hr@mgate.com",
+    timezone: "Asia/Kolkata",
+    currency: "INR",
+  },
+  branding: {
+    primaryColor: "#2563eb",
+  },
+};
+
+const MOCK_NOTIF_DATA = {
+  notifications: [
+    { id: "email_global",       active: true  },
+    { id: "leave_apply",        active: true  },
+    { id: "payroll_run",        active: true  },
+    { id: "attendance_summary", active: false },
+  ],
+};
+
+const MOCK_SECURITY_DATA = {
+  mfaEnabled:         false,
+  sessionTimeout:     "30",
+  ipWhitelistEnabled: false,
+  auditLogging:       true,
+};
+
 // The 4 page toggles map to notification-setting rows in the DB
 const NOTIF_DEFS = [
   { id: "email_global",       label: "Email Notifications", sub: "Receive system emails for key events",       channel: "Email",          trigger: "Global email switch" },
@@ -81,9 +109,13 @@ const Settings = ({ darkMode = false }) => {
   const queryClient = useQueryClient();
 
   // ── Server data ──
-  const { data: companyData }  = useQuery({ queryKey: ["company-settings"], queryFn: getCompanySettings,      select: (r) => r?.data ?? r });
-  const { data: notifData }    = useQuery({ queryKey: ["notif-settings"],   queryFn: getNotificationSettings, select: (r) => r?.data ?? r });
-  const { data: securityData } = useQuery({ queryKey: ["security-settings"],queryFn: getSecuritySettings,     select: (r) => r?.data ?? r });
+  const { data: companyDataRaw }  = useQuery({ queryKey: ["company-settings"], queryFn: getCompanySettings,      select: (r) => r?.data ?? r });
+  const { data: notifDataRaw }    = useQuery({ queryKey: ["notif-settings"],   queryFn: getNotificationSettings, select: (r) => r?.data ?? r });
+  const { data: securityDataRaw } = useQuery({ queryKey: ["security-settings"],queryFn: getSecuritySettings,     select: (r) => r?.data ?? r });
+
+  const companyData  = companyDataRaw  ?? MOCK_COMPANY_DATA;
+  const notifData    = notifDataRaw    ?? MOCK_NOTIF_DATA;
+  const securityData = securityDataRaw ?? MOCK_SECURITY_DATA;
 
   // ── Local form state ──
   const [companyName, setCompanyName] = useState("");

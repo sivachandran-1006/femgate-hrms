@@ -33,6 +33,39 @@ import {
 } from "../../queries/useBranding";
 import { getCompanies } from "../../api/multiCompanyApi";
 
+// ── Mock fallback data ────────────────────────────────────────────────────────
+
+const MOCK_BRAND_SETTINGS = {
+  companyName:    "Mgate Technologies",
+  shortName:      "Mgate",
+  tagline:        "Empowering Your Workforce",
+  website:        "https://mgate.com",
+  logoUrl:        "",
+  darkLogoUrl:    "",
+  lightLogoUrl:   "",
+  faviconUrl:     "",
+  primaryColor:   "#1d4ed8",
+  secondaryColor: "#3b82f6",
+  accentColor:    "#f59e0b",
+  sidebarColor:   "#1e3a8a",
+  successColor:   "#10b981",
+  warningColor:   "#f59e0b",
+  primaryFont:    "Inter",
+  theme:          "Corporate Blue",
+  borderRadius:   8,
+  supportEmail:   "support@mgate.com",
+  supportPhone:   "+91 98765 43210",
+  loginTitle:     "HRPLUSE — Mgate",
+  loginWelcome:   "Welcome Back",
+  loginSlogan:    "Sign in to continue to your HR portal",
+  loginBgUrl:     "",
+  loginFooter:    "© 2026 Mgate Technologies. All rights reserved.",
+};
+
+const MOCK_BRAND_DASHBOARD = {
+  customEmailTemplates: 7,
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const THEMES_LIST = ["Light", "Dark", "System", "Corporate Blue", "Modern Green", "Purple", "Custom"];
 const FONTS       = ["Inter", "Roboto", "Poppins", "Open Sans", "Lato", "Montserrat"];
@@ -169,8 +202,8 @@ function LivePreview({ form, viewport = "desktop" }) {
 
 // ═══ 1. Dashboard ═══
 function DashboardTab({ onNav }) {
-  const { data: d, isLoading } = useBrandDashboard();
-  const dash = d || {};
+  const { data: dashRaw, isLoading } = useBrandDashboard();
+  const dash = dashRaw ?? MOCK_BRAND_DASHBOARD;
   const brandedCount = BRAND_PROFILES.filter(b => b.status === "Published").length;
   const domainCount  = DOMAINS.filter(x => x.status === "Verified").length;
 
@@ -411,7 +444,8 @@ function BrandProfilesTab({ toast }) {
 // ═══ 3. Company Branding ═══
 function CompanyBrandingTab() {
   const { show } = useToast();
-  const { data: settings, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
   const save = useSaveBrandSettings();
   const publish = usePublishBrand();
   const reset = useResetBrand();
@@ -573,7 +607,8 @@ function ThemesTab({ toast }) {
 // ═══ 5. Login Page ═══
 function LoginPageTab() {
   const { show } = useToast();
-  const { data: settings, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
   const save = useSaveBrandSettings();
   const [form, setForm] = useState(null);
   const [viewport, setViewport] = useState("desktop");
@@ -1103,7 +1138,8 @@ function BrandAssetsTab({ toast }) {
 // ═══ 12. Preview & Publish ═══
 function PreviewPublishTab() {
   const { show } = useToast();
-  const { data: settings, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
   const publish = usePublishBrand();
   const [viewport, setViewport] = useState("desktop");
   const [mode, setMode] = useState("light");
