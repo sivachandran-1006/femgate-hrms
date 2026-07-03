@@ -375,8 +375,8 @@ function CreateTemplateTab({ editTemplate, onDone }) {
                   <Box p="md" style={{ borderBottom: "2px solid var(--mantine-color-violet-5)" }}>
                     <Group justify="space-between">
                       <Stack gap={2}>
-                        <Text fw={800} size="md">{{company.name}}</Text>
-                        <Text size="xs" c="dimmed">{{company.address}}</Text>
+                        <Text fw={800} size="md">{company.name}</Text>
+                        <Text size="xs" c="dimmed">{company.address}</Text>
                       </Stack>
                       <Box style={{ width: 60, height: 40, background: "var(--mantine-color-gray-2)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         <Text size="xs" c="dimmed">LOGO</Text>
@@ -385,8 +385,8 @@ function CreateTemplateTab({ editTemplate, onDone }) {
                   </Box>
                   {/* Body */}
                   <Box p="xl">
-                    <Text size="xs" c="dimmed" mb="sm">Ref: DOC-2026-XXX | Date: {{doc.date}}</Text>
-                    <Text fw={700} size="sm" mb="md">To,<br />{{employee.name}}<br />{{employee.designation}}<br />{{employee.department}}</Text>
+                    <Text size="xs" c="dimmed" mb="sm">{"Ref: DOC-2026-XXX | Date: {{doc.date}}"}</Text>
+                    <Text fw={700} size="sm" mb="md">{"To,\n{{employee.name}}\n{{employee.designation}}\n{{employee.department}}"}</Text>
                     <Textarea
                       value={form.bodyHtml}
                       onChange={e => set("bodyHtml", e.target.value)}
