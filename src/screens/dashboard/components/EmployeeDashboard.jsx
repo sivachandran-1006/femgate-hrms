@@ -198,8 +198,8 @@ export const EmployeeDashboard = ({ user }) => {
         />
         <KpiCard
           icon={IconWallet} color="violet" label="Net Salary"
-          value={payslip ? fmt(payslip.net) : "—"} sub={payslip?.month || "Latest payslip"}
-          spark={ramp(payslip ? payslip.net : 1)}
+          value={payslip?.net ? fmt(payslip.net) : "—"} sub={payslip?.month || "Latest payslip"}
+          spark={ramp(payslip?.net ? payslip.net : 1)}
         />
       </SimpleGrid>
 
@@ -239,7 +239,7 @@ export const EmployeeDashboard = ({ user }) => {
           <Text fz="xs" fw={700} c="dimmed" tt="uppercase" mb={8} style={{ letterSpacing: "0.06em" }}>Recent</Text>
           {records.length === 0 ? (
             <Text ta="center" c="dimmed" fz="sm" py="md">No records yet</Text>
-          ) : records.slice(0, 5).map((r, i, arr) => (
+          ) : records.slice(0, 8).map((r, i, arr) => (
             <Group key={i} justify="space-between" wrap="nowrap" py="xs"
               style={{ borderBottom: i < arr.length - 1 ? "1px solid var(--mantine-color-default-border)" : "none" }}>
               <Box>
