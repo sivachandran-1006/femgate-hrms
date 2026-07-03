@@ -10,6 +10,7 @@ import {
   IconArrowsMaximize, IconArrowsMinimize, IconZoomIn, IconZoomOut, IconPrinter,
   IconFileExport, IconUsers, IconBuildingCommunity, IconBuilding, IconUserStar,
   IconUser, IconHierarchy, IconChartBar, IconAlertTriangle,
+  IconPlus, IconMinus, IconEye, IconChevronDown, IconChevronRight,
 } from "@tabler/icons-react";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -27,34 +28,129 @@ const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "o
 
 const flatten = (nodes, out = []) => { nodes.forEach((n) => { out.push(n); flatten(n.children || [], out); }); return out; };
 
-// ─── Node card ────────────────────────────────────────────────────────────────
+// ─── Node card (Zoho-style) ──────────────────────────────────────────────────
 function NodeCard({ node, onToggle, expanded, hasChildren, onView, onTeam, compact }) {
   const av = getAvatarColor(node.name);
+  const isExecutive = node.designation?.toLowerCase().includes("director") || node.designation?.toLowerCase().includes("head") || node.designation?.toLowerCase().includes("ceo");
+
   return (
-    <Paper withBorder radius="lg" p={compact ? "sm" : "md"} shadow="xs"
-      style={{ minWidth: 220, maxWidth: 240, position: "relative" }}>
-      <Group gap="sm" wrap="nowrap" align="flex-start">
-        <Avatar size={compact ? 36 : 44} radius="xl" color={av.color} style={{ background: av.bg, color: av.color }}>
+    <Paper
+      withBorder
+      radius="md"
+      p={compact ? "sm" : "md"}
+      shadow="sm"
+      style={{
+        minWidth: 260,
+        maxWidth: 280,
+        position: "relative",
+        border: isExecutive ? "2px solid var(--mantine-color-blue-5)" : "1px solid var(--mantine-color-gray-2)",
+        background: isExecutive ? "linear-gradient(135deg, #f0f7ff, #ffffff)" : "white",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.12)";
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "";
+        e.currentTarget.style.transform = "";
+      }}
+    >
+      {/* Header with avatar and collapse button */}
+      <Group gap="sm" wrap="nowrap" align="flex-start" mb="sm">
+        <Avatar
+          size={compact ? 40 : 48}
+          radius="xl"
+          color={av.color}
+          style={{
+            background: av.bg,
+            color: av.color,
+            fontWeight: 700,
+            fontSize: compact ? 14 : 16,
+            border: "2px solid white",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          }}
+        >
           {getInitials(node.name)}
         </Avatar>
+
         <div style={{ minWidth: 0, flex: 1 }}>
-          <Text size="sm" fw={700} truncate>{node.name}</Text>
-          <Text size="xs" c="dimmed" truncate>{node.designation || "—"}</Text>
-          <Group gap={6} mt={4}>
-            <Badge size="xs" variant="light" radius="sm">{node.department || "—"}</Badge>
-            <Badge size="xs" variant="light" color={STATUS_COLOR[node.status] || "gray"} radius="sm">{node.status}</Badge>
+          <Group gap={4} wrap="nowrap" justify="space-between">
+            <Text size="sm" fw={700} truncate style={{ color: "#1a1a1a" }}>{node.name}</Text>
+            {isExecutive && <Badge size="xs" color="blue" radius="xs">Senior</Badge>}
           </Group>
-          <Text size="xs" c="dimmed" mt={4}>{node.employeeId} · {node.directReports || 0} reports</Text>
+          <Text size="xs" c="dimmed" truncate style={{ marginTop: 2 }}>{node.designation || "—"}</Text>
         </div>
       </Group>
-      <Group gap={4} mt="xs" justify="space-between">
+
+      {/* Department & Status Badges */}
+      <Group gap={4} mb="md" wrap="wrap">
+        <Badge
+          size="sm"
+          variant="light"
+          radius="sm"
+          style={{ fontSize: "10px", fontWeight: 600 }}
+        >
+          {node.department || "—"}
+        </Badge>
+        <Badge
+          size="sm"
+          color={STATUS_COLOR[node.status] || "gray"}
+          variant="dot"
+          radius="sm"
+          style={{ fontSize: "10px", fontWeight: 600 }}
+        >
+          {node.status}
+        </Badge>
+      </Group>
+
+      {/* Employee Info */}
+      <Stack gap={4} mb="md" style={{ borderTop: "1px solid var(--mantine-color-gray-1)", paddingTop: "sm" }}>
+        <Group gap={6} justify="space-between">
+          <Group gap={4}>
+            <Text size="xs" c="dimmed" fw={500}>ID:</Text>
+            <Text size="xs" fw={600} c="blue">{node.employeeId}</Text>
+          </Group>
+          <Group gap={4}>
+            <IconUsers size={14} style={{ color: "var(--mantine-color-gray-6)" }} />
+            <Text size="xs" fw={600}>{node.directReports || 0}</Text>
+          </Group>
+        </Group>
+      </Stack>
+
+      {/* Action buttons */}
+      <Group gap={4} justify="space-between">
         <Group gap={4}>
-          <ActionIcon size="sm" variant="subtle" title="View Profile" onClick={() => onView(node)}><IconEye size={13} /></ActionIcon>
-          <ActionIcon size="sm" variant="subtle" title="View Team" onClick={() => onTeam(node)}><IconUsersGroup size={13} /></ActionIcon>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="blue"
+            title="View Profile"
+            onClick={() => onView(node)}
+            style={{ transition: "all 0.15s" }}
+          >
+            <IconEye size={14} />
+          </ActionIcon>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            color="blue"
+            title="View Team"
+            onClick={() => onTeam(node)}
+            style={{ transition: "all 0.15s" }}
+          >
+            <IconUsers size={14} />
+          </ActionIcon>
         </Group>
         {hasChildren && (
-          <ActionIcon size="sm" variant="light" title={expanded ? "Collapse" : "Expand"} onClick={() => onToggle(node.id)}>
-            {expanded ? <IconMinus size={13} /> : <IconPlus size={13} />}
+          <ActionIcon
+            size="sm"
+            variant="light"
+            color="blue"
+            title={expanded ? "Collapse" : "Expand"}
+            onClick={() => onToggle(node.id)}
+          >
+            {expanded ? <IconMinus size={14} /> : <IconPlus size={14} />}
           </ActionIcon>
         )}
       </Group>
@@ -281,32 +377,106 @@ export default function OrgChart() {
 
         {/* ── VACANT ── */}
         <Tabs.Panel value="vacant">
-          <SimpleGrid cols={{ base: 1, md: 3 }}>
-            <AppSection title="Open Designations" sub={`${vacant?.openDesignations?.length || 0} vacant`}>
-              <Stack gap="xs">
-                {(vacant?.openDesignations || []).map((d) => (
-                  <Group key={d.id} justify="space-between"><Text size="sm">{d.name}</Text><Badge variant="light" radius="sm">L{d.level}</Badge></Group>
-                ))}
-                {!vacant?.openDesignations?.length && <Text size="sm" c="dimmed">None</Text>}
-              </Stack>
-            </AppSection>
-            <AppSection title="Unassigned Reporting" sub={`${vacant?.unassignedReporting?.length || 0} without manager`}>
-              <Stack gap="xs">
-                {(vacant?.unassignedReporting || []).map((e) => (
-                  <Group key={e.id} justify="space-between"><Text size="sm">{e.name}</Text><Text size="xs" c="dimmed">{e.designation || "—"}</Text></Group>
-                ))}
-                {!vacant?.unassignedReporting?.length && <Text size="sm" c="dimmed">None</Text>}
-              </Stack>
-            </AppSection>
-            <AppSection title="Vacant Department Heads" sub={`${vacant?.vacantDeptHeads?.length || 0} without head`}>
-              <Stack gap="xs">
-                {(vacant?.vacantDeptHeads || []).map((d) => (
-                  <Group key={d.id} justify="space-between"><Text size="sm">{d.name}</Text><Badge variant="light" color="orange" radius="sm">No head</Badge></Group>
-                ))}
-                {!vacant?.vacantDeptHeads?.length && <Text size="sm" c="dimmed">None</Text>}
-              </Stack>
-            </AppSection>
-          </SimpleGrid>
+          <Stack gap="xl">
+            {/* Open Designations */}
+            <Box>
+              <Group mb="md" align="flex-end">
+                <IconUserStar size={20} style={{ color: "var(--mantine-color-blue-6)" }} />
+                <div style={{ flex: 1 }}>
+                  <Text fw={700} size="lg">Open Designations</Text>
+                  <Text size="sm" c="dimmed">{vacant?.openDesignations?.length || 0} positions need to be filled</Text>
+                </div>
+                <Badge size="lg" color="blue" variant="light">{vacant?.openDesignations?.length || 0}</Badge>
+              </Group>
+              {(vacant?.openDesignations || []).length > 0 ? (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {(vacant?.openDesignations || []).map((d) => (
+                    <Paper key={d.id} withBorder radius="lg" p="md" style={{ background: "linear-gradient(135deg, #eff6ff, #dbeafe)" }}>
+                      <Group justify="space-between" mb="sm">
+                        <Text fw={600} size="sm">{d.name}</Text>
+                        <Badge color="blue" variant="filled" radius="sm">Level {d.level}</Badge>
+                      </Group>
+                      <Group gap="xs">
+                        <Text size="xs" c="dimmed">Department:</Text>
+                        <Badge variant="light" radius="xs">{d.department || "—"}</Badge>
+                      </Group>
+                    </Paper>
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Paper withBorder radius="lg" p="lg" ta="center">
+                  <Text size="sm" c="dimmed">All designations are filled</Text>
+                </Paper>
+              )}
+            </Box>
+
+            {/* Unassigned Reporting */}
+            <Box>
+              <Group mb="md" align="flex-end">
+                <IconUsers size={20} style={{ color: "var(--mantine-color-orange-6)" }} />
+                <div style={{ flex: 1 }}>
+                  <Text fw={700} size="lg">Employees Without Manager</Text>
+                  <Text size="sm" c="dimmed">{vacant?.unassignedReporting?.length || 0} employees need reporting manager assignment</Text>
+                </div>
+                <Badge size="lg" color="orange" variant="light">{vacant?.unassignedReporting?.length || 0}</Badge>
+              </Group>
+              {(vacant?.unassignedReporting || []).length > 0 ? (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {(vacant?.unassignedReporting || []).map((e) => (
+                    <Paper key={e.id} withBorder radius="lg" p="md" style={{ background: "linear-gradient(135deg, #fef3c7, #fde68a)" }}>
+                      <Group justify="space-between" mb="sm">
+                        <Text fw={600} size="sm" truncate>{e.name}</Text>
+                        <Badge color="orange" variant="filled" radius="xs" size="sm">Unassigned</Badge>
+                      </Group>
+                      <Stack gap="xs">
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">Designation:</Text>
+                          <Text size="xs" fw={500}>{e.designation || "—"}</Text>
+                        </Group>
+                        <Group gap="xs">
+                          <Text size="xs" c="dimmed">Department:</Text>
+                          <Badge variant="light" radius="xs" size="sm">{e.department || "—"}</Badge>
+                        </Group>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Paper withBorder radius="lg" p="lg" ta="center">
+                  <Text size="sm" c="dimmed">All employees have assigned managers</Text>
+                </Paper>
+              )}
+            </Box>
+
+            {/* Vacant Department Heads */}
+            <Box>
+              <Group mb="md" align="flex-end">
+                <IconBuildingCommunity size={20} style={{ color: "var(--mantine-color-red-6)" }} />
+                <div style={{ flex: 1 }}>
+                  <Text fw={700} size="lg">Departments Without Heads</Text>
+                  <Text size="sm" c="dimmed">{vacant?.vacantDeptHeads?.length || 0} departments need head assignments</Text>
+                </div>
+                <Badge size="lg" color="red" variant="light">{vacant?.vacantDeptHeads?.length || 0}</Badge>
+              </Group>
+              {(vacant?.vacantDeptHeads || []).length > 0 ? (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                  {(vacant?.vacantDeptHeads || []).map((d) => (
+                    <Paper key={d.id} withBorder radius="lg" p="md" style={{ background: "linear-gradient(135deg, #fee2e2, #fecaca)" }}>
+                      <Group justify="space-between" mb="sm">
+                        <Text fw={600} size="sm">{d.name}</Text>
+                        <Badge color="red" variant="filled" radius="sm">No Head</Badge>
+                      </Group>
+                      <Text size="xs" c="dimmed">This department requires immediate head assignment</Text>
+                    </Paper>
+                  ))}
+                </SimpleGrid>
+              ) : (
+                <Paper withBorder radius="lg" p="lg" ta="center">
+                  <Text size="sm" c="dimmed">All departments have heads assigned</Text>
+                </Paper>
+              )}
+            </Box>
+          </Stack>
         </Tabs.Panel>
       </Tabs>
     </>

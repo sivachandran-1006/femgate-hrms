@@ -110,7 +110,18 @@ const MyAttendance = () => {
         late ? "warning" : "success"
       );
     } catch (err) {
-      show(err?.response?.data?.message || "Failed to check in", "error");
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || "Failed to check in";
+      if (status === 409) {
+        // Already checked in — mark as checked in
+        setCheckInTime(time);
+        setCheckedIn(true);
+        show("Already checked in today", "info");
+      } else if (status === 404) {
+        show("Employee record not found. Contact HR to set up your employee profile.", "error");
+      } else {
+        show(msg, "error");
+      }
     }
   };
 
@@ -126,7 +137,18 @@ const MyAttendance = () => {
         : calcHours(checkInTime, time);
       show('Checked out at ' + time + (hrs ? ' · ' + hrs + ' worked' : ''), "success");
     } catch (err) {
-      show(err?.response?.data?.message || "Failed to check out", "error");
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || "Failed to check out";
+      if (status === 409) {
+        // Already checked out — mark as checked out
+        setCheckOutTime(time);
+        setCheckedOut(true);
+        show("Already checked out today", "info");
+      } else if (status === 404) {
+        show("Employee record not found. Contact HR to set up your employee profile.", "error");
+      } else {
+        show(msg, "error");
+      }
     }
   };
 
