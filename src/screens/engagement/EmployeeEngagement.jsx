@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Grid, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Avatar, Loader,
-  Center, NumberInput, Progress, Tooltip, Switch,
+  Center, NumberInput, Progress, Tooltip, Switch, Paper,
 } from "@mantine/core";
 import {
   IconAward, IconHeartHandshake, IconGift, IconChartBar, IconMoodSmile,
@@ -14,6 +14,8 @@ import { usePermission } from "../../hooks/usePermission";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
+import { AppStatCard } from "../../components/ui/AppStatCard";
+import { AppSection } from "../../components/ui/AppSection";
 import { useFetchAllEmployees } from "../../queries/useEmployees";
 import {
   useEngagementDashboard, useAwards, useCreateAward, useDeleteAward,
@@ -49,55 +51,49 @@ const useEmployeeOptions = () => {
   return { options, byName };
 };
 
-// ─── KPI Card ──────────────────────────────────────────────────────────────────
-function Kpi({ label, value, icon: Icon, color, sub }) {
-  return (
-    <Card withBorder radius="md" p="md">
-      <Group justify="space-between" mb={4}>
-        <Text size="xs" c="dimmed" fw={500}>{label}</Text>
-        <Box style={{ background: `var(--mantine-color-${color}-1)`, borderRadius: 8, padding: 6 }}>
-          <Icon size={18} color={`var(--mantine-color-${color}-6)`} />
-        </Box>
-      </Group>
-      <Text fw={700} size="xl">{value ?? "—"}</Text>
-      {sub && <Text size="xs" c="dimmed" mt={2}>{sub}</Text>}
-    </Card>
-  );
-}
-
 // ═══ Dashboard Tab ═══
 function DashboardTab() {
   const { data: d, isLoading } = useEngagementDashboard();
   const { data: board = [] } = useLeaderboard();
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
+  const medalColor = (i) => (i === 0 ? "yellow" : i === 1 ? "gray" : i === 2 ? "orange" : "blue");
   return (
-    <Stack gap="md">
+    <Stack gap="lg">
       <SimpleGrid cols={{ base: 2, md: 3, lg: 6 }} spacing="md">
-        <Kpi label="Satisfaction Score" value={dash.satisfactionScore} icon={IconMoodSmile} color="green" sub="avg survey score" />
-        <Kpi label="Recognitions" value={dash.recognitionsThisMonth} icon={IconAward} color="yellow" sub="this month" />
-        <Kpi label="Points Issued" value={dash.rewardPointsIssued} icon={IconCoins} color="orange" sub="all time" />
-        <Kpi label="Active Surveys" value={dash.activeSurveys} icon={IconClipboardList} color="blue" />
-        <Kpi label="Suggestions" value={dash.suggestionBoxEntries} icon={IconBulb} color="grape" />
-        <Kpi label="Wellness" value={dash.wellnessParticipation} icon={IconActivity} color="teal" sub="participants" />
+        <AppStatCard icon={<IconMoodSmile size={22} />} color="green" label="Satisfaction Score" value={dash.satisfactionScore ?? "—"} sub="avg survey score" />
+        <AppStatCard icon={<IconAward size={22} />} color="yellow" label="Recognitions" value={dash.recognitionsThisMonth ?? 0} sub="this month" />
+        <AppStatCard icon={<IconCoins size={22} />} color="orange" label="Points Issued" value={dash.rewardPointsIssued ?? 0} sub="all time" />
+        <AppStatCard icon={<IconClipboardList size={22} />} color="blue" label="Active Surveys" value={dash.activeSurveys ?? 0} />
+        <AppStatCard icon={<IconBulb size={22} />} color="grape" label="Suggestions" value={dash.suggestionBoxEntries ?? 0} />
+        <AppStatCard icon={<IconActivity size={22} />} color="teal" label="Wellness" value={dash.wellnessParticipation ?? 0} sub="participants" />
       </SimpleGrid>
-      <Card withBorder radius="md" p="md">
-        <Group gap="xs" mb="sm"><IconTrophy size={18} color="var(--mantine-color-yellow-6)" /><Text fw={600}>Points Leaderboard</Text></Group>
+
+      <AppSection title="Points Leaderboard" icon={<IconTrophy size={18} color="var(--mantine-color-yellow-6)" />} sub="Top performers by reward points">
         {board.length === 0 ? <AppEmptyState icon={<IconTrophy size={24} />} message="No points awarded yet" sub="As employees earn points, the leaderboard fills up here." py={24} /> : (
-          <Stack gap="xs">
+          <Stack gap={6}>
             {board.map((b, i) => (
-              <Group key={b.employee} justify="space-between">
+              <Group
+                key={b.employee}
+                justify="space-between"
+                p="xs"
+                style={{
+                  borderRadius: 10,
+                  background: i < 3 ? `var(--mantine-color-${medalColor(i)}-0)` : "transparent",
+                  transition: "background 120ms ease",
+                }}
+              >
                 <Group gap="sm">
-                  <Badge color={i === 0 ? "yellow" : i === 1 ? "gray" : i === 2 ? "orange" : "blue"} variant="light" w={28}>{i + 1}</Badge>
-                  <Avatar size={26} radius="xl" color="blue">{(b.employee || "?").slice(0, 2).toUpperCase()}</Avatar>
-                  <Text size="sm">{b.employee}</Text>
+                  <Badge color={medalColor(i)} variant={i < 3 ? "filled" : "light"} radius="xl" w={28} h={28} p={0} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</Badge>
+                  <Avatar size={30} radius="xl" color={medalColor(i)}>{(b.employee || "?").slice(0, 2).toUpperCase()}</Avatar>
+                  <Text size="sm" fw={i < 3 ? 600 : 400}>{b.employee}</Text>
                 </Group>
-                <Text size="sm" fw={700}>{b.points} pts</Text>
+                <Badge size="lg" color="orange" variant="light" leftSection={<IconCoins size={12} />}>{b.points} pts</Badge>
               </Group>
             ))}
           </Stack>
         )}
-      </Card>
+      </AppSection>
     </Stack>
   );
 }
@@ -110,46 +106,52 @@ function WallTab() {
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 4 }}>
-        <Card withBorder radius="md" p="md">
-          <Group gap="xs" mb="sm"><IconAward size={18} color="var(--mantine-color-yellow-6)" /><Text fw={600}>Recent Awards</Text></Group>
+        <AppSection title="Recent Awards" icon={<IconAward size={18} color="var(--mantine-color-yellow-6)" />}>
           <Stack gap="sm">
             {awards.length === 0 && <Text size="sm" c="dimmed">No awards yet.</Text>}
             {awards.map((a) => (
-              <Box key={a.id} p="xs" style={{ background: "var(--mantine-color-yellow-0)", borderRadius: 8 }}>
-                <Group justify="space-between"><Text size="sm" fw={600}>{a.employee}</Text><Badge size="xs" color="yellow">{a.points} pts</Badge></Group>
-                <Text size="xs" c="dimmed">{a.awardType} — {a.title}</Text>
+              <Box
+                key={a.id} p="sm"
+                style={{ background: "var(--mantine-color-yellow-0)", borderRadius: 10, borderLeft: "3px solid var(--mantine-color-yellow-5)" }}
+              >
+                <Group justify="space-between"><Text size="sm" fw={600}>{a.employee}</Text><Badge size="xs" color="yellow" variant="filled">{a.points} pts</Badge></Group>
+                <Text size="xs" c="dimmed" mt={2}>{a.awardType} — {a.title}</Text>
               </Box>
             ))}
           </Stack>
-        </Card>
+        </AppSection>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 4 }}>
-        <Card withBorder radius="md" p="md">
-          <Group gap="xs" mb="sm"><IconHeartHandshake size={18} color="var(--mantine-color-pink-6)" /><Text fw={600}>Recent Kudos</Text></Group>
+        <AppSection title="Recent Kudos" icon={<IconHeartHandshake size={18} color="var(--mantine-color-pink-6)" />}>
           <Stack gap="sm">
             {kudos.length === 0 && <Text size="sm" c="dimmed">No kudos yet.</Text>}
             {kudos.map((k) => (
-              <Box key={k.id} p="xs" style={{ background: "var(--mantine-color-pink-0)", borderRadius: 8 }}>
-                <Text size="xs"><Text span fw={600}>{k.fromEmployee}</Text> → <Text span fw={600}>{k.toEmployee}</Text></Text>
-                <Text size="sm">{k.message}</Text>
+              <Box
+                key={k.id} p="sm"
+                style={{ background: "var(--mantine-color-pink-0)", borderRadius: 10, borderLeft: "3px solid var(--mantine-color-pink-5)" }}
+              >
+                <Text size="xs" c="dimmed"><Text span fw={600} c="dark.6">{k.fromEmployee}</Text> → <Text span fw={600} c="dark.6">{k.toEmployee}</Text></Text>
+                <Text size="sm" mt={2}>{k.message}</Text>
               </Box>
             ))}
           </Stack>
-        </Card>
+        </AppSection>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 4 }}>
-        <Card withBorder radius="md" p="md">
-          <Group gap="xs" mb="sm"><IconConfetti size={18} color="var(--mantine-color-grape-6)" /><Text fw={600}>Milestones</Text></Group>
+        <AppSection title="Milestones" icon={<IconConfetti size={18} color="var(--mantine-color-grape-6)" />}>
           <Stack gap="sm">
             {milestones.length === 0 && <Text size="sm" c="dimmed">No milestones yet.</Text>}
             {milestones.map((m) => (
-              <Box key={m.id} p="xs" style={{ background: "var(--mantine-color-grape-0)", borderRadius: 8 }}>
+              <Box
+                key={m.id} p="sm"
+                style={{ background: "var(--mantine-color-grape-0)", borderRadius: 10, borderLeft: "3px solid var(--mantine-color-grape-5)" }}
+              >
                 <Text size="sm" fw={600}>{m.employee}</Text>
-                <Text size="xs" c="dimmed">{m.type} — {fmtDate(m.milestoneDate)}</Text>
+                <Text size="xs" c="dimmed" mt={2}>{m.type} — {fmtDate(m.milestoneDate)}</Text>
               </Box>
             ))}
           </Stack>
-        </Card>
+        </AppSection>
       </Grid.Col>
     </Grid>
   );
@@ -183,7 +185,12 @@ function RecognitionTab({ canManage }) {
       <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
         {awards.length === 0 && <Box style={{ gridColumn: "1 / -1" }}><AppEmptyState icon={<IconAward size={24} />} message="No recognitions yet" sub={canManage ? "Recognize an employee's great work to get started." : "Recognitions awarded to the team will appear here."} action={canManage && <Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Give Recognition</Button>} /></Box>}
         {awards.map((a) => (
-          <Card key={a.id} withBorder radius="md" p="md">
+          <Card
+            key={a.id} withBorder radius="lg" p="md"
+            style={{ transition: "transform 150ms ease, box-shadow 150ms ease", cursor: "default" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+          >
             <Group justify="space-between" mb="xs">
               <Badge color="yellow" variant="light" leftSection={<IconStar size={11} />}>{a.awardType}</Badge>
               {canManage && <ActionIcon variant="subtle" color="red" size="sm" onClick={async () => { await del.mutateAsync(a.id); show("Removed", "success"); }}><IconTrash size={13} /></ActionIcon>}
@@ -191,7 +198,7 @@ function RecognitionTab({ canManage }) {
             <Text fw={700}>{a.title}</Text>
             <Text size="sm">{a.employee}</Text>
             {a.description && <Text size="xs" c="dimmed" mt={4}>{a.description}</Text>}
-            <Group justify="space-between" mt="sm"><Text size="xs" c="dimmed">{fmtDate(a.awardDate)}</Text><Badge size="sm" color="orange">{a.points} pts</Badge></Group>
+            <Group justify="space-between" mt="sm"><Text size="xs" c="dimmed">{fmtDate(a.awardDate)}</Text><Badge size="sm" color="orange" variant="light">{a.points} pts</Badge></Group>
           </Card>
         ))}
       </SimpleGrid>
@@ -235,7 +242,12 @@ function KudosTab() {
       <Stack gap="sm">
         {kudos.length === 0 && <AppEmptyState icon={<IconHeartHandshake size={24} />} message="No kudos yet" sub="Be the first to appreciate a teammate!" action={<Button leftSection={<IconHeartHandshake size={14} />} onClick={() => setOpen(true)}>Send Kudos</Button>} />}
         {kudos.map((k) => (
-          <Card key={k.id} withBorder radius="md" p="md">
+          <Card
+            key={k.id} withBorder radius="lg" p="md"
+            style={{ transition: "transform 150ms ease, box-shadow 150ms ease" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+          >
             <Group justify="space-between">
               <Group gap="sm">
                 <Avatar size={36} radius="xl" color="pink">{(k.fromEmployee || "?").slice(0, 2).toUpperCase()}</Avatar>
@@ -246,7 +258,7 @@ function KudosTab() {
               </Group>
               <Stack gap={4} align="center">
                 <Badge size="xs" variant="light" color="pink">{k.category}</Badge>
-                <Button size="compact-xs" variant="subtle" leftSection={<IconThumbUp size={12} />} onClick={() => react.mutate(k.id)}>{k.reactions}</Button>
+                <Button size="compact-xs" variant="subtle" color="pink" leftSection={<IconThumbUp size={12} />} onClick={() => react.mutate(k.id)}>{k.reactions}</Button>
               </Stack>
             </Group>
           </Card>
@@ -292,7 +304,9 @@ function RewardsTab({ canManage }) {
   return (
     <Stack gap="md">
       <Group justify="space-between">
-        <Badge size="lg" color="orange" variant="light" leftSection={<IconCoins size={14} />}>My Balance: {bal?.balance ?? 0} pts</Badge>
+        <Paper radius="xl" px="lg" py="xs" style={{ background: "linear-gradient(135deg,#f59e0b,#d97706)", color: "white" }}>
+          <Group gap={8}><IconCoins size={18} /><Text fw={700} size="sm">My Balance: {bal?.balance ?? 0} pts</Text></Group>
+        </Paper>
         {canManage && <Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Add Reward</Button>}
       </Group>
       <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
@@ -300,7 +314,12 @@ function RewardsTab({ canManage }) {
         {rewards.map((r) => {
           const canAfford = (bal?.balance ?? 0) >= r.pointsCost;
           return (
-            <Card key={r.id} withBorder radius="md" p="md">
+            <Card
+              key={r.id} withBorder radius="lg" p="md"
+              style={{ transition: "transform 150ms ease, box-shadow 150ms ease" }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+            >
               <Group justify="space-between" mb="xs">
                 <Badge color="grape" variant="light">{r.category}</Badge>
                 {canManage && <ActionIcon variant="subtle" color="red" size="sm" onClick={async () => { await del.mutateAsync(r.id); show("Removed", "success"); }}><IconTrash size={13} /></ActionIcon>}
@@ -308,7 +327,7 @@ function RewardsTab({ canManage }) {
               <Text fw={700}>{r.name}</Text>
               {r.description && <Text size="xs" c="dimmed" mt={4}>{r.description}</Text>}
               <Group justify="space-between" mt="md">
-                <Badge color="orange" size="lg">{r.pointsCost} pts</Badge>
+                <Badge color="orange" size="lg" variant="light">{r.pointsCost} pts</Badge>
                 <Button size="xs" disabled={!canAfford} loading={redeem.isPending && redeem.variables === r.id} onClick={() => doRedeem(r)}>
                   {canAfford ? "Redeem" : "Not enough"}
                 </Button>
@@ -462,7 +481,12 @@ function WellnessTab({ canManage }) {
       <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
         {programs.length === 0 && <Box style={{ gridColumn: "1 / -1" }}><AppEmptyState icon={<IconActivity size={24} />} message="No wellness programs yet" sub={canManage ? "Launch a fitness or wellness program for your team." : "Wellness programs you can join will appear here."} action={canManage && <Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Add Program</Button>} /></Box>}
         {programs.map((p) => (
-          <Card key={p.id} withBorder radius="md" p="md">
+          <Card
+            key={p.id} withBorder radius="lg" p="md"
+            style={{ transition: "transform 150ms ease, box-shadow 150ms ease" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--mantine-shadow-md)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+          >
             <Group justify="space-between" mb="xs"><Badge color="teal" variant="light">{p.type}</Badge><Badge color={STATUS_COLOR[p.status] || "gray"} variant="light">{p.status}</Badge></Group>
             <Text fw={700}>{p.name}</Text>
             {p.description && <Text size="xs" c="dimmed" mt={4}>{p.description}</Text>}
@@ -509,7 +533,12 @@ function EventsTab({ canManage }) {
       <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
         {events.length === 0 && <Box style={{ gridColumn: "1 / -1" }}><AppEmptyState icon={<IconCalendarEvent size={24} />} message="No events scheduled" sub={canManage ? "Schedule a team event, celebration, or activity." : "Upcoming events will appear here."} action={canManage && <Button leftSection={<IconPlus size={14} />} onClick={() => setOpen(true)}>Add Event</Button>} /></Box>}
         {events.map((e) => (
-          <Card key={e.id} withBorder radius="md" p="md">
+          <Card
+            key={e.id} withBorder radius="lg" p="md"
+            style={{ transition: "transform 150ms ease, box-shadow 150ms ease" }}
+            onMouseEnter={(ev) => { ev.currentTarget.style.transform = "translateY(-2px)"; ev.currentTarget.style.boxShadow = "var(--mantine-shadow-md)"; }}
+            onMouseLeave={(ev) => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "none"; }}
+          >
             <Group justify="space-between" mb="xs"><Badge color="indigo" variant="light">{e.type}</Badge>
               {canManage && <ActionIcon variant="subtle" color="red" size="sm" onClick={async () => { await del.mutateAsync(e.id); show("Removed", "success"); }}><IconTrash size={13} /></ActionIcon>}
             </Group>

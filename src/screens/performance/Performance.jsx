@@ -33,6 +33,7 @@ import {
   useCreateAppraisal, useUpdateAppraisal, useDeleteAppraisal,
 } from "../../queries/usePerformance";
 import { useToast } from "../../components/ui/Toast";
+import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 const statusColor = (s) =>
   s === "Completed" || s === "Reviewed" ? "green" :
@@ -77,6 +78,11 @@ export default function Performance({ darkMode: dark }) {
   const [saved, setSaved] = useState(false);
 
   const { show } = useToast();
+  const { data: employees = [] } = useFetchAllEmployees();
+  const employeeOptions = (employees || []).map((e) => ({
+    value: e.name,
+    label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name,
+  }));
   const { data: perfData } = usePerformance();
   const ratingDistribution    = perfData?.ratingDistribution    || [];
   const departmentPerformance = perfData?.departmentPerformance || [];
@@ -348,8 +354,9 @@ export default function Performance({ darkMode: dark }) {
         centered radius="xl" size="md">
         <Stack gap="sm">
           <SimpleGrid cols={2} spacing="sm">
-            <TextInput label="Employee Name" placeholder="e.g. John Doe" value={goalForm.employee}
-              onChange={e => setGoalForm(f=>({...f, employee: e.target.value}))} />
+            <Select label="Employee Name" placeholder="Select employee" searchable
+              data={employeeOptions} value={goalForm.employee}
+              onChange={v => setGoalForm(f=>({...f, employee: v}))} nothingFoundMessage="No employee found" />
             <TextInput type="date" label="Target Date" value={goalForm.targetDate}
               onChange={e => setGoalForm(f=>({...f, targetDate: e.target.value}))} />
           </SimpleGrid>
@@ -377,10 +384,12 @@ export default function Performance({ darkMode: dark }) {
         centered radius="xl" size="md">
         <Stack gap="sm">
           <SimpleGrid cols={2} spacing="sm">
-            <TextInput label="Employee Name" placeholder="e.g. John Doe" value={apprForm.employee}
-              onChange={e => setApprForm(f=>({...f, employee: e.target.value}))} />
-            <TextInput label="Reviewer" placeholder="e.g. Manager Name" value={apprForm.reviewer}
-              onChange={e => setApprForm(f=>({...f, reviewer: e.target.value}))} />
+            <Select label="Employee Name" placeholder="Select employee" searchable
+              data={employeeOptions} value={apprForm.employee}
+              onChange={v => setApprForm(f=>({...f, employee: v}))} nothingFoundMessage="No employee found" />
+            <Select label="Reviewer" placeholder="Select reviewer" searchable
+              data={employeeOptions} value={apprForm.reviewer}
+              onChange={v => setApprForm(f=>({...f, reviewer: v}))} nothingFoundMessage="No employee found" />
             <TextInput label="Period" placeholder="e.g. Q1 2026" value={apprForm.period}
               onChange={e => setApprForm(f=>({...f, period: e.target.value}))} />
             <Select label="Status" value={apprForm.status}

@@ -400,6 +400,7 @@ const EmployeeList = () => {
 
       {/* ── Add / Edit Modal (Wizard) ── */}
       <EmployeeModal
+        key={editTarget || "new"}
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
         editingEmployee={editTarget ? employees.find(e => e.id === editTarget) : null}

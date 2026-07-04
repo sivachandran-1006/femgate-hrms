@@ -569,6 +569,7 @@ function AssessmentsTab() {
   const [modal, setModal]   = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm]     = useState({});
+  const [delId, setDelId]   = useState(null);
 
   const { data: assessments = [], isLoading } = useAssessments({});
   const { data: courses = [] } = useCourses({});
