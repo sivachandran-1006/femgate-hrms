@@ -27,6 +27,47 @@ export const useUpdateCandidateStatus = () => {
   return useMutation({ mutationFn: ({ id, status }) => hr.updateCandidateStatus(id, status), onSuccess: inv(qc, ["candidates"]) });
 };
 
+// ── Offer Management ──
+export const useOffers = (status) =>
+  useQuery({ queryKey: ["offers", status || "All"], queryFn: () => hr.getOffers(status) });
+
+export const useCreateOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.createOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useUpdateOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ id, ...payload }) => hr.updateOffer(id, payload), onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useApproveOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.approveOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useReleaseOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.releaseOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useAcceptOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.acceptOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useDeclineOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ id, reason }) => hr.declineOffer(id, reason), onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useNegotiateOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: ({ id, ...payload }) => hr.negotiateOffer(id, payload), onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useWithdrawOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.withdrawOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+export const useDeleteOffer = () => {
+  const qc = useQueryClient();
+  return useMutation({ mutationFn: hr.deleteOffer, onSuccess: () => qc.invalidateQueries({ queryKey: ["offers"] }) });
+};
+
 // ── Shifts ──
 export const useShifts = (weekStart) =>
   useQuery({ queryKey: ["shifts", weekStart || "current"], queryFn: () => hr.getShifts(weekStart) });

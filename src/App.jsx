@@ -23,9 +23,12 @@ import DepartmentProfile from "./screens/departments/DepartmentProfile";
 import BranchProfile     from "./screens/branches/BranchProfile";
 import DesignationProfile from "./screens/designations/DesignationProfile";
 import Attendance     from "./screens/attendance/Attendance";
+import Timesheet      from "./screens/timesheet/Timesheet";
+import MyTimesheet    from "./screens/timesheet/MyTimesheet";
 import LeaveManagement from "./screens/leave/LeaveManagement";
 import PayrollManagement from "./screens/payroll/PayrollManagement";
 import Recruitment    from "./screens/recruitment/Recruitment";
+import OfferManagement from "./screens/offers/OfferManagement";
 import OnboardingManagement from "./screens/onboarding/OnboardingManagement";
 import PerformanceManagement from "./screens/performance/PerformanceManagement";
 import Performance           from "./screens/performance/Performance";
@@ -301,6 +304,19 @@ export default function App() {
             }
           />
           <Route
+            path="/timesheet"
+            element={
+              <RoleGuard routeId="timesheet" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}>
+                  {can("timesheet.view_all")
+                    ? <Timesheet darkMode={dark} />
+                    : <MyTimesheet darkMode={dark} />
+                  }
+                </ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
             path="/leave"
             element={
               <RoleGuard routeId="leave" userRole={userRole}>
@@ -323,6 +339,14 @@ export default function App() {
             element={
               <RoleGuard routeId="recruitment" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><Recruitment darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/offers"
+            element={
+              <RoleGuard routeId="offers" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><OfferManagement /></ScreenWrapper>
               </RoleGuard>
             }
           />
@@ -688,6 +712,14 @@ export default function App() {
             element={
               <RoleGuard routeId="my-attendance" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><MyAttendance darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/my-timesheet"
+            element={
+              <RoleGuard routeId="my-timesheet" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyTimesheet darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />

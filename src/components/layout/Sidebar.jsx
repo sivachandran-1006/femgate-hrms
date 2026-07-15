@@ -55,6 +55,7 @@ import {
   IconShieldHeart,
   IconReportMoney,
   IconPalette,
+  IconFileCheck,
 } from "@tabler/icons-react";
 import { ROLE_SIDEBAR, SIDEBAR_SECTIONS, SIDEBAR_TOP } from "../../constants/permissions";
 import { COLORS } from "../../theme/colors";
@@ -108,6 +109,7 @@ const ICON_MAP = {
   IconShieldHeart,
   IconReportMoney,
   IconPalette,
+  IconFileCheck,
 };
 
 const Sidebar = ({
