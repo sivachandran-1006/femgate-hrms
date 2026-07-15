@@ -24,7 +24,8 @@ import {
   useTimesheetApprovals, useReviewTimesheetApproval,
 } from "../../queries/useTimesheet";
 
-const STATUS_COLOR = { Approved: "green", Pending: "yellow", Rejected: "red", Draft: "gray" };
+const STATUS_COLOR = { Approved: "green", ManagerApproved: "cyan", Pending: "yellow", Rejected: "red", Draft: "gray" };
+const STATUS_LABEL = { ManagerApproved: "Manager Approved" };
 
 // ── Mock fallback data ────────────────────────────────────────────────────────
 const MOCK_DASH = {
@@ -183,7 +184,7 @@ function EntriesList({ entries, isLoading }) {
         <Group gap="sm" wrap="wrap" align="flex-end">
           <TextInput label="Search" placeholder="Search by employee…" leftSection={<IconSearch size={15} />} value={search} onChange={(e) => setSearch(e.target.value)} size="sm" style={{ flex: 1, minWidth: 160 }} />
           <Select label="Project" w={180} size="sm" data={projects} value={projectF} onChange={setProjectF} />
-          <Select label="Status" w={150} size="sm" data={["All", "Draft", "Pending", "Approved", "Rejected"]} value={statusF} onChange={setStatusF} />
+          <Select label="Status" w={150} size="sm" data={["All", "Draft", "Pending", "ManagerApproved", "Approved", "Rejected"].map((s) => ({ value: s, label: STATUS_LABEL[s] || s }))} value={statusF} onChange={setStatusF} />
         </Group>
       </AppSection>
       <AppSection noPadding title="Timesheet Entries" sub={`${filtered.length} entries`}>
@@ -202,7 +203,7 @@ function EntriesList({ entries, isLoading }) {
                   <Table.Td><Text size="sm" c="dimmed">{e.client}</Text></Table.Td>
                   <Table.Td><Text size="sm">{e.hours}h</Text></Table.Td>
                   <Table.Td><Badge variant="light" color={e.billable ? "green" : "gray"} radius="sm">{e.billable ? "Billable" : "Non-Billable"}</Badge></Table.Td>
-                  <Table.Td><Badge variant="light" color={STATUS_COLOR[e.status] || "gray"} radius="sm">{e.status}</Badge></Table.Td>
+                  <Table.Td><Badge variant="light" color={STATUS_COLOR[e.status] || "gray"} radius="sm">{STATUS_LABEL[e.status] || e.status}</Badge></Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -257,7 +258,7 @@ function ApprovalsTab({ toast }) {
   return (
     <>
       <AppSection mb="md" p="md">
-        <Select label="Status" w={180} size="sm" data={["All", "Pending", "Approved", "Rejected"]} value={statusF} onChange={setStatusF} />
+        <Select label="Status" w={180} size="sm" data={["All", "Pending", "ManagerApproved", "Approved", "Rejected"].map((s) => ({ value: s, label: STATUS_LABEL[s] || s }))} value={statusF} onChange={setStatusF} />
       </AppSection>
       <AppSection noPadding title="Timesheet Approvals" sub={`${list.length} submissions`}>
         <ScrollArea>
@@ -271,9 +272,9 @@ function ApprovalsTab({ toast }) {
                     <Table.Td>{fmtDate(r.weekOf)}</Table.Td>
                     <Table.Td><Text size="sm">{r.project}</Text></Table.Td>
                     <Table.Td><Text size="sm">{r.hours}h</Text></Table.Td>
-                    <Table.Td><Badge variant="light" color={STATUS_COLOR[r.status] || "gray"} radius="sm">{r.status}</Badge></Table.Td>
+                    <Table.Td><Badge variant="light" color={STATUS_COLOR[r.status] || "gray"} radius="sm">{STATUS_LABEL[r.status] || r.status}</Badge></Table.Td>
                     <Table.Td>
-                      {r.status === "Pending" ? (
+                      {(r.status === "Pending" || r.status === "ManagerApproved") ? (
                         <Group gap={4} wrap="nowrap">
                           <ActionIcon size="sm" variant="light" color="green" title="Approve" onClick={() => review(r.id, "Approved")}><IconCheck size={13} /></ActionIcon>
                           <ActionIcon size="sm" variant="light" color="red" title="Reject" onClick={() => review(r.id, "Rejected")}><IconX size={13} /></ActionIcon>

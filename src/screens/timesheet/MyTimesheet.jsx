@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   IconClock, IconPlus, IconTrash, IconPlayerPlay, IconPlayerStop,
 } from "@tabler/icons-react";
@@ -27,7 +27,8 @@ const TODAY = new Date().toISOString().split("T")[0];
 const fmtDate = (d) =>
   new Date(d).toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
 
-const STATUS_STYLE = { Draft: "gray", Pending: "yellow", Approved: "green", Rejected: "red" };
+const STATUS_STYLE = { Draft: "gray", Pending: "yellow", ManagerApproved: "cyan", Approved: "green", Rejected: "red" };
+const STATUS_LABEL = { ManagerApproved: "Manager Approved" };
 
 const MOCK_MY_ENTRIES = [
   { id: "m1", date: "2026-07-01T00:00:00Z", project: "Client Portal Revamp", task: "API integration", hours: 8, billable: true, status: "Draft" },
@@ -42,9 +43,21 @@ const MyTimesheet = () => {
   const { show } = useToast();
 
   const [timerRunning, setTimerRunning] = useState(false);
-  const [timerSeconds] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerProject, setTimerProject] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    if (timerRunning) {
+      intervalRef.current = setInterval(() => setTimerSeconds((s) => s + 1), 1000);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [timerRunning]);
 
   const { data: apiEntries = [] } = useTimesheetEntries({ own: true });
   const createMut = useCreateTimesheetEntry();
@@ -63,7 +76,21 @@ const MyTimesheet = () => {
     hours: Number(e.hours || 0),
   }));
 
-  const toggleTimer = () => setTimerRunning((r) => !r);
+  const toggleTimer = async () => {
+    if (timerRunning) {
+      setTimerRunning(false);
+      const hours = Math.round((timerSeconds / 3600) * 100) / 100;
+      if (hours > 0) {
+        try {
+          await createMut.mutateAsync({ project: timerProject || "Untracked", task: "", client: "", hours, billable: true, date: TODAY });
+          show(`Logged ${hours}h to timesheet`, "success");
+        } catch { show("Failed to log timer entry", "error"); }
+      }
+      setTimerSeconds(0);
+    } else {
+      setTimerRunning(true);
+    }
+  };
 
   const openAddModal = () => { setForm(emptyForm); setModalOpen(true); };
 
@@ -111,7 +138,14 @@ const MyTimesheet = () => {
             <Text fz={36} fw={800} lh={1} style={{ fontVariantNumeric: "tabular-nums" }}>
               {new Date(timerSeconds * 1000).toISOString().substring(11, 19)}
             </Text>
-            <Text fz="sm" c="dimmed">Stopwatch for the task you're currently on</Text>
+            <TextInput
+              placeholder="What project are you working on?"
+              value={timerProject}
+              onChange={(e) => setTimerProject(e.target.value)}
+              disabled={timerRunning}
+              size="sm"
+              w={260}
+            />
           </Stack>
 
           <Stack align="center" gap="sm">
@@ -184,7 +218,7 @@ const MyTimesheet = () => {
                     <Table.Td><Text fz="sm" fw={500}>{e.project}</Text></Table.Td>
                     <Table.Td><Text fz="sm" c="dimmed">{e.task}</Text></Table.Td>
                     <Table.Td><Text fz="sm">{e.hours}h</Text></Table.Td>
-                    <Table.Td><Badge color={STATUS_STYLE[e.status] || "gray"} variant="light" size="sm">{e.status}</Badge></Table.Td>
+                    <Table.Td><Badge color={STATUS_STYLE[e.status] || "gray"} variant="light" size="sm">{STATUS_LABEL[e.status] || e.status}</Badge></Table.Td>
                     <Table.Td>
                       {e.status === "Draft" && (
                         <ActionIcon size="sm" variant="light" color="red" onClick={() => handleDelete(e.id)}>

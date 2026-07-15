@@ -25,6 +25,8 @@ import DesignationProfile from "./screens/designations/DesignationProfile";
 import Attendance     from "./screens/attendance/Attendance";
 import Timesheet      from "./screens/timesheet/Timesheet";
 import MyTimesheet    from "./screens/timesheet/MyTimesheet";
+import Tasks          from "./screens/tasks/Tasks";
+import MyTasks        from "./screens/tasks/MyTasks";
 import LeaveManagement from "./screens/leave/LeaveManagement";
 import PayrollManagement from "./screens/payroll/PayrollManagement";
 import Recruitment    from "./screens/recruitment/Recruitment";
@@ -311,6 +313,19 @@ export default function App() {
                   {can("timesheet.view_all")
                     ? <Timesheet darkMode={dark} />
                     : <MyTimesheet darkMode={dark} />
+                  }
+                </ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <RoleGuard routeId="tasks" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}>
+                  {can("tasks.view_all")
+                    ? <Tasks darkMode={dark} />
+                    : <MyTasks darkMode={dark} />
                   }
                 </ScreenWrapper>
               </RoleGuard>
@@ -720,6 +735,14 @@ export default function App() {
             element={
               <RoleGuard routeId="my-timesheet" userRole={userRole}>
                 <ScreenWrapper darkMode={dark}><MyTimesheet darkMode={dark} /></ScreenWrapper>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/my-tasks"
+            element={
+              <RoleGuard routeId="my-tasks" userRole={userRole}>
+                <ScreenWrapper darkMode={dark}><MyTasks darkMode={dark} /></ScreenWrapper>
               </RoleGuard>
             }
           />

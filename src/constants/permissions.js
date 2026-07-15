@@ -1,12 +1,12 @@
 // ── Route access (which pages each role can visit) ───────────────────────────
 export const ROLE_ROUTES = {
-  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","offers","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","marketplace","monitoring","backup","releases","feature-flags","subscriptions","dashboard-builder","workflow-builder","form-builder","email-template-builder","letter-template-builder","timesheet","my-timesheet"],
-  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","offers","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","timesheet","my-timesheet"],
-  HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","offers","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","timesheet","my-timesheet"],
-  MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement","compliance","visitors","shift-roster","benefits","timesheet","my-timesheet"],
-  FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits","compensation","my-timesheet"],
-  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits","my-timesheet"],
-  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance","engagement","compliance","visitors","shift-roster","benefits","my-timesheet"],
+  SUPER_ADMIN: ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","offers","onboarding","performance","assets","helpdesk","lms","analytics","settings","calendar","documents","exit","shifts","orgchart","user-management","roles-permissions","audit-logs","security","integrations","billing","companies","company-settings","notifications","reports","holiday-calendar","expense","announcements","my-attendance","approvals","my-team","workflows","communications","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","marketplace","monitoring","backup","releases","feature-flags","subscriptions","dashboard-builder","workflow-builder","form-builder","email-template-builder","letter-template-builder","timesheet","my-timesheet","tasks","my-tasks"],
+  ADMIN:       ["dashboard","employees","departments","branches","designations","attendance","leave","payroll","recruitment","offers","onboarding","performance","assets","helpdesk","lms","analytics","calendar","documents","exit","shifts","orgchart","audit-logs","security","integrations","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","branding","timesheet","my-timesheet","tasks","my-tasks"],
+  HR:          ["dashboard","employees","departments","branches","designations","attendance","leave","recruitment","offers","onboarding","performance","lms","analytics","calendar","documents","exit","shifts","orgchart","my-attendance","approvals","my-team","engagement","compliance","visitors","shift-roster","benefits","compensation","timesheet","my-timesheet","tasks","my-tasks"],
+  MANAGER:     ["dashboard","employees","departments","branches","designations","attendance","leave","performance","lms","calendar","orgchart","shifts","my-attendance","my-team","approvals","engagement","compliance","visitors","shift-roster","benefits","timesheet","my-timesheet","tasks","my-tasks"],
+  FINANCE:     ["dashboard","payroll","expense","analytics","documents","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits","compensation","my-timesheet","my-tasks"],
+  IT_ADMIN:    ["dashboard","assets","helpdesk","orgchart","calendar","my-attendance","approvals","engagement","compliance","visitors","shift-roster","benefits","my-timesheet","my-tasks"],
+  EMPLOYEE:    ["dashboard","attendance","leave","lms","calendar","my-profile","my-payslips","my-documents","my-assets","helpdesk","orgchart","announcements","notifications","self-onboarding","expense","performance","engagement","compliance","visitors","shift-roster","benefits","my-timesheet","my-tasks"],
 };
 
 // ── Sidebar section grouping (enterprise SaaS IA) ─────────────────────────────
@@ -16,7 +16,7 @@ export const ROLE_ROUTES = {
 // "dashboard" renders at the very top, above all sections.
 export const SIDEBAR_SECTIONS = [
   { title: "ORGANIZATION", items: ["employees", "my-team", "departments", "branches", "designations", "orgchart"] },
-  { title: "WORKFORCE",    items: ["attendance", "my-attendance", "timesheet", "my-timesheet", "shift-roster", "shifts", "leave", "approvals", "calendar", "holiday-calendar", "expense"] },
+  { title: "WORKFORCE",    items: ["attendance", "my-attendance", "timesheet", "my-timesheet", "tasks", "my-tasks", "shift-roster", "shifts", "leave", "approvals", "calendar", "holiday-calendar", "expense"] },
   { title: "TALENT MANAGEMENT", items: ["recruitment", "offers", "onboarding", "self-onboarding", "exit", "performance", "lms", "engagement", "benefits"] },
   { title: "PAYROLL & FINANCE", items: ["payroll", "my-payslips", "compensation"] },
   { title: "WORKPLACE",    items: ["assets", "my-assets", "documents", "my-documents", "visitors", "helpdesk"] },
@@ -50,6 +50,7 @@ export const ROLE_SIDEBAR = {
     { id: "attendance",       label: "Attendance",        icon: "IconClock"             },
     { id: "my-attendance",    label: "My Attendance",     icon: "IconUserCheck"         },
     { id: "timesheet",        label: "Timesheet",         icon: "IconClockHour4"        },
+    { id: "tasks",            label: "Tasks",             icon: "IconChecklist"         },
     { id: "shifts",           label: "Shifts",            icon: "IconRotateClockwise"   },
     { id: "leave",            label: "Leave",             icon: "IconCalendarOff"       },
     { id: "calendar",         label: "Calendar",          icon: "IconCalendar"          },
@@ -111,6 +112,7 @@ export const ROLE_SIDEBAR = {
     { id: "attendance",    label: "Attendance",    icon: "IconClock"             },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck"         },
     { id: "timesheet",     label: "Timesheet",     icon: "IconClockHour4"        },
+    { id: "tasks",         label: "Tasks",         icon: "IconChecklist"         },
     { id: "shifts",        label: "Shifts",        icon: "IconRotateClockwise"   },
     { id: "leave",         label: "Leave",         icon: "IconCalendarOff"       },
     { id: "calendar",      label: "Calendar",      icon: "IconCalendar"          },
@@ -147,6 +149,7 @@ export const ROLE_SIDEBAR = {
     { id: "attendance",    label: "Attendance",    icon: "IconClock"             },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck"         },
     { id: "timesheet",   label: "Timesheet",   icon: "IconClockHour4"        },
+    { id: "tasks",       label: "Tasks",       icon: "IconChecklist"         },
     { id: "shifts",      label: "Shifts",      icon: "IconRotateClockwise"   },
     { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
     { id: "calendar",    label: "Calendar",    icon: "IconCalendar"          },
@@ -173,6 +176,7 @@ export const ROLE_SIDEBAR = {
     { id: "attendance",  label: "Attendance",  icon: "IconClock"             },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "timesheet",   label: "Timesheet",   icon: "IconClockHour4" },
+    { id: "tasks",       label: "Tasks",       icon: "IconChecklist" },
     { id: "shifts",      label: "Shifts",      icon: "IconRotateClockwise"   },
     { id: "leave",       label: "Leave",       icon: "IconCalendarOff"       },
     { id: "calendar",    label: "Calendar",    icon: "IconCalendar"          },
@@ -189,6 +193,7 @@ export const ROLE_SIDEBAR = {
     { id: "compensation",  label: "Compensation",  icon: "IconReportMoney"     },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "my-timesheet", label: "My Timesheet", icon: "IconClockHour4" },
+    { id: "my-tasks",    label: "My Tasks",    icon: "IconChecklist" },
     { id: "payroll",     label: "Payroll",     icon: "IconCurrencyRupee"     },
     { id: "expense",     label: "Expenses",    icon: "IconReceipt"           },
     { id: "documents",   label: "Documents",   icon: "IconFolder"            },
@@ -203,6 +208,7 @@ export const ROLE_SIDEBAR = {
     { id: "benefits",      label: "Benefits",      icon: "IconShieldHeart"     },
     { id: "my-attendance", label: "My Attendance", icon: "IconUserCheck" },
     { id: "my-timesheet", label: "My Timesheet", icon: "IconClockHour4" },
+    { id: "my-tasks",    label: "My Tasks",    icon: "IconChecklist" },
     { id: "assets",      label: "Assets",      icon: "IconPackage"           },
     { id: "helpdesk",    label: "Helpdesk",    icon: "IconLifebuoy"          },
     { id: "orgchart",    label: "Org Chart",   icon: "IconHierarchy"         },
@@ -218,6 +224,7 @@ export const ROLE_SIDEBAR = {
     { id: "my-profile",   label: "My Profile",    icon: "IconUser"            },
     { id: "attendance",   label: "My Attendance", icon: "IconClock"           },
     { id: "my-timesheet", label: "My Timesheet",  icon: "IconClockHour4"      },
+    { id: "my-tasks",     label: "My Tasks",      icon: "IconChecklist"       },
     { id: "leave",        label: "My Leave",      icon: "IconCalendarOff"     },
     { id: "my-payslips",  label: "My Payslips",   icon: "IconCurrencyRupee"   },
     { id: "expense",      label: "My Expenses",   icon: "IconReceipt"         },
@@ -400,6 +407,14 @@ export const PERMISSIONS = {
   "timesheet.view_all":               ["HR","ADMIN","SUPER_ADMIN"],
   "timesheet.approve":                ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
   "timesheet.reject":                 ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
+
+  // ── Tasks ──
+  "tasks.view_own":                   ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","FINANCE","IT_ADMIN"],
+  "tasks.create_own":                 ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","FINANCE","IT_ADMIN"],
+  "tasks.view_team":                  ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
+  "tasks.view_all":                   ["HR","ADMIN","SUPER_ADMIN"],
+  "tasks.assign":                     ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
+  "tasks.delete":                     ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
 };
 
 // ── Helper function: check if role has permission ─────────────────────────────
