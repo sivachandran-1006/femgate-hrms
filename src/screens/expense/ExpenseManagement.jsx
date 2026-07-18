@@ -29,6 +29,67 @@ const STATUS_COLORS = {
   Rejected: "red", Reimbursed: "teal", Cancelled: "dark",
 };
 
+// ─── Mock fallback data (main_v1 UI-only branch) ────────────────────────────
+const MOCK_DASHBOARD = {
+  totalClaims: 128,
+  pendingApprovals: 14,
+  approvedClaims: 76,
+  rejectedClaims: 9,
+  reimbursedAmount: 452300,
+  pendingReimbursements: 68500,
+  monthlyExpense: 94200,
+};
+
+const MOCK_ANALYTICS = {
+  trend: [
+    { month: "Feb", amount: 62000 },
+    { month: "Mar", amount: 71500 },
+    { month: "Apr", amount: 58900 },
+    { month: "May", amount: 88200 },
+    { month: "Jun", amount: 79400 },
+    { month: "Jul", amount: 94200 },
+  ],
+  byCategory: [
+    { category: "Travel", amount: 128500 },
+    { category: "Accommodation", amount: 96200 },
+    { category: "Food", amount: 54300 },
+    { category: "Fuel", amount: 41800 },
+    { category: "Internet", amount: 18600 },
+    { category: "Training", amount: 62000 },
+    { category: "Client Meeting", amount: 33500 },
+  ],
+};
+
+const MOCK_EXPENSES = [
+  { id: "exp-1", claimNo: "EXP-2026-0142", employee: "Ananya Sharma", category: "Travel", amount: 12500, date: "2026-07-10", submittedAt: null, status: "Draft", description: "Client site visit travel - not yet submitted", currency: "INR", project: "Project Falcon", costCenter: "CC-101" },
+  { id: "exp-2", claimNo: "EXP-2026-0138", employee: "Rohit Verma", category: "Food", amount: 1850, date: "2026-07-08", submittedAt: "2026-07-09", status: "Submitted", description: "Team lunch with client", currency: "INR", project: "Project Orion", costCenter: "CC-102" },
+  { id: "exp-3", claimNo: "EXP-2026-0135", employee: "Priya Nair", category: "Accommodation", amount: 8600, date: "2026-07-05", submittedAt: "2026-07-06", status: "Pending Approval", description: "Hotel stay for onsite training", currency: "INR", project: "Project Falcon", costCenter: "CC-101" },
+  { id: "exp-4", claimNo: "EXP-2026-0130", employee: "Karthik Iyer", category: "Fuel", amount: 3200, date: "2026-07-03", submittedAt: "2026-07-04", status: "Pending Approval", description: "Fuel reimbursement for client visits", currency: "INR", project: "Project Nova", costCenter: "CC-103" },
+  { id: "exp-5", claimNo: "EXP-2026-0126", employee: "Sneha Reddy", category: "Internet", amount: 999, date: "2026-06-28", submittedAt: "2026-06-29", status: "Approved", description: "WFH broadband reimbursement", currency: "INR", project: "", costCenter: "CC-104" },
+  { id: "exp-6", claimNo: "EXP-2026-0119", employee: "Arjun Menon", category: "Mobile", amount: 799, date: "2026-06-25", submittedAt: "2026-06-26", status: "Approved", description: "Monthly mobile plan reimbursement", currency: "INR", project: "", costCenter: "CC-104" },
+  { id: "exp-7", claimNo: "EXP-2026-0112", employee: "Divya Krishnan", category: "Training", amount: 15000, date: "2026-06-20", submittedAt: "2026-06-21", status: "Approved", description: "AWS certification course fee", currency: "INR", project: "Learning & Development", costCenter: "CC-105" },
+  { id: "exp-8", claimNo: "EXP-2026-0108", employee: "Vikram Singh", category: "Office Supplies", amount: 2400, date: "2026-06-18", submittedAt: "2026-06-19", status: "Rejected", description: "Desk accessories purchase", currency: "INR", project: "", costCenter: "CC-102", rejectReason: "Missing original invoice" },
+  { id: "exp-9", claimNo: "EXP-2026-0101", employee: "Meera Pillai", category: "Client Meeting", amount: 5600, date: "2026-06-14", submittedAt: "2026-06-15", status: "Rejected", description: "Client dinner - exceeded per-diem limit", currency: "INR", project: "Project Orion", costCenter: "CC-102", rejectReason: "Exceeds approved per-diem limit" },
+  { id: "exp-10", claimNo: "EXP-2026-0095", employee: "Rahul Desai", category: "Medical", amount: 4200, date: "2026-06-10", submittedAt: "2026-06-11", status: "Reimbursed", description: "Medical reimbursement claim", currency: "INR", project: "", costCenter: "CC-104", paymentDate: "2026-06-20", paymentRef: "TXN-88213", paymentMode: "Bank Transfer" },
+  { id: "exp-11", claimNo: "EXP-2026-0088", employee: "Nisha Kapoor", category: "Travel", amount: 22300, date: "2026-06-05", submittedAt: "2026-06-06", status: "Reimbursed", description: "Flight tickets for onsite deployment", currency: "INR", project: "Project Falcon", costCenter: "CC-101", paymentDate: "2026-06-16", paymentRef: "TXN-88104", paymentMode: "UPI" },
+  { id: "exp-12", claimNo: "EXP-2026-0081", employee: "Suresh Kumar", category: "Fuel", amount: 1600, date: "2026-05-30", submittedAt: "2026-05-31", status: "Cancelled", description: "Fuel claim cancelled - duplicate entry", currency: "INR", project: "", costCenter: "CC-103" },
+  { id: "exp-13", claimNo: "EXP-2026-0075", employee: "Anjali Bhatt", category: "Other", amount: 950, date: "2026-05-25", submittedAt: "2026-05-26", status: "Approved", description: "Courier charges for document dispatch", currency: "INR", project: "", costCenter: "CC-105" },
+  { id: "exp-14", claimNo: "EXP-2026-0070", employee: "Aditya Rao", category: "Accommodation", amount: 11200, date: "2026-05-20", submittedAt: "2026-05-21", status: "Pending Approval", description: "Hotel stay - annual review offsite", currency: "INR", project: "Project Nova", costCenter: "CC-103" },
+  { id: "exp-15", claimNo: "EXP-2026-0063", employee: "Kavya Menon", category: "Food", amount: 1120, date: "2026-05-15", submittedAt: "2026-05-16", status: "Submitted", description: "Team offsite meal expenses", currency: "INR", project: "Project Orion", costCenter: "CC-102" },
+];
+
+function buildMockExpenseResult({ search = "", status = "", category = "", page = 1, limit = 25 } = {}) {
+  const q = search.trim().toLowerCase();
+  const filtered = MOCK_EXPENSES.filter((e) => {
+    if (status && e.status !== status) return false;
+    if (category && e.category !== category) return false;
+    if (q && !`${e.claimNo} ${e.employee} ${e.category}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const start = (page - 1) * limit;
+  return { expenses: filtered.slice(start, start + limit), total: filtered.length };
+}
+
 // ─── Dashboard KPIs ──────────────────────────────────────────────────────────
 function KpiCard({ label, value, icon: Icon, color, onClick }) {
   return (
@@ -46,8 +107,10 @@ function KpiCard({ label, value, icon: Icon, color, onClick }) {
 
 // ─── Dashboard Tab ───────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: dash, isLoading } = useExpenseDashboard();
-  const { data: analytics } = useExpenseAnalytics();
+  const { data: rawDash, isLoading } = useExpenseDashboard();
+  const dash = rawDash ?? MOCK_DASHBOARD;
+  const { data: rawAnalytics } = useExpenseAnalytics();
+  const analytics = rawAnalytics ?? MOCK_ANALYTICS;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -110,7 +173,10 @@ function ExpenseListTab() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
-  const { data: result = {}, isLoading } = useExpenses({ search, status, category, page, limit });
+  const { data: rawResult, isLoading } = useExpenses({ search, status, category, page, limit });
+  const result = rawResult?.expenses?.length
+    ? rawResult
+    : buildMockExpenseResult({ search, status, category, page, limit });
   const deleteExp = useDeleteExpense();
 
   const openNew = () => { setEditId(null); setFormOpen(true); };
@@ -245,7 +311,8 @@ function ExpenseFormModal({ opened, onClose, expenseId }) {
     costCenter: "",
   });
 
-  const { data: expense } = useExpense(expenseId);
+  const { data: rawExpense } = useExpense(expenseId);
+  const expense = rawExpense ?? (expenseId ? MOCK_EXPENSES.find((e) => e.id === expenseId) : null);
   const create = useCreateExpense();
   const update = useUpdateExpense();
 
@@ -302,7 +369,10 @@ function ApprovalsTab() {
   const [actionComment, setActionComment] = useState("");
   const [actionModalOpened, { open: openActionModal, close: closeActionModal }] = useDisclosure(false);
 
-  const { data: result = {}, isLoading } = useExpenses({ status: "Pending Approval", page, limit });
+  const { data: rawResult, isLoading } = useExpenses({ status: "Pending Approval", page, limit });
+  const result = rawResult?.expenses?.length
+    ? rawResult
+    : buildMockExpenseResult({ status: "Pending Approval", page, limit });
   const approve = useApproveExpense();
   const reject = useRejectExpense();
   const clarify = useClarifyExpense();
@@ -445,7 +515,10 @@ function ReimbursementsTab() {
     remarks: "",
   });
 
-  const { data: result = {}, isLoading } = useExpenses({ status: "Approved", page, limit });
+  const { data: rawResult, isLoading } = useExpenses({ status: "Approved", page, limit });
+  const result = rawResult?.expenses?.length
+    ? rawResult
+    : buildMockExpenseResult({ status: "Approved", page, limit });
   const reimburse = useReimburseExpense();
 
   const pf = (k) => (v) => setPaymentForm((p) => ({ ...p, [k]: v }));
