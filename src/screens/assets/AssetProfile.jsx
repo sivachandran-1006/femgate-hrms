@@ -17,6 +17,57 @@ import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
 import { useAsset, useAssetAssignments, useAssetMaintenance, useAssetAudit, useAddMaintenance } from "../../queries/useAssets";
 
+const MOCK_ASSETS = [
+  {
+    id: "1", assetId: "AST-1001", name: "Dell Latitude 5440", category: "Laptop", brand: "Dell", model: "Latitude 5440",
+    serialNumber: "DL5440-8823X1", vendor: "Dell Technologies", location: "Chennai HQ - 3rd Floor", status: "Assigned",
+    purchaseDate: "2024-02-10", warrantyExpiry: "2027-02-10", purchaseValue: 78500,
+    assignedTo: { id: "e101", name: "Arjun Menon" }, assignedAt: "2024-02-14", expectedReturnDate: null,
+  },
+  {
+    id: "2", assetId: "AST-1002", name: "Dell UltraSharp 27\" Monitor", category: "Monitor", brand: "Dell", model: "U2723QE",
+    serialNumber: "DLU2723-4471Q", vendor: "Dell Technologies", location: "Chennai HQ - 3rd Floor", status: "Assigned",
+    purchaseDate: "2024-02-10", warrantyExpiry: "2027-02-10", purchaseValue: 32000,
+    assignedTo: { id: "e101", name: "Arjun Menon" }, assignedAt: "2024-02-14", expectedReturnDate: null,
+  },
+  {
+    id: "3", assetId: "AST-1010", name: "iPhone 14", category: "Mobile Phone", brand: "Apple", model: "iPhone 14",
+    serialNumber: "APL14-9902MK", vendor: "Apple Store India", location: "Bengaluru Branch", status: "Assigned",
+    purchaseDate: "2023-11-05", warrantyExpiry: "2024-11-05", purchaseValue: 69900,
+    assignedTo: { id: "e108", name: "Priya Sharma" }, assignedAt: "2023-11-10", expectedReturnDate: null,
+  },
+  {
+    id: "4", assetId: "AST-1015", name: "HP ProBook 450 G9", category: "Laptop", brand: "HP", model: "ProBook 450 G9",
+    serialNumber: "HP450G9-3312R", vendor: "HP World", location: "Chennai HQ - 2nd Floor", status: "UnderRepair",
+    purchaseDate: "2022-06-18", warrantyExpiry: "2025-06-18", purchaseValue: 61500,
+    assignedTo: { id: "e114", name: "Karthik Raja" }, assignedAt: "2022-06-22", expectedReturnDate: "2026-07-25",
+  },
+  {
+    id: "5", assetId: "AST-1022", name: "Logitech MX Master 3S", category: "Peripheral", brand: "Logitech", model: "MX Master 3S",
+    serialNumber: "LMX3S-7743T", vendor: "Amazon Business", location: "Warehouse", status: "Available",
+    purchaseDate: "2025-01-15", warrantyExpiry: "2026-01-15", purchaseValue: 8990,
+    assignedTo: null, assignedAt: null, expectedReturnDate: null,
+  },
+  {
+    id: "6", assetId: "AST-1030", name: "Samsung Galaxy Tab S9", category: "Tablet", brand: "Samsung", model: "Galaxy Tab S9",
+    serialNumber: "SGT-S9-5581B", vendor: "Samsung Enterprise", location: "Coimbatore Branch", status: "Assigned",
+    purchaseDate: "2024-08-01", warrantyExpiry: "2026-08-01", purchaseValue: 54999,
+    assignedTo: { id: "e120", name: "Divya Suresh" }, assignedAt: "2024-08-05", expectedReturnDate: null,
+  },
+  {
+    id: "7", assetId: "AST-1041", name: "Lenovo ThinkPad X1 Carbon", category: "Laptop", brand: "Lenovo", model: "ThinkPad X1 Carbon Gen 11",
+    serialNumber: "LNVX1C-2290Z", vendor: "Lenovo Direct", location: "Chennai HQ - 4th Floor", status: "Lost",
+    purchaseDate: "2021-09-12", warrantyExpiry: "2024-09-12", purchaseValue: 112000,
+    assignedTo: { id: "e130", name: "Rohit Nair" }, assignedAt: "2021-09-15", expectedReturnDate: null,
+  },
+  {
+    id: "8", assetId: "AST-1050", name: "Canon imageCLASS Printer", category: "Printer", brand: "Canon", model: "MF264dw",
+    serialNumber: "CAN264DW-6612Y", vendor: "Canon India", location: "Chennai HQ - 1st Floor", status: "Retired",
+    purchaseDate: "2019-03-20", warrantyExpiry: "2021-03-20", purchaseValue: 24500,
+    assignedTo: null, assignedAt: null, expectedReturnDate: null,
+  },
+];
+
 const STATUS_COLOR = { Available: "green", Assigned: "blue", InUse: "blue", UnderRepair: "orange", Maintenance: "orange", Lost: "red", Damaged: "red", Disposed: "gray", Retired: "gray" };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
@@ -31,7 +82,9 @@ export default function AssetProfile() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: asset, isLoading, isError } = useAsset(id);
+  const { data: rawAsset, isLoading, isError: rawIsError } = useAsset(id);
+  const asset = rawAsset ?? MOCK_ASSETS.find(m => String(m.id) === String(id)) ?? MOCK_ASSETS[0];
+  const isError = rawIsError && !asset;
   const { data: assignments = [] } = useAssetAssignments(id);
   const { data: maintenance = [] } = useAssetMaintenance(id);
   const { data: audit = [] } = useAssetAudit(id);

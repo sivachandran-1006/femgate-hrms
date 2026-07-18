@@ -32,6 +32,45 @@ const BRANCH_TYPES = ["Head Office", "Regional Office", "Sales Office", "Remote 
 const TIMEZONES = ["Asia/Kolkata", "Asia/Dubai", "America/New_York", "Europe/London", "Asia/Singapore"];
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 
+const MOCK_BRANCHES = [
+  {
+    id: "b1", name: "Chennai HQ", code: "CHN", type: "Head Office",
+    country: "India", state: "Tamil Nadu", city: "Chennai",
+    address1: "12 Anna Salai", address2: "Teynampet",
+    postalCode: "600018", email: "chennai.hq@mgate.com", phone: "+91 44 4567 8901",
+    timezone: "Asia/Kolkata", status: "Active",
+    headName: "Arjun Menon", headEmail: "arjun.menon@mgate.com",
+    location: "Chennai, Tamil Nadu", employeeCount: 128, createdAt: "2019-04-10T00:00:00Z",
+  },
+  {
+    id: "b2", name: "Dubai Regional Office", code: "DXB", type: "Regional Office",
+    country: "UAE", state: "Dubai", city: "Dubai",
+    address1: "Office 1102, Marina Plaza", address2: "Dubai Marina",
+    postalCode: "00000", email: "dubai.office@mgate.com", phone: "+971 4 234 5678",
+    timezone: "Asia/Dubai", status: "Active",
+    headName: "Fatima Al Suwaidi", headEmail: "fatima.alsuwaidi@mgate.com",
+    location: "Dubai, UAE", employeeCount: 46, createdAt: "2021-01-15T00:00:00Z",
+  },
+  {
+    id: "b3", name: "New York Sales Office", code: "NYC", type: "Sales Office",
+    country: "United States", state: "New York", city: "New York",
+    address1: "350 5th Avenue", address2: "Suite 2100",
+    postalCode: "10118", email: "ny.sales@mgate.com", phone: "+1 212 555 0134",
+    timezone: "America/New_York", status: "Active",
+    headName: "Rachel Simmons", headEmail: "rachel.simmons@mgate.com",
+    location: "New York, USA", employeeCount: 23, createdAt: "2022-06-01T00:00:00Z",
+  },
+  {
+    id: "b4", name: "Singapore Remote Office", code: "SGP", type: "Remote Office",
+    country: "Singapore", state: "Singapore", city: "Singapore",
+    address1: "8 Marina View", address2: "#25-01 Asia Square Tower",
+    postalCode: "018960", email: "sg.office@mgate.com", phone: "+65 6123 4567",
+    timezone: "Asia/Singapore", status: "Inactive",
+    headName: "Wei Chen", headEmail: "wei.chen@mgate.com",
+    location: "Singapore", employeeCount: 9, createdAt: "2023-02-20T00:00:00Z",
+  },
+];
+
 const EMPTY_FORM = {
   name: "", code: "", type: "Head Office", headId: "",
   country: "", state: "", city: "", address1: "", address2: "",
@@ -156,7 +195,9 @@ const Branches = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: branches = [], isLoading, isError } = useBranches();
+  const { data: rawBranches, isLoading, isError: rawIsError } = useBranches();
+  const branches = rawBranches?.length ? rawBranches : MOCK_BRANCHES;
+  const isError = rawIsError && !branches.length;
   const { data: heads = [] } = useBranchHeads();
 
   const createMut = useCreateBranch();

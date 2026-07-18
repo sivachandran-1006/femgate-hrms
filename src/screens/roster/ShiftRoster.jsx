@@ -31,14 +31,56 @@ const WEEKLY_OFF = ["Saturday & Sunday", "Sunday Only", "Rotating Weekly Off", "
 const STATUS_COLOR = { Active: "green", Inactive: "gray", Archived: "dark", Pending: "orange", Approved: "green", Rejected: "red" };
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-const MOCK_SHIFTS = [];
-const MOCK_ASSIGNMENTS = [];
-const MOCK_CHANGE_REQUESTS = [];
-const MOCK_OVERTIME = [];
+const MOCK_SHIFTS = [
+  { id: 1, name: "General Shift", code: "GEN-01", type: "General Shift", startTime: "09:00", endTime: "18:00", breakDuration: 60, graceTime: 15, weeklyOff: "Saturday & Sunday", colorCode: "#3b82f6", status: "Active", workingHours: 8, _count: { assignments: 6 } },
+  { id: 2, name: "Morning Shift", code: "MOR-01", type: "Morning Shift", startTime: "06:00", endTime: "14:00", breakDuration: 30, graceTime: 10, weeklyOff: "Sunday Only", colorCode: "#22c55e", status: "Active", workingHours: 8, _count: { assignments: 4 } },
+  { id: 3, name: "Evening Shift", code: "EVE-01", type: "Evening Shift", startTime: "14:00", endTime: "22:00", breakDuration: 45, graceTime: 10, weeklyOff: "Sunday Only", colorCode: "#f97316", status: "Active", workingHours: 8, _count: { assignments: 3 } },
+  { id: 4, name: "Night Shift", code: "NGT-01", type: "Night Shift", startTime: "22:00", endTime: "06:00", breakDuration: 45, graceTime: 15, weeklyOff: "Rotating Weekly Off", colorCode: "#6366f1", status: "Active", workingHours: 8, _count: { assignments: 2 } },
+  { id: 5, name: "Split Shift", code: "SPL-01", type: "Split Shift", startTime: "10:00", endTime: "19:00", breakDuration: 90, graceTime: 10, weeklyOff: "Custom Weekly Off", colorCode: "#a855f7", status: "Inactive", workingHours: 7.5, _count: { assignments: 0 } },
+  { id: 6, name: "Rotational Shift", code: "ROT-01", type: "Rotational Shift", startTime: "08:00", endTime: "17:00", breakDuration: 60, graceTime: 10, weeklyOff: "Rotating Weekly Off", colorCode: "#14b8a6", status: "Active", workingHours: 8, _count: { assignments: 1 } },
+];
+
+const MOCK_ASSIGNMENTS = [
+  { id: 1, employee: "Arjun Mehta", employeeId: 101, department: "Engineering", date: "2026-07-14", shift: { name: "General Shift", colorCode: "#3b82f6", startTime: "09:00", endTime: "18:00" } },
+  { id: 2, employee: "Priya Sharma", employeeId: 102, department: "Human Resources", date: "2026-07-14", shift: { name: "Morning Shift", colorCode: "#22c55e", startTime: "06:00", endTime: "14:00" } },
+  { id: 3, employee: "Ravi Kumar", employeeId: 103, department: "Sales", date: "2026-07-14", shift: { name: "Evening Shift", colorCode: "#f97316", startTime: "14:00", endTime: "22:00" } },
+  { id: 4, employee: "Lakshmi Nair", employeeId: 104, department: "Support", date: "2026-07-15", shift: { name: "Night Shift", colorCode: "#6366f1", startTime: "22:00", endTime: "06:00" } },
+  { id: 5, employee: "Vikram Singh", employeeId: 105, department: "Engineering", date: "2026-07-15", shift: { name: "General Shift", colorCode: "#3b82f6", startTime: "09:00", endTime: "18:00" } },
+  { id: 6, employee: "Ananya Iyer", employeeId: 106, department: "Finance", date: "2026-07-15", shift: { name: "Morning Shift", colorCode: "#22c55e", startTime: "06:00", endTime: "14:00" } },
+  { id: 7, employee: "Karthik Reddy", employeeId: 107, department: "Operations", date: "2026-07-16", shift: { name: "Rotational Shift", colorCode: "#14b8a6", startTime: "08:00", endTime: "17:00" } },
+  { id: 8, employee: "Sneha Pillai", employeeId: 108, department: "Marketing", date: "2026-07-16", shift: { name: "Evening Shift", colorCode: "#f97316", startTime: "14:00", endTime: "22:00" } },
+  { id: 9, employee: "Rahul Verma", employeeId: 109, department: "Engineering", date: "2026-07-17", shift: { name: "Night Shift", colorCode: "#6366f1", startTime: "22:00", endTime: "06:00" } },
+  { id: 10, employee: "Divya Menon", employeeId: 110, department: "Human Resources", date: "2026-07-17", shift: { name: "General Shift", colorCode: "#3b82f6", startTime: "09:00", endTime: "18:00" } },
+];
+
+const MOCK_CHANGE_REQUESTS = [
+  { id: 1, employee: "Arjun Mehta", currentShift: "General Shift", requestedShift: "Morning Shift", reason: "Better commute timing", effectiveDate: "2026-07-20", status: "Pending" },
+  { id: 2, employee: "Priya Sharma", currentShift: "Morning Shift", requestedShift: "Evening Shift", reason: "Childcare arrangement", effectiveDate: "2026-07-22", status: "Approved" },
+  { id: 3, employee: "Ravi Kumar", currentShift: "Evening Shift", requestedShift: "Night Shift", reason: "Higher night allowance", effectiveDate: "2026-07-25", status: "Pending" },
+  { id: 4, employee: "Lakshmi Nair", currentShift: "Night Shift", requestedShift: "General Shift", reason: "Health reasons", effectiveDate: "2026-07-18", status: "Rejected" },
+];
+
+const MOCK_OVERTIME = [
+  { id: 1, employee: "Arjun Mehta", date: "2026-07-10", hours: 2.5, reason: "Month-end reporting", status: "Approved" },
+  { id: 2, employee: "Priya Sharma", date: "2026-07-11", hours: 3, reason: "Client escalation support", status: "Pending" },
+  { id: 3, employee: "Ravi Kumar", date: "2026-07-12", hours: 1.5, reason: "System migration", status: "Approved" },
+  { id: 4, employee: "Vikram Singh", date: "2026-07-14", hours: 4, reason: "Production release support", status: "Pending" },
+];
+
 const MOCK_SWAP_REQUESTS = [
   { id: 1, requester: "Arjun Mehta", requestedWith: "Priya Sharma", requesterShift: "Morning Shift", requestedShift: "Evening Shift", date: "2026-07-05", reason: "Family commitment", status: "Pending" },
   { id: 2, requester: "Lakshmi Nair", requestedWith: "Ravi Kumar", requesterShift: "Night Shift", requestedShift: "General Shift", date: "2026-07-08", reason: "Medical appointment", status: "Pending" },
 ];
+
+const MOCK_DASH = {
+  totalShifts: 6,
+  activeShifts: 5,
+  employeesAssigned: 16,
+  nightShifts: 2,
+  rotatingShifts: 1,
+  overtimeHours: 11,
+  shiftChangeRequests: 2,
+};
 
 const useEmployeeOptions = () => {
   const { data: employees = [] } = useFetchAllEmployees();
@@ -65,7 +107,7 @@ function DashboardTab() {
   const { data: d, isLoading } = useRosterDashboard();
   const { data: an } = useRosterAnalytics();
   if (isLoading) return <Center h={200}><Loader /></Center>;
-  const dash = d || {};
+  const dash = d || MOCK_DASH;
   return (
     <Stack gap="md">
       <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">

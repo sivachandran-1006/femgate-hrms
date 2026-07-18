@@ -38,6 +38,45 @@ const CHART_COLORS = {
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
+const MOCK_LEAVES = [
+  { id: 1, leaveId: "LV-1001", employee: "Ananya Sharma", leaveType: "Sick Leave",     fromDate: "2026-06-02", toDate: "2026-06-03", days: 2, status: "Approved" },
+  { id: 2, leaveId: "LV-1002", employee: "Rohit Verma",   leaveType: "Casual Leave",   fromDate: "2026-06-05", toDate: "2026-06-05", days: 1, status: "Approved" },
+  { id: 3, leaveId: "LV-1003", employee: "Priya Nair",    leaveType: "Earned Leave",   fromDate: "2026-06-10", toDate: "2026-06-14", days: 5, status: "Pending" },
+  { id: 4, leaveId: "LV-1004", employee: "Karthik Iyer",  leaveType: "Sick Leave",     fromDate: "2026-06-15", toDate: "2026-06-15", days: 1, status: "Rejected" },
+  { id: 5, leaveId: "LV-1005", employee: "Sneha Reddy",   leaveType: "Casual Leave",   fromDate: "2026-06-18", toDate: "2026-06-19", days: 2, status: "Approved" },
+  { id: 6, leaveId: "LV-1006", employee: "Vikram Singh",  leaveType: "Earned Leave",   fromDate: "2026-06-20", toDate: "2026-06-24", days: 5, status: "Pending" },
+  { id: 7, leaveId: "LV-1007", employee: "Divya Menon",   leaveType: "Maternity Leave",fromDate: "2026-06-01", toDate: "2026-06-30", days: 30, status: "Approved" },
+  { id: 8, leaveId: "LV-1008", employee: "Arjun Das",     leaveType: "Casual Leave",   fromDate: "2026-06-22", toDate: "2026-06-22", days: 1, status: "Approved" },
+  { id: 9, leaveId: "LV-1009", employee: "Meera Pillai",  leaveType: "Sick Leave",     fromDate: "2026-06-25", toDate: "2026-06-26", days: 2, status: "Pending" },
+  { id: 10, leaveId: "LV-1010", employee: "Suresh Kumar", leaveType: "Earned Leave",   fromDate: "2026-06-27", toDate: "2026-06-28", days: 2, status: "Rejected" },
+];
+
+const MOCK_PAYROLL = [
+  { payId: "PAY-2001", employeeName: "Ananya Sharma", departmentName: "Engineering", month: "June", salary: 85000,  bonus: 5000, deduction: 8000, netSalary: 82000, status: "Paid" },
+  { payId: "PAY-2002", employeeName: "Rohit Verma",   departmentName: "Sales",       month: "June", salary: 65000,  bonus: 3000, deduction: 6000, netSalary: 62000, status: "Paid" },
+  { payId: "PAY-2003", employeeName: "Priya Nair",    departmentName: "HR",          month: "June", salary: 60000,  bonus: 0,    deduction: 5500, netSalary: 54500, status: "Hold" },
+  { payId: "PAY-2004", employeeName: "Karthik Iyer",  departmentName: "Engineering", month: "June", salary: 95000,  bonus: 7000, deduction: 9000, netSalary: 93000, status: "Paid" },
+  { payId: "PAY-2005", employeeName: "Sneha Reddy",   departmentName: "Marketing",   month: "June", salary: 70000,  bonus: 2000, deduction: 6500, netSalary: 65500, status: "Paid" },
+  { payId: "PAY-2006", employeeName: "Vikram Singh",  departmentName: "Finance",     month: "June", salary: 80000,  bonus: 4000, deduction: 7500, netSalary: 76500, status: "Hold" },
+  { payId: "PAY-2007", employeeName: "Divya Menon",   departmentName: "Sales",       month: "June", salary: 62000,  bonus: 1000, deduction: 5800, netSalary: 57200, status: "Paid" },
+  { payId: "PAY-2008", employeeName: "Arjun Das",     departmentName: "Engineering", month: "June", salary: 88000,  bonus: 6000, deduction: 8200, netSalary: 85800, status: "Paid" },
+  { payId: "PAY-2009", employeeName: "Meera Pillai",  departmentName: "HR",          month: "June", salary: 58000,  bonus: 0,    deduction: 5200, netSalary: 52800, status: "Paid" },
+  { payId: "PAY-2010", employeeName: "Suresh Kumar",  departmentName: "Finance",     month: "June", salary: 90000,  bonus: 5000, deduction: 8700, netSalary: 86300, status: "Hold" },
+];
+
+const MOCK_ASSETS = [
+  { assetId: "AST-3001", name: "Dell Latitude 5420",  category: "Laptop",    assignedTo: { name: "Ananya Sharma" }, status: "InUse",      purchaseValue: 65000 },
+  { assetId: "AST-3002", name: "MacBook Pro 14\"",     category: "Laptop",    assignedTo: { name: "Karthik Iyer" },  status: "InUse",      purchaseValue: 150000 },
+  { assetId: "AST-3003", name: "HP LaserJet Pro",      category: "Printer",  assignedTo: null,                       status: "Available",   purchaseValue: 22000 },
+  { assetId: "AST-3004", name: "iPhone 13",            category: "Mobile",   assignedTo: { name: "Rohit Verma" },   status: "InUse",      purchaseValue: 55000 },
+  { assetId: "AST-3005", name: "Dell Monitor 24\"",     category: "Monitor",  assignedTo: { name: "Sneha Reddy" },   status: "InUse",      purchaseValue: 12000 },
+  { assetId: "AST-3006", name: "Lenovo ThinkPad E14",  category: "Laptop",    assignedTo: null,                       status: "Maintenance", purchaseValue: 58000 },
+  { assetId: "AST-3007", name: "Logitech Webcam",      category: "Accessory",assignedTo: { name: "Priya Nair" },    status: "InUse",      purchaseValue: 4500 },
+  { assetId: "AST-3008", name: "Office Chair",         category: "Furniture",assignedTo: { name: "Vikram Singh" },  status: "InUse",      purchaseValue: 8000 },
+  { assetId: "AST-3009", name: "Router TP-Link AX50",  category: "Network",  assignedTo: null,                       status: "Available",   purchaseValue: 6500 },
+  { assetId: "AST-3010", name: "Samsung Galaxy Tab",   category: "Mobile",   assignedTo: { name: "Meera Pillai" },  status: "Disposed",    purchaseValue: 30000 },
+];
+
 export default function Reports() {
   const { show } = useToast();
   const [tab, setTab]     = useState("employee");
@@ -47,9 +86,13 @@ export default function Reports() {
   // ── Live data ──
   const { data: employees = [] }  = useFetchAllEmployees();
   const { data: attendance = [] } = useAttendanceRecords();
-  const { data: leavesRaw = [] }  = useQuery({ queryKey: ["leaves"], queryFn: () => fetchLeaves(), select: (r) => r?.data ?? r ?? [] });
-  const { data: payrollRaw = [] } = useQuery({ queryKey: ["payroll"], queryFn: () => fetchPayroll(), select: (r) => r?.data ?? r ?? [] });
-  const { data: assetsRaw = [] }  = useQuery({ queryKey: ["assets"], queryFn: () => api.get("/assets").then((r) => r.data?.data ?? []) });
+  const { data: leavesRawQ }  = useQuery({ queryKey: ["leaves"], queryFn: () => fetchLeaves(), select: (r) => r?.data ?? r ?? [] });
+  const { data: payrollRawQ } = useQuery({ queryKey: ["payroll"], queryFn: () => fetchPayroll(), select: (r) => r?.data ?? r ?? [] });
+  const { data: assetsRawQ }  = useQuery({ queryKey: ["assets"], queryFn: () => api.get("/assets").then((r) => r.data?.data ?? []) });
+
+  const leavesRaw = leavesRawQ?.length ? leavesRawQ : MOCK_LEAVES;
+  const payrollRaw = payrollRawQ?.length ? payrollRawQ : MOCK_PAYROLL;
+  const assetsRaw = assetsRawQ?.length ? assetsRawQ : MOCK_ASSETS;
 
   const leaves = Array.isArray(leavesRaw) ? leavesRaw : [];
   const payrollRows = Array.isArray(payrollRaw) ? payrollRaw : [];

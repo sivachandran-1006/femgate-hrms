@@ -29,6 +29,52 @@ const STATUS_COLOR = {
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const money = (n) => n != null ? `₹${Number(n).toLocaleString("en-IN")}` : "—";
 
+const MOCK_DASHBOARD = {
+  totalPlans: 5,
+  employeesEnrolled: 42,
+  medicalInsurance: 28,
+  lifeInsurance: 19,
+  activeBenefits: 34,
+  pendingEnrollments: 6,
+  expiringBenefits: 3,
+};
+
+const MOCK_PLANS = [
+  { id: "pl-1", name: "Group Mediclaim Policy", category: "Medical Insurance", provider: "Star Health Insurance", coverageAmount: 500000, employerContribution: 1200, employeeContribution: 300, status: "Active", _count: { enrollments: 18 } },
+  { id: "pl-2", name: "Term Life Cover", category: "Life Insurance", provider: "LIC of India", coverageAmount: 1000000, employerContribution: 800, employeeContribution: 0, status: "Active", _count: { enrollments: 12 } },
+  { id: "pl-3", name: "Dental Care Plan", category: "Dental Insurance", provider: "Cigna TTK", coverageAmount: 50000, employerContribution: 250, employeeContribution: 100, status: "Active", _count: { enrollments: 7 } },
+  { id: "pl-4", name: "Employee PF Scheme", category: "PF", provider: "EPFO", coverageAmount: null, employerContribution: 1800, employeeContribution: 1800, status: "Active", _count: { enrollments: 40 } },
+  { id: "pl-5", name: "Meal Card Benefit", category: "Meal Card", provider: "Sodexo", coverageAmount: 22000, employerContribution: 1833, employeeContribution: 0, status: "Archived", _count: { enrollments: 0 } },
+];
+
+const MOCK_ENROLLMENTS = [
+  { id: "en-1", employee: "Rahul Menon", plan: { name: "Group Mediclaim Policy" }, policyNumber: "SH-2026-8841", premium: 1500, renewalDate: "2027-01-15", status: "Active" },
+  { id: "en-2", employee: "Priya Sharma", plan: { name: "Term Life Cover" }, policyNumber: "LIC-TL-5523", premium: 800, renewalDate: "2027-03-01", status: "Active" },
+  { id: "en-3", employee: "Ananya Iyer", plan: { name: "Dental Care Plan" }, policyNumber: "CGN-DC-1290", premium: 350, renewalDate: "2026-11-20", status: "Pending" },
+  { id: "en-4", employee: "Vikram Singh", plan: { name: "Group Mediclaim Policy" }, policyNumber: "SH-2026-8842", premium: 1500, renewalDate: "2027-01-15", status: "Active" },
+  { id: "en-5", employee: "Sneha Reddy", plan: { name: "Employee PF Scheme" }, policyNumber: "EPFO-9981", premium: 3600, renewalDate: "2027-04-01", status: "Active" },
+  { id: "en-6", employee: "Arjun Nair", plan: { name: "Term Life Cover" }, policyNumber: "LIC-TL-5524", premium: 800, renewalDate: "2027-03-01", status: "Pending" },
+  { id: "en-7", employee: "Divya Krishnan", plan: { name: "Group Mediclaim Policy" }, policyNumber: "SH-2026-8843", premium: 1500, renewalDate: "2026-09-10", status: "Rejected" },
+  { id: "en-8", employee: "Karthik Raman", plan: { name: "Dental Care Plan" }, policyNumber: "CGN-DC-1291", premium: 350, renewalDate: "2026-11-20", status: "Active" },
+];
+
+const MOCK_DEPENDENTS = [
+  { id: "dp-1", name: "Meera Menon", relationship: "Spouse", dob: "1990-04-12", gender: "Female", isNominee: true },
+  { id: "dp-2", name: "Aarav Menon", relationship: "Child", dob: "2018-07-22", gender: "Male", isNominee: false },
+  { id: "dp-3", name: "Suresh Sharma", relationship: "Parent", dob: "1962-01-05", gender: "Male", isNominee: false },
+  { id: "dp-4", name: "Lakshmi Iyer", relationship: "Parent", dob: "1965-09-30", gender: "Female", isNominee: false },
+  { id: "dp-5", name: "Kavya Singh", relationship: "Spouse", dob: "1992-11-18", gender: "Female", isNominee: true },
+];
+
+const MOCK_CLAIMS = [
+  { id: "cl-1", employee: "Rahul Menon", type: "Medical Claim", amount: 8500, description: "Hospitalization - appendix surgery", status: "Approved" },
+  { id: "cl-2", employee: "Priya Sharma", type: "Insurance Claim", amount: 25000, description: "Term life premium reimbursement", status: "Paid" },
+  { id: "cl-3", employee: "Ananya Iyer", type: "Benefit Claim", amount: 1200, description: "Dental root canal treatment", status: "Under Review" },
+  { id: "cl-4", employee: "Vikram Singh", type: "Medical Claim", amount: 4500, description: "OPD consultation and medicines", status: "Submitted" },
+  { id: "cl-5", employee: "Sneha Reddy", type: "Medical Claim", amount: 12000, description: "Maternity checkup expenses", status: "Approved" },
+  { id: "cl-6", employee: "Arjun Nair", type: "Insurance Claim", amount: 6000, description: "Accident insurance claim", status: "Rejected" },
+];
+
 function Kpi({ label, value, icon: Icon, color, sub }) {
   return (
     <Card withBorder radius="md" p="md">
@@ -44,7 +90,8 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useBenefitsDashboard();
+  const { data: rawD, isLoading } = useBenefitsDashboard();
+  const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
   return (
@@ -63,7 +110,8 @@ function DashboardTab() {
 // ═══ Plans ═══
 function PlansTab({ canManage }) {
   const { show } = useToast();
-  const { data: plans = [], isLoading } = usePlans();
+  const { data: rawPlans, isLoading } = usePlans();
+  const plans = rawPlans?.length ? rawPlans : MOCK_PLANS;
   const create = useCreatePlan();
   const del = useDeletePlan();
   const enroll = useEnroll();
@@ -133,7 +181,8 @@ function PlansTab({ canManage }) {
 // ═══ Enrollments ═══
 function EnrollmentsTab({ canManage }) {
   const { show } = useToast();
-  const { data: enrollments = [], isLoading } = useEnrollments();
+  const { data: rawEnrollments, isLoading } = useEnrollments();
+  const enrollments = rawEnrollments?.length ? rawEnrollments : MOCK_ENROLLMENTS;
   const updateStatus = useUpdateEnrollmentStatus();
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
@@ -163,7 +212,8 @@ function EnrollmentsTab({ canManage }) {
 // ═══ Dependents ═══
 function DependentsTab() {
   const { show } = useToast();
-  const { data: deps = [], isLoading } = useDependents();
+  const { data: rawDeps, isLoading } = useDependents();
+  const deps = rawDeps?.length ? rawDeps : MOCK_DEPENDENTS;
   const add = useAddDependent();
   const del = useDeleteDependent();
   const [open, setOpen] = useState(false);
@@ -213,7 +263,8 @@ function DependentsTab() {
 // ═══ Claims ═══
 function ClaimsTab({ canManage }) {
   const { show } = useToast();
-  const { data: claims = [], isLoading } = useClaims();
+  const { data: rawClaims, isLoading } = useClaims();
+  const claims = rawClaims?.length ? rawClaims : MOCK_CLAIMS;
   const submit = useSubmitClaim();
   const review = useUpdateClaimStatus();
   const [open, setOpen] = useState(false);

@@ -50,6 +50,29 @@ const STATUS_COLOR = {
 
 const ROWS_PER_PAGE = 8;
 
+// ── Mock fallback data ──────────────────────────────────────────────────────
+
+const MOCK_EMPLOYEES = [
+  { id: 1,  name: "Aditi Sharma",     email: "aditi.sharma@mgate.com",     phone: "+91 98765 10001", designation: "Software Engineer",       department: "IT",         salary: 850000,  joinDate: "2023-03-14", status: "Active" },
+  { id: 2,  name: "Rohan Verma",      email: "rohan.verma@mgate.com",      phone: "+91 98765 10002", designation: "Senior Software Engineer", department: "IT",         salary: 1250000, joinDate: "2021-07-01", status: "Active" },
+  { id: 3,  name: "Priya Nair",       email: "priya.nair@mgate.com",       phone: "+91 98765 10003", designation: "QA Engineer",              department: "IT",         salary: 700000,  joinDate: "2022-11-20", status: "On Leave" },
+  { id: 4,  name: "Karan Mehta",      email: "karan.mehta@mgate.com",      phone: "+91 98765 10004", designation: "DevOps Engineer",          department: "IT",         salary: 950000,  joinDate: "2024-01-09", status: "Active" },
+  { id: 5,  name: "Sneha Kulkarni",   email: "sneha.kulkarni@mgate.com",   phone: "+91 98765 10005", designation: "Finance Manager",          department: "Finance",    salary: 1400000, joinDate: "2019-05-18", status: "Active" },
+  { id: 6,  name: "Arjun Reddy",      email: "arjun.reddy@mgate.com",      phone: "+91 98765 10006", designation: "Accountant",               department: "Finance",    salary: 620000,  joinDate: "2022-08-02", status: "Active" },
+  { id: 7,  name: "Meera Iyer",       email: "meera.iyer@mgate.com",       phone: "+91 98765 10007", designation: "Payroll Specialist",       department: "Finance",    salary: 680000,  joinDate: "2023-06-10", status: "Inactive" },
+  { id: 8,  name: "Vikram Singh",     email: "vikram.singh@mgate.com",     phone: "+91 98765 10008", designation: "HR Manager",               department: "HR",         salary: 1150000, joinDate: "2020-02-25", status: "Active" },
+  { id: 9,  name: "Ananya Das",       email: "ananya.das@mgate.com",       phone: "+91 98765 10009", designation: "HR Executive",             department: "HR",         salary: 550000,  joinDate: "2024-04-03", status: "Active" },
+  { id: 10, name: "Rahul Gupta",      email: "rahul.gupta@mgate.com",      phone: "+91 98765 10010", designation: "Talent Acquisition Lead",  department: "HR",         salary: 900000,  joinDate: "2021-09-15", status: "On Leave" },
+  { id: 11, name: "Divya Menon",      email: "divya.menon@mgate.com",      phone: "+91 98765 10011", designation: "General Manager",          department: "Management", salary: 2200000, joinDate: "2018-01-10", status: "Active" },
+  { id: 12, name: "Suresh Pillai",    email: "suresh.pillai@mgate.com",    phone: "+91 98765 10012", designation: "Operations Head",          department: "Management", salary: 1900000, joinDate: "2019-12-01", status: "Active" },
+  { id: 13, name: "Neha Joshi",       email: "neha.joshi@mgate.com",       phone: "+91 98765 10013", designation: "Marketing Manager",        department: "Marketing",  salary: 1050000, joinDate: "2022-03-22", status: "Active" },
+  { id: 14, name: "Amitabh Rao",      email: "amitabh.rao@mgate.com",      phone: "+91 98765 10014", designation: "Content Strategist",       department: "Marketing",  salary: 600000,  joinDate: "2023-10-05", status: "Active" },
+  { id: 15, name: "Ishita Kapoor",    email: "ishita.kapoor@mgate.com",    phone: "+91 98765 10015", designation: "Digital Marketing Exec",   department: "Marketing",  salary: 520000,  joinDate: "2024-06-17", status: "Inactive" },
+  { id: 16, name: "Manoj Tiwari",     email: "manoj.tiwari@mgate.com",     phone: "+91 98765 10016", designation: "Backend Developer",        department: "IT",         salary: 800000,  joinDate: "2023-01-30", status: "Active" },
+  { id: 17, name: "Pooja Bhatt",      email: "pooja.bhatt@mgate.com",      phone: "+91 98765 10017", designation: "Frontend Developer",       department: "IT",         salary: 780000,  joinDate: "2024-02-14", status: "On Leave" },
+  { id: 18, name: "Siddharth Rao",    email: "siddharth.rao@mgate.com",    phone: "+91 98765 10018", designation: "Financial Analyst",        department: "Finance",    salary: 710000,  joinDate: "2022-05-09", status: "Active" },
+];
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const EmployeeList = () => {
@@ -68,7 +91,8 @@ const EmployeeList = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
 
-  const { data: employees = [], isLoading, isError } = useFetchAllEmployees();
+  const { data: rawEmployees, isLoading } = useFetchAllEmployees();
+  const employees = rawEmployees?.length ? rawEmployees : MOCK_EMPLOYEES;
   const { data: deptList = [] } = useDepartments();
   const createMut = useCreateEmployee();
   const updateMut = useUpdateEmployee();
@@ -169,7 +193,6 @@ const EmployeeList = () => {
   };
 
   if (isLoading) return <AppLoader fullScreen />;
-  if (isError)   return <Text c="red">Failed to load employees.</Text>;
 
   return (
     <>

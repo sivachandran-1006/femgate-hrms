@@ -21,9 +21,27 @@ const EMPTY = { name: "", date: "", type: "National", scope: "Company", optional
 
 const toInputDate = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 
+// ── Mock fallback data (main_v1: UI-only demo) ───────────────────────────────
+const MOCK_HOLIDAYS = [
+  { id: "h1", name: "New Year's Day", date: "2026-01-01", type: "National", scope: "Company", optional: false },
+  { id: "h2", name: "Pongal", date: "2026-01-14", type: "Regional", scope: "Branch", optional: false },
+  { id: "h3", name: "Republic Day", date: "2026-01-26", type: "National", scope: "Company", optional: false },
+  { id: "h4", name: "Holi", date: "2026-03-04", type: "Regional", scope: "Department", optional: true },
+  { id: "h5", name: "Good Friday", date: "2026-04-03", type: "Regional", scope: "Branch", optional: true },
+  { id: "h6", name: "Tamil New Year", date: "2026-04-14", type: "Regional", scope: "Branch", optional: false },
+  { id: "h7", name: "May Day", date: "2026-05-01", type: "National", scope: "Company", optional: false },
+  { id: "h8", name: "Independence Day", date: "2026-08-15", type: "National", scope: "Company", optional: false },
+  { id: "h9", name: "Ganesh Chaturthi", date: "2026-09-14", type: "Regional", scope: "Branch", optional: true },
+  { id: "h10", name: "Gandhi Jayanti", date: "2026-10-02", type: "National", scope: "Company", optional: false },
+  { id: "h11", name: "Diwali", date: "2026-11-08", type: "National", scope: "Company", optional: false },
+  { id: "h12", name: "Christmas Day", date: "2026-12-25", type: "National", scope: "Company", optional: false },
+];
+
 export default function HolidayCalendar() {
   const { show: showToast } = useToast();
-  const { data: holidays = [], isLoading, isError } = useHolidays();
+  const { data: rawHolidays, isLoading, isError: rawIsError } = useHolidays();
+  const holidays = rawHolidays?.length ? rawHolidays : MOCK_HOLIDAYS;
+  const isError = rawIsError && !holidays.length;
 
   const createMut = useCreateHoliday();
   const updateMut = useUpdateHoliday();

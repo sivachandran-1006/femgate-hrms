@@ -16,6 +16,77 @@ import { useToast }      from "../../components/ui/Toast";
 import { getInitials }   from "../../utils/helpers";
 import { useRole, useRoleMeta, useRoleUsers, useRoleAudit, useUpdateRole } from "../../queries/useRoles";
 
+const MOCK_ROLES = [
+  {
+    id: "1", code: "SUPER_ADMIN", name: "Super Admin", roleType: "System", status: "Active",
+    isSystem: true, usersAssigned: 2, createdAt: "2023-01-10T09:00:00Z",
+    description: "Full unrestricted access to all modules and settings across the organization.",
+    permissions: { Employees: { actions: ["View", "Create", "Edit", "Delete"], scope: "Organization" } },
+  },
+  {
+    id: "2", code: "HR_MANAGER", name: "HR Manager", roleType: "Custom", status: "Active",
+    isSystem: false, usersAssigned: 5, createdAt: "2023-02-14T09:00:00Z",
+    description: "Manages employee records, leave approvals, and payroll processing for assigned departments.",
+    permissions: {
+      Employees: { actions: ["View", "Create", "Edit"], scope: "Department" },
+      Leave: { actions: ["View", "Edit"], scope: "Department" },
+      Payroll: { actions: ["View"], scope: "Department" },
+    },
+  },
+  {
+    id: "3", code: "DEPT_HEAD", name: "Department Head", roleType: "Custom", status: "Active",
+    isSystem: false, usersAssigned: 8, createdAt: "2023-03-20T09:00:00Z",
+    description: "Oversees department staff, approves timesheets and leave requests for direct reports.",
+    permissions: {
+      Employees: { actions: ["View"], scope: "Team" },
+      Timesheet: { actions: ["View", "Edit"], scope: "Team" },
+      Leave: { actions: ["View", "Edit"], scope: "Team" },
+    },
+  },
+  {
+    id: "4", code: "PAYROLL_ADMIN", name: "Payroll Admin", roleType: "Custom", status: "Active",
+    isSystem: false, usersAssigned: 3, createdAt: "2023-04-05T09:00:00Z",
+    description: "Handles payroll processing, payslip generation, and salary structure configuration.",
+    permissions: {
+      Payroll: { actions: ["View", "Create", "Edit"], scope: "Organization" },
+      Employees: { actions: ["View"], scope: "Organization" },
+    },
+  },
+  {
+    id: "5", code: "RECRUITER", name: "Recruiter", roleType: "Custom", status: "Active",
+    isSystem: false, usersAssigned: 4, createdAt: "2023-05-18T09:00:00Z",
+    description: "Manages job postings, candidate pipelines, and interview scheduling.",
+    permissions: {
+      Recruitment: { actions: ["View", "Create", "Edit"], scope: "Organization" },
+    },
+  },
+  {
+    id: "6", code: "EMPLOYEE", name: "Employee", roleType: "System", status: "Active",
+    isSystem: true, usersAssigned: 42, createdAt: "2023-01-10T09:00:00Z",
+    description: "Standard employee access to personal profile, attendance, and leave requests.",
+    permissions: {
+      Attendance: { actions: ["View"], scope: "Self" },
+      Leave: { actions: ["View", "Create"], scope: "Self" },
+    },
+  },
+  {
+    id: "7", code: "FINANCE_VIEWER", name: "Finance Viewer", roleType: "Custom", status: "Inactive",
+    isSystem: false, usersAssigned: 0, createdAt: "2023-06-30T09:00:00Z",
+    description: "Read-only access to expense reports and financial summaries. Currently deactivated.",
+    permissions: {
+      Expenses: { actions: ["View"], scope: "Organization" },
+    },
+  },
+  {
+    id: "8", code: "AUDITOR", name: "Auditor", roleType: "Custom", status: "Active",
+    isSystem: false, usersAssigned: 1, createdAt: "2023-07-22T09:00:00Z",
+    description: "Read-only access to audit logs and compliance reports across all modules.",
+    permissions: {
+      Audit: { actions: ["View"], scope: "Organization" },
+    },
+  },
+];
+
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 const Field = ({ label, value }) => (
   <Box>
@@ -29,7 +100,9 @@ export default function RoleProfile() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: role, isLoading, isError } = useRole(id);
+  const { data: rawRole, isLoading, isError: rawIsError } = useRole(id);
+  const role = rawRole ?? MOCK_ROLES.find((m) => String(m.id) === String(id)) ?? MOCK_ROLES[0];
+  const isError = rawIsError && !role;
   const { data: meta } = useRoleMeta();
   const { data: users = [] } = useRoleUsers(id);
   const { data: audit = [] } = useRoleAudit(id);

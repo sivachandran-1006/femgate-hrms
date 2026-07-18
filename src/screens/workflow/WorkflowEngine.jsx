@@ -13,6 +13,36 @@ const WORKFLOW_TYPES = ["Leave Workflow", "Attendance Workflow", "Expense Workfl
 const APPROVER_ROLES = ["Manager", "Department Head", "HR", "Finance", "Admin"];
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2"];
 
+const MOCK_DASHBOARD = {
+  activeWorkflows: 14,
+  pendingApprovals: 9,
+  completedApprovals: 182,
+  rejectedRequests: 11,
+  escalatedRequests: 3,
+  avgApprovalTime: "6.4 hrs",
+};
+
+const MOCK_WORKFLOWS = [
+  { id: 1, name: "Standard Leave Approval", module: "Leave", workflowType: "Leave Workflow", status: "Active", steps: [{ approverRole: "Manager", escalationHours: 24 }, { approverRole: "HR", escalationHours: 48 }] },
+  { id: 2, name: "Expense Reimbursement", module: "Expense", workflowType: "Expense Workflow", status: "Active", steps: [{ approverRole: "Manager", escalationHours: 24 }, { approverRole: "Finance", escalationHours: 24 }] },
+  { id: 3, name: "Asset Request Approval", module: "Asset", workflowType: "Asset Workflow", status: "Active", steps: [{ approverRole: "Department Head", escalationHours: 24 }] },
+  { id: 4, name: "New Hire Onboarding", module: "Onboarding", workflowType: "Onboarding Workflow", status: "Active", steps: [{ approverRole: "HR", escalationHours: 24 }, { approverRole: "Admin", escalationHours: 24 }] },
+  { id: 5, name: "Payroll Adjustment Sign-off", module: "Payroll", workflowType: "Payroll Workflow", status: "Inactive", steps: [{ approverRole: "Finance", escalationHours: 12 }, { approverRole: "Admin", escalationHours: 24 }] },
+  { id: 6, name: "Document Approval", module: "Document", workflowType: "Document Approval Workflow", status: "Active", steps: [{ approverRole: "Manager", escalationHours: 48 }] },
+  { id: 7, name: "Recruitment Offer Approval", module: "Recruitment", workflowType: "Recruitment Workflow", status: "Active", steps: [{ approverRole: "Department Head", escalationHours: 24 }, { approverRole: "HR", escalationHours: 24 }] },
+  { id: 8, name: "Attendance Correction Request", module: "Attendance", workflowType: "Attendance Workflow", status: "Inactive", steps: [{ approverRole: "Manager", escalationHours: 12 }] },
+];
+
+const MOCK_APPROVAL_INBOX = [
+  { id: 101, requestId: "REQ-1001", requestedBy: "Ananya Sharma", workflowModule: "Leave", status: "Pending", createdAt: "2026-07-14T09:30:00Z" },
+  { id: 102, requestId: "REQ-1002", requestedBy: "Rohit Verma", workflowModule: "Expense", status: "Pending", createdAt: "2026-07-15T11:10:00Z" },
+  { id: 103, requestId: "REQ-1003", requestedBy: "Priya Nair", workflowModule: "Asset", status: "Approved", createdAt: "2026-07-10T14:05:00Z" },
+  { id: 104, requestId: "REQ-1004", requestedBy: "Karthik Iyer", workflowModule: "Document", status: "Rejected", createdAt: "2026-07-09T08:45:00Z" },
+  { id: 105, requestId: "REQ-1005", requestedBy: "Sneha Reddy", workflowModule: "Onboarding", status: "Pending", createdAt: "2026-07-16T10:20:00Z" },
+  { id: 106, requestId: "REQ-1006", requestedBy: "Vikram Singh", workflowModule: "Payroll", status: "Escalated", createdAt: "2026-07-08T16:00:00Z" },
+  { id: 107, requestId: "REQ-1007", requestedBy: "Meera Pillai", workflowModule: "Recruitment", status: "Pending", createdAt: "2026-07-17T09:00:00Z" },
+];
+
 function KpiCard({ label, value, icon: Icon, color }) {
   return (
     <Card withBorder radius="md" p="md">
@@ -29,7 +59,8 @@ function KpiCard({ label, value, icon: Icon, color }) {
 
 // ─── Dashboard Tab ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: dash, isLoading } = useWorkflowDashboard();
+  const { data: rawDash, isLoading } = useWorkflowDashboard();
+  const dash = rawDash ?? MOCK_DASHBOARD;
   const { data: analytics } = useWorkflowAnalytics();
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
@@ -96,7 +127,8 @@ function WorkflowsTab() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
-  const { data: result = {}, isLoading } = useWorkflows({ search, module, page, limit: 25 });
+  const { data: rawResult, isLoading } = useWorkflows({ search, module, page, limit: 25 });
+  const result = rawResult?.workflows?.length ? rawResult : { workflows: MOCK_WORKFLOWS };
   const create = useCreateWorkflow();
   const update = useUpdateWorkflow();
   const delete_ = useDeleteWorkflow();
@@ -266,7 +298,8 @@ function ApprovalInboxTab() {
   const { show } = useToast();
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
-  const { data: result = {}, isLoading } = useApprovalInbox({ status, page, limit: 25 });
+  const { data: rawResult, isLoading } = useApprovalInbox({ status, page, limit: 25 });
+  const result = rawResult?.approvals?.length ? rawResult : { approvals: MOCK_APPROVAL_INBOX };
   const approve = useApproveRequest();
   const reject = useRejectRequest();
   const escalate = useEscalateRequest();

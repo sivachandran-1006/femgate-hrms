@@ -39,6 +39,20 @@ const GRADES = ["A1", "A2", "A3", "B1", "B2", "C1", "C2"];
 const CATEGORIES = ["Full-time", "Part-time", "Contract", "Intern"];
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 
+const MOCK_DEPARTMENTS_FALLBACK = [
+  { id: "d1", name: "Engineering" },
+  { id: "d2", name: "Sales" },
+  { id: "d3", name: "HR" },
+  { id: "d4", name: "Finance" },
+];
+
+const MOCK_DESIGNATIONS = [
+  { id: "g1", name: "Senior Manager", code: "SM", department: { name: "Engineering" }, departmentId: "d1", level: 6, levelName: "6 — Manager", grade: "B1", employmentCategory: "Full-time", employeeCount: 8, status: "Active", description: "Leads a team of engineers and owns delivery for a product area.", createdAt: "2024-02-10T00:00:00Z" },
+  { id: "g2", name: "Software Engineer", code: "SE", department: { name: "Engineering" }, departmentId: "d1", level: 3, levelName: "3 — Executive", grade: "A2", employmentCategory: "Full-time", employeeCount: 21, status: "Active", description: "Builds and maintains product features across the stack.", createdAt: "2024-01-20T00:00:00Z" },
+  { id: "g3", name: "HR Executive", code: "HRE", department: { name: "HR" }, departmentId: "d3", level: 3, levelName: "3 — Executive", grade: "A3", employmentCategory: "Full-time", employeeCount: 5, status: "Active", description: "Handles recruitment, onboarding and employee relations.", createdAt: "2024-03-05T00:00:00Z" },
+  { id: "g4", name: "Finance Analyst", code: "FA", department: { name: "Finance" }, departmentId: "d4", level: 4, levelName: "4 — Senior Executive", grade: "B2", employmentCategory: "Contract", employeeCount: 3, status: "Inactive", description: "Prepares financial reports and assists with budgeting.", createdAt: "2024-04-12T00:00:00Z" },
+];
+
 const EMPTY_FORM = {
   name: "", code: "", departmentId: "", description: "",
   level: "3", grade: "B1", employmentCategory: "Full-time", status: "Active",
@@ -140,10 +154,13 @@ const Designations = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: designations = [], isLoading, isError } = useDesignations();
+  const { data: rawDesignations, isLoading, isError: rawIsError } = useDesignations();
+  const designations = rawDesignations?.length ? rawDesignations : MOCK_DESIGNATIONS;
+  const isError = rawIsError && !designations.length;
   const {
-    data: departments = [], isLoading: departmentsLoading, isError: departmentsError, refetch: refetchDepartments,
+    data: rawDepartments, isLoading: departmentsLoading, isError: departmentsError, refetch: refetchDepartments,
   } = useDepartments({ status: "Active" });
+  const departments = rawDepartments?.length ? rawDepartments : MOCK_DEPARTMENTS_FALLBACK;
 
   const createMut = useCreateDesignation();
   const updateMut = useUpdateDesignation();

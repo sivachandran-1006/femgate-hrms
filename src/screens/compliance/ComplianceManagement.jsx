@@ -49,6 +49,63 @@ const useDepartmentOptions = () => {
   return [...new Set((employees || []).map((e) => e.department).filter(Boolean))];
 };
 
+// ═══ Mock fallback data (branch main_v1 — pure UI-only demo, no backend) ═══
+const MOCK_DASHBOARD = {
+  totalPolicies: 18,
+  activePolicies: 12,
+  pendingAcknowledgement: 27,
+  complianceTasks: 9,
+  upcomingDeadlines: 5,
+  expiredPolicies: 2,
+  auditReadinessScore: 86,
+  compliancePercentage: 78,
+};
+
+const MOCK_POLICIES = [
+  { id: "pol-1", name: "Code of Conduct Policy", category: "Code of Conduct", version: "2.1", effectiveDate: "2026-01-01", reviewDate: "2027-01-01", owner: "Priya Sharma", department: "Human Resources", status: "Published" },
+  { id: "pol-2", name: "Leave & Absence Policy", category: "Leave Policy", version: "3.0", effectiveDate: "2025-11-15", reviewDate: "2026-11-15", owner: "Ankit Verma", department: "Human Resources", status: "Published" },
+  { id: "pol-3", name: "Information Security Policy", category: "Information Security Policy", version: "1.4", effectiveDate: "2025-09-01", reviewDate: "2026-09-01", owner: "Rahul Mehta", department: "IT", status: "Published" },
+  { id: "pol-4", name: "Remote Work Guidelines", category: "Remote Work Policy", version: "1.0", effectiveDate: "2026-06-01", reviewDate: "2027-06-01", owner: "Sneha Kulkarni", department: "Human Resources", status: "Draft" },
+  { id: "pol-5", name: "Travel & Reimbursement Policy", category: "Travel Policy", version: "2.0", effectiveDate: "2025-04-01", reviewDate: "2026-04-01", owner: "Vikram Singh", department: "Finance", status: "Pending Approval" },
+  { id: "pol-6", name: "Health & Safety Manual", category: "Health & Safety Policy", version: "1.2", effectiveDate: "2024-03-01", reviewDate: "2025-03-01", owner: "Neha Joshi", department: "Administration", status: "Expired" },
+  { id: "pol-7", name: "Payroll Processing Policy", category: "Payroll Policy", version: "1.1", effectiveDate: "2025-01-10", reviewDate: "2026-01-10", owner: "Kavita Rao", department: "Finance", status: "Archived" },
+];
+
+const MOCK_ACKNOWLEDGEMENTS = [
+  { id: "ack-1", employee: "Amit Kumar", policy: { name: "Code of Conduct Policy" }, department: "Engineering", acknowledgedAt: "2026-07-02", status: "Accepted" },
+  { id: "ack-2", employee: "Divya Nair", policy: { name: "Leave & Absence Policy" }, department: "Human Resources", acknowledgedAt: "2026-07-05", status: "Accepted" },
+  { id: "ack-3", employee: "Rohan Gupta", policy: { name: "Information Security Policy" }, department: "IT", acknowledgedAt: null, status: "Pending" },
+  { id: "ack-4", employee: "Meera Iyer", policy: { name: "Code of Conduct Policy" }, department: "Sales", acknowledgedAt: "2026-06-28", status: "Accepted" },
+  { id: "ack-5", employee: "Karan Malhotra", policy: { name: "Travel & Reimbursement Policy" }, department: "Finance", acknowledgedAt: null, status: "Rejected" },
+  { id: "ack-6", employee: "Pooja Reddy", policy: { name: "Leave & Absence Policy" }, department: "Marketing", acknowledgedAt: null, status: "Pending" },
+];
+
+const MOCK_TASKS = [
+  { id: "task-1", title: "File Q2 PF returns", description: "Submit quarterly provident fund returns to regional office", owner: "Kavita Rao", dueDate: "2026-07-25", priority: "High", recurring: true, status: "In Progress" },
+  { id: "task-2", title: "Renew ISO 27001 certification", description: "Coordinate with auditor for ISO recertification", owner: "Rahul Mehta", dueDate: "2026-08-10", priority: "High", recurring: false, status: "Open" },
+  { id: "task-3", title: "Review remote work policy draft", description: "Legal + HR review before publishing", owner: "Sneha Kulkarni", dueDate: "2026-07-30", priority: "Medium", recurring: false, status: "Open" },
+  { id: "task-4", title: "Conduct annual POSH training", description: "Schedule and complete POSH awareness sessions", owner: "Priya Sharma", dueDate: "2026-09-15", priority: "Medium", recurring: true, status: "Open" },
+  { id: "task-5", title: "Update employee handbook", description: "Incorporate latest labour law amendments", owner: "Ankit Verma", dueDate: "2026-07-10", priority: "Low", recurring: false, status: "Overdue" },
+  { id: "task-6", title: "Submit ESI monthly challan", description: "Ensure ESI contributions filed before deadline", owner: "Kavita Rao", dueDate: "2026-06-30", priority: "High", recurring: true, status: "Completed" },
+];
+
+const MOCK_AUDITS = [
+  { id: "aud-1", name: "Annual HR Compliance Audit", type: "HR Audit", auditor: "Deloitte India", auditDate: "2026-08-05", findings: "", status: "Scheduled" },
+  { id: "aud-2", name: "ISO 27001 Surveillance Audit", type: "ISO Audit", auditor: "BSI Group", auditDate: "2026-06-20", findings: "2 minor non-conformities raised, corrective actions in progress", status: "In Progress" },
+  { id: "aud-3", name: "Payroll Statutory Audit", type: "Payroll Audit", auditor: "KPMG", auditDate: "2026-04-12", findings: "No discrepancies found", status: "Completed" },
+  { id: "aud-4", name: "Internal Data Security Review", type: "Security Audit", auditor: "Internal IT Team", auditDate: "2026-05-18", findings: "Recommended MFA rollout for all admin accounts", status: "Completed" },
+  { id: "aud-5", name: "Vendor Compliance Audit", type: "External Audit", auditor: "EY India", auditDate: "2026-09-01", findings: "", status: "Scheduled" },
+];
+
+const MOCK_STATUTORY = [
+  { id: "stat-1", type: "PF", description: "Monthly Provident Fund contribution filing", dueDate: "2026-07-20", reference: "PF-2026-06", status: "Pending" },
+  { id: "stat-2", type: "ESI", description: "Monthly ESI challan submission", dueDate: "2026-07-21", reference: "ESI-2026-06", status: "Filed" },
+  { id: "stat-3", type: "Professional Tax", description: "Quarterly professional tax remittance", dueDate: "2026-07-15", reference: "PT-Q2-2026", status: "Overdue" },
+  { id: "stat-4", type: "Labour Law", description: "Annual labour welfare fund contribution", dueDate: "2026-12-31", reference: "LWF-2026", status: "Pending" },
+  { id: "stat-5", type: "Shops & Establishment", description: "License renewal for Bengaluru office", dueDate: "2026-10-01", reference: "SE-BLR-2026", status: "Pending" },
+  { id: "stat-6", type: "Income Tax", description: "TDS return filing for Q1", dueDate: "2026-07-31", reference: "TDS-Q1-2026", status: "Filed" },
+];
+
 const STATUS_COLOR = {
   Draft: "gray", "Pending Approval": "orange", Published: "green", Archived: "dark", Expired: "red",
   Pending: "orange", Accepted: "green", Rejected: "red",
@@ -75,7 +132,8 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useComplianceDashboard();
+  const { data: rawD, isLoading } = useComplianceDashboard();
+  const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
   return (
@@ -103,7 +161,8 @@ function DashboardTab() {
 function PoliciesTab({ canManage }) {
   const { show } = useToast();
   const [filters, setFilters] = useState({ category: "All", status: "All", search: "" });
-  const { data: policies = [], isLoading } = usePolicies(filters);
+  const { data: rawPolicies, isLoading } = usePolicies(filters);
+  const policies = rawPolicies?.length ? rawPolicies : MOCK_POLICIES;
   const create = useCreatePolicy();
   const publish = usePublishPolicy();
   const archive = useArchivePolicy();
@@ -182,7 +241,8 @@ function PoliciesTab({ canManage }) {
 
 // ═══ Acknowledgements ═══
 function AcknowledgementsTab() {
-  const { data: acks = [], isLoading } = useAcknowledgements();
+  const { data: rawAcks, isLoading } = useAcknowledgements();
+  const acks = rawAcks?.length ? rawAcks : MOCK_ACKNOWLEDGEMENTS;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
     <Table striped highlightOnHover>
@@ -206,7 +266,8 @@ function AcknowledgementsTab() {
 // ═══ Tasks ═══
 function TasksTab({ canManage }) {
   const { show } = useToast();
-  const { data: tasks = [], isLoading } = useComplianceTasks();
+  const { data: rawTasks, isLoading } = useComplianceTasks();
+  const tasks = rawTasks?.length ? rawTasks : MOCK_TASKS;
   const create = useCreateComplianceTask();
   const updateStatus = useUpdateTaskStatus();
   const del = useDeleteComplianceTask();
@@ -264,7 +325,8 @@ function TasksTab({ canManage }) {
 // ═══ Audits ═══
 function AuditsTab({ canManage }) {
   const { show } = useToast();
-  const { data: audits = [], isLoading } = useAudits();
+  const { data: rawAudits, isLoading } = useAudits();
+  const audits = rawAudits?.length ? rawAudits : MOCK_AUDITS;
   const create = useCreateAudit();
   const update = useUpdateAudit();
   const del = useDeleteAudit();
@@ -317,7 +379,8 @@ function AuditsTab({ canManage }) {
 // ═══ Statutory ═══
 function StatutoryTab({ canManage }) {
   const { show } = useToast();
-  const { data: items = [], isLoading } = useStatutory();
+  const { data: rawItems, isLoading } = useStatutory();
+  const items = rawItems?.length ? rawItems : MOCK_STATUTORY;
   const create = useCreateStatutory();
   const update = useUpdateStatutory();
   const [open, setOpen] = useState(false);

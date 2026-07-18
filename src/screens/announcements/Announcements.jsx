@@ -25,6 +25,89 @@ import {
 const PRIORITY_COLOR = { High: "red", Medium: "yellow", Low: "blue" };
 const EMPTY_FORM = { title: "", body: "", target: "Company", priority: "Medium", published: false };
 
+const MOCK_ANNOUNCEMENTS = [
+  {
+    id: "ann-001",
+    title: "Annual Health Insurance Renewal",
+    body: "The annual health insurance policy renewal window is now open. All employees must update their dependent details in the HR portal by July 31st to ensure uninterrupted coverage.",
+    target: "Company",
+    priority: "High",
+    published: true,
+    author: "Priya Nair",
+    createdAt: "2026-07-10T09:30:00Z",
+  },
+  {
+    id: "ann-002",
+    title: "Office Wi-Fi Maintenance - Bengaluru Branch",
+    body: "Scheduled network maintenance will take place this Saturday from 10 PM to 2 AM. Internet access at the Bengaluru branch may be intermittent during this window.",
+    target: "Branch",
+    priority: "Medium",
+    published: true,
+    author: "Arjun Mehta",
+    createdAt: "2026-07-12T14:15:00Z",
+  },
+  {
+    id: "ann-003",
+    title: "Engineering Sprint Retrospective - Draft Notes",
+    body: "Draft summary of the Q3 sprint retrospective. Please review and add comments before we circulate this to the wider engineering team.",
+    target: "Department",
+    priority: "Low",
+    published: false,
+    author: "Sara Iyer",
+    createdAt: "2026-07-14T11:00:00Z",
+  },
+  {
+    id: "ann-004",
+    title: "Mandatory Fire Safety Drill",
+    body: "A mandatory fire safety drill will be conducted on July 22nd at 3 PM across all floors. Please assemble at the designated muster points when the alarm sounds.",
+    target: "Company",
+    priority: "High",
+    published: true,
+    author: "Rohit Sharma",
+    createdAt: "2026-07-15T08:45:00Z",
+  },
+  {
+    id: "ann-005",
+    title: "New Expense Reimbursement Policy",
+    body: "Draft policy update for travel and expense reimbursements is under legal review. Do not share externally until final approval.",
+    target: "Company",
+    priority: "Medium",
+    published: false,
+    author: "Priya Nair",
+    createdAt: "2026-07-16T10:20:00Z",
+  },
+  {
+    id: "ann-006",
+    title: "Diwali Festival Celebration Schedule",
+    body: "Join us for the Diwali celebrations on-site with cultural performances, food stalls, and a rangoli competition. RSVP through the events tab by end of week.",
+    target: "Company",
+    priority: "Low",
+    published: true,
+    author: "Anita Desai",
+    createdAt: "2026-07-16T16:00:00Z",
+  },
+  {
+    id: "ann-007",
+    title: "HR Systems Downtime - Payroll Module",
+    body: "The payroll module will be unavailable this Sunday between 6 AM and 9 AM for a scheduled upgrade. Salary processing timelines remain unaffected.",
+    target: "Department",
+    priority: "High",
+    published: true,
+    author: "Rohit Sharma",
+    createdAt: "2026-07-17T07:30:00Z",
+  },
+  {
+    id: "ann-008",
+    title: "Hyderabad Branch Relocation Update",
+    body: "Internal draft notice regarding the upcoming Hyderabad branch office relocation. Final floor plan and timeline pending facilities sign-off.",
+    target: "Branch",
+    priority: "Medium",
+    published: false,
+    author: "Arjun Mehta",
+    createdAt: "2026-07-18T09:00:00Z",
+  },
+];
+
 const TARGET_ICON = {
   Company:    <IconBuildingCommunity size={13} />,
   Department: <IconUsers size={13} />,
@@ -36,7 +119,9 @@ export default function Announcements() {
   const { showToast }               = useToast();
   const can                         = usePermission();
   const isAdmin                     = can("announcements.create");
-  const { data: items = [], isLoading, isError } = useAnnouncements();
+  const { data: rawItems, isLoading, isError: rawIsError } = useAnnouncements();
+  const items = rawItems?.length ? rawItems : MOCK_ANNOUNCEMENTS;
+  const isError = rawIsError && !items.length;
 
   const createMut  = useCreateAnnouncement();
   const updateMut  = useUpdateAnnouncement();

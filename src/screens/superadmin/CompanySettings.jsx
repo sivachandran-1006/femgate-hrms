@@ -37,6 +37,57 @@ const INIT_BRANDING = {
 
 const VARIABLES = "{{employee_name}}  {{company_name}}  {{leave_type}}  {{from_date}}  {{to_date}}  {{month}}  {{year}}  {{name}}";
 
+// ── Mock data (used when backend returns nothing) ───────────────────────────
+const MOCK_COMPANY_SETTINGS = {
+  profile: {
+    name: "MGate Technologies", legalName: "MGate Technologies Pvt Ltd",
+    gstin: "29ABCDE1234F1Z5", pan: "ABCDE1234F", cin: "U72200KA2015PTC123456",
+    email: "info@mgatehrms.com", phone: "+91 80 4567 8900", website: "https://www.mgatehrms.com",
+    address: "4th Floor, Prestige Tech Park, Kadubeesanahalli",
+    city: "Bengaluru", state: "Karnataka", pincode: "560103", country: "India",
+    industry: "Information Technology", employees: "200-500", founded: "2015",
+    timezone: "Asia/Kolkata", currency: "INR", dateFormat: "DD/MM/YYYY",
+    fiscalYear: "April - March",
+  },
+  branding: {
+    primaryColor: "#2563eb", accentColor: "#7c3aed",
+    logoUrl: "", faviconUrl: "",
+    emailHeader: "MGate HRMS", tagline: "Empowering People. Enabling Growth.",
+    footerText: "© 2026 MGate Technologies Pvt Ltd. All rights reserved.",
+  },
+};
+
+const MOCK_EMAIL_TEMPLATES = [
+  {
+    id: "tpl-welcome", label: "Welcome Email",
+    subject: "Welcome to {{company_name}}, {{employee_name}}!",
+    body: "Hi {{employee_name}},\n\nWelcome aboard! We're thrilled to have you join {{company_name}}. Your account has been created and you can now log in to the HRMS portal to complete your onboarding tasks.\n\nBest,\nHR Team",
+  },
+  {
+    id: "tpl-leave-approved", label: "Leave Approved",
+    subject: "Your {{leave_type}} request has been approved",
+    body: "Hi {{employee_name}},\n\nYour {{leave_type}} request from {{from_date}} to {{to_date}} has been approved. Enjoy your time off!\n\nRegards,\n{{company_name}} HR",
+  },
+  {
+    id: "tpl-payslip", label: "Monthly Payslip",
+    subject: "Your payslip for {{month}} {{year}} is ready",
+    body: "Hi {{employee_name}},\n\nYour payslip for {{month}} {{year}} has been generated and is available on the HRMS portal under Payroll > Payslips.\n\nThanks,\n{{company_name}} Payroll Team",
+  },
+  {
+    id: "tpl-birthday", label: "Birthday Wishes",
+    subject: "Happy Birthday, {{name}}!",
+    body: "Dear {{name}},\n\nWishing you a very happy birthday from all of us at {{company_name}}! Have a wonderful day.\n\nCheers,\nHR Team",
+  },
+];
+
+const MOCK_NOTIFICATION_SETTINGS = [
+  { id: "notif-leave-request", label: "Leave Request Submitted", channel: "Email", trigger: "On employee applying for leave", active: true },
+  { id: "notif-leave-approval", label: "Leave Approved/Rejected", channel: "Email + In-App", trigger: "On manager action", active: true },
+  { id: "notif-payslip-ready", label: "Payslip Generated", channel: "Email", trigger: "On monthly payroll run", active: true },
+  { id: "notif-birthday", label: "Birthday Reminder", channel: "In-App", trigger: "Daily at 9:00 AM", active: false },
+  { id: "notif-attendance-alert", label: "Attendance Anomaly Alert", channel: "Email", trigger: "On missed check-in/out", active: true },
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const sf = (label, key, state, set, opts) => (
   <Select key={key} label={label} value={state[key]} data={opts}
@@ -65,12 +116,16 @@ export default function CompanySettings() {
 
   useEffect(() => {
     const d = settingsData?.data;
-    if (d?.profile) setCompany(p => ({ ...p, ...d.profile }));
-    if (d?.branding) setBranding(p => ({ ...p, ...d.branding }));
+    const profile = d?.profile ?? MOCK_COMPANY_SETTINGS.profile;
+    const brandingData = d?.branding ?? MOCK_COMPANY_SETTINGS.branding;
+    if (profile) setCompany(p => ({ ...p, ...profile }));
+    if (brandingData) setBranding(p => ({ ...p, ...brandingData }));
   }, [settingsData]);
 
   useEffect(() => {
-    const notifs = notifsData?.data?.notifications;
+    const notifs = notifsData?.data?.notifications?.length
+      ? notifsData.data.notifications
+      : MOCK_NOTIFICATION_SETTINGS;
     if (notifs?.length) setNotifs(notifs);
   }, [notifsData]);
 
@@ -335,7 +390,7 @@ export default function CompanySettings() {
 
   // ── Email Templates Tab ───────────────────────────────────────────────────────
   const EmailTab = () => {
-    const templates = templatesData?.data?.templates || [];
+    const templates = templatesData?.data?.templates?.length ? templatesData.data.templates : MOCK_EMAIL_TEMPLATES;
     return (
       <Stack gap="md">
         <div>

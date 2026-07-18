@@ -26,6 +26,18 @@ import {
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 const TYPE_COLOR   = { System: "blue", Custom: "violet" };
 
+// ── Mock fallback data (main_v1: UI-only demo) ───────────────────────────────
+const MOCK_ROLES = [
+  { id: "r1", name: "Super Admin", code: "SUPER_ADMIN", description: "Full platform access across all companies", usersAssigned: 2, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r2", name: "Administrator", code: "ADMIN", description: "Full company-level administrative access", usersAssigned: 3, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r3", name: "HR Manager", code: "HR", description: "Manages employees, leave, recruitment, onboarding", usersAssigned: 5, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r4", name: "Team Manager", code: "MANAGER", description: "Manages direct reports and team approvals", usersAssigned: 12, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r5", name: "Finance Admin", code: "FINANCE", description: "Manages payroll, expenses, compensation", usersAssigned: 3, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r6", name: "IT Admin", code: "IT_ADMIN", description: "Manages assets, helpdesk, integrations", usersAssigned: 2, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r7", name: "Employee", code: "EMPLOYEE", description: "Standard self-service employee access", usersAssigned: 107, roleType: "System", isSystem: true, status: "Active", createdAt: "2025-01-10T00:00:00Z" },
+  { id: "r8", name: "Recruiter", code: "RECRUITER", description: "Custom role scoped to recruitment pipeline only", usersAssigned: 1, roleType: "Custom", isSystem: false, status: "Inactive", createdAt: "2025-06-02T00:00:00Z" },
+];
+
 export default function RoleManagement() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
@@ -34,7 +46,9 @@ export default function RoleManagement() {
   const [typeF, setTypeF]     = useState("All");
   const [statusF, setStatusF] = useState("All");
 
-  const { data: roles = [], isLoading, isError } = useRoles();
+  const { data: rawRoles, isLoading, isError: rawIsError } = useRoles();
+  const roles = rawRoles?.length ? rawRoles : MOCK_ROLES;
+  const isError = rawIsError && !roles.length;
   const { data: meta } = useRoleMeta();
 
   const createMut = useCreateRole();
