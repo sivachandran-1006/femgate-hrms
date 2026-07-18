@@ -15,6 +15,53 @@ const EVENT_TYPES = ["Company Event", "Department Event", "Training", "Town Hall
 const AWARD_TYPES = ["Employee of the Month", "Star Performer", "Achievement Award", "Spot Award", "Work Anniversary", "Birthday"];
 const SURVEY_TYPES = ["Employee Satisfaction", "Engagement Survey", "Training Feedback", "Exit Feedback", "Custom Survey"];
 
+// ─── Mock fallback data (main_v1 UI-only branch) ───────────────────────────────
+const MOCK_DASHBOARD = {
+  activeAnnouncements: 6,
+  upcomingEvents: 4,
+  unreadAnnouncements: 3,
+  activeSurveys: 2,
+  employeeRecognitions: 9,
+  birthdaysToday: 1,
+  workAnniversariesToday: 2,
+};
+
+const MOCK_COMM_ANNOUNCEMENTS = [
+  { id: "cm-ann-01", title: "Annual Health Insurance Renewal", category: "Policy Update", publishedBy: "Priya Nair", priority: "High", expiryDate: "2026-07-31T00:00:00Z" },
+  { id: "cm-ann-02", title: "Office Wi-Fi Maintenance - Bengaluru Branch", category: "Branch Announcement", publishedBy: "Arjun Mehta", priority: "Medium", expiryDate: "2026-07-20T00:00:00Z" },
+  { id: "cm-ann-03", title: "Mandatory Fire Safety Drill", category: "Emergency Notice", publishedBy: "Rohit Sharma", priority: "Critical", expiryDate: "2026-07-22T00:00:00Z" },
+  { id: "cm-ann-04", title: "Independence Day Holiday Notice", category: "Holiday Notice", publishedBy: "Sara Iyer", priority: "Low", expiryDate: "2026-08-15T00:00:00Z" },
+  { id: "cm-ann-05", title: "Q3 Town Hall Announcement", category: "Event Announcement", publishedBy: "Kavya Reddy", priority: "Medium", expiryDate: "2026-08-05T00:00:00Z" },
+  { id: "cm-ann-06", title: "Engineering Department Offsite", category: "Department Announcement", publishedBy: "Vikram Singh", priority: "Low", expiryDate: "2026-08-10T00:00:00Z" },
+  { id: "cm-ann-07", title: "New Expense Reimbursement Policy", category: "Policy Update", publishedBy: "Priya Nair", priority: "High", expiryDate: "2026-07-28T00:00:00Z" },
+];
+
+const MOCK_COMM_EVENTS = [
+  { id: "cm-evt-01", eventName: "Company Annual Day", eventDate: "2026-08-14T00:00:00Z", eventTime: "18:00", location: "Grand Ballroom, Taj Hotel", meetingLink: "", eventType: "Celebration" },
+  { id: "cm-evt-02", eventName: "Q3 All-Hands Town Hall", eventDate: "2026-08-05T00:00:00Z", eventTime: "11:00", location: "", meetingLink: "https://meet.mgate.com/townhall-q3", eventType: "Town Hall" },
+  { id: "cm-evt-03", eventName: "React Advanced Patterns Training", eventDate: "2026-07-25T00:00:00Z", eventTime: "14:00", location: "Training Room 2, Bengaluru", meetingLink: "", eventType: "Training" },
+  { id: "cm-evt-04", eventName: "Engineering Department Offsite", eventDate: "2026-08-10T00:00:00Z", eventTime: "09:30", location: "Nandi Hills Resort", meetingLink: "", eventType: "Department Event" },
+  { id: "cm-evt-05", eventName: "Diversity & Inclusion Webinar", eventDate: "2026-07-30T00:00:00Z", eventTime: "16:00", location: "", meetingLink: "https://meet.mgate.com/di-webinar", eventType: "Webinar" },
+  { id: "cm-evt-06", eventName: "Product Launch Celebration", eventDate: "2026-08-20T00:00:00Z", eventTime: "17:30", location: "Rooftop Lounge, HQ", meetingLink: "", eventType: "Company Event" },
+];
+
+const MOCK_RECOGNITIONS = [
+  { id: "cm-rec-01", employeeName: "Ananya Rao", awardType: "Employee of the Month", description: "Outstanding contribution to the payroll migration project.", recognizedBy: "Priya Nair" },
+  { id: "cm-rec-02", employeeName: "Karthik Subramanian", awardType: "Star Performer", description: "Consistently exceeded client delivery targets this quarter.", recognizedBy: "Rohit Sharma" },
+  { id: "cm-rec-03", employeeName: "Meera Krishnan", awardType: "Spot Award", description: "Went above and beyond to resolve a critical production issue over the weekend.", recognizedBy: "Vikram Singh" },
+  { id: "cm-rec-04", employeeName: "Aditya Verma", awardType: "Achievement Award", description: "Led the successful rollout of the new leave management module.", recognizedBy: "Sara Iyer" },
+  { id: "cm-rec-05", employeeName: "Divya Menon", awardType: "Work Anniversary", description: "Celebrating 5 wonderful years with the company!", recognizedBy: "Kavya Reddy" },
+  { id: "cm-rec-06", employeeName: "Rahul Nambiar", awardType: "Birthday", description: "Wishing you a fantastic year ahead!", recognizedBy: "HR Team" },
+];
+
+const MOCK_SURVEYS = [
+  { id: "cm-svy-01", title: "Employee Engagement Survey 2026", surveyType: "Engagement Survey", status: "Active", endDate: "2026-08-01T00:00:00Z" },
+  { id: "cm-svy-02", title: "Annual Job Satisfaction Survey", surveyType: "Employee Satisfaction", status: "Active", endDate: "2026-07-25T00:00:00Z" },
+  { id: "cm-svy-03", title: "React Training Feedback", surveyType: "Training Feedback", status: "Closed", endDate: "2026-06-30T00:00:00Z" },
+  { id: "cm-svy-04", title: "Exit Interview Feedback - Q2", surveyType: "Exit Feedback", status: "Closed", endDate: "2026-06-15T00:00:00Z" },
+  { id: "cm-svy-05", title: "Remote Work Preferences Poll", surveyType: "Custom Survey", status: "Active", endDate: "2026-08-10T00:00:00Z" },
+];
+
 function KpiCard({ label, value, icon: Icon, color }) {
   return (
     <Card withBorder radius="md" p="md">
@@ -31,7 +78,8 @@ function KpiCard({ label, value, icon: Icon, color }) {
 
 // ─── Dashboard Tab ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: dash, isLoading } = useCommunicationDashboard();
+  const { data: rawDash, isLoading } = useCommunicationDashboard();
+  const dash = rawDash ?? MOCK_DASHBOARD;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -70,7 +118,9 @@ function AnnouncementsTab() {
     priority: "Medium",
   });
 
-  const { data: result = {}, isLoading } = useAnnouncements({ search, category, page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = useAnnouncements({ search, category, page, limit: 25 });
+  const result = rawResult?.announcements?.length ? rawResult : { ...rawResult, announcements: MOCK_COMM_ANNOUNCEMENTS };
+  const isError = rawIsError && !result.announcements?.length;
   const create = useCreateAnnouncement();
   const update = useUpdateAnnouncement();
   const delete_ = useDeleteAnnouncement();
@@ -215,7 +265,9 @@ function EventsTab() {
     eventType: "Company Event",
   });
 
-  const { data: result = {}, isLoading } = useEvents({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = useEvents({ page, limit: 25 });
+  const result = rawResult?.events?.length ? rawResult : { ...rawResult, events: MOCK_COMM_EVENTS };
+  const isError = rawIsError && !result.events?.length;
   const create = useCreateEvent();
   const delete_ = useDeleteEvent();
 
@@ -305,7 +357,9 @@ function RecognitionsTab() {
     description: "",
   });
 
-  const { data: result = {}, isLoading } = useRecognitions({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = useRecognitions({ page, limit: 25 });
+  const result = rawResult?.recognitions?.length ? rawResult : { ...rawResult, recognitions: MOCK_RECOGNITIONS };
+  const isError = rawIsError && !result.recognitions?.length;
   const create = useCreateRecognition();
   const qc = useQueryClient();
   const updateRecogMut = useMutation({
@@ -423,7 +477,9 @@ function SurveysTab() {
     endDate: "",
   });
 
-  const { data: result = {}, isLoading } = useSurveys({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = useSurveys({ page, limit: 25 });
+  const result = rawResult?.surveys?.length ? rawResult : { ...rawResult, surveys: MOCK_SURVEYS };
+  const isError = rawIsError && !result.surveys?.length;
   const create = useCreateSurvey();
   const close = useCloseSurvey();
 
