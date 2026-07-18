@@ -57,11 +57,63 @@ const EMPTY_FORM = {
   visitDate: "", visitTime: "", expectedDuration: "", vehicleNumber: "", remarks: "",
 };
 
+const MOCK_DASHBOARD = {
+  todaysVisitors: 14,
+  visitorsInside: 5,
+  scheduledVisitors: 6,
+  walkInVisitors: 4,
+  pendingApprovals: 3,
+  rejectedVisitors: 1,
+  expiredPasses: 2,
+};
+
+const today = new Date();
+const isoToday = today.toISOString().slice(0, 10);
+const isoOffset = (days) => new Date(today.getTime() + days * 86400000).toISOString().slice(0, 10);
+const atTime = (dateStr, hh, mm) => new Date(`${dateStr}T${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:00`).toISOString();
+
+const MOCK_VISITORS = [
+  { id: "v1", visitorCode: "VIS-1001", name: "Rahul Menon", mobile: "9876543210", company: "Zydus Logistics", hostEmployee: "Anita Sharma", visitorType: "Business Visitor", visitDate: isoToday, visitTime: "10:00", status: "Checked In", checkInTime: atTime(isoToday, 10, 6), checkOutTime: null, badgePrinted: true, qrCode: "QR-A1B2C3D4" },
+  { id: "v2", visitorCode: "VIS-1002", name: "Priya Nair", mobile: "9845012233", company: "—", hostEmployee: "Vikram Rao", visitorType: "Interview Candidate", visitDate: isoToday, visitTime: "11:30", status: "Pending Approval", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-B2C3D4E5" },
+  { id: "v3", visitorCode: "VIS-1003", name: "Suresh Kumar", mobile: "9900112244", company: "Bluewave Traders", hostEmployee: "Anita Sharma", visitorType: "Vendor", visitDate: isoToday, visitTime: "09:15", status: "Checked Out", checkInTime: atTime(isoToday, 9, 20), checkOutTime: atTime(isoToday, 10, 45), badgePrinted: true, qrCode: "QR-C3D4E5F6" },
+  { id: "v4", visitorCode: "VIS-1004", name: "Divya Iyer", mobile: "9765432109", company: "Trident Consulting", hostEmployee: "Meera Pillai", visitorType: "Consultant", visitDate: isoOffset(1), visitTime: "14:00", status: "Approved", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-D4E5F6G7" },
+  { id: "v5", visitorCode: "VIS-1005", name: "Arjun Verma", mobile: "9988776655", company: "—", hostEmployee: "Vikram Rao", visitorType: "Guest", visitDate: isoToday, visitTime: "13:00", status: "Checked In", checkInTime: atTime(isoToday, 13, 5), checkOutTime: null, badgePrinted: true, qrCode: "QR-E5F6G7H8" },
+  { id: "v6", visitorCode: "VIS-1006", name: "Kavita Joshi", mobile: "9871234567", company: "FastTrack Couriers", hostEmployee: "Anita Sharma", visitorType: "Delivery Personnel", visitDate: isoToday, visitTime: "08:45", status: "Checked Out", checkInTime: atTime(isoToday, 8, 50), checkOutTime: atTime(isoToday, 9, 5), badgePrinted: true, qrCode: "QR-F6G7H8I9" },
+  { id: "v7", visitorCode: "VIS-1007", name: "Manoj Pillai", mobile: "9812345678", company: "Orion Systems", hostEmployee: "Meera Pillai", visitorType: "Business Visitor", visitDate: isoOffset(2), visitTime: "15:30", status: "Scheduled", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-G7H8I9J0" },
+  { id: "v8", visitorCode: "VIS-1008", name: "Sneha Reddy", mobile: "9823456789", company: "—", hostEmployee: "Vikram Rao", visitorType: "Customer", visitDate: isoToday, visitTime: "12:15", status: "Pending Approval", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-H8I9J0K1" },
+  { id: "v9", visitorCode: "VIS-1009", name: "Ramesh Babu", mobile: "9834567890", company: "Skyline Interiors", hostEmployee: "Anita Sharma", visitorType: "Vendor", visitDate: isoOffset(-1), visitTime: "10:30", status: "Rejected", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-I9J0K1L2" },
+  { id: "v10", visitorCode: "VIS-1010", name: "Fatima Sheikh", mobile: "9845678901", company: "Nimbus Cloud Pvt Ltd", hostEmployee: "Meera Pillai", visitorType: "Business Visitor", visitDate: isoToday, visitTime: "16:00", status: "Pending Approval", checkInTime: null, checkOutTime: null, badgePrinted: false, qrCode: "QR-J0K1L2M3" },
+];
+
+const applyMockVisitorFilters = (list, filters) => {
+  const { search = "", status = "All", visitorType = "All", scope = "all" } = filters || {};
+  const todayStr = isoToday;
+  return list.filter((v) => {
+    if (scope === "today" && v.visitDate !== todayStr) return false;
+    if (scope === "inside" && v.status !== "Checked In") return false;
+    if (scope === "pending" && v.status !== "Pending Approval") return false;
+    if (status !== "All" && v.status !== status) return false;
+    if (visitorType !== "All" && v.visitorType !== visitorType) return false;
+    if (search && search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = [v.name, v.visitorCode, v.company, v.hostEmployee, v.mobile].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+};
+
+const MOCK_BLACKLIST = [
+  { id: "b1", name: "Ankit Malhotra", mobile: "9900001111", reason: "Attempted unauthorized access to server room", expiryDate: null, active: true },
+  { id: "b2", name: "Rakesh Yadav", mobile: "9900002222", reason: "Repeated policy violations during vendor visits", expiryDate: isoOffset(90), active: true },
+  { id: "b3", name: "Sunita Das", mobile: "9900003333", reason: "Misrepresented visit purpose", expiryDate: isoOffset(30), active: true },
+];
+
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useVisitorDashboard();
+  const { data: rawD, isLoading } = useVisitorDashboard();
+  const dash = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
-  const dash = d || {};
   return (
     <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
       <Kpi label="Today's Visitors" value={dash.todaysVisitors} icon={IconUsers} color="blue" />
@@ -79,7 +131,9 @@ function DashboardTab() {
 function VisitorsTab({ canManage, scope }) {
   const { show } = useToast();
   const [filters, setFilters] = useState({ search: "", status: "All", visitorType: "All", scope });
-  const { data: visitors = [], isLoading } = useVisitors(filters);
+  const { data: rawVisitors, isLoading } = useVisitors(filters);
+  const usingMock = !rawVisitors?.length;
+  const visitors = usingMock ? applyMockVisitorFilters(MOCK_VISITORS, filters) : rawVisitors;
   const { options: empOptions, byName } = useEmployeeOptions();
   const reg = useRegisterVisitor();
   const walkIn = useRegisterWalkIn();
@@ -250,7 +304,8 @@ function QrCheckInTab() {
 // ═══ Blacklist ═══
 function BlacklistTab({ canManage }) {
   const { show } = useToast();
-  const { data: list = [], isLoading } = useBlacklist();
+  const { data: rawList, isLoading } = useBlacklist();
+  const list = rawList?.length ? rawList : MOCK_BLACKLIST;
   const add = useAddBlacklist();
   const remove = useRemoveBlacklist();
   const [open, setOpen] = useState(false);
