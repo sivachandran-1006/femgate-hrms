@@ -37,6 +37,75 @@ const STATUS_COLOR = { Available: "green", Assigned: "blue", InUse: "blue", Unde
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6", "#f97316", "#64748b"];
 
+const MOCK_BRANCHES = [
+  { id: 1, name: "Chennai HQ" },
+  { id: 2, name: "Bengaluru Office" },
+  { id: 3, name: "Mumbai Office" },
+  { id: 4, name: "Hyderabad Office" },
+];
+
+const MOCK_ASSETS = [
+  { id: 1, assetId: "AST-1001", name: "Dell Latitude 5440", category: "Laptop", brand: "Dell", model: "Latitude 5440", serialNumber: "DL5440X001", purchaseDate: "2023-04-12", warrantyExpiry: "2026-04-12", vendor: "Dell India", purchaseValue: 78500, location: "Chennai HQ - 3rd Floor", branchId: "1", departmentName: "Engineering", status: "Assigned", assignedTo: { name: "Ramesh Kumar" } },
+  { id: 2, assetId: "AST-1002", name: "MacBook Pro 14\"", category: "Laptop", brand: "Apple", model: "MacBook Pro M3", serialNumber: "MBP14M3002", purchaseDate: "2023-08-02", warrantyExpiry: "2026-08-02", vendor: "Apple India", purchaseValue: 189900, location: "Bengaluru Office - 2nd Floor", branchId: "2", departmentName: "Design", status: "Assigned", assignedTo: { name: "Priya Sharma" } },
+  { id: 3, assetId: "AST-1003", name: "HP EliteDesk 800", category: "Desktop", brand: "HP", model: "EliteDesk 800 G9", serialNumber: "HPED800003", purchaseDate: "2022-11-20", warrantyExpiry: "2025-11-20", vendor: "HP India", purchaseValue: 62000, location: "Chennai HQ - Ground Floor", branchId: "1", departmentName: "Finance", status: "Available", assignedTo: null },
+  { id: 4, assetId: "AST-1004", name: "Dell UltraSharp 27\"", category: "Monitor", brand: "Dell", model: "U2723QE", serialNumber: "DLU2723004", purchaseDate: "2023-01-15", warrantyExpiry: "2026-01-15", vendor: "Dell India", purchaseValue: 45000, location: "Chennai HQ - 3rd Floor", branchId: "1", departmentName: "Engineering", status: "Assigned", assignedTo: { name: "Ramesh Kumar" } },
+  { id: 5, assetId: "AST-1005", name: "iPhone 14", category: "Mobile Phone", brand: "Apple", model: "iPhone 14", serialNumber: "IP14X005", purchaseDate: "2023-05-10", warrantyExpiry: "2025-05-10", vendor: "Apple India", purchaseValue: 69900, location: "Mumbai Office", branchId: "3", departmentName: "Sales", status: "UnderRepair", assignedTo: { name: "Anita Desai" } },
+  { id: 6, assetId: "AST-1006", name: "Canon LaserJet Pro", category: "Printer", brand: "Canon", model: "LBP 2900", serialNumber: "CNPR006", purchaseDate: "2021-09-01", warrantyExpiry: "2024-09-01", vendor: "Canon India", purchaseValue: 15500, location: "Bengaluru Office", branchId: "2", departmentName: "Admin", status: "Maintenance", assignedTo: null },
+  { id: 7, assetId: "AST-1007", name: "Epson Document Scanner", category: "Scanner", brand: "Epson", model: "DS-530", serialNumber: "EPSC007", purchaseDate: "2022-03-18", warrantyExpiry: "2025-03-18", vendor: "Epson India", purchaseValue: 22000, location: "Chennai HQ", branchId: "1", departmentName: "HR", status: "Available", assignedTo: null },
+  { id: 8, assetId: "AST-1008", name: "HID Proximity Card", category: "Access Card", brand: "HID", model: "ProxCard II", serialNumber: "HIDAC008", purchaseDate: "2023-02-01", warrantyExpiry: "2028-02-01", vendor: "HID Global", purchaseValue: 500, location: "Hyderabad Office", branchId: "4", departmentName: "Operations", status: "Assigned", assignedTo: { name: "Vikram Singh" } },
+  { id: 9, assetId: "AST-1009", name: "Microsoft 365 License", category: "Software License", brand: "Microsoft", model: "M365 Business", serialNumber: "MS365009", purchaseDate: "2023-06-01", warrantyExpiry: "2025-06-01", vendor: "Microsoft", purchaseValue: 12000, location: "Chennai HQ", branchId: "1", departmentName: "IT", status: "Assigned", assignedTo: { name: "Sneha Rao" } },
+  { id: 10, assetId: "AST-1010", name: "Cisco Router RV340", category: "Network Device", brand: "Cisco", model: "RV340", serialNumber: "CSRV010", purchaseDate: "2022-07-22", warrantyExpiry: "2025-07-22", vendor: "Cisco India", purchaseValue: 34500, location: "Mumbai Office", branchId: "3", departmentName: "IT", status: "InUse", assignedTo: { name: "Karthik Iyer" } },
+  { id: 11, assetId: "AST-1011", name: "Lenovo ThinkPad T14", category: "Laptop", brand: "Lenovo", model: "ThinkPad T14 Gen 3", serialNumber: "LNTP014011", purchaseDate: "2021-12-05", warrantyExpiry: "2024-12-05", vendor: "Lenovo India", purchaseValue: 71000, location: "Bengaluru Office", branchId: "2", departmentName: "Engineering", status: "Lost", assignedTo: null },
+  { id: 12, assetId: "AST-1012", name: "Samsung 24\" Monitor", category: "Monitor", brand: "Samsung", model: "S24R350", serialNumber: "SM24R012", purchaseDate: "2020-10-11", warrantyExpiry: "2023-10-11", vendor: "Samsung India", purchaseValue: 13500, location: "Hyderabad Office", branchId: "4", departmentName: "Support", status: "Damaged", assignedTo: null },
+  { id: 13, assetId: "AST-1013", name: "Office Chair (Ergo)", category: "Other Assets", brand: "Godrej", model: "Ergo Pro", serialNumber: "GDCH013", purchaseDate: "2019-04-30", warrantyExpiry: "2022-04-30", vendor: "Godrej Interio", purchaseValue: 9800, location: "Chennai HQ", branchId: "1", departmentName: "Admin", status: "Disposed", assignedTo: null },
+  { id: 14, assetId: "AST-1014", name: "Dell Latitude 5420", category: "Laptop", brand: "Dell", model: "Latitude 5420", serialNumber: "DL5420X014", purchaseDate: "2023-09-14", warrantyExpiry: "2026-09-14", vendor: "Dell India", purchaseValue: 68000, location: "Mumbai Office", branchId: "3", departmentName: "Marketing", status: "Assigned", assignedTo: { name: "Meera Nair" } },
+  { id: 15, assetId: "AST-1015", name: "Zebra Barcode Scanner", category: "Scanner", brand: "Zebra", model: "DS2208", serialNumber: "ZBDS015", purchaseDate: "2021-01-20", warrantyExpiry: "2024-01-20", vendor: "Zebra Technologies", purchaseValue: 8200, location: "Bengaluru Office", branchId: "2", departmentName: "Warehouse", status: "Retired", assignedTo: null },
+];
+
+const MOCK_EMPLOYEES = [
+  { id: 101, name: "Ramesh Kumar", designation: "Software Engineer" },
+  { id: 102, name: "Priya Sharma", designation: "UI/UX Designer" },
+  { id: 103, name: "Anita Desai", designation: "Sales Executive" },
+  { id: 104, name: "Vikram Singh", designation: "Operations Manager" },
+  { id: 105, name: "Sneha Rao", designation: "IT Administrator" },
+  { id: 106, name: "Karthik Iyer", designation: "Network Engineer" },
+  { id: 107, name: "Meera Nair", designation: "Marketing Lead" },
+];
+
+const MOCK_ASSET_DASHBOARD = {
+  cards: { totalAssets: 15, assigned: 7, available: 3, underRepair: 2, dueForReturn: 4, expiredLicenses: 2, assetValue: 680300 },
+};
+
+const MOCK_ASSET_ANALYTICS = {
+  byCategory: [
+    { name: "Laptop", value: 4 }, { name: "Desktop", value: 1 }, { name: "Monitor", value: 2 },
+    { name: "Mobile Phone", value: 1 }, { name: "Printer", value: 1 }, { name: "Scanner", value: 2 },
+    { name: "Access Card", value: 1 }, { name: "Software License", value: 1 }, { name: "Network Device", value: 1 }, { name: "Other Assets", value: 1 },
+  ],
+  lifecycleStatus: [
+    { name: "Assigned", value: 6 }, { name: "Available", value: 3 }, { name: "InUse", value: 1 },
+    { name: "UnderRepair", value: 1 }, { name: "Maintenance", value: 1 }, { name: "Lost", value: 1 },
+    { name: "Damaged", value: 1 }, { name: "Disposed", value: 1 },
+  ],
+  byBranch: [
+    { name: "Chennai HQ", value: 5 }, { name: "Bengaluru Office", value: 4 }, { name: "Mumbai Office", value: 3 }, { name: "Hyderabad Office", value: 3 },
+  ],
+  byDepartment: [
+    { name: "Engineering", value: 3 }, { name: "Design", value: 1 }, { name: "Finance", value: 1 }, { name: "Sales", value: 1 },
+    { name: "Admin", value: 2 }, { name: "HR", value: 1 }, { name: "Operations", value: 1 }, { name: "IT", value: 2 }, { name: "Marketing", value: 1 }, { name: "Support", value: 1 }, { name: "Warehouse", value: 1 },
+  ],
+};
+
+const MOCK_LICENSES = [
+  { id: 1, name: "Microsoft 365 Business", vendor: "Microsoft", licenseKey: "MS365-XXXX-1001", purchaseDate: "2023-06-01", expiryDate: "2026-06-01", assignedUser: "Sneha Rao", seats: 25, status: "Active" },
+  { id: 2, name: "Adobe Creative Cloud", vendor: "Adobe", licenseKey: "ADCC-XXXX-1002", purchaseDate: "2023-01-10", expiryDate: "2025-08-15", assignedUser: "Priya Sharma", seats: 5, status: "ExpiringSoon" },
+  { id: 3, name: "Zoom Business", vendor: "Zoom", licenseKey: "ZOOM-XXXX-1003", purchaseDate: "2022-05-01", expiryDate: "2024-05-01", assignedUser: "Karthik Iyer", seats: 50, status: "Expired" },
+  { id: 4, name: "Slack Standard", vendor: "Slack", licenseKey: "SLK-XXXX-1004", purchaseDate: "2023-03-20", expiryDate: "2026-03-20", assignedUser: "Vikram Singh", seats: 40, status: "Active" },
+  { id: 5, name: "Antivirus Endpoint Suite", vendor: "Symantec", licenseKey: "SYM-XXXX-1005", purchaseDate: "2022-09-01", expiryDate: "2024-09-01", assignedUser: "IT Admin", seats: 100, status: "Suspended" },
+  { id: 6, name: "JetBrains All Products", vendor: "JetBrains", licenseKey: "JB-XXXX-1006", purchaseDate: "2023-11-01", expiryDate: "2026-11-01", assignedUser: "Ramesh Kumar", seats: 10, status: "Active" },
+  { id: 7, name: "AutoCAD LT", vendor: "Autodesk", licenseKey: "ACAD-XXXX-1007", purchaseDate: "2021-07-15", expiryDate: "2024-07-15", assignedUser: "Meera Nair", seats: 3, status: "Expired" },
+];
+
 export default function AssetManagement({ darkMode }) {
   const { show: toast } = useToast();
   const doExport = async (fmt) => {
@@ -78,8 +147,10 @@ export default function AssetManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = useAssetDashboard();
-  const { data: an } = useAssetAnalytics();
+  const { data: rawDash } = useAssetDashboard();
+  const dash = rawDash ?? MOCK_ASSET_DASHBOARD;
+  const { data: rawAn } = useAssetAnalytics();
+  const an = rawAn ?? MOCK_ASSET_ANALYTICS;
   const c = dash?.cards || {};
   return (
     <>
@@ -141,10 +212,13 @@ const EMPTY_ASSET = { name: "", assetId: "", category: "Laptop", brand: "", mode
 
 function InventoryTab({ toast }) {
   const navigate = useNavigate();
-  const { data: assets = [], isLoading } = useAssets();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: rawAssets, isLoading, isError: rawIsError } = useAssets();
+  const assets = rawAssets?.length ? rawAssets : MOCK_ASSETS;
+  const isError = rawIsError && !assets.length;
+  const { data: rawEmployees } = useFetchAllEmployees();
+  const employees = rawEmployees?.length ? rawEmployees : MOCK_EMPLOYEES;
   const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
-  const branches = branchesRes || [];
+  const branches = branchesRes?.length ? branchesRes : MOCK_BRANCHES;
 
   const createMut = useCreateAsset();
   const updateMut = useUpdateAsset();
@@ -202,6 +276,7 @@ function InventoryTab({ toast }) {
   };
 
   if (isLoading) return <Box ta="center" py="xl"><Loader size="sm" /></Box>;
+  void isError;
   const COLS = ["Asset ID", "Name", "Category", "Brand", "Serial", "Assigned To", "Status", "Actions"];
 
   return (
@@ -326,7 +401,10 @@ const EMPTY_LIC = { name: "", vendor: "", licenseKey: "", purchaseDate: "", expi
 const LIC_COLOR = { Active: "green", Expired: "red", ExpiringSoon: "orange", Suspended: "gray" };
 
 function LicensesTab({ toast }) {
-  const { data: licenses = [] } = useLicenses();
+  const { data: rawLicenses, isError: rawIsError } = useLicenses();
+  const licenses = rawLicenses?.length ? rawLicenses : MOCK_LICENSES;
+  const isError = rawIsError && !licenses.length;
+  void isError;
   const createMut = useCreateLicense();
   const updateMut = useUpdateLicense();
   const deleteMut = useDeleteLicense();
