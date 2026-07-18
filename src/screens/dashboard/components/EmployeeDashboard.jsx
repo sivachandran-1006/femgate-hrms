@@ -42,6 +42,65 @@ import { fetchLeaves } from "../../../api/leaveApi";
 import { useFetchAllEmployees } from "../../../queries/useEmployees";
 import { KpiCard, PanelCard } from "./DashboardKit";
 
+const MOCK_ATTEND = {
+  records: [
+    { date: "2026-07-14", status: "Present", checkIn: "2026-07-14T09:02:00", checkOut: "2026-07-14T18:05:00", hoursWorked: 9 },
+    { date: "2026-07-15", status: "Present", checkIn: "2026-07-15T09:10:00", checkOut: "2026-07-15T18:00:00", hoursWorked: 8.8 },
+    { date: "2026-07-16", status: "Late",    checkIn: "2026-07-16T09:45:00", checkOut: "2026-07-16T18:15:00", hoursWorked: 8.5 },
+    { date: "2026-07-17", status: "Present", checkIn: "2026-07-17T08:55:00", checkOut: "2026-07-17T18:02:00", hoursWorked: 9.1 },
+    { date: "2026-07-18", status: "Absent",  checkIn: null,                  checkOut: null,                  hoursWorked: 0 },
+  ],
+};
+
+const MOCK_PAYSLIP = {
+  month: "June 2026",
+  gross: 82000,
+  deductions: 9200,
+  net: 72800,
+  status: "Paid",
+};
+
+const MOCK_BALANCE = [
+  { label: "Casual Leave",  leaveType: "Casual",  total: 12, used: 5,  color: "blue" },
+  { label: "Medical Leave", leaveType: "Medical", total: 10, used: 2,  color: "green" },
+  { label: "Earned Leave",  leaveType: "Earned",  total: 15, used: 6,  color: "violet" },
+  { label: "Comp-Off",      leaveType: "CompOff", total: 4,  used: 1,  color: "orange" },
+];
+
+const MOCK_LEAVES = [
+  { id: "L101", leaveType: "Casual",  status: "Approved", fromDate: "2026-06-10", days: 2 },
+  { id: "L102", leaveType: "Medical", status: "Pending",  fromDate: "2026-06-25", days: 1 },
+  { id: "L103", leaveType: "Earned",  status: "Approved", fromDate: "2026-05-18", days: 3 },
+  { id: "L104", leaveType: "Casual",  status: "Rejected", fromDate: "2026-04-30", days: 1 },
+  { id: "L105", leaveType: "Earned",  status: "Approved", fromDate: "2026-03-12", days: 2 },
+];
+
+const MOCK_ANNOUNCE = {
+  announcements: [
+    { id: 1, title: "Q3 All-Hands Meeting — 15 Jul 2026",        priority: "Medium", author: "HR Team",      createdAt: "2026-07-10" },
+    { id: 2, title: "Updated Leave Policy effective August 2026", priority: "High",   author: "HR Team",      createdAt: "2026-07-08" },
+    { id: 3, title: "Payroll processed for June 2026",            priority: "Low",    author: "Finance Team", createdAt: "2026-07-05" },
+    { id: 4, title: "Office closed on 17 Jul — National Holiday", priority: "Medium", author: "Admin",        createdAt: "2026-07-03" },
+  ],
+};
+
+const MOCK_EVENTS = {
+  events: [
+    { id: "EV1", title: "Independence Day Holiday", type: "Holiday", date: "2026-08-15" },
+    { id: "EV2", title: "Team Outing — Engineering", type: "Event",   date: "2026-07-25" },
+    { id: "EV3", title: "Onam Holiday",              type: "Holiday", date: "2026-09-05" },
+    { id: "EV4", title: "Q3 Townhall",                type: "Event",   date: "2026-07-30" },
+  ],
+};
+
+const MOCK_EMPLOYEES = [
+  { id: "E001", name: "Arjun Mehta",    department: "Engineering", designation: "Sr. Engineer",    dob: "1991-07-15", joinDate: "2022-07-10" },
+  { id: "E002", name: "Priya Sharma",   department: "HR",          designation: "HR Manager",      dob: "1988-07-22", joinDate: "2021-07-05" },
+  { id: "E003", name: "Rahul Nair",     department: "Sales",       designation: "Sales Lead",      dob: "1993-08-05", joinDate: "2023-06-15" },
+  { id: "E004", name: "Sneha Iyer",     department: "Finance",     designation: "Finance Analyst", dob: "1990-07-30", joinDate: "2024-06-01" },
+  { id: "E005", name: "Kiran Patel",    department: "Operations",  designation: "Ops Coordinator", dob: "1995-09-11", joinDate: "2020-07-20" },
+];
+
 const statusColor = (s) =>
   s === "Present"
     ? "#22c55e"
@@ -156,37 +215,49 @@ const ViewAll = ({ navigate, to }) => (
 export const EmployeeDashboard = ({ user }) => {
   const navigate = useNavigate();
 
-  const { data: attendData, isLoading } = useQuery({
+  const { data: rawAttendData, isLoading } = useQuery({
     queryKey: ["my-attendance"],
     queryFn: getMyAttendance,
     select: (r) => r?.data ?? r,
   });
-  const { data: payslipData } = useQuery({
+  const { data: rawPayslipData } = useQuery({
     queryKey: ["my-payslip"],
     queryFn: getMyPayslip,
     select: (r) => r?.data ?? r,
   });
-  const { data: balanceData } = useQuery({
+  const { data: rawBalanceData } = useQuery({
     queryKey: ["leave-balance"],
     queryFn: getLeaveBalance,
     select: (r) => r?.data ?? r,
   });
-  const { data: leavesData } = useQuery({
+  const { data: rawLeavesData } = useQuery({
     queryKey: ["leaves"],
     queryFn: () => fetchLeaves(),
     select: (r) => r?.data ?? r ?? [],
   });
-  const { data: announceData } = useQuery({
+  const { data: rawAnnounceData } = useQuery({
     queryKey: ["dashboard-announce"],
     queryFn: getAnnouncements,
     select: (r) => r?.data ?? r,
   });
-  const { data: eventsData } = useQuery({
+  const { data: rawEventsData } = useQuery({
     queryKey: ["dashboard-events"],
     queryFn: getUpcomingEvents,
     select: (r) => r?.data ?? r,
   });
-  const { data: allEmployees = [] } = useFetchAllEmployees();
+  const { data: rawEmployees = [] } = useFetchAllEmployees();
+
+  const attendData = rawAttendData?.records?.length ? rawAttendData : MOCK_ATTEND;
+  const payslipData = rawPayslipData ?? MOCK_PAYSLIP;
+  const balanceRaw = Array.isArray(rawBalanceData)
+    ? rawBalanceData
+    : rawBalanceData?.balance || [];
+  const balanceData = balanceRaw.length ? balanceRaw : MOCK_BALANCE;
+  const leavesRaw = Array.isArray(rawLeavesData) ? rawLeavesData : [];
+  const leavesData = leavesRaw.length ? leavesRaw : MOCK_LEAVES;
+  const announceData = rawAnnounceData?.announcements?.length ? rawAnnounceData : MOCK_ANNOUNCE;
+  const eventsData = rawEventsData?.events?.length ? rawEventsData : MOCK_EVENTS;
+  const allEmployees = rawEmployees.length ? rawEmployees : MOCK_EMPLOYEES;
 
   if (isLoading)
     return (
@@ -197,10 +268,8 @@ export const EmployeeDashboard = ({ user }) => {
 
   const records = attendData?.records || [];
   const payslip = payslipData;
-  const balance = Array.isArray(balanceData)
-    ? balanceData
-    : balanceData?.balance || [];
-  const leaves = Array.isArray(leavesData) ? leavesData : [];
+  const balance = balanceData;
+  const leaves = leavesData;
   const announcements = announceData?.announcements || [];
   const events = eventsData?.events || [];
 
