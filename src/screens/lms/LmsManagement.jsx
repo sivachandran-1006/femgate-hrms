@@ -31,6 +31,91 @@ const ENROLL_STATUS    = ["Enrolled", "In Progress", "Completed", "Failed", "Dro
 const CERT_STATUS      = ["Active", "Expired", "Revoked"];
 const ASSESSMENT_TYPES = ["Quiz", "Assignment", "Practical", "MCQ"];
 
+// ─── Mock data (main_v1 UI-only fallback) ─────────────────────────────────────
+const MOCK_COURSES = [
+  { id: 1, title: "Workplace Safety Fundamentals", code: "CRS-101", category: "Compliance", description: "Core safety practices for all employees.", durationHrs: 4, level: "Beginner", format: "Online", trainer: "Anita Rao", maxSeats: 100, passingScore: 70, status: "Active", tags: "safety,compliance", _count: { enrollments: 42 } },
+  { id: 2, title: "Advanced React Patterns", code: "CRS-102", category: "Technical", description: "Hooks, performance, and architecture patterns.", durationHrs: 12, level: "Advanced", format: "Self-Paced", trainer: "Karthik Iyer", maxSeats: 40, passingScore: 75, status: "Active", tags: "react,frontend", _count: { enrollments: 28 } },
+  { id: 3, title: "Effective Communication Skills", code: "CRS-103", category: "Soft Skills", description: "Building clear, confident workplace communication.", durationHrs: 6, level: "Beginner", format: "Classroom", trainer: "Priya Menon", maxSeats: 30, passingScore: 60, status: "Active", tags: "communication", _count: { enrollments: 35 } },
+  { id: 4, title: "Leadership Essentials", code: "CRS-104", category: "Leadership", description: "First-time manager training program.", durationHrs: 16, level: "Intermediate", format: "Blended", trainer: "Suresh Nair", maxSeats: 25, passingScore: 70, status: "Active", tags: "leadership,management", _count: { enrollments: 19 } },
+  { id: 5, title: "Data Privacy & GDPR", code: "CRS-105", category: "Compliance", description: "Understanding data protection obligations.", durationHrs: 3, level: "Beginner", format: "Online", trainer: "Anita Rao", maxSeats: 150, passingScore: 80, status: "Active", tags: "privacy,gdpr", _count: { enrollments: 61 } },
+  { id: 6, title: "Node.js Backend Development", code: "CRS-106", category: "Technical", description: "Building scalable APIs with Node.js.", durationHrs: 20, level: "Intermediate", format: "Self-Paced", trainer: "Karthik Iyer", maxSeats: 35, passingScore: 75, status: "Draft", tags: "node,backend", _count: { enrollments: 8 } },
+  { id: 7, title: "Conflict Resolution at Work", code: "CRS-107", category: "Soft Skills", description: "Practical techniques for resolving team conflicts.", durationHrs: 5, level: "Intermediate", format: "Classroom", trainer: "Priya Menon", maxSeats: 20, passingScore: 65, status: "Inactive", tags: "hr,soft-skills", _count: { enrollments: 12 } },
+  { id: 8, title: "Diversity & Inclusion Training", code: "CRS-108", category: "Compliance", description: "Fostering an inclusive workplace culture.", durationHrs: 4, level: "Beginner", format: "Online", trainer: "Meera Pillai", maxSeats: 200, passingScore: 70, status: "Active", tags: "dei,compliance", _count: { enrollments: 74 } },
+];
+
+const MOCK_ENROLLMENTS = [
+  { id: 101, courseId: 1, course: { title: "Workplace Safety Fundamentals" }, employeeName: "Ravi Kumar", employeeDept: "Operations", assignedBy: "Anita Rao", dueDate: "2026-08-05", status: "In Progress", progress: 60, score: null },
+  { id: 102, courseId: 2, course: { title: "Advanced React Patterns" }, employeeName: "Divya Shankar", employeeDept: "Engineering", assignedBy: "Karthik Iyer", dueDate: "2026-07-25", status: "Completed", progress: 100, score: 88 },
+  { id: 103, courseId: 3, course: { title: "Effective Communication Skills" }, employeeName: "Arjun Das", employeeDept: "Sales", assignedBy: "Priya Menon", dueDate: "2026-07-30", status: "Enrolled", progress: 0, score: null },
+  { id: 104, courseId: 4, course: { title: "Leadership Essentials" }, employeeName: "Sneha Reddy", employeeDept: "Marketing", assignedBy: "Suresh Nair", dueDate: "2026-08-10", status: "In Progress", progress: 45, score: null },
+  { id: 105, courseId: 5, course: { title: "Data Privacy & GDPR" }, employeeName: "Vikram Singh", employeeDept: "Legal", assignedBy: "Anita Rao", dueDate: "2026-07-20", status: "Completed", progress: 100, score: 92 },
+  { id: 106, courseId: 8, course: { title: "Diversity & Inclusion Training" }, employeeName: "Fatima Sheikh", employeeDept: "HR", assignedBy: "Meera Pillai", dueDate: "2026-07-15", status: "Failed", progress: 100, score: 55 },
+  { id: 107, courseId: 3, course: { title: "Effective Communication Skills" }, employeeName: "Naveen Gupta", employeeDept: "Support", assignedBy: "Priya Menon", dueDate: "2026-06-30", status: "Dropped", progress: 20, score: null },
+];
+
+const MOCK_CERTIFICATES = [
+  { id: 201, courseId: 2, course: { title: "Advanced React Patterns" }, employeeName: "Divya Shankar", employeeDept: "Engineering", certificateNo: "CERT-2026-0021", score: 88, issueDate: "2026-06-15", expiryDate: null, issuedBy: "Karthik Iyer", status: "Active" },
+  { id: 202, courseId: 5, course: { title: "Data Privacy & GDPR" }, employeeName: "Vikram Singh", employeeDept: "Legal", certificateNo: "CERT-2026-0022", score: 92, issueDate: "2026-06-20", expiryDate: "2027-06-20", issuedBy: "Anita Rao", status: "Active" },
+  { id: 203, courseId: 1, course: { title: "Workplace Safety Fundamentals" }, employeeName: "Ramesh Chandra", employeeDept: "Operations", certificateNo: "CERT-2025-0110", score: 78, issueDate: "2025-05-10", expiryDate: "2026-05-10", issuedBy: "Anita Rao", status: "Expired" },
+  { id: 204, courseId: 8, course: { title: "Diversity & Inclusion Training" }, employeeName: "Meena Iyer", employeeDept: "HR", certificateNo: "CERT-2026-0045", score: 95, issueDate: "2026-07-01", expiryDate: null, issuedBy: "Meera Pillai", status: "Active" },
+  { id: 205, courseId: 3, course: { title: "Effective Communication Skills" }, employeeName: "Rohit Verma", employeeDept: "Sales", certificateNo: "CERT-2026-0033", score: 82, issueDate: "2026-05-18", expiryDate: null, issuedBy: "Priya Menon", status: "Revoked" },
+  { id: 206, courseId: 4, course: { title: "Leadership Essentials" }, employeeName: "Kavya Nair", employeeDept: "Marketing", certificateNo: "CERT-2026-0050", score: 90, issueDate: "2026-07-10", expiryDate: "2028-07-10", issuedBy: "Suresh Nair", status: "Active" },
+];
+
+const MOCK_ASSESSMENTS = [
+  { id: 301, courseId: 1, course: { title: "Workplace Safety Fundamentals" }, title: "Safety Basics Quiz", type: "Quiz", passingScore: 70, timeLimit: 20, maxAttempts: 3, status: "Active" },
+  { id: 302, courseId: 2, course: { title: "Advanced React Patterns" }, title: "React Patterns Practical", type: "Practical", passingScore: 75, timeLimit: 60, maxAttempts: 2, status: "Active" },
+  { id: 303, courseId: 3, course: { title: "Effective Communication Skills" }, title: "Communication Assessment", type: "Assignment", passingScore: 60, timeLimit: null, maxAttempts: 1, status: "Active" },
+  { id: 304, courseId: 4, course: { title: "Leadership Essentials" }, title: "Leadership Case Study", type: "Assignment", passingScore: 70, timeLimit: 90, maxAttempts: 2, status: "Active" },
+  { id: 305, courseId: 5, course: { title: "Data Privacy & GDPR" }, title: "GDPR Compliance MCQ", type: "MCQ", passingScore: 80, timeLimit: 30, maxAttempts: 3, status: "Active" },
+  { id: 306, courseId: 8, course: { title: "Diversity & Inclusion Training" }, title: "D&I Knowledge Check", type: "Quiz", passingScore: 70, timeLimit: 15, maxAttempts: 3, status: "Inactive" },
+];
+
+const MOCK_DASHBOARD = {
+  totalCourses: 8,
+  totalEnrollments: 279,
+  inProgress: 62,
+  completionRate: 68,
+  completions: 190,
+  certs: 41,
+  overdue: 7,
+  monthlyCompletions: [
+    { month: "Feb", count: 18 }, { month: "Mar", count: 24 }, { month: "Apr", count: 21 },
+    { month: "May", count: 30 }, { month: "Jun", count: 27 }, { month: "Jul", count: 33 },
+  ],
+  categories: [
+    { category: "Compliance", count: 177 }, { category: "Technical", count: 36 },
+    { category: "Soft Skills", count: 47 }, { category: "Leadership", count: 19 },
+  ],
+  topCourses: [
+    { courseId: 8, title: "Diversity & Inclusion Training", enrollments: 74 },
+    { courseId: 5, title: "Data Privacy & GDPR", enrollments: 61 },
+    { courseId: 1, title: "Workplace Safety Fundamentals", enrollments: 42 },
+    { courseId: 3, title: "Effective Communication Skills", enrollments: 35 },
+    { courseId: 2, title: "Advanced React Patterns", enrollments: 28 },
+  ],
+};
+
+const MOCK_ANALYTICS = {
+  enrollmentsByStatus: [
+    { status: "Completed", count: 190 }, { status: "In Progress", count: 62 },
+    { status: "Enrolled", count: 15 }, { status: "Failed", count: 8 }, { status: "Dropped", count: 4 },
+  ],
+  enrollmentsByDept: [
+    { dept: "Operations", count: 58 }, { dept: "Engineering", count: 45 }, { dept: "Sales", count: 51 },
+    { dept: "Marketing", count: 32 }, { dept: "Legal", count: 20 }, { dept: "HR", count: 41 }, { dept: "Support", count: 32 },
+  ],
+  certsByMonth: [
+    { month: "Feb", count: 4 }, { month: "Mar", count: 6 }, { month: "Apr", count: 5 },
+    { month: "May", count: 8 }, { month: "Jun", count: 9 }, { month: "Jul", count: 9 },
+  ],
+  avgScorePerCourse: [
+    { title: "Workplace Safety", avgScore: 82 }, { title: "React Patterns", avgScore: 86 },
+    { title: "Communication Skills", avgScore: 75 }, { title: "Leadership Essentials", avgScore: 88 },
+    { title: "Data Privacy & GDPR", avgScore: 90 },
+  ],
+};
+
 // ─── KPI Card ────────────────────────────────────────────────────────────────
 function KpiCard({ label, value, icon: Icon, color, sub }) {
   return (
@@ -49,7 +134,8 @@ function KpiCard({ label, value, icon: Icon, color, sub }) {
 
 // ─── Dashboard Tab ───────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: dash, isLoading } = useLmsDashboard();
+  const { data: rawDash, isLoading } = useLmsDashboard();
+  const dash = rawDash ?? MOCK_DASHBOARD;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -134,7 +220,8 @@ function CoursesTab() {
   const [delId, setDelId]       = useState(null);
 
   const params = { search: search || undefined, category: filterCat || undefined, status: filterStatus || undefined };
-  const { data: courses = [], isLoading, refetch } = useCourses(params);
+  const { data: rawCourses, isLoading } = useCourses(params);
+  const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
   const createCourse  = useCreateCourse();
   const updateCourse  = useUpdateCourse();
   const deleteCourse  = useDeleteCourse();
@@ -302,8 +389,10 @@ function EnrollmentsTab() {
   const [delId, setDelId]   = useState(null);
 
   const params = { employeeName: search || undefined, status: filterStatus || undefined };
-  const { data: enrollments = [], isLoading } = useEnrollments(params);
-  const { data: courses = [] } = useCourses({});
+  const { data: rawEnrollments, isLoading } = useEnrollments(params);
+  const enrollments = rawEnrollments?.length ? rawEnrollments : MOCK_ENROLLMENTS;
+  const { data: rawCourses } = useCourses({});
+  const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
   const create = useCreateEnrollment();
   const update = useUpdateEnrollment();
   const remove = useDeleteEnrollment();
@@ -446,8 +535,10 @@ function CertificatesTab() {
   const [form, setForm]       = useState({});
   const [delId, setDelId]     = useState(null);
 
-  const { data: certs = [], isLoading } = useCertificates({ employeeName: search || undefined });
-  const { data: courses = [] } = useCourses({});
+  const { data: rawCerts, isLoading } = useCertificates({ employeeName: search || undefined });
+  const certs = rawCerts?.length ? rawCerts : MOCK_CERTIFICATES;
+  const { data: rawCourses } = useCourses({});
+  const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
   const create = useCreateCertificate();
   const remove = useDeleteCertificate();
 
@@ -571,8 +662,10 @@ function AssessmentsTab() {
   const [form, setForm]     = useState({});
   const [delId, setDelId]   = useState(null);
 
-  const { data: assessments = [], isLoading } = useAssessments({});
-  const { data: courses = [] } = useCourses({});
+  const { data: rawAssessments, isLoading } = useAssessments({});
+  const assessments = rawAssessments?.length ? rawAssessments : MOCK_ASSESSMENTS;
+  const { data: rawCourses } = useCourses({});
+  const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
   const create = useCreateAssessment();
   const update = useUpdateAssessment();
   const remove = useDeleteAssessment();
@@ -680,7 +773,8 @@ function AssessmentsTab() {
 
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
 function AnalyticsTab() {
-  const { data: analytics, isLoading } = useLmsAnalytics();
+  const { data: rawAnalytics, isLoading } = useLmsAnalytics();
+  const analytics = rawAnalytics ?? MOCK_ANALYTICS;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!analytics) return null;
