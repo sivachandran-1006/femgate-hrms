@@ -31,6 +31,62 @@ import {
 
 const CHART_COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
 
+// ─── Mock fallback data (main_v1 UI-only branch) ───
+const MOCK_DASHBOARD = {
+  employeesUnderComp: 128,
+  pendingRevisions: 6,
+  approvedRevisions: 22,
+  upcomingIncrementCycle: "Apr 2026",
+  averageSalary: 68500,
+  bonusBudget: 4200000,
+  variablePayBudget: 2850000,
+};
+
+const MOCK_BENCHMARKING = [
+  { designation: "Software Engineer", internalAvg: 62000, marketAvg: 68000, gapPct: -8.8, position: "Below Market" },
+  { designation: "Senior Software Engineer", internalAvg: 95000, marketAvg: 98000, gapPct: -3.1, position: "Near Market" },
+  { designation: "HR Executive", internalAvg: 42000, marketAvg: 40000, gapPct: 5.0, position: "At/Above Market" },
+  { designation: "Accountant", internalAvg: 48000, marketAvg: 51000, gapPct: -5.9, position: "Near Market" },
+  { designation: "Product Manager", internalAvg: 128000, marketAvg: 135000, gapPct: -5.2, position: "Near Market" },
+  { designation: "Sales Manager", internalAvg: 88000, marketAvg: 82000, gapPct: 7.3, position: "At/Above Market" },
+  { designation: "QA Engineer", internalAvg: 54000, marketAvg: 58000, gapPct: -6.9, position: "Below Market" },
+];
+
+const MOCK_BUDGET = {
+  salaryBudget: 58500000,
+  bonusBudget: 4200000,
+  incrementBudget: 5100000,
+  departments: [
+    { department: "Engineering", salaryBudget: 22000000, actualSpend: 20800000, utilizationPct: 94.5 },
+    { department: "Sales", salaryBudget: 12500000, actualSpend: 11900000, utilizationPct: 95.2 },
+    { department: "HR", salaryBudget: 6000000, actualSpend: 5200000, utilizationPct: 86.7 },
+    { department: "Finance", salaryBudget: 7500000, actualSpend: 6100000, utilizationPct: 81.3 },
+    { department: "Operations", salaryBudget: 10500000, actualSpend: 10450000, utilizationPct: 99.5 },
+  ],
+};
+
+const MOCK_REVISIONS = [
+  { id: "rev-1", employee: "Ravi Kumar", currentSalary: 55000, revisedSalary: 62000, incrementPct: 12.7, type: "Annual Increment", cycle: "Annual", effectiveDate: "2026-04-01", status: "Pending" },
+  { id: "rev-2", employee: "Priya Sharma", currentSalary: 72000, revisedSalary: 80000, incrementPct: 11.1, type: "Promotion Increment", cycle: "Promotion Based", effectiveDate: "2026-03-15", status: "Approved" },
+  { id: "rev-3", employee: "Arjun Nair", currentSalary: 48000, revisedSalary: 51000, incrementPct: 6.3, type: "Annual Increment", cycle: "Annual", effectiveDate: "2026-04-01", status: "Approved" },
+  { id: "rev-4", employee: "Divya Menon", currentSalary: 90000, revisedSalary: 99000, incrementPct: 10.0, type: "Retention Increment", cycle: "Custom", effectiveDate: "2026-02-01", status: "Rejected" },
+  { id: "rev-5", employee: "Karthik Iyer", currentSalary: 65000, revisedSalary: 71500, incrementPct: 10.0, type: "Special Increment", cycle: "Half-Yearly", effectiveDate: "2026-01-10", status: "Pending" },
+];
+
+const MOCK_COMP_HISTORY = {
+  revisions: [
+    { id: "h-rev-1", currentSalary: 55000, revisedSalary: 62000, incrementPct: 12.7, type: "Annual Increment", effectiveDate: "2026-04-01" },
+    { id: "h-rev-2", currentSalary: 48000, revisedSalary: 55000, incrementPct: 14.6, type: "Promotion Increment", effectiveDate: "2025-04-01" },
+  ],
+  bonuses: [
+    { id: "h-bon-1", amount: 25000, type: "Performance Bonus", status: "Released" },
+    { id: "h-bon-2", amount: 10000, type: "Festival Bonus", status: "Paid" },
+  ],
+  promotions: [
+    { id: "h-prom-1", currentDesignation: "Software Engineer", newDesignation: "Senior Software Engineer", promotionDate: "2025-04-01", status: "Approved" },
+  ],
+};
+
 // CSV export helper — turns an array of rows into a downloaded CSV file
 const exportCSV = (filename, rows) => {
   if (!rows || !rows.length) return;
@@ -87,8 +143,9 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useCompDashboard();
+  const { data: rawD, isLoading } = useCompDashboard();
   const { data: an } = useCompAnalytics();
+  const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
   const a = an || {};
@@ -156,7 +213,8 @@ function DashboardTab() {
 
 // ═══ Market Benchmarking ═══
 function BenchmarkingTab() {
-  const { data: rows = [], isLoading } = useBenchmarking();
+  const { data: rawRows, isLoading } = useBenchmarking();
+  const rows = rawRows?.length ? rawRows : MOCK_BENCHMARKING;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const posColor = { "At/Above Market": "green", "Near Market": "orange", "Below Market": "red" };
   return (
@@ -183,7 +241,8 @@ function BenchmarkingTab() {
 
 // ═══ Budget Planning ═══
 function BudgetTab() {
-  const { data: b, isLoading } = useBudget();
+  const { data: rawB, isLoading } = useBudget();
+  const b = rawB ?? MOCK_BUDGET;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const data = b || {};
   return (
@@ -221,7 +280,8 @@ function BudgetTab() {
 function HistoryTab() {
   const empOptions = useEmployeeOptions();
   const [employee, setEmployee] = useState("");
-  const { data: h, isLoading } = useCompHistory(employee);
+  const { data: rawH, isLoading } = useCompHistory(employee);
+  const h = rawH ?? (employee ? MOCK_COMP_HISTORY : rawH);
   return (
     <Stack gap="md">
       <Select label="Select Employee" placeholder="Choose an employee to view history" searchable w={360} data={empOptions} value={employee} onChange={setEmployee} nothingFoundMessage="No employee found" />
@@ -256,7 +316,8 @@ function HistoryTab() {
 // ═══ Salary Revisions ═══
 function RevisionsTab({ canManage }) {
   const { show } = useToast();
-  const { data: revisions = [], isLoading } = useRevisions();
+  const { data: rawRevisions, isLoading } = useRevisions();
+  const revisions = rawRevisions?.length ? rawRevisions : MOCK_REVISIONS;
   const create = useCreateRevision();
   const review = useUpdateRevisionStatus();
   const empOptions = useEmployeeOptions();
