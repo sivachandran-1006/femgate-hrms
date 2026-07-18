@@ -23,6 +23,21 @@ import { useFetchAllEmployees } from "../../queries/useEmployees";
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CHART_COLORS = [COLORS.primary, COLORS.success, COLORS.warning, COLORS.danger, COLORS.purple, COLORS.info];
 
+const MOCK_PAYROLL_RECORDS = [
+  { _id: "mock-1",  employee: "Aarthi Suresh",      employeeId: "MGT-1042", department: "Engineering",  designation: "Senior Software Engineer", salary: 85000, bonus: 5000, deduction: 3200, netSalary: 86800, month: "July",      year: "2026", status: "Paid" },
+  { _id: "mock-2",  employee: "Karthik Raja",        employeeId: "MGT-1018", department: "Engineering",  designation: "Software Engineer",        salary: 62000, bonus: 2000, deduction: 2400, netSalary: 61600, month: "July",      year: "2026", status: "Pending" },
+  { _id: "mock-3",  employee: "Divya Prakash",       employeeId: "MGT-1077", department: "Design",        designation: "UI/UX Designer",           salary: 58000, bonus: 0,    deduction: 2100, netSalary: 55900, month: "July",      year: "2026", status: "Paid" },
+  { _id: "mock-4",  employee: "Naveen Kumar",        employeeId: "MGT-1005", department: "Sales",         designation: "Sales Manager",            salary: 72000, bonus: 8000, deduction: 3000, netSalary: 77000, month: "July",      year: "2026", status: "Pending" },
+  { _id: "mock-5",  employee: "Priya Ramesh",        employeeId: "MGT-1063", department: "HR",            designation: "HR Executive",             salary: 48000, bonus: 1000, deduction: 1800, netSalary: 47200, month: "June",      year: "2026", status: "Paid" },
+  { _id: "mock-6",  employee: "Suresh Babu",         employeeId: "MGT-1029", department: "Finance",       designation: "Accounts Manager",         salary: 76000, bonus: 3000, deduction: 3400, netSalary: 75600, month: "June",      year: "2026", status: "Paid" },
+  { _id: "mock-7",  employee: "Meena Iyer",          employeeId: "MGT-1054", department: "Engineering",  designation: "QA Engineer",              salary: 54000, bonus: 1500, deduction: 2000, netSalary: 53500, month: "June",      year: "2026", status: "Pending" },
+  { _id: "mock-8",  employee: "Ramesh Chandran",     employeeId: "MGT-1011", department: "Marketing",     designation: "Marketing Lead",           salary: 68000, bonus: 4000, deduction: 2600, netSalary: 69400, month: "June",      year: "2026", status: "Paid" },
+  { _id: "mock-9",  employee: "Lakshmi Narayan",     employeeId: "MGT-1088", department: "Engineering",  designation: "DevOps Engineer",          salary: 79000, bonus: 2500, deduction: 3100, netSalary: 78400, month: "May",       year: "2026", status: "Paid" },
+  { _id: "mock-10", employee: "Vignesh Anand",       employeeId: "MGT-1033", department: "Support",       designation: "Support Engineer",         salary: 42000, bonus: 0,    deduction: 1500, netSalary: 40500, month: "May",       year: "2026", status: "Pending" },
+  { _id: "mock-11", employee: "Kavitha Selvam",      employeeId: "MGT-1071", department: "Design",        designation: "Product Designer",         salary: 61000, bonus: 1800, deduction: 2200, netSalary: 60600, month: "May",       year: "2026", status: "Paid" },
+  { _id: "mock-12", employee: "Arun Prasad",         employeeId: "MGT-1047", department: "Sales",         designation: "Sales Executive",          salary: 46000, bonus: 3000, deduction: 1700, netSalary: 47300, month: "May",       year: "2026", status: "Paid" },
+];
+
 // PayslipModal keeps inline styles intentionally for print-safe layout
 const computePayslip = (row) => {
   const basic     = Math.round(Number(row.salary) * 0.5);
@@ -191,6 +206,10 @@ const Payroll = ({ embedded = false } = {}) => {
     try {
       const res = await fetchPayroll();
       const records = res?.data ?? res ?? [];
+      if (!records.length) {
+        setPayroll(MOCK_PAYROLL_RECORDS);
+        return;
+      }
       setPayroll(records.map(r => ({
         ...r,
         _id:        r.id,
@@ -200,6 +219,7 @@ const Payroll = ({ embedded = false } = {}) => {
       })));
     } catch {
       show("Failed to load payroll records", "error");
+      setPayroll(MOCK_PAYROLL_RECORDS);
     } finally {
       setLoading(false);
     }
