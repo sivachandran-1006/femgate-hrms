@@ -17,8 +17,10 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
+import { AppModalFooter, AppUnsavedChangesModal } from "../../components/ui/AppModalFooter";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
+import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
 import { exportBranches } from "../../api/branchApi";
 import {
   useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch,
@@ -36,13 +38,15 @@ const EMPTY_FORM = {
   postalCode: "", email: "", phone: "", timezone: "Asia/Kolkata", status: "Active",
 };
 
-const BranchModal = ({ open, onClose, onSave, editData, saving, heads }) => {
+const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [err, setErr]   = useState({});
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (open) {
       setErr({});
+      setIsDirty(false);
       setForm(editData ? {
         name: editData.name || "", code: editData.code || "", type: editData.type || "Head Office",
         headId: editData.headName ? String(heads.find((h) => h.name === editData.headName)?.id || "") : "",
@@ -54,8 +58,10 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads }) => {
     }
   }, [open, editData, heads]);
 
+  const guard = useUnsavedChangesGuard({ isDirty, onClose });
+
   if (!open) return null;
-  const set = (k) => (v) => setForm((p) => ({ ...p, [k]: v?.currentTarget ? v.currentTarget.value : v }));
+  const set = (k) => (v) => { setIsDirty(true); setForm((p) => ({ ...p, [k]: v?.currentTarget ? v.currentTarget.value : v })); };
 
   const validate = () => {
     const e = {};
@@ -66,6 +72,7 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads }) => {
     if (!form.city.trim())     e.city = "City is required";
     if (!form.address1.trim()) e.address1 = "Address Line 1 is required";
     setErr(e);
+    if (Object.keys(e).length > 0) showToast?.("Please fill all mandatory fields.", "error");
     return Object.keys(e).length === 0;
   };
 
@@ -74,46 +81,57 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads }) => {
     const head = heads.find((h) => String(h.id) === String(form.headId));
     const { headId, ...rest } = form;
     onSave({ ...rest, headName: head?.name || null, headEmail: head?.email || null }, keepOpen);
+    if (keepOpen) { setForm(EMPTY_FORM); setErr({}); setIsDirty(false); }
   };
 
   return (
-    <AppModal opened={open} onClose={onClose} size="lg"
-      title={editData ? "Edit Branch" : "Add Branch"}
-      icon={<IconBuilding size={16} color="#3b82f6" />} iconColor="#3b82f6">
-      <Stack gap="md">
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <AppInput label="Branch Name *" placeholder="e.g. Chennai HQ" value={form.name} onChange={set("name")} error={err.name} />
-          <AppInput label="Branch Code *" placeholder="e.g. CHN" value={form.code} onChange={set("code")} error={err.code} />
-        </SimpleGrid>
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <AppInput type="select" label="Branch Type" data={BRANCH_TYPES} value={form.type} onChange={set("type")} />
-          <AppInput type="select" label="Branch Head" placeholder="Select employee" searchable clearable
-            data={heads.map((h) => ({ value: String(h.id), label: `${h.name}${h.designation ? ` — ${h.designation}` : ""}` }))}
-            value={form.headId} onChange={set("headId")} />
-        </SimpleGrid>
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <AppInput label="Country *" value={form.country} onChange={set("country")} error={err.country} />
-          <AppInput label="State *" value={form.state} onChange={set("state")} error={err.state} />
-          <AppInput label="City *" value={form.city} onChange={set("city")} error={err.city} />
-        </SimpleGrid>
-        <AppInput label="Address Line 1 *" value={form.address1} onChange={set("address1")} error={err.address1} />
-        <AppInput label="Address Line 2" value={form.address2} onChange={set("address2")} />
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <AppInput label="Postal Code" value={form.postalCode} onChange={set("postalCode")} />
-          <AppInput label="Email" value={form.email} onChange={set("email")} />
-          <AppInput label="Phone" value={form.phone} onChange={set("phone")} />
-        </SimpleGrid>
-        <SimpleGrid cols={{ base: 1, sm: 2 }}>
-          <AppInput type="select" label="Timezone" searchable data={TIMEZONES} value={form.timezone} onChange={set("timezone")} />
-          <AppInput type="select" label="Status" data={["Active", "Inactive"]} value={form.status} onChange={set("status")} />
-        </SimpleGrid>
-        <Group justify="flex-end" gap="sm" mt="xs">
-          <AppButton variant="default" onClick={onClose}>Cancel</AppButton>
-          {!editData && <AppButton variant="light" loading={saving} onClick={() => submit(true)}>Save &amp; Continue</AppButton>}
-          <AppButton loading={saving} onClick={() => submit(false)}>{editData ? "Save Changes" : "Save"}</AppButton>
-        </Group>
-      </Stack>
-    </AppModal>
+    <>
+      <AppModal opened={open} onClose={guard.requestClose} closeOnEscape={false} closeOnClickOutside={false} size="lg"
+        title={editData ? "Edit Branch" : "Add Branch"}
+        icon={<IconBuilding size={16} color="#3b82f6" />} iconColor="#3b82f6">
+        <Stack gap="md">
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
+            <AppInput label="Branch Name *" placeholder="e.g. Chennai HQ" value={form.name} onChange={set("name")} error={err.name} />
+            <AppInput label="Branch Code *" placeholder="e.g. CHN" value={form.code} onChange={set("code")} error={err.code} />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
+            <AppInput type="select" label="Branch Type" data={BRANCH_TYPES} value={form.type} onChange={set("type")} />
+            <AppInput type="select" label="Branch Head" placeholder="Select employee" searchable clearable
+              data={heads.map((h) => ({ value: String(h.id), label: `${h.name}${h.designation ? ` — ${h.designation}` : ""}` }))}
+              value={form.headId} onChange={set("headId")} />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, sm: 3 }}>
+            <AppInput label="Country *" value={form.country} onChange={set("country")} error={err.country} />
+            <AppInput label="State *" value={form.state} onChange={set("state")} error={err.state} />
+            <AppInput label="City *" value={form.city} onChange={set("city")} error={err.city} />
+          </SimpleGrid>
+          <AppInput label="Address Line 1 *" value={form.address1} onChange={set("address1")} error={err.address1} />
+          <AppInput label="Address Line 2" value={form.address2} onChange={set("address2")} />
+          <SimpleGrid cols={{ base: 1, sm: 3 }}>
+            <AppInput label="Postal Code" value={form.postalCode} onChange={set("postalCode")} />
+            <AppInput label="Email" value={form.email} onChange={set("email")} />
+            <AppInput label="Phone" value={form.phone} onChange={set("phone")} />
+          </SimpleGrid>
+          <SimpleGrid cols={{ base: 1, sm: 2 }}>
+            <AppInput type="select" label="Timezone" searchable data={TIMEZONES} value={form.timezone} onChange={set("timezone")} />
+            <AppInput type="select" label="Status" data={["Active", "Inactive"]} value={form.status} onChange={set("status")} />
+          </SimpleGrid>
+          <AppModalFooter
+            onCancel={guard.requestClose}
+            onSave={() => submit(false)}
+            onSaveAndNew={() => submit(true)}
+            saving={saving}
+            isEdit={!!editData}
+            isDirty={isDirty}
+          />
+        </Stack>
+      </AppModal>
+      <AppUnsavedChangesModal
+        opened={guard.confirmOpen}
+        onContinueEditing={guard.cancelClose}
+        onDiscard={guard.confirmDiscard}
+      />
+    </>
   );
 };
 
@@ -320,7 +338,7 @@ const Branches = () => {
       )}
 
       <BranchModal open={modalOpen} onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        onSave={handleSave} editData={editTarget} saving={createMut.isPending || updateMut.isPending} heads={heads} />
+        onSave={handleSave} editData={editTarget} saving={createMut.isPending || updateMut.isPending} heads={heads} showToast={showToast} />
 
       <AppModal opened={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Branch"
         icon={<IconAlertTriangle size={16} color="#ef4444" />} iconColor="#ef4444">
