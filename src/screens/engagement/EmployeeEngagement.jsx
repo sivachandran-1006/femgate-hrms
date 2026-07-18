@@ -40,6 +40,95 @@ const STATUS_COLOR = { New: "blue", "Under Review": "orange", Implemented: "gree
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
+// ═══ Mock fallback data (main_v1 UI-only branch) ═══
+const MOCK_DASHBOARD = {
+  satisfactionScore: 4.3,
+  recognitionsThisMonth: 18,
+  rewardPointsIssued: 12450,
+  activeSurveys: 3,
+  suggestionBoxEntries: 27,
+  wellnessParticipation: 64,
+};
+
+const MOCK_LEADERBOARD = [
+  { employee: "Ananya Sharma", points: 2450 },
+  { employee: "Rohit Verma", points: 2100 },
+  { employee: "Priya Nair", points: 1980 },
+  { employee: "Karthik Iyer", points: 1720 },
+  { employee: "Fatima Sheikh", points: 1540 },
+  { employee: "Vikram Singh", points: 1310 },
+];
+
+const MOCK_WALL = {
+  awards: [
+    { id: "aw1", employee: "Ananya Sharma", awardType: "Employee Of The Month", title: "Outstanding Q2 Delivery", points: 500 },
+    { id: "aw2", employee: "Rohit Verma", awardType: "Star Performer", title: "Client Escalation Save", points: 300 },
+    { id: "aw3", employee: "Priya Nair", awardType: "Innovation Award", title: "Automated Onboarding Flow", points: 400 },
+    { id: "aw4", employee: "Karthik Iyer", awardType: "Team Excellence Award", title: "Cross-team Launch Support", points: 350 },
+    { id: "aw5", employee: "Fatima Sheikh", awardType: "Leadership Award", title: "Mentoring New Joiners", points: 250 },
+  ],
+  kudos: [
+    { id: "kd1", fromEmployee: "Vikram Singh", toEmployee: "Ananya Sharma", message: "Thanks for jumping in on the release at 9pm!" },
+    { id: "kd2", fromEmployee: "Priya Nair", toEmployee: "Rohit Verma", message: "Great job debugging the payroll issue so fast." },
+    { id: "kd3", fromEmployee: "Karthik Iyer", toEmployee: "Fatima Sheikh", message: "Loved your walkthrough of the new dashboard." },
+    { id: "kd4", fromEmployee: "Ananya Sharma", toEmployee: "Vikram Singh", message: "Appreciate the detailed code review notes." },
+    { id: "kd5", fromEmployee: "Rohit Verma", toEmployee: "Karthik Iyer", message: "Solid teamwork on the client demo." },
+  ],
+  milestones: [
+    { id: "ms1", employee: "Ananya Sharma", type: "3 Year Work Anniversary", milestoneDate: "2026-07-02" },
+    { id: "ms2", employee: "Rohit Verma", type: "5 Year Work Anniversary", milestoneDate: "2026-06-18" },
+    { id: "ms3", employee: "Priya Nair", type: "1 Year Work Anniversary", milestoneDate: "2026-07-10" },
+    { id: "ms4", employee: "Karthik Iyer", type: "Birthday", milestoneDate: "2026-07-15" },
+  ],
+};
+
+const MOCK_AWARDS = MOCK_WALL.awards.map((a, i) => ({ ...a, description: "Recognized for exceptional contribution to the team.", awardDate: `2026-0${6 + (i % 2)}-${10 + i}` }));
+
+const MOCK_KUDOS = MOCK_WALL.kudos.map((k, i) => ({ ...k, category: ["Appreciation", "Teamwork", "Innovation", "Help"][i % 4], reactions: 3 + i }));
+
+const MOCK_POINTS_BALANCE = { balance: 860 };
+
+const MOCK_REWARDS = [
+  { id: "rw1", name: "₹1000 Gift Voucher", category: "Gift Voucher", pointsCost: 500, description: "Redeemable at major retail partners." },
+  { id: "rw2", name: "Amazon Voucher ₹500", category: "Amazon Voucher", pointsCost: 300, description: "Digital Amazon gift card." },
+  { id: "rw3", name: "Company Hoodie", category: "Company Merchandise", pointsCost: 400, description: "Premium branded hoodie." },
+  { id: "rw4", name: "1 Extra Day Off", category: "Extra Leave", pointsCost: 800, description: "One additional paid leave day." },
+  { id: "rw5", name: "Online Course Credit", category: "Training Credit", pointsCost: 600, description: "Credit for any certified course." },
+  { id: "rw6", name: "Coffee Hamper", category: "Custom Reward", pointsCost: 200, description: "Premium coffee gift hamper." },
+];
+
+const MOCK_SURVEYS = [
+  { id: "sv1", title: "Q3 Engagement Pulse", type: "Pulse Survey", status: "Active", _count: { responses: 42 }, startDate: "2026-07-01", endDate: "2026-07-25" },
+  { id: "sv2", title: "Annual Culture Survey", type: "Culture Survey", status: "Draft", _count: { responses: 0 }, startDate: "2026-08-01", endDate: "2026-08-15" },
+  { id: "sv3", title: "Manager Feedback Survey", type: "Employee Satisfaction", status: "Active", _count: { responses: 27 }, startDate: "2026-06-20", endDate: "2026-07-20" },
+  { id: "sv4", title: "Onboarding Experience", type: "Engagement Survey", status: "Closed", _count: { responses: 15 }, startDate: "2026-05-01", endDate: "2026-05-31" },
+  { id: "sv5", title: "Remote Work Check-in", type: "Pulse Survey", status: "Active", _count: { responses: 33 }, startDate: "2026-07-05", endDate: "2026-07-30" },
+];
+
+const MOCK_SUGGESTIONS = [
+  { id: "sg1", title: "Flexible lunch hours", body: "Allow staggered lunch slots to reduce cafeteria crowding.", category: "Improvement", anonymous: false, submittedBy: "Priya Nair", status: "Under Review", createdAt: "2026-07-10" },
+  { id: "sg2", title: "Standing desks", body: "Provide standing desk options for the engineering floor.", category: "Idea", anonymous: true, status: "New", createdAt: "2026-07-12" },
+  { id: "sg3", title: "Monthly town hall recordings", body: "Share recordings for people who miss the live session.", category: "Feedback", anonymous: false, submittedBy: "Karthik Iyer", status: "Implemented", createdAt: "2026-06-28" },
+  { id: "sg4", title: "Better parking allocation", body: "Rotate reserved parking spots fairly across teams.", category: "Improvement", anonymous: true, status: "Rejected", createdAt: "2026-06-15" },
+  { id: "sg5", title: "In-office game room", body: "Set up a small recreation corner for breaks.", category: "Idea", anonymous: false, submittedBy: "Fatima Sheikh", status: "New", createdAt: "2026-07-14" },
+];
+
+const MOCK_WELLNESS = [
+  { id: "wl1", name: "10K Steps Challenge", type: "Fitness Challenge", status: "Ongoing", description: "Track daily steps and compete on the leaderboard.", pointsReward: 150, _count: { participants: 34 } },
+  { id: "wl2", name: "Mindfulness Mondays", type: "Mental Health Program", status: "Ongoing", description: "Weekly guided meditation sessions.", pointsReward: 50, _count: { participants: 21 } },
+  { id: "wl3", name: "Annual Health Checkup", type: "Health Campaign", status: "Upcoming", description: "Free comprehensive health screening.", pointsReward: 100, _count: { participants: 58 } },
+  { id: "wl4", name: "No-Meeting Fridays", type: "Work-Life Balance", status: "Ongoing", description: "Protect Friday afternoons for focused work.", pointsReward: 0, _count: { participants: 76 } },
+  { id: "wl5", name: "Yoga Break Sessions", type: "Fitness Challenge", status: "Completed", description: "Bi-weekly office yoga sessions.", pointsReward: 75, _count: { participants: 19 } },
+];
+
+const MOCK_EVENTS = [
+  { id: "ev1", title: "Annual Sports Day", type: "Sports Event", description: "Company-wide sports tournament and fun games.", eventDate: "2026-08-15", location: "Community Grounds" },
+  { id: "ev2", title: "Diwali Celebration", type: "Cultural Event", description: "Festive celebration with food and decor.", eventDate: "2026-11-01", location: "Head Office Atrium" },
+  { id: "ev3", title: "Hackathon 2026", type: "Competition", description: "48-hour internal innovation hackathon.", eventDate: "2026-08-22", location: "Tech Park Campus" },
+  { id: "ev4", title: "Beach Cleanup Drive", type: "CSR Activity", description: "Volunteer drive to clean the local coastline.", eventDate: "2026-07-27", location: "Marina Beach" },
+  { id: "ev5", title: "Team Offsite", type: "Team Building", description: "Full-day outdoor team bonding activities.", eventDate: "2026-09-05", location: "Lonavala Resort" },
+];
+
 // Build searchable employee dropdown options: value = name, label = "Name (EMP-ID)"
 const useEmployeeOptions = () => {
   const { data: employees = [] } = useFetchAllEmployees();
@@ -53,10 +142,11 @@ const useEmployeeOptions = () => {
 
 // ═══ Dashboard Tab ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useEngagementDashboard();
-  const { data: board = [] } = useLeaderboard();
+  const { data: rawD, isLoading } = useEngagementDashboard();
+  const dash = rawD ?? MOCK_DASHBOARD;
+  const { data: rawBoard = [] } = useLeaderboard();
+  const board = rawBoard?.length ? rawBoard : MOCK_LEADERBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
-  const dash = d || {};
   const medalColor = (i) => (i === 0 ? "yellow" : i === 1 ? "gray" : i === 2 ? "orange" : "blue");
   return (
     <Stack gap="lg">
@@ -100,9 +190,10 @@ function DashboardTab() {
 
 // ═══ Recognition Wall ═══
 function WallTab() {
-  const { data, isLoading } = useWall();
+  const { data: rawData, isLoading } = useWall();
   if (isLoading) return <Center h={200}><Loader /></Center>;
-  const { awards = [], kudos = [], milestones = [] } = data || {};
+  const data = rawData ?? MOCK_WALL;
+  const { awards = [], kudos = [], milestones = [] } = data;
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 4 }}>
@@ -160,7 +251,8 @@ function WallTab() {
 // ═══ Recognition / Awards Tab ═══
 function RecognitionTab({ canManage }) {
   const { show } = useToast();
-  const { data: awards = [], isLoading } = useAwards();
+  const { data: rawAwards, isLoading } = useAwards();
+  const awards = rawAwards?.length ? rawAwards : MOCK_AWARDS;
   const create = useCreateAward();
   const del = useDeleteAward();
   const { options: empOptions, byName } = useEmployeeOptions();
@@ -222,7 +314,8 @@ function RecognitionTab({ canManage }) {
 // ═══ Kudos Tab ═══
 function KudosTab() {
   const { show } = useToast();
-  const { data: kudos = [], isLoading } = useKudos();
+  const { data: rawKudos, isLoading } = useKudos();
+  const kudos = rawKudos?.length ? rawKudos : MOCK_KUDOS;
   const send = useSendKudos();
   const react = useReactKudos();
   const { options: empOptions } = useEmployeeOptions();
@@ -282,8 +375,10 @@ function KudosTab() {
 // ═══ Rewards Tab ═══
 function RewardsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rewards = [], isLoading } = useRewards();
-  const { data: bal } = usePointsBalance();
+  const { data: rawRewards, isLoading } = useRewards();
+  const rewards = rawRewards?.length ? rawRewards : MOCK_REWARDS;
+  const { data: rawBal } = usePointsBalance();
+  const bal = rawBal ?? MOCK_POINTS_BALANCE;
   const create = useCreateReward();
   const del = useDeleteReward();
   const redeem = useRedeemReward();
@@ -353,7 +448,8 @@ function RewardsTab({ canManage }) {
 // ═══ Surveys Tab ═══
 function SurveysTab({ canManage }) {
   const { show } = useToast();
-  const { data: surveys = [], isLoading } = useSurveys();
+  const { data: rawSurveys, isLoading } = useSurveys();
+  const surveys = rawSurveys?.length ? rawSurveys : MOCK_SURVEYS;
   const create = useCreateSurvey();
   const publish = usePublishSurvey();
   const [open, setOpen] = useState(false);
@@ -407,7 +503,8 @@ function SurveysTab({ canManage }) {
 // ═══ Suggestions Tab ═══
 function SuggestionsTab({ canManage }) {
   const { show } = useToast();
-  const { data: suggestions = [], isLoading } = useSuggestions();
+  const { data: rawSuggestions, isLoading } = useSuggestions();
+  const suggestions = rawSuggestions?.length ? rawSuggestions : MOCK_SUGGESTIONS;
   const create = useCreateSuggestion();
   const updateStatus = useUpdateSuggestionStatus();
   const [open, setOpen] = useState(false);
@@ -461,7 +558,8 @@ function SuggestionsTab({ canManage }) {
 // ═══ Wellness Tab ═══
 function WellnessTab({ canManage }) {
   const { show } = useToast();
-  const { data: programs = [], isLoading } = useWellness();
+  const { data: rawPrograms, isLoading } = useWellness();
+  const programs = rawPrograms?.length ? rawPrograms : MOCK_WELLNESS;
   const create = useCreateWellness();
   const join = useJoinWellness();
   const [open, setOpen] = useState(false);
@@ -514,7 +612,8 @@ function WellnessTab({ canManage }) {
 // ═══ Events Tab ═══
 function EventsTab({ canManage }) {
   const { show } = useToast();
-  const { data: events = [], isLoading } = useEvents();
+  const { data: rawEvents, isLoading } = useEvents();
+  const events = rawEvents?.length ? rawEvents : MOCK_EVENTS;
   const create = useCreateEvent();
   const del = useDeleteEvent();
   const [open, setOpen] = useState(false);
