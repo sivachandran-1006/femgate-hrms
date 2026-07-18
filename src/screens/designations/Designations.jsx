@@ -17,6 +17,7 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
+import { MasterDataSelect } from "../../components/ui/MasterDataSelect";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
 import { useDepartments } from "../../queries/useDepartments";
@@ -43,7 +44,7 @@ const EMPTY_FORM = {
   level: "3", grade: "B1", employmentCategory: "Full-time", status: "Active",
 };
 
-const DesigModal = ({ open, onClose, onSave, editData, saving, departments }) => {
+const DesigModal = ({ open, onClose, onSave, editData, saving, departments, departmentsLoading, departmentsError, refetchDepartments }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [err, setErr]   = useState({});
 
@@ -88,9 +89,20 @@ const DesigModal = ({ open, onClose, onSave, editData, saving, departments }) =>
           <AppInput label="Designation Name *" placeholder="e.g. Senior Manager" value={form.name} onChange={set("name")} error={err.name} />
           <AppInput label="Designation Code *" placeholder="e.g. SM" value={form.code} onChange={set("code")} error={err.code} />
         </SimpleGrid>
-        <AppInput type="select" label="Department *" placeholder="Select department" searchable
-          data={departments.map((d) => ({ value: String(d.id), label: d.name }))}
-          value={form.departmentId} onChange={set("departmentId")} error={err.departmentId} />
+        <MasterDataSelect
+          label="Department *" placeholder="Select department"
+          data={departments}
+          isLoading={departmentsLoading}
+          isError={departmentsError}
+          onRetry={refetchDepartments}
+          getOptionValue={(d) => String(d.id)}
+          getOptionLabel={(d) => d.name}
+          value={form.departmentId} onChange={set("departmentId")} error={err.departmentId}
+          emptyTitle="No departments found."
+          emptyHint="Please create a department first."
+          createHref="/departments"
+          createLabel="Create Department"
+        />
         <AppInput type="textarea" label="Description" placeholder="Role summary…" value={form.description} onChange={set("description")} />
         <SimpleGrid cols={{ base: 1, sm: 3 }}>
           <AppInput type="select" label="Level *" data={LEVELS} value={form.level} onChange={set("level")} error={err.level} />
@@ -129,7 +141,9 @@ const Designations = () => {
   const fileRef = useRef(null);
 
   const { data: designations = [], isLoading, isError } = useDesignations();
-  const { data: departments = [] } = useDepartments();
+  const {
+    data: departments = [], isLoading: departmentsLoading, isError: departmentsError, refetch: refetchDepartments,
+  } = useDepartments({ status: "Active" });
 
   const createMut = useCreateDesignation();
   const updateMut = useUpdateDesignation();
@@ -299,7 +313,8 @@ const Designations = () => {
       )}
 
       <DesigModal open={modalOpen} onClose={() => { setModalOpen(false); setEditTarget(null); }}
-        onSave={handleSave} editData={editTarget} saving={createMut.isPending || updateMut.isPending} departments={departments} />
+        onSave={handleSave} editData={editTarget} saving={createMut.isPending || updateMut.isPending} departments={departments}
+        departmentsLoading={departmentsLoading} departmentsError={departmentsError} refetchDepartments={refetchDepartments} />
 
       <AppModal opened={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Delete Designation"
         icon={<IconAlertTriangle size={16} color="#ef4444" />} iconColor="#ef4444">
