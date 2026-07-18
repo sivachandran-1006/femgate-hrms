@@ -9,7 +9,6 @@ import {
   Group, Stack, Text, Badge, Avatar, Paper, Box,
   Progress, SimpleGrid, ThemeIcon, Select, Tabs,
 } from "@mantine/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { AppPageHeader }  from "../../components/ui/AppPageHeader";
 import { AppSection }     from "../../components/ui/AppSection";
@@ -18,11 +17,8 @@ import { AppInput }       from "../../components/ui/AppInput";
 import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { useAuth }        from "../../hooks/useAuth";
-import { useMyProfile, useUpdateMyProfile } from "../../queries/useSelfService";
-import { useMyDocuments, useCreateDocument, useDeleteDocument } from "../../queries/useSelfService";
 import { useToast }       from "../../components/ui/Toast";
 import { COLORS }         from "../../theme/colors";
-import api                from "../../api/axios";
 
 const r = (res) => res.data?.data ?? res.data ?? res;
 
@@ -66,29 +62,16 @@ const MyProfile = () => {
   const { user } = useAuth();
   const { show } = useToast();
 
-  const { data: me }  = useMyProfile();
-  const updateMut     = useUpdateMyProfile();
-  const { data: docsRaw = [] } = useMyDocuments();
-  const createDocMut  = useCreateDocument();
-  const deleteDocMut  = useDeleteDocument();
+  const { data: me }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateMut     = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const { data: docsRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createDocMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteDocMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Avatar upload ──────────────────────────────────────────────────────────
   const avatarInputRef = useRef(null);
-  const qc = useQueryClient();
-  const avatarMut = useMutation({
-    mutationFn: (file) => {
-      const fd = new FormData();
-      fd.append("avatar", file);
-      return api.patch("/employees/me/avatar", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }).then(r);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me", "profile"] });
-      show("Avatar updated", "success");
-    },
-    onError: () => show("Failed to update avatar", "error"),
-  });
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
+  const avatarMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [activeTab, setActiveTab] = useState("personal");
   const [editing, setEditing]     = useState(false);

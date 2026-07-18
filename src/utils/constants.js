@@ -9,7 +9,8 @@ export { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE } from "../
 
 export const APP_NAME      = "MGate HRMS";
 export const COMPANY_NAME  = "MGate Technologies";
-export const API_BASE      = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
+// API_BASE removed — this branch uses static mock data only.
+// When new backend is ready, configure VITE_API_URL in .env on the new branch.
 
 export const ROLES = {
   SUPER_ADMIN: "Super Admin",

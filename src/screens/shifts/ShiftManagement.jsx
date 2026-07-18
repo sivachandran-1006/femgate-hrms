@@ -33,16 +33,6 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 
 import { COLORS }                        from "../../theme/colors";
-import { useShifts as useHrShifts, useSetShift } from "../../queries/useHr";
-import {
-  useShifts,
-  useCreateShift,
-  useUpdateShift,
-  useDeleteShift,
-  useChangeRequests,
-  useReviewChangeRequest,
-} from "../../queries/useRoster";
-import { useFetchAllEmployees }           from "../../queries/useEmployees";
 import { useToast }                       from "../../components/ui/Toast";
 import { AppPageHeader }                  from "../../components/ui/AppPageHeader";
 
@@ -475,13 +465,13 @@ function ShiftDefinitionsTab({ darkMode }) {
   const { show } = useToast();
 
   // ── Data ──────────────────────────────────────────────────────────────────
-  const { data: raw, isLoading } = useShifts();
+  const { data: raw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const definitions = raw?.length ? raw : MOCK_SHIFT_DEFINITIONS;
 
   // ── Mutations ─────────────────────────────────────────────────────────────
-  const createMutation = useCreateShift();
-  const updateMutation = useUpdateShift();
-  const deleteMutation = useDeleteShift();
+  const createMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Form modal ────────────────────────────────────────────────────────────
   const [formOpened, { open: openForm, close: closeForm }] = useDisclosure(false);
@@ -678,10 +668,10 @@ function SwapRequestsTab({ darkMode }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
   const { show } = useToast();
 
-  const { data: rawRequests } = useChangeRequests();
+  const { data: rawRequests } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const swapRequests = rawRequests?.length ? rawRequests : MOCK_CHANGE_REQUESTS;
 
-  const reviewMutation = useReviewChangeRequest();
+  const reviewMutation = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const handleUpdateStatus = (id, status) => {
     reviewMutation.mutate(
@@ -813,8 +803,8 @@ const ShiftManagement = ({ darkMode = false }) => {
   const [roster, setRoster] = useState({});
 
   const { data: shiftsData } = useHrShifts();
-  const { data: allEmployees = [] } = useFetchAllEmployees();
-  const setShiftMutation = useSetShift();
+  const { data: allEmployees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const setShiftMutation = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const { show } = useToast();
 
   // Sync roster from API data

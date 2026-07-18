@@ -1,8 +1,7 @@
-import api from "../api/axios";
-
-const unwrap = (res) => res.data?.data ?? res.data ?? [];
-
-export const getHolidays    = ()            => api.get("/holidays").then(unwrap);
-export const createHoliday  = (payload)     => api.post("/holidays", payload).then(unwrap);
-export const updateHoliday  = (id, payload) => api.put(`/holidays/${id}`, payload).then(unwrap);
-export const deleteHoliday  = (id)          => api.delete(`/holidays/${id}`).then(unwrap);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

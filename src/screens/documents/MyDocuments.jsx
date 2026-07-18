@@ -4,7 +4,6 @@ import {
   IconTrash, IconFile, IconShieldCheck,
 } from "@tabler/icons-react";
 import { useAuth }              from "../../hooks/useAuth";
-import { useMyDocuments, useCreateDocument, useDeleteDocument } from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
 import {
   Stack, Group, Box, Paper, SimpleGrid, Text, Badge,
@@ -51,9 +50,9 @@ const MyDocuments = ({ darkMode: dark = false }) => {
   const [form, setForm] = useState({ name: "", category: "Identity" });
   const [viewDoc, setViewDoc] = useState(null);
 
-  const { data: docsRaw = [] } = useMyDocuments();
-  const createMut = useCreateDocument();
-  const deleteMut = useDeleteDocument();
+  const { data: docsRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const docs     = docsRaw.map(mapApiDoc);
   const filtered = docs.filter((d) => catFilter === "All" || d.category === catFilter);

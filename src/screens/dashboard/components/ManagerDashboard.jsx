@@ -4,13 +4,11 @@ import {
   AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useQuery } from "@tanstack/react-query";
 import {
   IconUsers, IconUserCheck, IconCalendarOff, IconClipboardCheck,
   IconUserPlus, IconCalendarOff as IconLeaveAction, IconCake, IconSpeakerphone, IconChevronRight,
 } from "@tabler/icons-react";
 import { KpiCard, PanelCard, ChartTooltip, initials } from "./DashboardKit";
-import { getAnnouncements, getUpcomingEvents, getDashboardSummary, getAttendanceSummary } from "../../../api/dashboardApi";
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
 const PIE = ["#6d28d9", "#2563eb", "#16a34a", "#f59e0b", "#ef4444"];
@@ -63,9 +61,9 @@ const QUICK = [
 
 export const ManagerDashboard = ({ employees: empProp = [], leaves: leavesProp = [] }) => {
   const navigate = useNavigate();
-  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
-  const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],   queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
-  const { data: announceData } = useQuery({ queryKey: ["dashboard-announce"], queryFn: getAnnouncements, select: (r) => r?.data ?? r });
+  const { data: summaryData, isLoading: loadSum } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: attendData }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: announceData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 

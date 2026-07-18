@@ -1,10 +1,7 @@
-import api from "../api/axios";
-
-const unwrap = (res) => res.data?.data ?? res.data ?? [];
-
-export const getAnnouncements  = ()         => api.get("/announcements").then(unwrap);
-export const getAnnouncement   = (id)       => api.get(`/announcements/${id}`).then(unwrap);
-export const createAnnouncement = (payload) => api.post("/announcements", payload).then(unwrap);
-export const updateAnnouncement = (id, payload) => api.put(`/announcements/${id}`, payload).then(unwrap);
-export const publishAnnouncement = (id)    => api.patch(`/announcements/${id}/publish`).then(unwrap);
-export const deleteAnnouncement  = (id)    => api.delete(`/announcements/${id}`).then(unwrap);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

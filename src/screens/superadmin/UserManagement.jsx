@@ -9,16 +9,6 @@ import {
   IconSearch, IconPlus, IconPencil, IconKey, IconUserX,
   IconTrash, IconActivity, IconShieldCheck, IconRefresh,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  toggleUserStatus,
-  updateUserRole,
-  resetUserPassword,
-} from "../../api/userManagementApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard } from "../../components/ui/AppStatCard";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
@@ -94,7 +84,7 @@ function roleLabel(role = "") {
 
 export default function UserManagement() {
   const toast         = useToast();
-  const queryClient   = useQueryClient();
+  const queryClient   = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // Filters
   const [search, setSearch]           = useState("");
@@ -108,83 +98,27 @@ export default function UserManagement() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [newUser, setNewUser]           = useState(EMPTY_NEW_USER);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["users"] });
+  const invalidate = () => {}
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  const { data: rawUsers = [], isLoading, isError } = useQuery({
-    queryKey: ["users", search, roleFilter, statusFilter],
-    queryFn: () => getUsers({
-      search: search || undefined,
-      role:   roleFilter || undefined,
-      status: statusFilter || undefined,
-    }),
-    select: (res) => res?.data?.users ?? res?.data ?? res ?? [],
-    keepPreviousData: true,
-  });
+  const { data: rawUsers = [], isLoading, isError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const users = rawUsers.length ? rawUsers : MOCK_USERS;
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
-  const createMutation = useMutation({
-    mutationFn: (data) => createUser(data),
-    onSuccess: (_, vars) => {
-      toast.show(`User "${vars.name}" created`, "success");
-      setShowAdd(false);
-      setNewUser(EMPTY_NEW_USER);
-      invalidate();
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to create user", "error"),
-  });
+  const createMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => updateUser(id, data),
-    onSuccess: () => {
-      toast.show("User updated", "success");
-      setProfileUser(null);
-      invalidate();
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to update user", "error"),
-  });
+  const updateMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => deleteUser(id),
-    onSuccess: (_, id) => {
-      const name = deleteTarget?.name ?? "User";
-      toast.show(`"${name}" deleted`, "error");
-      setDeleteTarget(null);
-      invalidate();
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to delete user", "error"),
-  });
+  const deleteMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const toggleStatusMutation = useMutation({
-    mutationFn: (id) => toggleUserStatus(id),
-    onSuccess: (data) => {
-      toast.show(`User ${data?.status === "Suspended" ? "suspended" : "activated"}`, "success");
-      invalidate();
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to update status", "error"),
-  });
+  const toggleStatusMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }) => updateUserRole(id, role),
-    onSuccess: () => {
-      toast.show("Role updated", "success");
-      invalidate();
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to update role", "error"),
-  });
+  const updateRoleMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const resetPasswordMutation = useMutation({
-    mutationFn: (id) => resetUserPassword(id),
-    onSuccess: (_, id) => {
-      const user = users.find((u) => u.id === id);
-      toast.show(`Reset email sent to ${user?.email ?? "user"}`, "info");
-    },
-    onError: (err) => toast.show(err?.response?.data?.message || "Failed to reset password", "error"),
-  });
+  const resetPasswordMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Stats ──────────────────────────────────────────────────────────────────
 
@@ -234,7 +168,7 @@ export default function UserManagement() {
           <Button
             variant="default"
             leftSection={<IconRefresh size={14} />}
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["users"] })}
+            onClick={() => {}}
           >
             Retry
           </Button>

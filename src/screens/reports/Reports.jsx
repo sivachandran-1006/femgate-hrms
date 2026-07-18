@@ -11,12 +11,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 
-import { useQuery } from "@tanstack/react-query";
-import api from "../../api/axios";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { fetchLeaves } from "../../api/leaveApi";
-import { fetchPayroll } from "../../api/payrollApi";
-import { useAttendanceRecords } from "../../queries/useAttendance";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppSection }    from "../../components/ui/AppSection";
@@ -84,11 +78,11 @@ export default function Reports() {
   const [range, setRange] = useState("This Month");
 
   // ── Live data ──
-  const { data: employees = [] }  = useFetchAllEmployees();
-  const { data: attendance = [] } = useAttendanceRecords();
-  const { data: leavesRawQ }  = useQuery({ queryKey: ["leaves"], queryFn: () => fetchLeaves(), select: (r) => r?.data ?? r ?? [] });
-  const { data: payrollRawQ } = useQuery({ queryKey: ["payroll"], queryFn: () => fetchPayroll(), select: (r) => r?.data ?? r ?? [] });
-  const { data: assetsRawQ }  = useQuery({ queryKey: ["assets"], queryFn: () => api.get("/assets").then((r) => r.data?.data ?? []) });
+  const { data: employees = [] }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: attendance = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: leavesRawQ }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: payrollRawQ } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: assetsRawQ }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const leavesRaw = leavesRawQ?.length ? leavesRawQ : MOCK_LEAVES;
   const payrollRaw = payrollRawQ?.length ? payrollRawQ : MOCK_PAYROLL;

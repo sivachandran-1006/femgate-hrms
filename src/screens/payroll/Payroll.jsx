@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { fetchPayroll, createPayrollRecord, markPayrollPaid, deletePayrollRecord } from "../../api/payrollApi";
 import {
   Stack, Group, Text, Title, Paper, Badge, Button, SimpleGrid, ThemeIcon,
   TextInput, Select, Progress, Modal, ActionIcon, Notification, Loader, Center,
@@ -18,7 +17,10 @@ import DataTable           from "../../components/ui/DataTable";
 import { AppEmptyState }    from "../../components/ui/AppEmptyState";
 import { AppPageHeader }    from "../../components/ui/AppPageHeader";
 import { useToast }        from "../../components/ui/Toast";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
+
+// ── Mock stubs for removed service functions ──
+const fetchPayroll = async (...args) => { console.log("Mock: fetchPayroll"); return { data: { data: [] } }; };
+
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const CHART_COLORS = [COLORS.primary, COLORS.success, COLORS.warning, COLORS.danger, COLORS.purple, COLORS.info];
@@ -188,7 +190,7 @@ const Payroll = ({ embedded = false } = {}) => {
 
   const rowsPerPage = 10;
 
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [fEmployeeId, setFEmployeeId] = useState(null);
   const [fSalary,    setFSalary]    = useState("");

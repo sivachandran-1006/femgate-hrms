@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Progress, Checkbox, Textarea, NumberInput } from "@mantine/core";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconChartLine, IconClipboard, IconFileText, IconBox, IconServer, IconCheck, IconX, IconLogout, IconDoorExit } from "@tabler/icons-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useOnboardingDashboard, useOnboardings, useCreateOnboarding, useUpdateOnboarding, useChecklists, useTasks, useOffboardingDashboard, useOffboardings, useOffboarding, useCreateOffboarding, useUpdateOffboarding, useUpdateAssetReturn, useCreateExitInterview, useCreateSettlement } from "../../queries/useOnboarding";
 import { useToast } from "../../components/ui/Toast";
-import api from "../../api/axios";
-import { exportOnboardingCSV, exportOffboardingCSV } from "../../api/onboardingApi";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useDepartments } from "../../queries/useDepartments";
-import { useDesignations } from "../../queries/useDesignations";
+
+// ── Mock stubs for removed service functions ──
+const exportOffboardingCSV = async (...args) => { console.log("Mock: exportOffboardingCSV"); return new Blob(["mock data"], { type: "text/csv" }); };
+const exportOnboardingCSV = async (...args) => { console.log("Mock: exportOnboardingCSV"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const ONBOARD_STATUSES = ["Pending", "In Progress", "Completed", "Delayed", "Cancelled"];
 const OFFBOARD_STATUSES = ["Pending", "In Progress", "Approved", "Completed"];
@@ -19,19 +17,19 @@ const PRIORITY_COLORS = { Critical: "red", High: "orange", Medium: "blue", Low: 
 
 // Shared pickers (memory rule: dropdowns over free-text for known entities)
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
 };
 const useDepartmentOptions = () => {
-  const { data: depts = [] } = useDepartments();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: depts = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const fromApi = (depts || []).map((d) => d.name).filter(Boolean);
   if (fromApi.length) return fromApi;
   return [...new Set((employees || []).map((e) => e.department).filter(Boolean))];
 };
 const useDesignationOptions = () => {
-  const { data: desigs = [] } = useDesignations();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: desigs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const fromApi = (desigs || []).map((d) => d.name).filter(Boolean);
   if (fromApi.length) return fromApi;
   return [...new Set((employees || []).map((e) => e.designation).filter(Boolean))];
@@ -54,7 +52,7 @@ function KpiCard({ label, value, icon: Icon, color }) {
 // ─── ONBOARDING TABS ──────────────────────────────────────────────────────────
 
 function OnboardingDashboardTab() {
-  const { data: dash, isLoading } = useOnboardingDashboard();
+  const { data: dash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -85,9 +83,9 @@ function NewJoinersTab() {
   const [detailModal, setDetailModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [form, setForm] = useState({ employeeName: "", joiningDate: "", department: "", designation: "", reportingMgr: "" });
-  const { data: result = {}, isLoading } = useOnboardings({ search, status, page, limit: 25 });
-  const create = useCreateOnboarding();
-  const update = useUpdateOnboarding();
+  const { data: result = {}, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleCreate = async () => {
     if (!form.employeeName || !form.joiningDate) {
@@ -238,18 +236,14 @@ function NewJoinersTab() {
 
 function ChecklistsTab() {
   const { show } = useToast();
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [selectedId, setSelectedId] = useState(null);
-  const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const { data: onboardingsResult = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
-  const { data: checklists = [], isLoading } = useChecklists(firstId);
+  const { data: checklists = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const markChecklistMut = useMutation({
-    mutationFn: (itemId) => api.patch(`/onboarding/checklist/${itemId}/complete`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["onboarding"] }); show("Checklist item marked complete", "success"); },
-    onError: () => show("Failed to mark complete", "error"),
-  });
+  const markChecklistMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const handleMarkComplete = (itemId) => markChecklistMut.mutate(itemId);
 
   return (
@@ -289,18 +283,14 @@ function ChecklistsTab() {
 
 function TasksTab() {
   const { show } = useToast();
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [selectedId, setSelectedId] = useState(null);
-  const { data: onboardingsResult = {}, isLoading: loadingList } = useOnboardings({ limit: 100 });
+  const { data: onboardingsResult = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const onboardings = onboardingsResult.onboardings || [];
   const firstId = selectedId || (onboardings[0]?.id);
-  const { data: tasks = [], isLoading } = useTasks(firstId);
+  const { data: tasks = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const completeTaskMut = useMutation({
-    mutationFn: (id) => api.patch(`/onboarding/tasks/${id}/complete`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["onboarding"] }); show("Task marked complete", "success"); },
-    onError: () => show("Failed to mark complete", "error"),
-  });
+  const completeTaskMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const handleCompleteTask = (id) => completeTaskMut.mutate(id);
 
   return (
@@ -353,7 +343,7 @@ function TasksTab() {
 // ─── OFFBOARDING TABS ──────────────────────────────────────────────────────────
 
 function OffboardingDashboardTab() {
-  const { data: dash, isLoading } = useOffboardingDashboard();
+  const { data: dash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -383,9 +373,9 @@ function OffboardingListTab() {
   const [detailModal, setDetailModal] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [form, setForm] = useState({ employeeName: "", department: "", designation: "", reasonForExit: "", lastWorkingDate: "", noticePeriodDays: "30" });
-  const { data: result = {}, isLoading } = useOffboardings({ search, status, page, limit: 25 });
-  const create = useCreateOffboarding();
-  const update = useUpdateOffboarding();
+  const { data: result = {}, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleCreate = async () => {
     if (!form.employeeName || !form.lastWorkingDate) {
@@ -498,27 +488,16 @@ const DEFAULT_CLEARANCE_TYPES = ["Manager Clearance", "HR Clearance", "IT Cleara
 
 function ClearanceTrackerTab() {
   const { show } = useToast();
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [selectedId, setSelectedId] = useState(null);
   const [approvingType, setApprovingType] = useState(null);
-  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
-  const { data: offboarding = {} } = useOffboarding(firstId);
+  const { data: offboarding = {} } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const clearanceTypes = (offboarding?.clearances?.length ? offboarding.clearances.map((c) => c.type) : null) ?? DEFAULT_CLEARANCE_TYPES;
 
-  const approveClearanceMut = useMutation({
-    mutationFn: ({ offboardingId, type }) => api.patch(`/onboarding/offboarding/${offboardingId}/clearance/approve`, { type, status: "Approved" }),
-    onSuccess: (_, { type }) => {
-      qc.invalidateQueries({ queryKey: ["offboarding"] });
-      show(`${type} approved`, "success");
-      setApprovingType(null);
-    },
-    onError: () => {
-      show("Failed to approve clearance", "error");
-      setApprovingType(null);
-    },
-  });
+  const approveClearanceMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleApprove = (ct) => {
     if (!firstId) { show("Select an employee first", "error"); return; }
@@ -567,28 +546,16 @@ const MOCK_ASSETS = [
 
 function AssetReturnTab() {
   const { show } = useToast();
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [selectedId, setSelectedId] = useState(null);
   const [returningId, setReturningId] = useState(null);
-  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
-  const { data: offboarding = {} } = useOffboarding(firstId);
+  const { data: offboarding = {} } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const assets = offboarding?.assets?.length ? offboarding.assets : MOCK_ASSETS;
 
-  const markReturnedMut = useMutation({
-    mutationFn: ({ offboardingId, asset }) =>
-      api.patch(`/onboarding/offboarding/${offboardingId}/asset-return/${asset.id}`, { status: "Returned" }),
-    onSuccess: (_, { asset }) => {
-      qc.invalidateQueries({ queryKey: ["offboarding"] });
-      show(`${asset.type} marked as returned`, "success");
-      setReturningId(null);
-    },
-    onError: () => {
-      show("Failed to mark asset as returned", "error");
-      setReturningId(null);
-    },
-  });
+  const markReturnedMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleMarkReturned = (asset) => {
     if (!firstId) { show("Select an employee first", "error"); return; }
@@ -647,10 +614,10 @@ function ExitInterviewTab() {
   const [selectedId, setSelectedId] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [suggestions, setSuggestions] = useState("");
-  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
-  const create = useCreateExitInterview();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleSubmit = async () => {
     if (!firstId || !feedback) {
@@ -693,10 +660,10 @@ function SettlementTab() {
   const { show } = useToast();
   const [selectedId, setSelectedId] = useState(null);
   const [settlement, setSettlement] = useState({ salaryPayable: 0, leaveEncashment: 0, bonus: 0, deductions: 0, assetRecovery: 0 });
-  const { data: raw = {}, isLoading: loadingList } = useOffboardings({ limit: 100 });
+  const { data: raw = {}, isLoading: loadingList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const offboardings = Array.isArray(raw) ? raw : (raw.exits ?? []);
   const firstId = selectedId || (offboardings[0]?.id);
-  const create = useCreateSettlement();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const finalAmount = settlement.salaryPayable + settlement.leaveEncashment + settlement.bonus - settlement.deductions - settlement.assetRecovery;
 

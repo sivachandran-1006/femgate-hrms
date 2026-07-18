@@ -21,11 +21,10 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { exportTickets } from "../../api/ticketApi";
-import {
-  useTicketList, useTicketDashboard, useTicketAnalytics, useCreateTicket,
-  useKnowledge, useCreateKnowledge, useUpdateKnowledge, useDeleteKnowledge,
-} from "../../queries/useTickets";
+
+// ── Mock stubs for removed service functions ──
+const exportTickets = async (...args) => { console.log("Mock: exportTickets"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const CATEGORIES = ["IT Support", "HR Support", "Payroll Support", "Admin Support", "Facilities Support", "Asset Request", "Software Access Request", "Travel Request"];
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
@@ -75,8 +74,8 @@ export default function HelpdeskManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = useTicketDashboard();
-  const { data: an } = useTicketAnalytics();
+  const { data: dash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const c = dash?.cards || {};
   return (
     <>
@@ -129,8 +128,8 @@ const EMPTY_TICKET = { subject: "", category: "IT Support", priority: "Medium", 
 
 function TicketsTab({ toast }) {
   const navigate = useNavigate();
-  const { data: tickets = [], isLoading } = useTicketList();
-  const createMut = useCreateTicket();
+  const { data: tickets = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [search, setSearch] = useState("");
   const [searchBy, setSearchBy] = useState("subject");
   const [catF, setCatF] = useState("All");
@@ -210,10 +209,10 @@ function TicketsTab({ toast }) {
 
 const EMPTY_KB = { title: "", category: "FAQ", body: "", tags: "", status: "Published" };
 function KnowledgeTab({ toast }) {
-  const { data: articles = [] } = useKnowledge();
-  const createMut = useCreateKnowledge();
-  const updateMut = useUpdateKnowledge();
-  const deleteMut = useDeleteKnowledge();
+  const { data: articles = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_KB);

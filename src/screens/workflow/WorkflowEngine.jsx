@@ -3,7 +3,6 @@ import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, T
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconClipboard, IconCheck, IconX, IconClock, IconArrowRight, IconAlertCircle } from "@tabler/icons-react";
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
-import { useWorkflowDashboard, useWorkflows, useCreateWorkflow, useUpdateWorkflow, useDeleteWorkflow, useApprovalInbox, useApproveRequest, useRejectRequest, useEscalateRequest, useWorkflowAnalytics } from "../../queries/useWorkflow";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -59,9 +58,9 @@ function KpiCard({ label, value, icon: Icon, color }) {
 
 // ─── Dashboard Tab ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: rawDash, isLoading } = useWorkflowDashboard();
+  const { data: rawDash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawDash ?? MOCK_DASHBOARD;
-  const { data: analytics } = useWorkflowAnalytics();
+  const { data: analytics } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
   if (!dash) return null;
@@ -127,11 +126,11 @@ function WorkflowsTab() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
-  const { data: rawResult, isLoading } = useWorkflows({ search, module, page, limit: 25 });
+  const { data: rawResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.workflows?.length ? rawResult : { workflows: MOCK_WORKFLOWS };
-  const create = useCreateWorkflow();
-  const update = useUpdateWorkflow();
-  const delete_ = useDeleteWorkflow();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const delete_ = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleSubmit = async () => {
     if (!form.name || !form.module || form.steps.length === 0) {
@@ -298,11 +297,11 @@ function ApprovalInboxTab() {
   const { show } = useToast();
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
-  const { data: rawResult, isLoading } = useApprovalInbox({ status, page, limit: 25 });
+  const { data: rawResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.approvals?.length ? rawResult : { approvals: MOCK_APPROVAL_INBOX };
-  const approve = useApproveRequest();
-  const reject = useRejectRequest();
-  const escalate = useEscalateRequest();
+  const approve = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const reject = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const escalate = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const handleApprove = async (id) => {
     try {

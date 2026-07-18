@@ -6,18 +6,12 @@ import {
 import {
   IconDownload, IconCreditCard, IconCheck, IconPlus, IconTrendingUp,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import {
-  getBillingPlan,
-  getBillingInvoices,
-  downloadInvoice,
-  getBillingUsage,
-  upgradePlan,
-  getPaymentMethods,
-  addPaymentMethod,
-} from "../../api/billingApi";
+
+// ── Mock stubs for removed service functions ──
+const downloadInvoice = async (...args) => { console.log("Mock: downloadInvoice"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PLAN_FEATURES = [
   "Unlimited modules access",
@@ -68,53 +62,21 @@ export default function Billing() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const toast = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
-  const { data: planData, isLoading: planLoading } = useQuery({
-    queryKey: ["billing-plan"],
-    queryFn: getBillingPlan,
-  });
+  const { data: planData, isLoading: planLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: invoicesData } = useQuery({
-    queryKey: ["billing-invoices"],
-    queryFn: getBillingInvoices,
-  });
+  const { data: invoicesData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: usageData } = useQuery({
-    queryKey: ["billing-usage"],
-    queryFn: getBillingUsage,
-  });
+  const { data: usageData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: cardsData } = useQuery({
-    queryKey: ["billing-payment-methods"],
-    queryFn: getPaymentMethods,
-  });
+  const { data: cardsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const upgradeMutation = useMutation({
-    mutationFn: upgradePlan,
-    onSuccess: (_, planName) => {
-      queryClient.invalidateQueries({ queryKey: ["billing-plan"] });
-      setShowUpgrade(false);
-      setSelectedPlan(null);
-      toast.show(`Plan changed to ${planName}`, "success");
-    },
-    onError: () => {
-      toast.show("Failed to upgrade plan. Please try again.", "error");
-    },
-  });
+  const upgradeMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [showAddCard, setShowAddCard]   = useState(false);
   const [cardForm, setCardForm]         = useState({ number: "", expiry: "", cvv: "", name: "" });
-  const addCardMut = useMutation({
-    mutationFn: addPaymentMethod,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["billing-payment-methods"] });
-      setShowAddCard(false);
-      setCardForm({ number: "", expiry: "", cvv: "", name: "" });
-      toast.show("Payment method added", "success");
-    },
-    onError: () => toast.show("Failed to add payment method", "error"),
-  });
+  const addCardMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const openUpgrade = () => {
     setSelectedPlan(plan.plan || "Enterprise");
@@ -223,7 +185,7 @@ export default function Billing() {
 
   const handleSetPrimary = () => {
     toast.show("Primary payment method updated", "success");
-    queryClient.invalidateQueries({ queryKey: ["billing-payment-methods"] });
+    /* no-op: query cache removed */
   };
 
   if (planLoading) {

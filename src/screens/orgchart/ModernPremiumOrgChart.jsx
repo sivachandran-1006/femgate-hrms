@@ -15,7 +15,6 @@ import {
   IconMail,
   IconShoppingCart,
 } from "@tabler/icons-react";
-import { useOrgTree } from "../../queries/useOrgChart";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
 const ROLE_ICONS = {
@@ -361,7 +360,7 @@ function ModernOrgTree({ tree, selectedNode, onNodeClick }) {
 }
 
 export default function ModernPremiumOrgChart() {
-  const { data: treeData, isLoading } = useOrgTree();
+  const { data: treeData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [selectedNode, setSelectedNode] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 

@@ -36,11 +36,8 @@ import {
   IconRefresh as RefreshCw,
 } from "@tabler/icons-react";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useExits, useUpdateExit }             from "../../queries/useHr";
 import { useToast }                            from "../../components/ui/Toast";
 import { AppPageHeader }                       from "../../components/ui/AppPageHeader";
-import api from "../../api/axios";
 
 const r = (res) => res.data?.data ?? res.data ?? res;
 
@@ -111,17 +108,13 @@ const ExitManagement = ({ darkMode = false }) => {
   const [remarks, setRemarks]     = useState({});
   const [viewExit, setViewExit]   = useState(null);
 
-  const { data: exits = [] } = useExits();
-  const updateExit           = useUpdateExit();
+  const { data: exits = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateExit           = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const { show }             = useToast();
-  const qc                   = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // Clearance remarks mutation
-  const saveRemarksMutation = useMutation({
-    mutationFn: ({ itemId, remark }) => api.patch(`/exit/clearance/${itemId}/remarks`, { remark }).then(r),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["exits"] }); show("Remark saved", "success"); },
-    onError: (e) => show(e.message || "Failed to save remark", "error"),
-  });
+  const saveRemarksMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const ACTIVE_EXITS = useMemo(
     () =>

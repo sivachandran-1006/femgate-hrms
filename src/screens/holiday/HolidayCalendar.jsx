@@ -11,9 +11,6 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppSection }    from "../../components/ui/AppSection";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { useToast }      from "../../components/ui/Toast";
-import {
-  useHolidays, useCreateHoliday, useUpdateHoliday, useDeleteHoliday,
-} from "../../queries/useHolidays";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const TYPE_COLOR = { National: "blue", Regional: "teal" };
@@ -39,13 +36,13 @@ const MOCK_HOLIDAYS = [
 
 export default function HolidayCalendar() {
   const { show: showToast } = useToast();
-  const { data: rawHolidays, isLoading, isError: rawIsError } = useHolidays();
+  const { data: rawHolidays, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const holidays = rawHolidays?.length ? rawHolidays : MOCK_HOLIDAYS;
   const isError = rawIsError && !holidays.length;
 
-  const createMut = useCreateHoliday();
-  const updateMut = useUpdateHoliday();
-  const deleteMut = useDeleteHoliday();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [search, setSearch]         = useState("");
   const [filterType, setFilterType] = useState("All");

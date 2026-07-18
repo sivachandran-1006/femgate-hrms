@@ -13,7 +13,6 @@ import {
   Stack,
   UnstyledButton,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   IconUserCheck,
@@ -31,15 +30,6 @@ import {
   IconCalendarEvent,
   IconClipboardList,
 } from "@tabler/icons-react";
-import {
-  getMyAttendance,
-  getMyPayslip,
-  getLeaveBalance,
-  getAnnouncements,
-  getUpcomingEvents,
-} from "../../../api/dashboardApi";
-import { fetchLeaves } from "../../../api/leaveApi";
-import { useFetchAllEmployees } from "../../../queries/useEmployees";
 import { KpiCard, PanelCard } from "./DashboardKit";
 
 const MOCK_ATTEND = {
@@ -215,37 +205,13 @@ const ViewAll = ({ navigate, to }) => (
 export const EmployeeDashboard = ({ user }) => {
   const navigate = useNavigate();
 
-  const { data: rawAttendData, isLoading } = useQuery({
-    queryKey: ["my-attendance"],
-    queryFn: getMyAttendance,
-    select: (r) => r?.data ?? r,
-  });
-  const { data: rawPayslipData } = useQuery({
-    queryKey: ["my-payslip"],
-    queryFn: getMyPayslip,
-    select: (r) => r?.data ?? r,
-  });
-  const { data: rawBalanceData } = useQuery({
-    queryKey: ["leave-balance"],
-    queryFn: getLeaveBalance,
-    select: (r) => r?.data ?? r,
-  });
-  const { data: rawLeavesData } = useQuery({
-    queryKey: ["leaves"],
-    queryFn: () => fetchLeaves(),
-    select: (r) => r?.data ?? r ?? [],
-  });
-  const { data: rawAnnounceData } = useQuery({
-    queryKey: ["dashboard-announce"],
-    queryFn: getAnnouncements,
-    select: (r) => r?.data ?? r,
-  });
-  const { data: rawEventsData } = useQuery({
-    queryKey: ["dashboard-events"],
-    queryFn: getUpcomingEvents,
-    select: (r) => r?.data ?? r,
-  });
-  const { data: rawEmployees = [] } = useFetchAllEmployees();
+  const { data: rawAttendData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawPayslipData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawBalanceData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawLeavesData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawAnnounceData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawEventsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawEmployees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const attendData = rawAttendData?.records?.length ? rawAttendData : MOCK_ATTEND;
   const payslipData = rawPayslipData ?? MOCK_PAYSLIP;

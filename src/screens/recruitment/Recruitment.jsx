@@ -31,9 +31,6 @@ import { AppInput }       from "../../components/ui/AppInput";
 import { COLORS }         from "../../theme/colors";
 import { getAvatarColor } from "../../utils/helpers";
 import { useToast }       from "../../components/ui/Toast";
-import {
-  useJobs, useCandidates, useCreateJob, useUpdateCandidateStatus,
-} from "../../queries/useHr";
 
 
 const PIPELINE_STAGES = [
@@ -83,10 +80,10 @@ export default function Recruitment() {
   const [jobForm, setJobForm]             = useState({ title: "", dept: "", loc: "", type: "Full-time" });
 
   const { show } = useToast();
-  const { data: jobsRaw = [] }  = useJobs();
-  const { data: candsRaw = [] } = useCandidates();
-  const createJobMut  = useCreateJob();
-  const candStatusMut = useUpdateCandidateStatus();
+  const { data: jobsRaw = [] }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: candsRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createJobMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const candStatusMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const MOCK_JOBS = jobsRaw.map((j) => ({
     ...j,

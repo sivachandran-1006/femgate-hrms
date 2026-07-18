@@ -11,16 +11,14 @@ import {
   IconCheck, IconX, IconEye, IconPlayerPlay, IconClock,
 } from "@tabler/icons-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { useLmsDashboard, useLmsAnalytics, useCourses, useEnrollments, useCertificates, useAssessments, useLmsAudit,
-  useCreateCourse, useUpdateCourse, useDeleteCourse,
-  useCreateEnrollment, useUpdateEnrollment, useDeleteEnrollment,
-  useCreateCertificate, useDeleteCertificate,
-  useCreateAssessment, useUpdateAssessment, useDeleteAssessment } from "../../queries/useLms";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { exportLms } from "../../api/lmsApi";
 import { topSlices } from "../dashboard/components/DashboardKit";
+
+// ── Mock stubs for removed service functions ──
+const exportLms = async (...args) => { console.log("Mock: exportLms"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
 const CATEGORY_OPTIONS = ["Technical", "Soft Skills", "Compliance", "Leadership", "Other"];
@@ -134,7 +132,7 @@ function KpiCard({ label, value, icon: Icon, color, sub }) {
 
 // ─── Dashboard Tab ───────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: rawDash, isLoading } = useLmsDashboard();
+  const { data: rawDash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawDash ?? MOCK_DASHBOARD;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
@@ -220,11 +218,11 @@ function CoursesTab() {
   const [delId, setDelId]       = useState(null);
 
   const params = { search: search || undefined, category: filterCat || undefined, status: filterStatus || undefined };
-  const { data: rawCourses, isLoading } = useCourses(params);
+  const { data: rawCourses, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
-  const createCourse  = useCreateCourse();
-  const updateCourse  = useUpdateCourse();
-  const deleteCourse  = useDeleteCourse();
+  const createCourse  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateCourse  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteCourse  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const openNew = () => {
     setForm({ title: "", code: "", category: "Technical", description: "", durationHrs: 1, level: "Beginner", format: "Online", trainer: "", maxSeats: "", passingScore: 70, status: "Active", tags: "" });
@@ -389,13 +387,13 @@ function EnrollmentsTab() {
   const [delId, setDelId]   = useState(null);
 
   const params = { employeeName: search || undefined, status: filterStatus || undefined };
-  const { data: rawEnrollments, isLoading } = useEnrollments(params);
+  const { data: rawEnrollments, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const enrollments = rawEnrollments?.length ? rawEnrollments : MOCK_ENROLLMENTS;
-  const { data: rawCourses } = useCourses({});
+  const { data: rawCourses } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
-  const create = useCreateEnrollment();
-  const update = useUpdateEnrollment();
-  const remove = useDeleteEnrollment();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const remove = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const courseOptions = courses.map((c) => ({ value: String(c.id), label: c.title }));
 
@@ -535,12 +533,12 @@ function CertificatesTab() {
   const [form, setForm]       = useState({});
   const [delId, setDelId]     = useState(null);
 
-  const { data: rawCerts, isLoading } = useCertificates({ employeeName: search || undefined });
+  const { data: rawCerts, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const certs = rawCerts?.length ? rawCerts : MOCK_CERTIFICATES;
-  const { data: rawCourses } = useCourses({});
+  const { data: rawCourses } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
-  const create = useCreateCertificate();
-  const remove = useDeleteCertificate();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const remove = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const courseOptions = courses.map((c) => ({ value: String(c.id), label: c.title }));
 
@@ -662,13 +660,13 @@ function AssessmentsTab() {
   const [form, setForm]     = useState({});
   const [delId, setDelId]   = useState(null);
 
-  const { data: rawAssessments, isLoading } = useAssessments({});
+  const { data: rawAssessments, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const assessments = rawAssessments?.length ? rawAssessments : MOCK_ASSESSMENTS;
-  const { data: rawCourses } = useCourses({});
+  const { data: rawCourses } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const courses = rawCourses?.length ? rawCourses : MOCK_COURSES;
-  const create = useCreateAssessment();
-  const update = useUpdateAssessment();
-  const remove = useDeleteAssessment();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const remove = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const courseOptions = courses.map((c) => ({ value: String(c.id), label: c.title }));
 
@@ -773,7 +771,7 @@ function AssessmentsTab() {
 
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
 function AnalyticsTab() {
-  const { data: rawAnalytics, isLoading } = useLmsAnalytics();
+  const { data: rawAnalytics, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const analytics = rawAnalytics ?? MOCK_ANALYTICS;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
@@ -842,7 +840,7 @@ function AnalyticsTab() {
 
 // ─── Audit Tab ────────────────────────────────────────────────────────────────
 function AuditTab() {
-  const { data: logs = [], isLoading } = useLmsAudit();
+  const { data: logs = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Center h={200}><Loader /></Center>;
 

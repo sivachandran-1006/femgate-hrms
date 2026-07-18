@@ -10,7 +10,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import { useBackups, useTriggerBackup, useDeleteBackup } from "../../queries/usePlatform";
 
 const MOCK_BACKUPS = [
   { id:1, type:"full",        status:"Completed", size:"2.4 GB",  triggeredBy:"Siva",   startedAt:"2026-06-28T02:00:00Z", completedAt:"2026-06-28T02:14:22Z", location:"s3://hrpluse-backups/full/1.tar.gz"   },
@@ -52,9 +51,9 @@ export default function BackupRecovery() {
   const toast     = useToast();
   const isSA      = ["SUPER_ADMIN"].includes(user?.role);
 
-  const { data: raw, isLoading, refetch } = useBackups();
-  const triggerBackup = useTriggerBackup();
-  const deleteBackup  = useDeleteBackup();
+  const { data: raw, isLoading, refetch } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const triggerBackup = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteBackup  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const backups  = (raw?.backups?.length ? raw.backups : MOCK_BACKUPS);
   const summary  = raw?.summary ?? {};

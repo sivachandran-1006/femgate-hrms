@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { Search, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
@@ -86,7 +85,7 @@ const Attendance = () => {
 
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/attendance");
+      const res = await Promise.resolve({ data: [] });
       if (res.data && res.data.length > 0) setAttendance(res.data);
     } catch { /* keep mock */ }
   };
@@ -143,7 +142,7 @@ const Attendance = () => {
       status: fStatus === "Present" && isLate ? "Late" : fStatus,
     };
     try {
-      await axios.post("http://localhost:5000/attendance", { ...newRecord, status: newRecord.status });
+      await Promise.resolve({ data: [] });
     } catch { /* offline — add locally */ }
     setAttendance(prev => [newRecord, ...prev]);
     setFName(""); setFDept("IT"); setFStatus("Present");
@@ -152,7 +151,7 @@ const Attendance = () => {
 
   const handleCheckOut = async (id) => {
     const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    try { await axios.put(`http://localhost:5000/attendance-checkout/${id}`, { checkOut: now }); } catch { /* offline */ }
+    try { await Promise.resolve({ data: [] }); } catch { /* offline */ }
     setAttendance(prev => prev.map(a => a._id === id ? { ...a, checkOut: now } : a));
   };
 

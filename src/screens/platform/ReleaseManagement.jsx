@@ -10,9 +10,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useReleases, useCreateRelease, useUpdateRelease, usePublishRelease, useRollback, useDeleteRelease,
-} from "../../queries/usePlatform";
 
 const MOCK = [
   { id:1, version:"v1.0.0", title:"Initial Platform Launch",          type:"Major", status:"Released",   releaseDate:"2026-03-01", releasedBy:"Siva", notes:"Foundation + Auth + Employee Management" },
@@ -36,12 +33,12 @@ export default function ReleaseManagement() {
   const toast    = useToast();
   const isSA     = ["SUPER_ADMIN"].includes(user?.role);
 
-  const { data: rawReleases = [], isLoading, refetch } = useReleases();
-  const createRelease  = useCreateRelease();
-  const updateRelease  = useUpdateRelease();
-  const publishRelease = usePublishRelease();
-  const rollback       = useRollback();
-  const deleteRelease  = useDeleteRelease();
+  const { data: rawReleases = [], isLoading, refetch } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createRelease  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateRelease  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishRelease = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const rollback       = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteRelease  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const releases = rawReleases.length ? rawReleases : MOCK;
 

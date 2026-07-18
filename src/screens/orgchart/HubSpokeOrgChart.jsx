@@ -5,7 +5,6 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppSection } from "../../components/ui/AppSection";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
-import { useOrgTree } from "../../queries/useOrgChart";
 
 const STATUS_COLOR = { Active: "green", Probation: "yellow", "Notice Period": "orange", Resigned: "red", Terminated: "red", Inactive: "gray" };
 
@@ -96,7 +95,7 @@ function SubSpokeNode({ x, y, parentX, parentY, node, onClick }) {
 }
 
 export default function HubSpokeOrgChart() {
-  const { data: treeData, isLoading } = useOrgTree();
+  const { data: treeData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [zoom, setZoom] = useState(1);
   const [selectedNode, setSelectedNode] = useState(null);
 

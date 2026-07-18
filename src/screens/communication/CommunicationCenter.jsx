@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import { Box, Tabs, Button, Group, Text, Badge, Card, Grid, Stack, SimpleGrid, TextInput, Select, Modal, Table, ActionIcon, Tooltip, Loader, Center, Textarea, Textarea as MantineTextarea } from "@mantine/core";
 import { IconPlus, IconSearch, IconDownload, IconEye, IconPencil, IconTrash, IconChartLine, IconBell, IconCalendar, IconAward, IconClipboard, IconCake, IconCheck, IconX, IconSpeakerphone, IconCalendarEvent, IconClipboardList, IconConfetti } from "@tabler/icons-react";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import { useCommunicationDashboard, useAnnouncements, useCreateAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement, useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, useRecognitions, useCreateRecognition, useSurveys, useCreateSurvey, useCloseSurvey, useBirthdaysUpcoming, useAnniversariesUpcoming } from "../../queries/useCommunication";
 import { useToast } from "../../components/ui/Toast";
-import { exportAnnouncementsCSV } from "../../api/communicationApi";
 import ScreenWrapper from "../../components/layout/ScreenWrapper";
+
+// ── Mock stubs for removed service functions ──
+const exportAnnouncementsCSV = async (...args) => { console.log("Mock: exportAnnouncementsCSV"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const CATEGORIES = ["Company Announcement", "Department Announcement", "Branch Announcement", "Policy Update", "Holiday Notice", "Emergency Notice", "Event Announcement"];
 const PRIORITIES = ["Low", "Medium", "High", "Critical"];
@@ -78,7 +78,7 @@ function KpiCard({ label, value, icon: Icon, color }) {
 
 // ─── Dashboard Tab ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: rawDash, isLoading } = useCommunicationDashboard();
+  const { data: rawDash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawDash ?? MOCK_DASHBOARD;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
@@ -118,12 +118,12 @@ function AnnouncementsTab() {
     priority: "Medium",
   });
 
-  const { data: rawResult, isLoading, isError: rawIsError } = useAnnouncements({ search, category, page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.announcements?.length ? rawResult : { ...rawResult, announcements: MOCK_COMM_ANNOUNCEMENTS };
   const isError = rawIsError && !result.announcements?.length;
-  const create = useCreateAnnouncement();
-  const update = useUpdateAnnouncement();
-  const delete_ = useDeleteAnnouncement();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const delete_ = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleCreate = async () => {
     if (!form.title || !form.category || !form.audience) {
@@ -265,11 +265,11 @@ function EventsTab() {
     eventType: "Company Event",
   });
 
-  const { data: rawResult, isLoading, isError: rawIsError } = useEvents({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.events?.length ? rawResult : { ...rawResult, events: MOCK_COMM_EVENTS };
   const isError = rawIsError && !result.events?.length;
-  const create = useCreateEvent();
-  const delete_ = useDeleteEvent();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const delete_ = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleCreate = async () => {
     if (!form.eventName || !form.eventDate) {
@@ -357,21 +357,13 @@ function RecognitionsTab() {
     description: "",
   });
 
-  const { data: rawResult, isLoading, isError: rawIsError } = useRecognitions({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.recognitions?.length ? rawResult : { ...rawResult, recognitions: MOCK_RECOGNITIONS };
   const isError = rawIsError && !result.recognitions?.length;
-  const create = useCreateRecognition();
-  const qc = useQueryClient();
-  const updateRecogMut = useMutation({
-    mutationFn: ({ id, ...d }) => api.put(`/communications/recognitions/${id}`, d),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["communications"] }); show("Recognition updated", "success"); setEditRecog(null); },
-    onError: () => show("Failed to update", "error"),
-  });
-  const deleteRecogMut = useMutation({
-    mutationFn: (id) => api.delete(`/communications/recognitions/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["communications"] }); show("Recognition deleted", "success"); setDeleteRecogId(null); },
-    onError: () => show("Failed to delete", "error"),
-  });
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
+  const updateRecogMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteRecogMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleCreate = async () => {
     if (!form.employeeName || !form.awardType) {
@@ -477,11 +469,11 @@ function SurveysTab() {
     endDate: "",
   });
 
-  const { data: rawResult, isLoading, isError: rawIsError } = useSurveys({ page, limit: 25 });
+  const { data: rawResult, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.surveys?.length ? rawResult : { ...rawResult, surveys: MOCK_SURVEYS };
   const isError = rawIsError && !result.surveys?.length;
-  const create = useCreateSurvey();
-  const close = useCloseSurvey();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const close = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const handleCreate = async () => {
     if (!form.title || !form.surveyType || !form.endDate) {
@@ -554,8 +546,8 @@ function SurveysTab() {
 
 // ─── Milestones Tab ───────────────────────────────────────────────────────────
 function MilestonesTab() {
-  const { data: birthdays = [] } = useBirthdaysUpcoming();
-  const { data: anniversaries = [] } = useAnniversariesUpcoming();
+  const { data: birthdays = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: anniversaries = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   return (
     <Grid>

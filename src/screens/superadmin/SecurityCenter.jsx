@@ -7,18 +7,7 @@ import {
   IconShield, IconDeviceFloppy, IconPlus, IconX, IconLogout,
   IconUsers, IconAlertTriangle, IconLock, IconStarFilled,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import {
-  getSecuritySettings,
-  updateSecuritySettings,
-  getActiveSessions,
-  forceLogoutSession,
-  forceLogoutAll,
-  getSecurityStats,
-  addIpToWhitelist,
-  removeIpFromWhitelist,
-} from "../../api/securityApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard } from "../../components/ui/AppStatCard";
 import { useToast } from "../../components/ui/Toast";
@@ -53,24 +42,15 @@ const MOCK_SESSIONS = [
 export default function SecurityCenter({ userRole = "SUPER_ADMIN" }) {
   const isReadOnly = userRole !== "SUPER_ADMIN";
   const toast = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
-  const { data: statsData } = useQuery({
-    queryKey: ["security-stats"],
-    queryFn: getSecurityStats,
-  });
+  const { data: statsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: settingsData } = useQuery({
-    queryKey: ["security-settings"],
-    queryFn: getSecuritySettings,
-  });
+  const { data: settingsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: sessionsData } = useQuery({
-    queryKey: ["security-sessions"],
-    queryFn: getActiveSessions,
-  });
+  const { data: sessionsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   // ── Local settings form state (seeded from API) ────────────────────────────
 
@@ -100,60 +80,21 @@ export default function SecurityCenter({ userRole = "SUPER_ADMIN" }) {
 
   // ── Settings mutation ──────────────────────────────────────────────────────
 
-  const saveSettingsMutation = useMutation({
-    mutationFn: updateSecuritySettings,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
-      toast.show("Security settings saved successfully", "success");
-    },
-    onError: () => toast.show("Failed to save settings", "error"),
-  });
+  const saveSettingsMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Session mutations ──────────────────────────────────────────────────────
 
-  const forceLogoutOneMutation = useMutation({
-    mutationFn: forceLogoutSession,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["security-sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
-      toast.show("Session terminated", "success");
-    },
-    onError: () => toast.show("Failed to terminate session", "error"),
-  });
+  const forceLogoutOneMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const forceLogoutAllMutation = useMutation({
-    mutationFn: forceLogoutAll,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["security-sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["security-stats"] });
-      toast.show("All sessions terminated", "success");
-    },
-    onError: () => toast.show("Failed to terminate sessions", "error"),
-  });
+  const forceLogoutAllMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── IP whitelist mutations ─────────────────────────────────────────────────
 
   const [ipInput, setIpInput] = useState("");
 
-  const addIpMutation = useMutation({
-    mutationFn: addIpToWhitelist,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
-      setIpInput("");
-      toast.show("IP added to whitelist", "success");
-    },
-    onError: () => toast.show("Failed to add IP", "error"),
-  });
+  const addIpMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const removeIpMutation = useMutation({
-    mutationFn: removeIpFromWhitelist,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
-      toast.show("IP removed from whitelist", "success");
-    },
-    onError: () => toast.show("Failed to remove IP", "error"),
-  });
+  const removeIpMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleAddIp = () => {
     const trimmed = ipInput.trim();

@@ -1,12 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAllSettings, getSettingsGroup, saveSettingsGroup, getSettingsAudit } from "../api/settingsApi";
-
-const KEY = ["settings"];
-export const useAllSettings   = () => useQuery({ queryKey: KEY, queryFn: getAllSettings });
-export const useSettingsGroup = (group) => useQuery({ queryKey: [...KEY, group], queryFn: () => getSettingsGroup(group), enabled: !!group });
-export const useSettingsAudit = () => useQuery({ queryKey: [...KEY, "audit"], queryFn: getSettingsAudit });
-
-export const useSaveSettings = () => {
-  const qc = useQueryClient();
-  return useMutation({ mutationFn: ({ group, data }) => saveSettingsGroup(group, data), onSuccess: () => qc.invalidateQueries({ queryKey: KEY }) });
-};
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

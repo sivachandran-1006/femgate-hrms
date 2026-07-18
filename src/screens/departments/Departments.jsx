@@ -9,7 +9,6 @@ import {
   IconPlus, IconPencil, IconTrash, IconSearch, IconAlertCircle, IconAlertTriangle,
   IconEye, IconBan, IconUpload, IconDownload, IconFileExport, IconFilter,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
@@ -20,12 +19,10 @@ import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
-import { fetchBranches } from "../../api/branchApi";
-import { exportDepartments } from "../../services/departmentService";
-import {
-  useDepartments, useCreateDepartment, useUpdateDepartment, useDeleteDepartment,
-  useDeptHeads, useImportDepartments,
-} from "../../queries/useDepartments";
+
+// ── Mock stubs for removed service functions ──
+const exportDepartments = async (...args) => { console.log("Mock: exportDepartments"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PAGE_SIZE = 8;
 const EMPTY_FORM = {
@@ -165,16 +162,16 @@ const Departments = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: rawDepartments, isLoading, isError } = useDepartments();
+  const { data: rawDepartments, isLoading, isError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const departments = rawDepartments?.length ? rawDepartments : MOCK_DEPARTMENTS;
-  const { data: heads = [] } = useDeptHeads();
-  const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
+  const { data: heads = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: branchesRes } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branches = branchesRes || [];
 
-  const createMut = useCreateDepartment();
-  const updateMut = useUpdateDepartment();
-  const deleteMut = useDeleteDepartment();
-  const importMut = useImportDepartments();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const importMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // unique heads for the filter dropdown
   const headOptions = useMemo(

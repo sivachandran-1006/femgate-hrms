@@ -28,12 +28,7 @@ import {
 } from "@mantine/core";
 
 import { COLORS } from "../../theme/colors";
-import { useAllDocuments } from "../../queries/useHr";
-import { useDeleteDocument } from "../../queries/useSelfService";
 import { useToast } from "../../components/ui/Toast";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const CATEGORIES = ["Identity", "Employment", "Financial", "Other"];
@@ -155,7 +150,7 @@ const ActionBtn = ({ icon: Icon, color, onClick, title, hoverBg }) => {
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
 
 const UploadModal = ({ onClose, dark, onUploaded }) => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [form, setForm] = useState({ employeeId: "", name: "", category: CATEGORIES[0] });
   const [fileName, setFileName] = useState("No file chosen");
   const [saving, setSaving] = useState(false);
@@ -168,10 +163,7 @@ const UploadModal = ({ onClose, dark, onUploaded }) => {
     if (!form.employeeId)  return show("Select an employee", "error");
     setSaving(true);
     try {
-      await api.post("/documents", {
-        name:       form.name,
-        category:   form.category,
-        fileUrl:    `/files/${form.name.toLowerCase().replace(/\s+/g, "-")}`,
+      await Promise.resolve({ data: {} }).replace(/\s+/g, "-")}`,
         fileSize:   fileName !== "No file chosen" ? fileName : null,
         employeeId: Number(form.employeeId),
       });
@@ -316,10 +308,10 @@ const Documents = ({ darkMode: dark = false }) => {
   const [viewDoc,       setViewDoc]       = useState(null);
 
   const { show } = useToast();
-  const qc = useQueryClient();
-  const { data: docsRawApi = [] } = useAllDocuments();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
+  const { data: docsRawApi = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const docsRaw = docsRawApi.length ? docsRawApi : MOCK_DOCUMENTS;
-  const deleteMut = useDeleteDocument();
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const docs = docsRaw.map((d) => ({
     id:         d.id,
@@ -355,7 +347,7 @@ const Documents = ({ darkMode: dark = false }) => {
   const handleDelete = async (id) => {
     try {
       await deleteMut.mutateAsync(id);
-      qc.invalidateQueries({ queryKey: ["documents", "all"] });
+      /* no-op: query cache removed */
       show("Document archived", "success");
     } catch {
       show("Failed to delete document", "error");
@@ -473,7 +465,7 @@ const Documents = ({ darkMode: dark = false }) => {
         <UploadModal
           dark={dark}
           onClose={() => setShowModal(false)}
-          onUploaded={() => qc.invalidateQueries({ queryKey: ["documents", "all"] })}
+          onUploaded={() => {}}
         />
       )}
 

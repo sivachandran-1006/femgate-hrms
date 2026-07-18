@@ -1,10 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Box, Text, Group, Avatar, Badge, SimpleGrid, Modal, Stack, Paper, Button, ActionIcon, Textarea } from "@mantine/core";
 import { useState } from "react";
 import {
   IconUsers, IconCalendarOff, IconCheck, IconX,
 } from "@tabler/icons-react";
-import { fetchMyTeam, fetchApprovals, approveLeave } from "../../api/approvalsApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { getInitials, getAvatarColor } from "../../utils/helpers";
 
@@ -41,28 +39,19 @@ const MOCK_PENDING_LEAVES = [
 const statusColor = (s) => s === "Active" ? "green" : s === "On Leave" ? "yellow" : "gray";
 
 export default function MyTeam({ darkMode }) {
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [leaveModal, setLeaveModal] = useState(null);
   const [note, setNote] = useState("");
 
-  const { data: teamRaw = [] } = useQuery({
-    queryKey: ["my-team"],
-    queryFn: () => fetchMyTeam().then(r => r.data?.data ?? r.data ?? []),
-  });
+  const { data: teamRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const team = teamRaw.length ? teamRaw : MOCK_TEAM;
 
-  const { data: approvals } = useQuery({
-    queryKey: ["approvals"],
-    queryFn: () => fetchApprovals().then(r => r.data?.data ?? r.data),
-  });
+  const { data: approvals } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const pendingLeavesRaw = approvals?.leaves || [];
   const pendingLeaves = pendingLeavesRaw.length ? pendingLeavesRaw : MOCK_PENDING_LEAVES;
 
-  const approveMut = useMutation({
-    mutationFn: ({ id, action }) => approveLeave(id, { action, note }),
-    onSuccess: () => { qc.invalidateQueries(["approvals"]); setLeaveModal(null); setNote(""); },
-  });
+  const approveMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const card   = darkMode ? "#1e293b" : "#ffffff";
   const border = darkMode ? "#334155" : "#e2e8f0";

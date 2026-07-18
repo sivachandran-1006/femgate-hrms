@@ -1,24 +1,7 @@
-import api from "./axios";
-const r = (res) => res.data?.data ?? res.data ?? res;
-
-export const getLTDashboard        = ()         => api.get("/letter-templates/dashboard").then(r);
-export const getLetterTemplates    = (params)   => api.get("/letter-templates", { params }).then(r);
-export const getLetterTemplate     = (id)       => api.get(`/letter-templates/${id}`).then(r);
-export const createLetterTemplate  = (data)     => api.post("/letter-templates", data).then(r);
-export const updateLetterTemplate  = (id, data) => api.put(`/letter-templates/${id}`, data).then(r);
-export const deleteLetterTemplate  = (id)       => api.delete(`/letter-templates/${id}`).then(r);
-export const duplicateLetterTemplate = (id)     => api.post(`/letter-templates/${id}/duplicate`).then(r);
-export const publishLetterTemplate = (id)       => api.post(`/letter-templates/${id}/publish`).then(r);
-export const archiveLetterTemplate  = (id)       => api.post(`/letter-templates/${id}/archive`).then(r);
-export const generateDocument      = (id, data) => api.post(`/letter-templates/${id}/generate`, data).then(r);
-export const getLTCategories       = ()         => api.get("/letter-templates/categories").then(r);
-export const createLTCategory      = (data)     => api.post("/letter-templates/categories", data).then(r);
-export const deleteLTCategory      = (id)       => api.delete(`/letter-templates/categories/${id}`).then(r);
-export const getLTVariables        = ()         => api.get("/letter-templates/variables").then(r);
-export const getGeneratedDocuments = (params)   => api.get("/letter-templates/generated", { params }).then(r);
-export const downloadDocument      = (id)       => api.get(`/letter-templates/generated/${id}/download`, { responseType: "blob" }).then(r);
-export const deleteDocument        = (id)       => api.delete(`/letter-templates/generated/${id}`).then(r);
-export const getLTVersionHistory   = (id)       => api.get(`/letter-templates/${id}/versions`).then(r);
-export const restoreLTVersion      = (id, ver)  => api.post(`/letter-templates/${id}/versions/${ver}/restore`).then(r);
-export const getLTSettings         = ()         => api.get("/letter-templates/settings").then(r);
-export const updateLTSettings      = (data)     => api.put("/letter-templates/settings", data).then(r);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

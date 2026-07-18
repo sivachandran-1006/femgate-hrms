@@ -20,12 +20,11 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { exportPayroll } from "../../api/payrollApi";
 import Payroll from "./Payroll";
-import {
-  usePayrollDashboard, usePayrollAnalytics, useSalaryStructures,
-  useCreateStructure, useUpdateStructure, useDeleteStructure, usePayslip, usePayroll,
-} from "../../queries/usePayroll";
+
+// ── Mock stubs for removed service functions ──
+const exportPayroll = async (...args) => { console.log("Mock: exportPayroll"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -73,8 +72,8 @@ export default function PayrollManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = usePayrollDashboard();
-  const { data: an } = usePayrollAnalytics();
+  const { data: dash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const c = dash?.cards || {};
   return (
     <>
@@ -145,10 +144,10 @@ function DashboardTab() {
 const EMPTY_STRUCT = { name: "", department: "", grade: "", basic: 50, hra: 20, specialAllowance: 30, conveyance: 0, medicalAllowance: 0, bonus: 0, variablePay: 0, pf: 12, esi: 0, professionalTax: 200, status: "Active" };
 
 function StructuresTab({ toast }) {
-  const { data: structures = [] } = useSalaryStructures();
-  const createMut = useCreateStructure();
-  const updateMut = useUpdateStructure();
-  const deleteMut = useDeleteStructure();
+  const { data: structures = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_STRUCT);
@@ -243,7 +242,7 @@ function StructuresTab({ toast }) {
 }
 
 function PayslipsTab() {
-  const { data: records = [] } = usePayroll();
+  const { data: records = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [viewId, setViewId] = useState(null);
   const published = (records || []).filter((r) => ["Published", "Paid", "Approved"].includes(r.status));
 
@@ -275,7 +274,7 @@ function PayslipsTab() {
 }
 
 function PayslipViewer({ id, onClose }) {
-  const { data: p } = usePayslip(id);
+  const { data: p } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   if (!id) return null;
   const earnings = [
     ["Basic", p?.basic], ["HRA", p?.hra], ["Special Allowance", p?.specialAllowance],

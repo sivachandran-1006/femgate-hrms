@@ -18,9 +18,6 @@ import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppSection }    from "../../components/ui/AppSection";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
-import { fetchBranches } from "../../api/branchApi";
-import { useQuery } from "@tanstack/react-query";
-import { useOrgTree, useOrgAnalytics, useOrgVacant } from "../../queries/useOrgChart";
 import CenteredOrgTree from "./CenteredOrgTree";
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6"];
@@ -226,10 +223,10 @@ function TreeNode({ node, expandedSet, onToggle, onView, onTeam, depth = 0, isLa
 export default function OrgChart() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: treeData, isLoading } = useOrgTree();
-  const { data: analytics } = useOrgAnalytics();
-  const { data: vacant } = useOrgVacant();
-  const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
+  const { data: treeData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: analytics } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: vacant } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: branchesRes } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branches = branchesRes || [];
 
   const tree = treeData?.tree || [];

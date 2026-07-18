@@ -14,13 +14,6 @@ import { AppSection }     from "../../components/ui/AppSection";
 import { AppStatCard }    from "../../components/ui/AppStatCard";
 import { useToast }       from "../../components/ui/Toast";
 import { useAuth }        from "../../hooks/useAuth";
-import {
-  useAnnouncements,
-  useCreateAnnouncement,
-  useUpdateAnnouncement,
-  usePublishAnnouncement,
-  useDeleteAnnouncement,
-} from "../../queries/useAnnouncements";
 
 const PRIORITY_COLOR = { High: "red", Medium: "yellow", Low: "blue" };
 const EMPTY_FORM = { title: "", body: "", target: "Company", priority: "Medium", published: false };
@@ -119,14 +112,14 @@ export default function Announcements() {
   const { showToast }               = useToast();
   const can                         = usePermission();
   const isAdmin                     = can("announcements.create");
-  const { data: rawItems, isLoading, isError: rawIsError } = useAnnouncements();
+  const { data: rawItems, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const items = rawItems?.length ? rawItems : MOCK_ANNOUNCEMENTS;
   const isError = rawIsError && !items.length;
 
-  const createMut  = useCreateAnnouncement();
-  const updateMut  = useUpdateAnnouncement();
-  const publishMut = usePublishAnnouncement();
-  const deleteMut  = useDeleteAnnouncement();
+  const createMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [tab, setTab]             = useState("all");
   const [search, setSearch]       = useState("");

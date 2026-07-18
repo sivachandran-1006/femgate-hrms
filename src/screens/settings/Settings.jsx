@@ -3,7 +3,6 @@ import {
   IconBell, IconBuilding, IconShield, IconDeviceFloppy,
   IconPalette, IconAlertTriangle, IconLoader2,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Box, Stack, Group, Text, Paper, SimpleGrid,
   TextInput, Select, Button, UnstyledButton, Modal,
@@ -11,11 +10,6 @@ import {
 import { COLORS }    from "../../theme/colors";
 import { RADIUS, TRANSITION, ICON_SIZE, ICON_STROKE } from "../../theme/sizes";
 import { useToast }  from "../../components/ui/Toast";
-import {
-  getCompanySettings, updateCompanySettings,
-  getNotificationSettings, updateNotificationSettings,
-} from "../../api/companyApi";
-import { getSecuritySettings, updateSecuritySettings } from "../../api/securityApi";
 
 const MOCK_COMPANY_DATA = {
   profile: {
@@ -106,12 +100,12 @@ const SectionTitle = ({ icon: Icon, iconColor, children, color }) => (
 
 const Settings = ({ darkMode = false }) => {
   const { show } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // ── Server data ──
-  const { data: companyDataRaw }  = useQuery({ queryKey: ["company-settings"], queryFn: getCompanySettings,      select: (r) => r?.data ?? r });
-  const { data: notifDataRaw }    = useQuery({ queryKey: ["notif-settings"],   queryFn: getNotificationSettings, select: (r) => r?.data ?? r });
-  const { data: securityDataRaw } = useQuery({ queryKey: ["security-settings"],queryFn: getSecuritySettings,     select: (r) => r?.data ?? r });
+  const { data: companyDataRaw }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: notifDataRaw }    = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: securityDataRaw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const companyData  = companyDataRaw  ?? MOCK_COMPANY_DATA;
   const notifData    = notifDataRaw    ?? MOCK_NOTIF_DATA;
@@ -163,34 +157,7 @@ const Settings = ({ darkMode = false }) => {
   }, [securityData]);
 
   // ── Save ──
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      await updateCompanySettings({
-        profile: { name: companyName, email: hrEmail, timezone, currency },
-      });
-      await updateNotificationSettings({
-        notifications: NOTIF_DEFS.map((d) => ({ ...d, active: toggles[d.id] })),
-      });
-      await updateSecuritySettings({
-        mfaEnabled:         twoFactor,
-        sessionTimeout,
-        // echo back unrelated security flags so they are not clobbered
-        ipWhitelistEnabled: securityData?.ipWhitelistEnabled ?? false,
-        auditLogging:       securityData?.auditLogging ?? false,
-      });
-      localStorage.setItem("hrms-language", language);
-      localStorage.setItem("hrms-password-expiry", passwordExpiry);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["notif-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["security-settings"] });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-      show("Settings saved", "success");
-    },
-    onError: () => show("Failed to save settings", "error"),
-  });
+  const saveMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [saved, setSaved] = useState(false);
   const [resetModal, setResetModal] = useState(false);

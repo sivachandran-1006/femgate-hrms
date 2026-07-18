@@ -7,13 +7,6 @@ import {
   IconSearch, IconPlus, IconRefresh, IconSettings, IconPlugConnectedX,
   IconPlugConnected, IconAlertTriangle,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getIntegrations,
-  connectIntegration,
-  disconnectIntegration,
-  requestIntegration,
-} from "../../api/integrationsApi";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -52,14 +45,11 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
   const [reqForm, setReqForm] = useState(EMPTY_REQUEST);
 
   const toast = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
   const isReadOnly = userRole !== "SUPER_ADMIN";
 
   // ── Fetch integrations ──────────────────────────────────────────────────────
-  const { data, isLoading } = useQuery({
-    queryKey: ["integrations"],
-    queryFn: getIntegrations,
-  });
+  const { data, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const rawIntegrations = data?.data?.integrations?.length ? data.data.integrations : MOCK_INTEGRATIONS;
   const integrations = rawIntegrations.map(i => ({
@@ -71,40 +61,13 @@ export default function Integrations({ userRole = "SUPER_ADMIN" }) {
   }));
 
   // ── Connect mutation ────────────────────────────────────────────────────────
-  const connectMutation = useMutation({
-    mutationFn: (intg) => connectIntegration(intg.id || intg.name, {}),
-    onSuccess: (_, intg) => {
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      toast?.show(`${intg.name} connected successfully`, "success");
-    },
-    onError: (_, intg) => {
-      toast?.show(`Failed to connect ${intg.name}`, "error");
-    },
-  });
+  const connectMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Disconnect mutation ─────────────────────────────────────────────────────
-  const disconnectMutation = useMutation({
-    mutationFn: (intg) => disconnectIntegration(intg.id || intg.name),
-    onSuccess: (_, intg) => {
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      toast?.show(`${intg.name} disconnected`, "error");
-    },
-    onError: (_, intg) => {
-      toast?.show(`Failed to disconnect ${intg.name}`, "error");
-    },
-  });
+  const disconnectMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Request new integration mutation ────────────────────────────────────────
-  const requestMutation = useMutation({
-    mutationFn: (data) => requestIntegration(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["integrations"] });
-      setShowAddModal(false);
-      setReqForm(EMPTY_REQUEST);
-      toast?.show("Integration request submitted", "success");
-    },
-    onError: () => toast?.show("Failed to submit request. Please try again.", "error"),
-  });
+  const requestMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleConnect = (intg) => connectMutation.mutate(intg);
   const handleDisconnect = (intg) => disconnectMutation.mutate(intg);

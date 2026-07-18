@@ -19,10 +19,6 @@ import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { AppButton }      from "../../components/ui/AppButton";
 import { AppModal }       from "../../components/ui/AppModal";
 import { useToast }       from "../../components/ui/Toast";
-import {
-  useOffers, useCreateOffer, useApproveOffer, useReleaseOffer,
-  useAcceptOffer, useDeclineOffer, useNegotiateOffer, useWithdrawOffer,
-} from "../../queries/useHr";
 
 const STATUS_COLOR = {
   Draft: "gray", "Pending Approval": "yellow", Approved: "blue", Released: "cyan",
@@ -43,14 +39,14 @@ export default function OfferManagement() {
   const [revisedCtc, setRevisedCtc] = useState("");
 
   const { show } = useToast();
-  const { data: offers = [], isLoading } = useOffers(tab === "All" ? undefined : tab);
-  const createMut    = useCreateOffer();
-  const approveMut   = useApproveOffer();
-  const releaseMut   = useReleaseOffer();
-  const acceptMut    = useAcceptOffer();
-  const declineMut   = useDeclineOffer();
-  const negotiateMut = useNegotiateOffer();
-  const withdrawMut  = useWithdrawOffer();
+  const { data: offers = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const approveMut   = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const releaseMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const acceptMut    = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const declineMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const negotiateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const withdrawMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const counts = {
     pending:   offers.filter((o) => o.status === "Pending Approval").length,

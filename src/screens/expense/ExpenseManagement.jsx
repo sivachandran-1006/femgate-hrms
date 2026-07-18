@@ -12,14 +12,13 @@ import {
 } from "@tabler/icons-react";
 import { LineChart as RechartLine, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, PieChart as RechartPie, Pie, Cell } from "recharts";
 import { topSlices } from "../dashboard/components/DashboardKit";
-import {
-  useExpenseDashboard, useExpenseAnalytics, useExpenses, useExpense,
-  useCreateExpense, useUpdateExpense, useSubmitExpense, useApproveExpense, useRejectExpense, useClarifyExpense, useReimburseExpense, useDeleteExpense,
-} from "../../queries/useExpense";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { exportExpensesCSV } from "../../api/expenseApi";
+
+// ── Mock stubs for removed service functions ──
+const exportExpensesCSV = async (...args) => { console.log("Mock: exportExpensesCSV"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2"];
 const CATEGORIES = ["Travel", "Food", "Accommodation", "Fuel", "Internet", "Mobile", "Training", "Office Supplies", "Client Meeting", "Medical", "Other"];
@@ -107,9 +106,9 @@ function KpiCard({ label, value, icon: Icon, color, onClick }) {
 
 // ─── Dashboard Tab ───────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: rawDash, isLoading } = useExpenseDashboard();
+  const { data: rawDash, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawDash ?? MOCK_DASHBOARD;
-  const { data: rawAnalytics } = useExpenseAnalytics();
+  const { data: rawAnalytics } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const analytics = rawAnalytics ?? MOCK_ANALYTICS;
 
   if (isLoading) return <Center h={300}><Loader /></Center>;
@@ -173,11 +172,11 @@ function ExpenseListTab() {
   const [deleteId, setDeleteId] = useState(null);
   const [deleteModalOpened, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
 
-  const { data: rawResult, isLoading } = useExpenses({ search, status, category, page, limit });
+  const { data: rawResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.expenses?.length
     ? rawResult
     : buildMockExpenseResult({ search, status, category, page, limit });
-  const deleteExp = useDeleteExpense();
+  const deleteExp = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const openNew = () => { setEditId(null); setFormOpen(true); };
 
@@ -311,10 +310,10 @@ function ExpenseFormModal({ opened, onClose, expenseId }) {
     costCenter: "",
   });
 
-  const { data: rawExpense } = useExpense(expenseId);
+  const { data: rawExpense } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const expense = rawExpense ?? (expenseId ? MOCK_EXPENSES.find((e) => e.id === expenseId) : null);
-  const create = useCreateExpense();
-  const update = useUpdateExpense();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   useEffect(() => {
     if (expense) setForm(expense);
@@ -369,13 +368,13 @@ function ApprovalsTab() {
   const [actionComment, setActionComment] = useState("");
   const [actionModalOpened, { open: openActionModal, close: closeActionModal }] = useDisclosure(false);
 
-  const { data: rawResult, isLoading } = useExpenses({ status: "Pending Approval", page, limit });
+  const { data: rawResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.expenses?.length
     ? rawResult
     : buildMockExpenseResult({ status: "Pending Approval", page, limit });
-  const approve = useApproveExpense();
-  const reject = useRejectExpense();
-  const clarify = useClarifyExpense();
+  const approve = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const reject = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const clarify = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const openAction = (id, type) => { setActionTarget({ id, type }); setActionComment(""); openActionModal(); };
 
@@ -515,11 +514,11 @@ function ReimbursementsTab() {
     remarks: "",
   });
 
-  const { data: rawResult, isLoading } = useExpenses({ status: "Approved", page, limit });
+  const { data: rawResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const result = rawResult?.expenses?.length
     ? rawResult
     : buildMockExpenseResult({ status: "Approved", page, limit });
-  const reimburse = useReimburseExpense();
+  const reimburse = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const pf = (k) => (v) => setPaymentForm((p) => ({ ...p, [k]: v }));
 

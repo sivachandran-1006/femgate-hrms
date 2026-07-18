@@ -12,13 +12,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import {
-  useVisitorDashboard,
-  useVisitors, useRegisterVisitor, useRegisterWalkIn,
-  useApproveVisitor, useRejectVisitor, useCancelVisitor, useCheckInVisitor, useCheckOutVisitor, usePrintBadge, useQrCheckIn,
-  useBlacklist, useAddBlacklist, useRemoveBlacklist,
-} from "../../queries/useVisitors";
 
 const VISITOR_TYPES = ["Business Visitor", "Interview Candidate", "Vendor", "Customer", "Contractor", "Consultant", "Delivery Personnel", "Guest"];
 const VISITOR_STATUS = ["Scheduled", "Pending Approval", "Approved", "Checked In", "Checked Out", "Rejected", "Cancelled"];
@@ -30,7 +23,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-dig
 const fmtTime = (d) => d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—";
 
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const options = (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
   const byName = Object.fromEntries((employees || []).map((e) => [e.name, e]));
   return { options, byName };
@@ -111,7 +104,7 @@ const MOCK_BLACKLIST = [
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: rawD, isLoading } = useVisitorDashboard();
+  const { data: rawD, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
@@ -131,17 +124,17 @@ function DashboardTab() {
 function VisitorsTab({ canManage, scope }) {
   const { show } = useToast();
   const [filters, setFilters] = useState({ search: "", status: "All", visitorType: "All", scope });
-  const { data: rawVisitors, isLoading } = useVisitors(filters);
+  const { data: rawVisitors, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const usingMock = !rawVisitors?.length;
   const visitors = usingMock ? applyMockVisitorFilters(MOCK_VISITORS, filters) : rawVisitors;
   const { options: empOptions, byName } = useEmployeeOptions();
-  const reg = useRegisterVisitor();
-  const walkIn = useRegisterWalkIn();
-  const approve = useApproveVisitor();
-  const reject = useRejectVisitor();
-  const checkIn = useCheckInVisitor();
-  const checkOut = useCheckOutVisitor();
-  const badge = usePrintBadge();
+  const reg = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const walkIn = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const approve = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const reject = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const checkIn = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const checkOut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const badge = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [isWalkIn, setIsWalkIn] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -279,7 +272,7 @@ function VisitorsTab({ canManage, scope }) {
 // ═══ QR Self Check-In ═══
 function QrCheckInTab() {
   const { show } = useToast();
-  const qr = useQrCheckIn();
+  const qr = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [code, setCode] = useState("");
   const submit = async () => {
     if (!code.trim()) return show("Enter a QR code", "error");
@@ -304,10 +297,10 @@ function QrCheckInTab() {
 // ═══ Blacklist ═══
 function BlacklistTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawList, isLoading } = useBlacklist();
+  const { data: rawList, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const list = rawList?.length ? rawList : MOCK_BLACKLIST;
-  const add = useAddBlacklist();
-  const remove = useRemoveBlacklist();
+  const add = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const remove = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", mobile: "", reason: "", expiryDate: "" });
 

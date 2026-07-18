@@ -18,7 +18,6 @@ import { getAvatarColor }    from "../../utils/helpers";
 import { useToast }          from "../../components/ui/Toast";
 import { usePermission }     from "../../hooks/usePermission";
 import { useAuth }           from "../../hooks/useAuth";
-import { useTickets, useRaiseTicket, useUpdateTicketStatus } from "../../queries/useTickets";
 import { AppModal }          from "../../components/ui/AppModal";
 import { AppInput }          from "../../components/ui/AppInput";
 import { AppButton }         from "../../components/ui/AppButton";
@@ -83,9 +82,9 @@ export default function Helpdesk() {
   const can = usePermission();
   const { user } = useAuth();
 
-  const { data: rawTickets = [] } = useTickets();
-  const raiseMut  = useRaiseTicket();
-  const statusMut = useUpdateTicketStatus();
+  const { data: rawTickets = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const raiseMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const statusMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const tickets = rawTickets.map(mapTicket);
   const [activeTab, setActiveTab]       = useState(can("helpdesk.view_all_tickets") ? "all" : "mine");

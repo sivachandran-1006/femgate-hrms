@@ -14,7 +14,6 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast }      from "../../components/ui/Toast";
 import { getInitials }   from "../../utils/helpers";
-import { useRole, useRoleMeta, useRoleUsers, useRoleAudit, useUpdateRole } from "../../queries/useRoles";
 
 const MOCK_ROLES = [
   {
@@ -100,13 +99,13 @@ export default function RoleProfile() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: rawRole, isLoading, isError: rawIsError } = useRole(id);
+  const { data: rawRole, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const role = rawRole ?? MOCK_ROLES.find((m) => String(m.id) === String(id)) ?? MOCK_ROLES[0];
   const isError = rawIsError && !role;
-  const { data: meta } = useRoleMeta();
-  const { data: users = [] } = useRoleUsers(id);
-  const { data: audit = [] } = useRoleAudit(id);
-  const updateMut = useUpdateRole();
+  const { data: meta } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: users = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: audit = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const modules = meta?.modules || [];
   const actions = meta?.actions || [];

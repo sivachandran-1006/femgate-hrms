@@ -12,9 +12,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useFeatureFlags, useCreateFlag, useUpdateFlag, useToggleFlag, useDeleteFlag, useOverrideFlag,
-} from "../../queries/usePlatform";
 
 const MOCK = [
   { id:1, key:"ai_assistant",       name:"AI Assistant",          enabled:false, rollout:0,   targetPlan:"Enterprise", _count:{ overrides:0 } },
@@ -39,12 +36,12 @@ export default function FeatureFlags() {
   const toast    = useToast();
   const isSA     = ["SUPER_ADMIN"].includes(user?.role);
 
-  const { data: rawFlags = [], isLoading, refetch } = useFeatureFlags();
-  const createFlag = useCreateFlag();
-  const updateFlag = useUpdateFlag();
-  const toggleFlag = useToggleFlag();
-  const deleteFlag = useDeleteFlag();
-  const overrideFlag = useOverrideFlag();
+  const { data: rawFlags = [], isLoading, refetch } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createFlag = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateFlag = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const toggleFlag = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteFlag = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const overrideFlag = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const flags = rawFlags.length ? rawFlags : MOCK;
 

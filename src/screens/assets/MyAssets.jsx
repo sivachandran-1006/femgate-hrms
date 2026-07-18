@@ -16,7 +16,6 @@ import { AppModal }       from "../../components/ui/AppModal";
 import { AppInput }       from "../../components/ui/AppInput";
 
 import { useToast }       from "../../components/ui/Toast";
-import { useMyAssets, useReportAssetIssue, useRequestAssetReturn } from "../../queries/useSelfService";
 import { COLORS }         from "../../theme/colors";
 
 const STATUS_MAP = { InUse: "Active", Maintenance: "Under Repair", Disposed: "Returned", Available: "Active" };
@@ -53,11 +52,11 @@ const MyAssets = () => {
   const [reportNote, setReportNote] = useState("");
   const [submitted,  setSubmitted]  = useState({});
 
-  const { data: assetsRaw = [] } = useMyAssets();
+  const { data: assetsRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const MY_ASSETS = assetsRaw.map(mapApiAsset);
 
-  const reportMut = useReportAssetIssue();
-  const returnMut = useRequestAssetReturn();
+  const reportMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const returnMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const handleReport = async (id) => {
     const name = MY_ASSETS.find((a) => a.id === id)?.name || "Asset";

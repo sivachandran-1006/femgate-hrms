@@ -20,12 +20,10 @@ import { AppInput }      from "../../components/ui/AppInput";
 import { MasterDataSelect } from "../../components/ui/MasterDataSelect";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
-import { useDepartments } from "../../queries/useDepartments";
-import { exportDesignations } from "../../api/designationApi";
-import {
-  useDesignations, useCreateDesignation, useUpdateDesignation, useDeleteDesignation,
-  useImportDesignations,
-} from "../../queries/useDesignations";
+
+// ── Mock stubs for removed service functions ──
+const exportDesignations = async (...args) => { console.log("Mock: exportDesignations"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PAGE_SIZE = 8;
 const LEVELS = [
@@ -154,18 +152,18 @@ const Designations = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: rawDesignations, isLoading, isError: rawIsError } = useDesignations();
+  const { data: rawDesignations, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const designations = rawDesignations?.length ? rawDesignations : MOCK_DESIGNATIONS;
   const isError = rawIsError && !designations.length;
   const {
     data: rawDepartments, isLoading: departmentsLoading, isError: departmentsError, refetch: refetchDepartments,
-  } = useDepartments({ status: "Active" });
+  } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const departments = rawDepartments?.length ? rawDepartments : MOCK_DEPARTMENTS_FALLBACK;
 
-  const createMut = useCreateDesignation();
-  const updateMut = useUpdateDesignation();
-  const deleteMut = useDeleteDesignation();
-  const importMut = useImportDesignations();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const importMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const filtered = useMemo(() => designations.filter((d) => {
     const q = searchTerm.toLowerCase();

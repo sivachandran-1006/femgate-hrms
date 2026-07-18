@@ -10,13 +10,6 @@ import {
   IconDeviceFloppy, IconX, IconChevronRight,
   IconFileText, IconWorld,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getCompanySettings, updateCompanySettings,
-  uploadCompanyLogo, uploadCompanyFavicon,
-  getEmailTemplates, updateEmailTemplate,
-  getNotificationSettings, updateNotificationSettings,
-} from "../../api/companyApi";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
@@ -107,12 +100,12 @@ export default function CompanySettings() {
   const toast = useToast();
   const notify = (msg, type = "success") => toast?.show(msg, type);
 
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // ── Queries ──────────────────────────────────────────────────────────────────
-  const { data: settingsData } = useQuery({ queryKey: ["company-settings"], queryFn: getCompanySettings });
-  const { data: templatesData } = useQuery({ queryKey: ["email-templates"], queryFn: getEmailTemplates });
-  const { data: notifsData } = useQuery({ queryKey: ["notif-settings"], queryFn: getNotificationSettings });
+  const { data: settingsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: templatesData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: notifsData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   useEffect(() => {
     const d = settingsData?.data;
@@ -130,53 +123,15 @@ export default function CompanySettings() {
   }, [notifsData]);
 
   // ── Mutations ─────────────────────────────────────────────────────────────────
-  const settingsMutation = useMutation({
-    mutationFn: (data) => updateCompanySettings(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-      notify("Settings saved successfully");
-    },
-    onError: () => notify("Failed to save settings", "error"),
-  });
+  const settingsMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const logoMutation = useMutation({
-    mutationFn: (file) => uploadCompanyLogo(file),
-    onSuccess: (res) => {
-      if (res?.url) setBranding(p => ({ ...p, logoUrl: res.url }));
-      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-      notify("Logo uploaded successfully");
-    },
-    onError: () => notify("Failed to upload logo", "error"),
-  });
+  const logoMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const faviconMutation = useMutation({
-    mutationFn: (file) => uploadCompanyFavicon(file),
-    onSuccess: (res) => {
-      if (res?.url) setBranding(p => ({ ...p, faviconUrl: res.url }));
-      queryClient.invalidateQueries({ queryKey: ["company-settings"] });
-      notify("Favicon uploaded successfully");
-    },
-    onError: () => notify("Failed to upload favicon", "error"),
-  });
+  const faviconMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const emailTplMutation = useMutation({
-    mutationFn: ({ id, data }) => updateEmailTemplate(id, data),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["email-templates"] });
-      notify(`"${vars.label}" template saved`);
-      setEditTpl(null);
-    },
-    onError: () => notify("Failed to save template", "error"),
-  });
+  const emailTplMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const notifsMutation = useMutation({
-    mutationFn: (data) => updateNotificationSettings(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notif-settings"] });
-      notify("Notification settings saved");
-    },
-    onError: () => notify("Failed to save notification settings", "error"),
-  });
+  const notifsMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── File handlers ─────────────────────────────────────────────────────────────
   const handleFile = (key, nameKey, _ref, file) => {

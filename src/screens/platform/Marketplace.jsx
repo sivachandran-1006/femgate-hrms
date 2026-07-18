@@ -12,9 +12,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useMarketplaceApps, useInstalledApps, useInstallApp, useUninstallApp, useCreateMktApp,
-} from "../../queries/usePlatform";
 
 const MOCK_APPS = [
   { id:1, name:"Slack Notifications",  slug:"slack",    category:"Integration", developer:"Slack Inc",    installs:142, rating:4.8, pricingModel:"Free",  price:0,    status:"Active" },
@@ -38,11 +35,11 @@ export default function Marketplace() {
   const toast    = useToast();
   const isSA     = ["SUPER_ADMIN"].includes(user?.role);
 
-  const { data: rawApps = [],     isLoading, refetch } = useMarketplaceApps();
-  const { data: installedRaw = []                     } = useInstalledApps();
-  const installApp   = useInstallApp();
-  const uninstallApp = useUninstallApp();
-  const createApp    = useCreateMktApp();
+  const { data: rawApps = [],     isLoading, refetch } = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const { data: installedRaw = []                     } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const installApp   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const uninstallApp = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createApp    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const apps      = rawApps.length ? rawApps : MOCK_APPS;
   const installed = installedRaw.map ? installedRaw.map(i => i.appId ?? i.app?.id ?? i.id) : [];

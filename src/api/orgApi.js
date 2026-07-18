@@ -1,7 +1,7 @@
-import api from "./axios";
-
-const unwrap = (res) => res.data?.data ?? res.data ?? {};
-
-export const getOrgTree      = () => api.get("/orgchart/tree").then(unwrap);
-export const getOrgAnalytics = () => api.get("/orgchart/analytics").then(unwrap);
-export const getOrgVacant    = () => api.get("/orgchart/vacant").then(unwrap);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

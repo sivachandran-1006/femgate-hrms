@@ -12,9 +12,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useSubscriptions, useSubDashboard, useUpdateSub, useCancelSub, useReactivateSub,
-} from "../../queries/usePlatform";
 
 const MOCK_SUBS = [
   { id:1, companyId:1, company:{ name:"Mgate Technologies" }, plan:"Enterprise", status:"Active",    billingCycle:"Monthly", mrr:45000, renewalDate:"2026-07-01", discountPct:10 },
@@ -74,11 +71,11 @@ export default function SubscriptionEngine() {
   const toast    = useToast();
   const isSA     = ["SUPER_ADMIN"].includes(user?.role);
 
-  const { data: rawSubs, isLoading, refetch } = useSubscriptions();
-  const { data: dash }                        = useSubDashboard();
-  const updateSub     = useUpdateSub();
-  const cancelSub     = useCancelSub();
-  const reactivateSub = useReactivateSub();
+  const { data: rawSubs, isLoading, refetch } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: dash }                        = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateSub     = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const cancelSub     = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const reactivateSub = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const allSubs = useMemo(() => {
     const list = rawSubs?.subscriptions ?? rawSubs ?? [];

@@ -23,15 +23,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import { generateReport } from "../../api/reportApi";
-import {
-  useReportDashboard, useReportCatalog, useReportData, useSavedReports,
-  useCreateSavedReport, useUpdateSavedReport, useDeleteSavedReport,
-  useReportSchedules, useCreateReportSchedule, useUpdateReportSchedule, useDeleteReportSchedule,
-  useReportShares, useCreateReportShare, useDeleteReportShare,
-  useExportLogs, useCreateExportLog,
-  useReportSettings, useUpdateReportSettings,
-} from "../../queries/useReports";
 
 const PIE_COLORS = ["#3b82f6","#10b981","#8b5cf6","#f59e0b","#ef4444","#06b6d4","#ec4899","#14b8a6","#f97316","#64748b"];
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -161,7 +152,7 @@ export default function ReportsCenter() {
 
 // ─── DASHBOARD TAB ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data, isLoading } = useReportDashboard();
+  const { data, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   if (isLoading) return <Center h={300}><Loader /></Center>;
   const c  = data?.cards  || {};
   const ch = data?.charts || {};
@@ -259,9 +250,9 @@ function DashboardTab() {
 // ─── LIBRARY TAB ─────────────────────────────────────────────────────────────
 function LibraryTab() {
   const toast = useToast();
-  const { data: catalog = {} } = useReportCatalog();
-  const createSaved   = useCreateSavedReport();
-  const createExport  = useCreateExportLog();
+  const { data: catalog = {} } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createSaved   = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const createExport  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [search, setSearch]       = useState("");
   const [modFilter, setMod]       = useState("");
@@ -271,7 +262,7 @@ function LibraryTab() {
   const [runReport, setRunReport] = useState("");
   const [exporting, setExporting] = useState(false);
 
-  const { data: runData, isFetching } = useReportData(runModule, runReport);
+  const { data: runData, isFetching } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const modules = Object.keys(catalog).length ? Object.keys(catalog) : MODULES;
 
@@ -454,7 +445,7 @@ const BLANK_REPORT = {
 
 function CreateReportTab({ onDone }) {
   const toast = useToast();
-  const createSaved = useCreateSavedReport();
+  const createSaved = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [step, setStep] = useState(0);
   const [form, setForm] = useState(BLANK_REPORT);
 
@@ -781,10 +772,10 @@ function TemplatesTab({ onUse }) {
 // ─── SCHEDULED REPORTS TAB ───────────────────────────────────────────────────
 function ScheduledTab() {
   const toast = useToast();
-  const { data: rawSched = [], isLoading } = useReportSchedules();
-  const createSched  = useCreateReportSchedule();
-  const updateSched  = useUpdateReportSchedule();
-  const deleteSched  = useDeleteReportSchedule();
+  const { data: rawSched = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createSched  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateSched  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteSched  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const schedules = Array.isArray(rawSched) ? rawSched : (rawSched.schedules ?? MOCK_SCHEDULED);
   const rows = schedules.length ? schedules : MOCK_SCHEDULED;
@@ -885,13 +876,13 @@ function ScheduledTab() {
 // ─── SHARED REPORTS TAB ──────────────────────────────────────────────────────
 function SharedTab() {
   const toast = useToast();
-  const { data: rawShares = [], isLoading } = useReportShares();
-  const deleteShare  = useDeleteReportShare();
+  const { data: rawShares = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteShare  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [viewing, setViewing]     = useState(null);
   const [runModule, setRunModule] = useState("");
   const [runReport, setRunReport] = useState("");
-  const { data: runData, isFetching } = useReportData(runModule, runReport);
+  const { data: runData, isFetching } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const shares = Array.isArray(rawShares) ? rawShares : (rawShares.shares ?? MOCK_SHARED);
   const rows   = shares.length ? shares : MOCK_SHARED;
@@ -1037,8 +1028,8 @@ function SharedTab() {
 
 // ─── FAVORITES TAB ───────────────────────────────────────────────────────────
 function FavoritesTab() {
-  const { data: saved = [] } = useSavedReports();
-  const update = useUpdateSavedReport();
+  const { data: saved = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const toast = useToast();
 
   const favorites = Array.isArray(saved) ? saved.filter(r => r.isFavorite) : [];
@@ -1072,8 +1063,8 @@ function FavoritesTab() {
 // ─── EXPORT CENTER TAB ───────────────────────────────────────────────────────
 function ExportCenterTab() {
   const toast = useToast();
-  const { data: rawLogs = [], isLoading, refetch } = useExportLogs();
-  const createExport = useCreateExportLog();
+  const { data: rawLogs = [], isLoading, refetch } = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const createExport = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [search, setSearch]   = useState("");
   const [rerunning, setRerun] = useState(null);
 
@@ -1168,8 +1159,8 @@ function ExportCenterTab() {
 // ─── SETTINGS TAB ────────────────────────────────────────────────────────────
 function SettingsTab() {
   const toast = useToast();
-  const { data: apiSettings } = useReportSettings();
-  const updateSettings = useUpdateReportSettings();
+  const { data: apiSettings } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateSettings = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [settings, setSettings] = useState({
     defaultFormat: "Excel", timezone: "Asia/Kolkata", dateFormat: "DD/MM/YYYY",

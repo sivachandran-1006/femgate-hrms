@@ -4,17 +4,12 @@ import {
   AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useQuery } from "@tanstack/react-query";
 import {
   IconUsers, IconUserCheck, IconUserMinus, IconClock, IconWallet,
   IconChevronRight, IconCake, IconUserPlus, IconCalendarOff,
   IconFileText, IconSpeakerphone, IconClipboardCheck,
 } from "@tabler/icons-react";
 import { KpiCard, PanelCard, ChartTooltip, fmtMoney, initials, SPARK_HEX } from "./DashboardKit";
-import {
-  getDashboardSummary, getAnnouncements, getAttendanceSummary, getPayrollSummary,
-} from "../../../api/dashboardApi";
-import { useFetchAllEmployees } from "../../../queries/useEmployees";
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
@@ -75,11 +70,11 @@ const QUICK_ACTIONS = [
 
 export const AdminDashboard = ({ employees: empProp = [] }) => {
   const navigate = useNavigate();
-  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"],  queryFn: getDashboardSummary,  select: (r) => r?.data ?? r });
-  const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],   queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
-  const { data: announceData } = useQuery({ queryKey: ["dashboard-announce"], queryFn: getAnnouncements,     select: (r) => r?.data ?? r });
-  const { data: payrollData }  = useQuery({ queryKey: ["dashboard-payroll"],  queryFn: getPayrollSummary,    select: (r) => r?.data ?? r });
-  const { data: allEmployees = [] } = useFetchAllEmployees();
+  const { data: summaryData, isLoading: loadSum } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: attendData }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: announceData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: payrollData }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: allEmployees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (loadSum) return <Center py="xl"><Loader /></Center>;
 

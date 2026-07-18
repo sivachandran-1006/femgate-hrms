@@ -1,9 +1,7 @@
 import { SimpleGrid, Text, Badge, Table, Loader, Center } from "@mantine/core";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useQuery } from "@tanstack/react-query";
 import { IconWallet, IconTrendingUp, IconAward, IconShieldCheck } from "@tabler/icons-react";
 import { AppTable } from "../../../components/ui/AppTable";
-import { getDashboardSummary, getPayrollSummary } from "../../../api/dashboardApi";
 import { KpiCard, PanelCard, ChartTooltip, fmtMoney, SPARK_HEX } from "./DashboardKit";
 
 const fmtINR = (v) => `₹${(v / 1000).toFixed(0)}k`;
@@ -45,8 +43,8 @@ const MOCK_EMPLOYEES = [
 ];
 
 export const FinanceDashboard = ({ employees: empProp }) => {
-  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
-  const { data: payrollData, isLoading: loadPay } = useQuery({ queryKey: ["dashboard-payroll"], queryFn: getPayrollSummary, select: (r) => r?.data ?? r });
+  const { data: summaryData, isLoading: loadSum } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: payrollData, isLoading: loadPay } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (loadSum || loadPay) return <Center py="xl"><Loader /></Center>;
 

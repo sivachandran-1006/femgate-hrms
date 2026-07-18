@@ -10,7 +10,12 @@
       "Bash(sed -i '' 's/\\\\[\"MANAGER\",\"HR\",\"ADMIN\",\"SUPER_ADMIN\"\\\\]/[\"SUPER_ADMIN\",\"COMPANY_ADMIN\",\"ADMIN\",\"HR\",\"MANAGER\"]/g' /Users/annz/Documents/GitHub/mgate-hrms/src/constants/permissions.js)",
       "Bash(lsof -ti:4000)",
       "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"sk@gmail.com\",\"password\":\"Admin@123\"}')",
-      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"sk@gmail.com\",\"password\":\"Admin@123\"}')"
+      "Bash(curl -s -X POST http://localhost:4000/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"sk@gmail.com\",\"password\":\"Admin@123\"}')",
+      "Bash(git -C /Users/annz/Documents/GitHub/mgate-hrms diff --stat src/screens/superadmin/CompanySettings.jsx)",
+      "Bash(git -C /Users/annz/Documents/GitHub/mgate-hrms stash)",
+      "Bash(git -C /Users/annz/Documents/GitHub/mgate-hrms stash pop)",
+      "Bash(brctl status *)",
+      "Bash(xattr -l /Users/annz/Documents)"
     ]
   }
 }

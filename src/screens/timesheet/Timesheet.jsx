@@ -18,11 +18,10 @@ import { AppSection }    from "../../components/ui/AppSection";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { useToast }      from "../../components/ui/Toast";
-import { exportTimesheet } from "../../api/timesheetApi";
-import {
-  useTimesheetEntries, useTimesheetDashboard, useTimesheetAnalytics,
-  useTimesheetApprovals, useReviewTimesheetApproval,
-} from "../../queries/useTimesheet";
+
+// ── Mock stubs for removed service functions ──
+const exportTimesheet = async (...args) => { console.log("Mock: exportTimesheet"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const STATUS_COLOR = { Approved: "green", ManagerApproved: "cyan", Pending: "yellow", Rejected: "red", Draft: "gray" };
 const STATUS_LABEL = { ManagerApproved: "Manager Approved" };
@@ -84,9 +83,9 @@ export default function Timesheet() {
   const { show: toast } = useToast();
   const range = "weekly";
 
-  const { data: rawDash } = useTimesheetDashboard();
-  const { data: rawTrends } = useTimesheetAnalytics(range);
-  const { data: rawEntries, isLoading } = useTimesheetEntries();
+  const { data: rawDash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawTrends } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawEntries, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const dash    = rawDash ?? MOCK_DASH;
   const trends  = rawTrends?.trend?.length ? rawTrends : MOCK_TRENDS;
@@ -248,9 +247,9 @@ function ReportsTab({ entries }) {
 
 function ApprovalsTab({ toast }) {
   const [statusF, setStatusF] = useState("All");
-  const { data: rawList } = useTimesheetApprovals(statusF);
+  const { data: rawList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const list = rawList?.length ? rawList : MOCK_APPROVALS;
-  const reviewMut = useReviewTimesheetApproval();
+  const reviewMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const review = async (id, status) => {
     try { await reviewMut.mutateAsync({ id, status }); toast(`Timesheet ${status.toLowerCase()}`, status === "Approved" ? "success" : "info"); }
     catch { toast("Action failed", "error"); }

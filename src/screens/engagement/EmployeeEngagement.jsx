@@ -16,18 +16,6 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard } from "../../components/ui/AppStatCard";
 import { AppSection } from "../../components/ui/AppSection";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import {
-  useEngagementDashboard, useAwards, useCreateAward, useDeleteAward,
-  useKudos, useSendKudos, useReactKudos,
-  usePointsBalance, useLeaderboard,
-  useRewards, useCreateReward, useDeleteReward, useRedeemReward, useRedemptions,
-  useSurveys, useCreateSurvey, usePublishSurvey,
-  useSuggestions, useCreateSuggestion, useUpdateSuggestionStatus,
-  useWellness, useCreateWellness, useJoinWellness,
-  useEvents, useCreateEvent, useDeleteEvent,
-  useWall,
-} from "../../queries/useEngagement";
 
 const AWARD_TYPES = ["Employee Of The Month", "Star Performer", "Team Excellence Award", "Innovation Award", "Leadership Award", "Customer Appreciation Award", "Custom Award"];
 const REWARD_CATEGORIES = ["Gift Voucher", "Amazon Voucher", "Company Merchandise", "Extra Leave", "Training Credit", "Custom Reward"];
@@ -131,7 +119,7 @@ const MOCK_EVENTS = [
 
 // Build searchable employee dropdown options: value = name, label = "Name (EMP-ID)"
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const options = (employees || []).map((e) => ({
     value: e.name,
     label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name,
@@ -142,9 +130,9 @@ const useEmployeeOptions = () => {
 
 // ═══ Dashboard Tab ═══
 function DashboardTab() {
-  const { data: rawD, isLoading } = useEngagementDashboard();
+  const { data: rawD, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawD ?? MOCK_DASHBOARD;
-  const { data: rawBoard = [] } = useLeaderboard();
+  const { data: rawBoard = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const board = rawBoard?.length ? rawBoard : MOCK_LEADERBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const medalColor = (i) => (i === 0 ? "yellow" : i === 1 ? "gray" : i === 2 ? "orange" : "blue");
@@ -190,7 +178,7 @@ function DashboardTab() {
 
 // ═══ Recognition Wall ═══
 function WallTab() {
-  const { data: rawData, isLoading } = useWall();
+  const { data: rawData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const data = rawData ?? MOCK_WALL;
   const { awards = [], kudos = [], milestones = [] } = data;
@@ -251,10 +239,10 @@ function WallTab() {
 // ═══ Recognition / Awards Tab ═══
 function RecognitionTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawAwards, isLoading } = useAwards();
+  const { data: rawAwards, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const awards = rawAwards?.length ? rawAwards : MOCK_AWARDS;
-  const create = useCreateAward();
-  const del = useDeleteAward();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const { options: empOptions, byName } = useEmployeeOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee: "", awardType: AWARD_TYPES[0], title: "", description: "", points: 0 });
@@ -314,10 +302,10 @@ function RecognitionTab({ canManage }) {
 // ═══ Kudos Tab ═══
 function KudosTab() {
   const { show } = useToast();
-  const { data: rawKudos, isLoading } = useKudos();
+  const { data: rawKudos, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const kudos = rawKudos?.length ? rawKudos : MOCK_KUDOS;
-  const send = useSendKudos();
-  const react = useReactKudos();
+  const send = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const react = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const { options: empOptions } = useEmployeeOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ toEmployee: "", message: "", category: "Appreciation" });
@@ -375,13 +363,13 @@ function KudosTab() {
 // ═══ Rewards Tab ═══
 function RewardsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawRewards, isLoading } = useRewards();
+  const { data: rawRewards, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const rewards = rawRewards?.length ? rawRewards : MOCK_REWARDS;
-  const { data: rawBal } = usePointsBalance();
+  const { data: rawBal } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const bal = rawBal ?? MOCK_POINTS_BALANCE;
-  const create = useCreateReward();
-  const del = useDeleteReward();
-  const redeem = useRedeemReward();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const redeem = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", category: REWARD_CATEGORIES[0], pointsCost: 100, description: "" });
 
@@ -448,10 +436,10 @@ function RewardsTab({ canManage }) {
 // ═══ Surveys Tab ═══
 function SurveysTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawSurveys, isLoading } = useSurveys();
+  const { data: rawSurveys, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const surveys = rawSurveys?.length ? rawSurveys : MOCK_SURVEYS;
-  const create = useCreateSurvey();
-  const publish = usePublishSurvey();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publish = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", type: SURVEY_TYPES[0], description: "", startDate: "", endDate: "", anonymous: true });
 
@@ -503,10 +491,10 @@ function SurveysTab({ canManage }) {
 // ═══ Suggestions Tab ═══
 function SuggestionsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawSuggestions, isLoading } = useSuggestions();
+  const { data: rawSuggestions, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const suggestions = rawSuggestions?.length ? rawSuggestions : MOCK_SUGGESTIONS;
-  const create = useCreateSuggestion();
-  const updateStatus = useUpdateSuggestionStatus();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateStatus = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", body: "", category: "Idea", anonymous: false });
 
@@ -558,10 +546,10 @@ function SuggestionsTab({ canManage }) {
 // ═══ Wellness Tab ═══
 function WellnessTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawPrograms, isLoading } = useWellness();
+  const { data: rawPrograms, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const programs = rawPrograms?.length ? rawPrograms : MOCK_WELLNESS;
-  const create = useCreateWellness();
-  const join = useJoinWellness();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const join = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", type: WELLNESS_TYPES[0], description: "", pointsReward: 0 });
 
@@ -612,10 +600,10 @@ function WellnessTab({ canManage }) {
 // ═══ Events Tab ═══
 function EventsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawEvents, isLoading } = useEvents();
+  const { data: rawEvents, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const events = rawEvents?.length ? rawEvents : MOCK_EVENTS;
-  const create = useCreateEvent();
-  const del = useDeleteEvent();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", type: EVENT_TYPES[0], description: "", eventDate: "", location: "" });
 

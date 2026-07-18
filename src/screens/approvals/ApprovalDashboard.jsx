@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Box, Text, Group, Tabs, Badge, Modal, Stack, Paper, Button, ActionIcon, Textarea, Progress } from "@mantine/core";
 import {
   IconCalendarOff, IconReceipt, IconUserCheck,
   IconCheck, IconX,
 } from "@tabler/icons-react";
-import { fetchApprovals, approveLeave, approveExpense, reviewOnboarding } from "../../api/approvalsApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -29,30 +27,18 @@ const MOCK_APPROVALS = {
 };
 
 export default function ApprovalDashboard({ darkMode }) {
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [activeTab, setActiveTab] = useState("leaves");
   const [modal, setModal] = useState(null); // { type, item }
   const [note, setNote] = useState("");
 
-  const { data: approvals } = useQuery({
-    queryKey: ["approvals"],
-    queryFn: () => fetchApprovals().then(r => r.data?.data ?? r.data),
-  });
+  const { data: approvals } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const leaveMut = useMutation({
-    mutationFn: ({ id, action }) => approveLeave(id, { action, note }),
-    onSuccess: () => { qc.invalidateQueries(["approvals"]); setModal(null); setNote(""); },
-  });
+  const leaveMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const expenseMut = useMutation({
-    mutationFn: ({ id, action }) => approveExpense(id, { action }),
-    onSuccess: () => { qc.invalidateQueries(["approvals"]); setModal(null); },
-  });
+  const expenseMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const onboardMut = useMutation({
-    mutationFn: ({ id, action }) => reviewOnboarding(id, { action, note }),
-    onSuccess: () => { qc.invalidateQueries(["approvals"]); setModal(null); setNote(""); },
-  });
+  const onboardMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const card   = darkMode ? "#1e293b" : "#ffffff";
   const border = darkMode ? "#334155" : "#e2e8f0";

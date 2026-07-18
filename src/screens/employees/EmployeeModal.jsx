@@ -7,9 +7,6 @@ import {
   IconUser, IconMail, IconPhone,
   IconCheck, IconSend, IconDeviceFloppy,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchBranches } from "../../api/branchApi";
-import { fetchDesignations } from "../../api/designationApi";
 import { isValidEmail, isValidPhone, isPositiveNumber } from "../../utils/validators";
 
 const ROLES = ["EMPLOYEE", "HR", "ADMIN", "FINANCE", "IT_ADMIN", "SUPER_ADMIN"];
@@ -63,15 +60,9 @@ const EmployeeModal = ({
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches"],
-    queryFn: () => fetchBranches().then(r => r.data?.data ?? r.data ?? []),
-  });
+  const { data: branches = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: designations = [] } = useQuery({
-    queryKey: ["designations"],
-    queryFn: () => fetchDesignations().then(r => r.data?.data ?? r.data ?? []),
-  });
+  const { data: designations = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const depts = [...new Set(employees.map(e => e.department).filter(Boolean))];
   const managers = employees.filter(e => e.status === "Active");

@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -30,10 +28,6 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useWFDashboard, useWorkflows, useWFHistory,
-  useCreateWF, useUpdateWF, useDeleteWF, usePublishWF, useDuplicateWF, useUpdateWFSettings,
-} from "../../queries/useWorkflowBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -166,7 +160,7 @@ function KpiCard({ label, value, change, icon: Icon, color }) {
 
 // ── 1. Dashboard ──────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: kpis } = useWFDashboard();
+  const { data: kpis } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const active    = kpis?.active    ?? MOCK_WORKFLOWS.filter(w => w.status === "Active").length;
   const draft     = kpis?.draft     ?? MOCK_WORKFLOWS.filter(w => w.status === "Draft").length;
   const total     = kpis?.total     ?? MOCK_WORKFLOWS.length;
@@ -278,11 +272,11 @@ function WorkflowLibraryTab({ onCreate }) {
   const [module, setModule]   = useState("");
   const [status, setStatus]   = useState("");
   const [viewWf, setViewWf]   = useState(null);
-  const { data: rawWfs = [] } = useWorkflows({ module: module || undefined, status: status || undefined, search: search || undefined });
+  const { data: rawWfs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const wfs = rawWfs.length ? rawWfs : MOCK_WORKFLOWS;
-  const deleteMut    = useDeleteWF();
-  const publishMut   = usePublishWF();
-  const duplicateMut = useDuplicateWF();
+  const deleteMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const duplicateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const filtered = wfs.filter(w => {
     const q = search.toLowerCase();
@@ -388,7 +382,7 @@ function CreateWorkflowTab() {
 
   const STEPS = ["Basic Info","Trigger","Designer","Conditions","Approval Levels","Notifications","Escalation","Preview & Publish"];
 
-  const createWFMut = useCreateWF();
+  const createWFMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const handlePublish = () => {
     createWFMut.mutate({ ...form, status: "active", nodes: canvasNodes }, {
       onSuccess: () => {
@@ -798,11 +792,11 @@ function TemplatesTab({ onCreate }) {
 function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
   const { show } = useToast();
   const [editWf, setEditWf] = useState(null);
-  const { data: rawList = [] } = useWorkflows({ status: filterStatus });
+  const { data: rawList = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const list = rawList.length ? rawList : MOCK_WORKFLOWS.filter(w => w.status === filterStatus);
-  const publishMut   = usePublishWF();
-  const deleteMut    = useDeleteWF();
-  const duplicateMut = useDuplicateWF();
+  const publishMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const duplicateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return (
     <Stack gap="md">
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -866,7 +860,7 @@ function FilteredWorkflowsTab({ filterStatus, emptyMsg }) {
 function WorkflowHistoryTab() {
   const { show } = useToast();
   const [viewHist, setViewHist] = useState(null);
-  const { data: rawHistory = [] } = useWFHistory();
+  const { data: rawHistory = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const historyData = rawHistory.length ? rawHistory : MOCK_HISTORY;
 
   return (
@@ -905,7 +899,7 @@ function WorkflowHistoryTab() {
                   <Table.Td>
                     <Group gap={3}>
                       <Tooltip label="View Timeline"><ActionIcon size="sm" variant="subtle" onClick={() => setViewHist(h)}><IconEye size={13} /></ActionIcon></Tooltip>
-                      {h.status === "Failed" && <Tooltip label="Restart"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => { api.post(`/workflows/executions/${h.id}/restart`).then(() => show("Workflow restarted","success")).catch(() => show("Failed to restart","error")); }}><IconRefresh size={13} /></ActionIcon></Tooltip>}
+                      {h.status === "Failed" && <Tooltip label="Restart"><ActionIcon size="sm" variant="subtle" color="blue" onClick={() => { Promise.resolve({ data: {} }).then(() => show("Workflow restarted","success")).catch(() => show("Failed to restart","error")); }}><IconRefresh size={13} /></ActionIcon></Tooltip>}
                       <Tooltip label="Export"><ActionIcon size="sm" variant="subtle"><IconDownload size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
@@ -952,23 +946,15 @@ function WorkflowHistoryTab() {
 // ── 7. Approval Matrix ────────────────────────────────────────────────────────
 function ApprovalMatrixTab() {
   const { show } = useToast();
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [matrix, setMatrix] = useState(APPROVAL_MATRIX);
   const [editRule, setEditRule] = useState(null);
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
   const [newRuleName, setNewRuleName] = useState("");
 
-  const deleteMut = useMutation({
-    mutationFn: (idx) => api.delete(`/workflows/approval-matrix/${idx}`).then(r => r.data),
-    onSuccess: (_, idx) => { setMatrix(prev => prev.filter((_, i) => i !== idx)); show("Rule removed","success"); },
-    onError: () => show("Delete failed","error"),
-  });
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const addMut = useMutation({
-    mutationFn: (data) => api.post("/workflows/approval-matrix", data).then(r => r.data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["workflows-b"] }); show("Rule added","success"); closeAdd(); setNewRuleName(""); },
-    onError: () => show("Failed to add rule","error"),
-  });
+  const addMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   return (
     <Stack gap="md">
@@ -1039,8 +1025,8 @@ function EscalationRulesTab() {
   const { show } = useToast();
   const [addName, setAddName] = useState("");
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
-  const deleteMut = useMutation({ mutationFn: (id) => api.delete(`/workflows/escalation-rules/${id}`).then(r), onSuccess: () => show("Rule deleted","success"), onError: () => show("Failed","error") });
-  const addMut = useMutation({ mutationFn: (d) => api.post("/workflows/escalation-rules", d).then(r), onSuccess: () => { show("Rule added","success"); setAddName(""); closeAdd(); }, onError: () => show("Failed","error") });
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const addMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [rules, setRules] = useState([
     { id:1, workflow:"Leave Approval",  after:"2 Days", to:"HR Admin",    channel:"Email",  enabled:true  },
     { id:2, workflow:"Expense Claim",   after:"1 Day",  to:"Finance Head",channel:"Email+Slack",enabled:true },

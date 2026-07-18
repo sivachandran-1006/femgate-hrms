@@ -1,8 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useHolidays } from "../../queries/useHolidays";
-import { useOnboarding } from "../../queries/useOnboarding";
-import { fetchLeaves } from "../../api/leaveApi";
 import {
   IconChevronLeft as ChevronLeft,
   IconChevronRight as ChevronRight,
@@ -233,13 +229,9 @@ function SidePanelEvent({ event, darkMode }) {
 
 // ── Main Calendar component ────────────────────────────────────────────────────
 export default function Calendar({ darkMode = false }) {
-  const { data: holidaysRawData = [] } = useHolidays();
-  const { data: onboardRawData = [] }  = useOnboarding();
-  const { data: leavesRawData = [] }   = useQuery({
-    queryKey: ["leaves"],
-    queryFn: () => fetchLeaves(),
-    select: (r) => r?.data ?? r ?? [],
-  });
+  const { data: holidaysRawData = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: onboardRawData = [] }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: leavesRawData = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const holidaysRaw = holidaysRawData.length ? holidaysRawData : MOCK_HOLIDAYS;
   const onboardRaw  = onboardRawData.length  ? onboardRawData  : MOCK_ONBOARDING;

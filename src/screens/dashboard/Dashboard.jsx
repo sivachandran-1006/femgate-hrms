@@ -1,7 +1,5 @@
 import { Group, Text, Box } from "@mantine/core";
 
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useFetchAllLeaves }    from "../../queries/useLeaves";
 import { useAuth }              from "../../hooks/useAuth";
 import { usePermission }        from "../../hooks/usePermission";
 
@@ -15,8 +13,8 @@ import { EmployeeDashboard }   from "./components/EmployeeDashboard";
 const Dashboard = () => {
   const { user, userRole } = useAuth();
   const can = usePermission();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const { data: leaves    = [] } = useFetchAllLeaves();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: leaves    = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 

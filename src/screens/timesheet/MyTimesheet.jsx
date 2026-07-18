@@ -18,9 +18,6 @@ import { AppTable }       from "../../components/ui/AppTable";
 import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { AppModal }       from "../../components/ui/AppModal";
 import { AppButton }      from "../../components/ui/AppButton";
-import {
-  useTimesheetEntries, useCreateTimesheetEntry, useDeleteTimesheetEntry, useSubmitTimesheet,
-} from "../../queries/useTimesheet";
 
 const TODAY = new Date().toISOString().split("T")[0];
 
@@ -59,10 +56,10 @@ const MyTimesheet = () => {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [timerRunning]);
 
-  const { data: apiEntries = [] } = useTimesheetEntries({ own: true });
-  const createMut = useCreateTimesheetEntry();
-  const deleteMut = useDeleteTimesheetEntry();
-  const submitMut = useSubmitTimesheet();
+  const { data: apiEntries = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const submitMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const entries = apiEntries.length ? apiEntries : MOCK_MY_ENTRIES;
 

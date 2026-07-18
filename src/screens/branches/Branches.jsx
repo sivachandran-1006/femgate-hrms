@@ -21,11 +21,10 @@ import { AppModalFooter, AppUnsavedChangesModal } from "../../components/ui/AppM
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
 import { useUnsavedChangesGuard } from "../../hooks/useUnsavedChangesGuard";
-import { exportBranches } from "../../api/branchApi";
-import {
-  useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch,
-  useBranchHeads, useImportBranches,
-} from "../../queries/useBranches";
+
+// ── Mock stubs for removed service functions ──
+const exportBranches = async (...args) => { console.log("Mock: exportBranches"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PAGE_SIZE = 8;
 const BRANCH_TYPES = ["Head Office", "Regional Office", "Sales Office", "Remote Office"];
@@ -195,15 +194,15 @@ const Branches = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const fileRef = useRef(null);
 
-  const { data: rawBranches, isLoading, isError: rawIsError } = useBranches();
+  const { data: rawBranches, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branches = rawBranches?.length ? rawBranches : MOCK_BRANCHES;
   const isError = rawIsError && !branches.length;
-  const { data: heads = [] } = useBranchHeads();
+  const { data: heads = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const createMut = useCreateBranch();
-  const updateMut = useUpdateBranch();
-  const deleteMut = useDeleteBranch();
-  const importMut = useImportBranches();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const importMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const uniq = (k) => ["All", ...new Set(branches.map((b) => b[k]).filter(Boolean))];
   const countryOpts = useMemo(() => uniq("country"), [branches]);

@@ -8,20 +8,12 @@ import {
   IconFilter, IconShield, IconCreditCard, IconUsers,
   IconCalendar, IconPackage, IconFileText, IconInfoCircle,
 } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppLoader }     from "../../components/ui/AppLoader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast }      from "../../components/ui/Toast";
-import {
-  getNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-  deleteNotification,
-  clearReadNotifications,
-} from "../../api/notificationsApi";
 
 const CATEGORIES = ["All", "HR", "Payroll", "Security", "System", "Assets", "Leave"];
 
@@ -61,42 +53,27 @@ function isToday(dateStr) {
 
 export default function NotificationCenter() {
   const { show } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   const [category, setCategory]     = useState("All");
   const [search, setSearch]         = useState("");
   const [showUnread, setShowUnread] = useState(false);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
-  const { data, isLoading } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: getNotifications,
-  });
+  const { data, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const rawNotifications = data?.data?.notifications ?? data?.notifications ?? [];
   const notifications = rawNotifications.length ? rawNotifications : MOCK_NOTIFICATIONS;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications"] });
+  const invalidate = () => {}
 
   // ── Mutations ──────────────────────────────────────────────────────────────
-  const markReadMutation = useMutation({
-    mutationFn: markNotificationRead,
-    onSuccess: invalidate,
-  });
+  const markReadMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const markAllReadMutation = useMutation({
-    mutationFn: markAllNotificationsRead,
-    onSuccess: () => { invalidate(); show("All notifications marked as read", "success"); },
-  });
+  const markAllReadMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteNotification,
-    onSuccess: invalidate,
-  });
+  const deleteMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const clearReadMutation = useMutation({
-    mutationFn: clearReadNotifications,
-    onSuccess: () => { invalidate(); show("Read notifications cleared", "success"); },
-  });
+  const clearReadMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Derived stats ──────────────────────────────────────────────────────────
   const unreadCount   = notifications.filter(n => !n.read).length;

@@ -13,18 +13,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useDepartments } from "../../queries/useDepartments";
-import {
-  useComplianceDashboard,
-  usePolicies, useCreatePolicy, usePublishPolicy, useArchivePolicy,
-  useAcknowledgements, useAcknowledgePolicy,
-  useComplianceTasks, useCreateComplianceTask, useUpdateTaskStatus, useDeleteComplianceTask,
-  useAudits, useCreateAudit, useUpdateAudit, useDeleteAudit,
-  useStatutory, useCreateStatutory, useUpdateStatutory,
-  useCertificates, useCreateCertificate, useDeleteCertificate,
-  useComplianceCalendar,
-} from "../../queries/useCompliance";
 
 const POLICY_CATEGORIES = ["HR Policy", "Leave Policy", "Attendance Policy", "Payroll Policy", "IT Policy", "Information Security Policy", "Code of Conduct", "Travel Policy", "Expense Policy", "Remote Work Policy", "Health & Safety Policy", "Custom Policy"];
 const POLICY_STATUS = ["Draft", "Pending Approval", "Published", "Archived", "Expired"];
@@ -36,14 +24,14 @@ const RISK_LEVELS = ["Low", "Medium", "High", "Critical"];
 
 // Shared pickers (memory rule: dropdowns over free-text for employees/departments)
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
 };
 // Department options: from the Departments API, falling back to the distinct
 // departments present on employees (so the dropdown is never empty).
 const useDepartmentOptions = () => {
-  const { data: depts = [] } = useDepartments();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: depts = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const fromApi = (depts || []).map((d) => d.name).filter(Boolean);
   if (fromApi.length) return fromApi;
   return [...new Set((employees || []).map((e) => e.department).filter(Boolean))];
@@ -132,7 +120,7 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: rawD, isLoading } = useComplianceDashboard();
+  const { data: rawD, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
@@ -161,12 +149,12 @@ function DashboardTab() {
 function PoliciesTab({ canManage }) {
   const { show } = useToast();
   const [filters, setFilters] = useState({ category: "All", status: "All", search: "" });
-  const { data: rawPolicies, isLoading } = usePolicies(filters);
+  const { data: rawPolicies, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const policies = rawPolicies?.length ? rawPolicies : MOCK_POLICIES;
-  const create = useCreatePolicy();
-  const publish = usePublishPolicy();
-  const archive = useArchivePolicy();
-  const ack = useAcknowledgePolicy();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publish = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archive = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const ack = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const empOptions = useEmployeeOptions();
   const deptOptions = useDepartmentOptions();
   const [open, setOpen] = useState(false);
@@ -241,7 +229,7 @@ function PoliciesTab({ canManage }) {
 
 // ═══ Acknowledgements ═══
 function AcknowledgementsTab() {
-  const { data: rawAcks, isLoading } = useAcknowledgements();
+  const { data: rawAcks, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const acks = rawAcks?.length ? rawAcks : MOCK_ACKNOWLEDGEMENTS;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
@@ -266,11 +254,11 @@ function AcknowledgementsTab() {
 // ═══ Tasks ═══
 function TasksTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawTasks, isLoading } = useComplianceTasks();
+  const { data: rawTasks, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const tasks = rawTasks?.length ? rawTasks : MOCK_TASKS;
-  const create = useCreateComplianceTask();
-  const updateStatus = useUpdateTaskStatus();
-  const del = useDeleteComplianceTask();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateStatus = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const empOptions = useEmployeeOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", owner: "", dueDate: "", priority: "Medium", recurring: false });
@@ -325,11 +313,11 @@ function TasksTab({ canManage }) {
 // ═══ Audits ═══
 function AuditsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawAudits, isLoading } = useAudits();
+  const { data: rawAudits, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const audits = rawAudits?.length ? rawAudits : MOCK_AUDITS;
-  const create = useCreateAudit();
-  const update = useUpdateAudit();
-  const del = useDeleteAudit();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", type: AUDIT_TYPES[0], auditor: "", auditDate: "", findings: "" });
 
@@ -379,10 +367,10 @@ function AuditsTab({ canManage }) {
 // ═══ Statutory ═══
 function StatutoryTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawItems, isLoading } = useStatutory();
+  const { data: rawItems, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const items = rawItems?.length ? rawItems : MOCK_STATUTORY;
-  const create = useCreateStatutory();
-  const update = useUpdateStatutory();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ type: STATUTORY_TYPES[0], description: "", dueDate: "", reference: "" });
 
@@ -432,9 +420,9 @@ function StatutoryTab({ canManage }) {
 // ═══ Certificates ═══
 function CertificatesTab({ canManage }) {
   const { show } = useToast();
-  const { data: certs = [], isLoading } = useCertificates();
-  const create = useCreateCertificate();
-  const del = useDeleteCertificate();
+  const { data: certs = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", type: CERT_TYPES[0], issuer: "", issueDate: "", expiryDate: "" });
 
@@ -480,7 +468,7 @@ function CertificatesTab({ canManage }) {
 
 // ═══ Calendar ═══
 function CalendarTab() {
-  const { data: events = [], isLoading } = useComplianceCalendar();
+  const { data: events = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const typeColor = { "Policy Review": "blue", "Compliance Deadline": "orange", "Certificate Renewal": "teal", Audit: "grape" };
   return (

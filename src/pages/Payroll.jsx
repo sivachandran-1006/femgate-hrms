@@ -1,4 +1,3 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   Plus, Users, Wallet, TrendingUp, Clock,
@@ -64,7 +63,7 @@ const Payroll = () => {
 
   const fetchPayroll = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/payroll");
+      const res = await Promise.resolve({ data: [] });
       if (res.data && res.data.length > 0) setPayroll(res.data);
     } catch { /* keep mock data */ }
   };
@@ -80,19 +79,14 @@ const Payroll = () => {
   const generatePayroll = async () => {
     if (!fEmployee.trim() || !fSalary) { alert("Employee name and salary are required"); return; }
     try {
-      await axios.post("http://localhost:5000/payroll", {
-        employee: fEmployee, department: fDept,
-        salary: Number(fSalary), bonus: Number(fBonus) || 0,
-        deduction: Number(fDeduction) || 0, netSalary,
-        month: fMonth, year: fYear, status: "Pending",
-      });
+      await Promise.resolve({ data: [] });
       fetchPayroll(); resetForm(); setShowModal(false);
     } catch (e) { console.log(e); }
   };
 
   const markAsPaid = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/payroll/${id}`, { status: "Paid" });
+      await Promise.resolve({ data: [] });
       fetchPayroll();
     } catch (e) { console.log(e); }
   };
@@ -100,7 +94,7 @@ const Payroll = () => {
   const deleteRecord = async (id) => {
     if (!window.confirm("Delete this payroll record?")) return;
     try {
-      await axios.delete(`http://localhost:5000/payroll/${id}`);
+      await Promise.resolve({ data: [] });
       fetchPayroll();
     } catch (e) { console.log(e); }
   };

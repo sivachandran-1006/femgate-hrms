@@ -15,9 +15,6 @@ import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppSection }    from "../../components/ui/AppSection";
 import { AppButton }     from "../../components/ui/AppButton";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useDesignation, useDesigEmployees, useDesigChain, useDesigAnalytics, useDesigAudit,
-} from "../../queries/useDesignations";
 
 const PIE_COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
@@ -41,12 +38,12 @@ export default function DesignationProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: rawDesig, isLoading } = useDesignation(id);
+  const { data: rawDesig, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const desig = rawDesig ?? MOCK_DESIGNATIONS.find((m) => String(m.id) === String(id)) ?? MOCK_DESIGNATIONS[0];
-  const { data: employees = [] } = useDesigEmployees(id);
-  const { data: chain }          = useDesigChain(id);
-  const { data: analytics }      = useDesigAnalytics(id);
-  const { data: auditLogs = [] } = useDesigAudit(id);
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: chain }          = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: analytics }      = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: auditLogs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Box ta="center" py="xl"><Loader /></Box>;
   if (!desig) return (
@@ -148,13 +145,13 @@ export default function DesignationProfile() {
                         <Text size="sm" fw={isCurrent ? 700 : 500}>{c.name}</Text>
                         <Text size="xs" c="dimmed">{c.levelName}</Text>
                       </Group>
-                      {i < chain.chain.length - 1 && (
+                      {i < (chain || []).length - 1 && (
                         <Group justify="center" my={-2}><IconChevronDown size={14} color="var(--mantine-color-gray-5)" /></Group>
                       )}
                     </Box>
                   );
                 })}
-                {(!chain?.chain || chain.chain.length === 0) && <AppEmptyState message="No hierarchy data" py={40} />}
+                {(!chain?.chain || (chain || []).length === 0) && <AppEmptyState message="No hierarchy data" py={40} />}
               </Stack>
             </AppSection>
           </SimpleGrid>

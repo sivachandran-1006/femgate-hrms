@@ -19,13 +19,6 @@ import {
   IconClock, IconFileCheck, IconAlertTriangle, IconBuilding,
   IconUser, IconBriefcase, IconCalendar, IconCurrencyRupee,
 } from "@tabler/icons-react";
-import {
-  useLTDashboard, useLetterTemplates, useLTCategories, useLTVariables,
-  useGeneratedDocuments, useLTSettings,
-  useCreateLetterTemplate, useUpdateLetterTemplate, useDeleteLetterTemplate,
-  useDuplicateLetterTemplate, usePublishLetterTemplate, useArchiveLetterTemplate,
-  useGenerateDocument, useUpdateLTSettings,
-} from "../../queries/useLetterTemplate";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 const MOCK_DASHBOARD = {
@@ -104,7 +97,7 @@ function KpiCard({ icon: Icon, label, value, color = "blue", sub }) {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: raw } = useLTDashboard();
+  const { data: raw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const d = raw ?? MOCK_DASHBOARD;
 
   return (
@@ -165,13 +158,13 @@ function TemplateLibraryTab({ onEdit, onGenerate }) {
   const [statusF, setStatusF] = useState("");
   const [delId, setDelId]   = useState(null);
 
-  const { data: raw = [] } = useLetterTemplates({ search: search || undefined, category: catF || undefined, status: statusF || undefined });
-  const templates = raw.length ? raw : MOCK_TEMPLATES;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const templates = (raw || []).length ? raw : MOCK_TEMPLATES;
 
-  const dupMut  = useDuplicateLetterTemplate();
-  const pubMut  = usePublishLetterTemplate();
-  const archMut = useArchiveLetterTemplate();
-  const delMut  = useDeleteLetterTemplate();
+  const dupMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const pubMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const delMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   return (
     <Stack gap="md">
@@ -248,8 +241,8 @@ function CreateTemplateTab({ editTemplate, onDone }) {
   });
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
-  const createMut = useCreateLetterTemplate();
-  const updateMut = useUpdateLetterTemplate();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const STEPS = ["Basic Info", "Designer", "Variables", "Conditions", "Approval", "Preview", "Publish"];
 
@@ -603,8 +596,8 @@ function CreateTemplateTab({ editTemplate, onDone }) {
 // ── Categories ────────────────────────────────────────────────────────────────
 function CategoriesTab() {
   const { show } = useToast();
-  const { data: raw = [] } = useLTCategories();
-  const cats = raw.length ? raw : MOCK_CATEGORIES;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const cats = (raw || []).length ? raw : MOCK_CATEGORIES;
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState("");
 
@@ -643,8 +636,8 @@ function CategoriesTab() {
 function GeneratedDocumentsTab() {
   const { show } = useToast();
   const [search, setSearch] = useState("");
-  const { data: raw = [] } = useGeneratedDocuments();
-  const docs = raw.length ? raw : MOCK_GENERATED;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const docs = (raw || []).length ? raw : MOCK_GENERATED;
 
   return (
     <Stack gap="md">
@@ -694,8 +687,8 @@ function GeneratedDocumentsTab() {
 
 // ── Draft / Published ─────────────────────────────────────────────────────────
 function FilteredTemplatesTab({ status, onEdit }) {
-  const { data: raw = [] } = useLetterTemplates({ status });
-  const templates = (raw.length ? raw : MOCK_TEMPLATES).filter(t => t.status === status);
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const templates = ((raw || []).length ? raw : MOCK_TEMPLATES).filter(t => t.status === status);
 
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -763,8 +756,8 @@ function VersionHistoryTab() {
 // ── Settings ──────────────────────────────────────────────────────────────────
 function SettingsTab() {
   const { show } = useToast();
-  const { data: raw } = useLTSettings();
-  const updateMut = useUpdateLTSettings();
+  const { data: raw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [settings, setSettings] = useState({
     paperSize: "A4", font: "Arial", marginTop: 25, marginBottom: 25,
     marginLeft: 30, marginRight: 30, pageNumbers: true,
@@ -830,7 +823,7 @@ function SettingsTab() {
 // ── Generate Document Modal ───────────────────────────────────────────────────
 function GenerateDocModal({ template, opened, onClose }) {
   const { show } = useToast();
-  const generateMut = useGenerateDocument();
+  const generateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [employeeId, setEmployeeId] = useState("");
 
   return (

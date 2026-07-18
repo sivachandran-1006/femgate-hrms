@@ -22,11 +22,6 @@ import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { COLORS }         from "../../theme/colors";
 import { getAvatarColor } from "../../utils/helpers";
-import {
-  useOnboarding, useCreateJoiner, useToggleTask, useStartOnboarding, useDeleteOnboarding,
-} from "../../queries/useOnboarding";
-import { useDepartments } from "../../queries/useDepartments";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -63,14 +58,14 @@ const EMPTY_FORM = { name: "", department: "", role: "", joiningDate: "", mentor
 
 const Onboarding = () => {
   const { show } = useToast();
-  const { data: records = [], isLoading, isError } = useOnboarding();
-  const { data: deptList = [] }  = useDepartments();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: records = [], isLoading, isError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: deptList = [] }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const createMut = useCreateJoiner();
-  const toggleMut = useToggleTask();
-  const startMut  = useStartOnboarding();
-  const deleteMut = useDeleteOnboarding();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const toggleMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const startMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [activeTab, setActiveTab] = useState("active");
   const [expanded, setExpanded]   = useState(null);

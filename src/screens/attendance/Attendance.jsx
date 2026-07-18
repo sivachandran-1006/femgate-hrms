@@ -18,13 +18,10 @@ import { AppSection }    from "../../components/ui/AppSection";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { useToast }      from "../../components/ui/Toast";
-import { fetchBranches } from "../../api/branchApi";
-import { exportAttendance } from "../../api/attendanceApi";
-import { useQuery } from "@tanstack/react-query";
-import {
-  useAttendanceRecords, useAttDashboard, useAttTrends, useAttBreakdown,
-  useLateReport, useOvertime, useWFH, useRegularizations, useReviewRegularization,
-} from "../../queries/useAttendance";
+
+// ── Mock stubs for removed service functions ──
+const exportAttendance = async (...args) => { console.log("Mock: exportAttendance"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const STATUS_COLOR = {
   Present: "green", Late: "orange", Absent: "red", HalfDay: "yellow",
@@ -120,16 +117,16 @@ export default function Attendance() {
   const { show: toast } = useToast();
   const [range, setRange] = useState("weekly");
 
-  const { data: rawDash } = useAttDashboard();
-  const { data: rawTrends } = useAttTrends(range);
-  const { data: rawBreakdown } = useAttBreakdown();
-  const { data: rawRecords, isLoading } = useAttendanceRecords();
+  const { data: rawDash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawTrends } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawBreakdown } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawRecords, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const dash      = rawDash      ?? MOCK_DASH;
   const trends    = rawTrends?.trend?.length    ? rawTrends    : MOCK_TRENDS;
   const breakdown = rawBreakdown?.byDepartment?.length ? rawBreakdown : MOCK_BREAKDOWN;
   const records   = rawRecords?.length ? rawRecords : MOCK_RECORDS;
-  const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
+  const { data: branchesRes } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branches = branchesRes || [];
 
   const c = dash?.cards || {};
@@ -281,9 +278,9 @@ function AttendanceList({ records, isLoading }) {
 }
 
 function ReportsTab() {
-  const { data: rawLate } = useLateReport();
-  const { data: rawOt }   = useOvertime();
-  const { data: rawWfh }  = useWFH();
+  const { data: rawLate } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawOt }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawWfh }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const late = rawLate?.length ? rawLate : MOCK_LATE;
   const ot   = rawOt?.records?.length  ? rawOt  : MOCK_OT;
@@ -343,9 +340,9 @@ function ReportsTab() {
 
 function RegularizationTab({ toast }) {
   const [statusF, setStatusF] = useState("All");
-  const { data: rawList } = useRegularizations(statusF);
+  const { data: rawList } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const list = rawList?.length ? rawList : MOCK_REGULARIZATIONS;
-  const reviewMut = useReviewRegularization();
+  const reviewMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const review = async (id, status) => {
     try { await reviewMut.mutateAsync({ id, status }); toast(`Request ${status.toLowerCase()}`, status === "Approved" ? "success" : "info"); }
     catch { toast("Action failed", "error"); }

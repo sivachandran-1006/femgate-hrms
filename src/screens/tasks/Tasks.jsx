@@ -14,10 +14,10 @@ import { AppSection }    from "../../components/ui/AppSection";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { useToast }      from "../../components/ui/Toast";
-import { exportTasks } from "../../api/taskApi";
-import {
-  useTasks, useTaskDashboard, useUpdateTaskStatus, useDeleteTask,
-} from "../../queries/useTask";
+
+// ── Mock stubs for removed service functions ──
+const exportTasks = async (...args) => { console.log("Mock: exportTasks"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const STATUS_COLOR = { "To Do": "gray", "In Progress": "blue", "Done": "green" };
 const PRIORITY_COLOR = { Low: "gray", Medium: "yellow", High: "orange", Urgent: "red" };
@@ -53,8 +53,8 @@ async function doExport(fmt, toast) {
 export default function Tasks() {
   const { show: toast } = useToast();
 
-  const { data: rawDash } = useTaskDashboard();
-  const { data: rawTasks, isLoading } = useTasks();
+  const { data: rawDash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawTasks, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const dash  = rawDash ?? MOCK_DASH;
   const tasks = rawTasks?.length ? rawTasks : MOCK_TASKS;
@@ -101,8 +101,8 @@ export default function Tasks() {
 }
 
 function BoardView({ tasks, isLoading, toast }) {
-  const statusMut = useUpdateTaskStatus();
-  const deleteMut = useDeleteTask();
+  const statusMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const moveTask = async (id, status) => {
     try { await statusMut.mutateAsync({ id, status }); toast(`Moved to ${status}`, "success"); }

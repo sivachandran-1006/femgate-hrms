@@ -22,9 +22,6 @@ import {
   Box, Stack, Group, Text, Paper, Badge, Tabs, SimpleGrid,
   Progress, Table, ThemeIcon, Avatar, Divider, ScrollArea,
 } from "@mantine/core";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useFetchAllLeaves }    from "../../queries/useLeaves";
-import { useCandidates, useExits } from "../../queries/useHr";
 import { topSlices } from "../dashboard/components/DashboardKit";
 import { AppLoader }     from "../../components/ui/AppLoader";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -137,12 +134,12 @@ const ProgressRow = ({ label, value, total, pct, color = "blue" }) => (
 const Analytics = ({ darkMode: dark = false }) => {
   const [tab, setTab] = useState("overview");
 
-  const { data: rawEmployeesQ, isLoading: loadEmp  } = useFetchAllEmployees();
-  const { data: rawLeavesQ,    isLoading: loadLeave } = useFetchAllLeaves();
+  const { data: rawEmployeesQ, isLoading: loadEmp  } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawLeavesQ,    isLoading: loadLeave } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const rawEmployees = rawEmployeesQ?.length ? rawEmployeesQ : MOCK_EMPLOYEES;
   const rawLeaves    = rawLeavesQ?.length    ? rawLeavesQ    : MOCK_LEAVES;
-  const { data: candidates   = [] } = useCandidates();
-  const { data: exits        = [] } = useExits();
+  const { data: candidates   = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: exits        = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const headcount = rawEmployees.length || 1;

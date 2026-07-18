@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Box, Text, Group, SimpleGrid, TextInput, Select, Progress, Button, Stack, Paper } from "@mantine/core";
 import {
   IconUser, IconPhone, IconCheck, IconAlertCircle,
   IconBuildingBank, IconFileText, IconShieldCheck,
 } from "@tabler/icons-react";
-import { fetchMyEmployee, updateMyProfile } from "../../api/approvalsApi";
-import { useCreateDocument } from "../../queries/useSelfService";
 import { useToast } from "../../components/ui/Toast";
 
 const STEPS = [
@@ -23,14 +20,11 @@ const inp = (dark) => ({
 });
 
 export default function SelfOnboarding({ darkMode }) {
-  const qc = useQueryClient();
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [step, setStep] = useState(0);
   const [saved, setSaved] = useState(false);
 
-  const { data: emp } = useQuery({
-    queryKey: ["my-employee"],
-    queryFn: () => fetchMyEmployee().then(r => r.data?.data ?? r.data),
-  });
+  const { data: emp } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [personal, setPersonal] = useState({
     dob: "", gender: "", maritalStatus: "", bloodGroup: "",
@@ -43,12 +37,9 @@ export default function SelfOnboarding({ darkMode }) {
   const [uploadingDoc, setUploadingDoc] = useState(null);
 
   const { show } = useToast();
-  const createDoc = useCreateDocument();
+  const createDoc = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const saveMut = useMutation({
-    mutationFn: (data) => updateMyProfile(data),
-    onSuccess: () => { qc.invalidateQueries(["my-employee"]); setSaved(true); setTimeout(() => setSaved(false), 3000); },
-  });
+  const saveMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleDocUpload = async (docName, file) => {
     if (!file) return;

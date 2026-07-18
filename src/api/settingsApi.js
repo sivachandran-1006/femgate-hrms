@@ -1,8 +1,7 @@
-import api from "./axios";
-
-const unwrap = (res) => res.data?.data ?? res.data ?? {};
-
-export const getAllSettings   = ()        => api.get("/settings").then(unwrap);
-export const getSettingsGroup = (group)   => api.get(`/settings/${group}`).then(unwrap);
-export const saveSettingsGroup = (group, data) => api.put(`/settings/${group}`, data).then(unwrap);
-export const getSettingsAudit = ()        => api.get("/settings/audit/log").then(unwrap);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

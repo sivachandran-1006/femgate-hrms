@@ -13,11 +13,6 @@ import {
 } from "@mantine/core";
 import EmployeeModal from "./EmployeeModal";
 
-import {
-  useFetchAllEmployees, useCreateEmployee,
-  useUpdateEmployee, useDeleteEmployee,
-} from "../../queries/useEmployees";
-import { useDepartments } from "../../queries/useDepartments";
 import { AppButton }            from "../../components/ui/AppButton";
 import { AppLoader }            from "../../components/ui/AppLoader";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
@@ -91,12 +86,12 @@ const EmployeeList = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
 
-  const { data: rawEmployees, isLoading } = useFetchAllEmployees();
+  const { data: rawEmployees, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const employees = rawEmployees?.length ? rawEmployees : MOCK_EMPLOYEES;
-  const { data: deptList = [] } = useDepartments();
-  const createMut = useCreateEmployee();
-  const updateMut = useUpdateEmployee();
-  const deleteMut = useDeleteEmployee();
+  const { data: deptList = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // All departments from DB (fallback to ones present on employees)
   const DEPARTMENTS = deptList.length

@@ -7,12 +7,14 @@ import {
   IconShield, IconSettings, IconUser, IconSearch, IconDownload,
   IconChevronDown, IconChevronRight, IconClipboardList,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import { getAuditLogs, getAuditStats, exportAuditLogs } from "../../api/auditLogsApi";
+
+// ── Mock stubs for removed service functions ──
+const exportAuditLogs = async (...args) => { console.log("Mock: exportAuditLogs"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const SEV_COLOR = { Critical: "red", Warning: "yellow", Info: "blue" };
 
@@ -50,22 +52,9 @@ export default function AuditLogs({ userRole = "SUPER_ADMIN" }) {
   const [activeTab, setTab]     = useState("all");
   const [expanded, setExpanded] = useState(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["audit-logs", search, dateFilter, sevFilter, actorFilter, activeTab],
-    queryFn: () =>
-      getAuditLogs({
-        search,
-        dateRange: dateFilter === "All Time" ? undefined : dateFilter,
-        severity:  sevFilter === "All" ? undefined : sevFilter,
-        actor:     actorFilter === "All" ? undefined : actorFilter,
-        module:    activeTab === "all" ? undefined : activeTab,
-      }),
-  });
+  const { data, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: stats } = useQuery({
-    queryKey: ["audit-stats"],
-    queryFn:  getAuditStats,
-  });
+  const { data: stats } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const rawLogs = data?.data?.logs || data?.logs || [];
   const logs = rawLogs.length ? rawLogs : MOCK_LOGS;

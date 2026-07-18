@@ -19,14 +19,6 @@ import {
   IconPhoto, IconTable, IconColumns, IconMinus, IconChevronDown,
   IconEyeOff, IconClock, IconCalendar,
 } from "@tabler/icons-react";
-import {
-  useETDashboard, useTemplates, useEmailCategories, useEmailVariables,
-  useEmailLayouts, useEmailHistory, useEmailSettings,
-  useCreateTemplate, useUpdateTemplate, useDeleteTemplate,
-  useDuplicateTemplate, usePublishTemplate, useArchiveTemplate,
-  useSendTestEmail, useUpdateEmailSettings,
-  useCreateCategory, useDeleteCategory,
-} from "../../queries/useEmailTemplate";
 
 // ── mock fallback data ────────────────────────────────────────────────────────
 const MOCK_DASHBOARD = {
@@ -121,7 +113,7 @@ function KpiCard({ icon: Icon, label, value, color = "blue", sub }) {
 
 // ── Dashboard Tab ─────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const { data: raw } = useETDashboard();
+  const { data: raw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const d = raw ?? MOCK_DASHBOARD;
 
   return (
@@ -190,17 +182,17 @@ function TemplateLibraryTab({ onEdit }) {
   const [statusF,setStatusF]  = useState("");
   const [delId,  setDelId]    = useState(null);
 
-  const { data: raw = [] }  = useTemplates({ search: search || undefined, category: catF || undefined, status: statusF || undefined });
-  const templates            = raw.length ? raw : MOCK_TEMPLATES;
+  const { data: raw = [] }  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const templates            = (raw || []).length ? raw : MOCK_TEMPLATES;
 
-  const dupMut  = useDuplicateTemplate();
-  const pubMut  = usePublishTemplate();
-  const archMut = useArchiveTemplate();
-  const delMut  = useDeleteTemplate();
+  const dupMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const pubMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const delMut  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [testOpen, { open: openTest, close: closeTest }] = useDisclosure(false);
   const [testId, setTestId] = useState(null);
   const [testEmail, setTestEmail] = useState("");
-  const testMut = useSendTestEmail();
+  const testMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const filtered = templates.filter(t =>
     (!search || t.name.toLowerCase().includes(search.toLowerCase()))
@@ -293,9 +285,9 @@ function CreateTemplateTab({ editTemplate, onDone }) {
     testCc: "",
   });
 
-  const createMut = useCreateTemplate();
-  const updateMut = useUpdateTemplate();
-  const testMut   = useSendTestEmail();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const testMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -575,12 +567,12 @@ function CreateTemplateTab({ editTemplate, onDone }) {
 // ── Categories Tab ────────────────────────────────────────────────────────────
 function CategoriesTab() {
   const { show } = useToast();
-  const { data: raw = [] } = useEmailCategories();
-  const cats = raw.length ? raw : MOCK_CATEGORIES;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const cats = (raw || []).length ? raw : MOCK_CATEGORIES;
   const [opened, { open, close }] = useDisclosure(false);
   const [name, setName] = useState("");
-  const createCatMut = useCreateCategory();
-  const deleteCatMut = useDeleteCategory();
+  const createCatMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteCatMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handleAdd = () => {
     if (!name.trim()) return;
@@ -636,7 +628,7 @@ function CategoriesTab() {
 // ── Variable Library Tab ──────────────────────────────────────────────────────
 function VariableLibraryTab() {
   const { show } = useToast();
-  const { data: raw } = useEmailVariables();
+  const { data: raw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [search, setSearch] = useState("");
 
   return (
@@ -676,8 +668,8 @@ function VariableLibraryTab() {
 
 // ── Layout Library Tab ────────────────────────────────────────────────────────
 function LayoutLibraryTab() {
-  const { data: raw = [] } = useEmailLayouts();
-  const layouts = raw.length ? raw : LAYOUTS;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const layouts = (raw || []).length ? raw : LAYOUTS;
 
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
@@ -699,8 +691,8 @@ function LayoutLibraryTab() {
 
 // ── Email History Tab ─────────────────────────────────────────────────────────
 function EmailHistoryTab() {
-  const { data: raw = [] } = useEmailHistory();
-  const history = raw.length ? raw : MOCK_HISTORY;
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const history = (raw || []).length ? raw : MOCK_HISTORY;
   const [search, setSearch] = useState("");
 
   const filtered = history.filter(e => !search || e.template.toLowerCase().includes(search.toLowerCase()) || e.recipient.includes(search));
@@ -748,8 +740,8 @@ function EmailHistoryTab() {
 
 // ── Draft / Published Tabs ────────────────────────────────────────────────────
 function FilteredTemplatesTab({ status, onEdit }) {
-  const { data: raw = [] } = useTemplates({ status });
-  const templates = (raw.length ? raw : MOCK_TEMPLATES).filter(t => t.status === status);
+  const { data: raw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const templates = ((raw || []).length ? raw : MOCK_TEMPLATES).filter(t => t.status === status);
 
   return (
     <Stack gap="md">
@@ -818,8 +810,8 @@ function VersionHistoryTab() {
 // ── Settings Tab ──────────────────────────────────────────────────────────────
 function SettingsTab() {
   const { show } = useToast();
-  const { data: raw } = useEmailSettings();
-  const updateMut = useUpdateEmailSettings();
+  const { data: raw } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [settings, setSettings] = useState({
     senderName: "MGate HRMS",
     senderEmail: "noreply@mgate.com",

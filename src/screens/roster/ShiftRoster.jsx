@@ -13,15 +13,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import {
-  useRosterDashboard, useRosterAnalytics,
-  useShifts, useCreateShift, useUpdateShift, useDeleteShift,
-  useAssignments, useCreateAssignment, useDeleteAssignment,
-  useChangeRequests, useCreateChangeRequest, useReviewChangeRequest,
-  useOvertime, useRequestOvertime, useReviewOvertime,
-  useSwapRequests, useCreateSwapRequest, useUpdateSwapStatus,
-} from "../../queries/useRoster";
 
 const r = (res) => res.data?.data ?? res.data ?? res;
 
@@ -83,7 +74,7 @@ const MOCK_DASH = {
 };
 
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const options = (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
   const byName = Object.fromEntries((employees || []).map((e) => [e.name, e]));
   return { options, byName };
@@ -104,8 +95,8 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: d, isLoading } = useRosterDashboard();
-  const { data: an } = useRosterAnalytics();
+  const { data: d, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || MOCK_DASH;
   return (
@@ -151,11 +142,11 @@ function DashboardTab() {
 // ═══ Shifts ═══
 function ShiftsTab({ canManage }) {
   const { show } = useToast();
-  const { data: raw, isLoading } = useShifts();
+  const { data: raw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const shifts = raw?.length ? raw : MOCK_SHIFTS;
-  const create = useCreateShift();
-  const update = useUpdateShift();
-  const del = useDeleteShift();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const EMPTY = { name: "", code: "", type: SHIFT_TYPES[0], startTime: "09:00", endTime: "18:00", breakDuration: 60, graceTime: 15, weeklyOff: WEEKLY_OFF[0], colorCode: "#3b82f6", status: "Active" };
@@ -233,13 +224,13 @@ function ShiftsTab({ canManage }) {
 // ═══ Roster / Assignments ═══
 function RosterTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawAssignments, isLoading } = useAssignments();
+  const { data: rawAssignments, isLoading } = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const assignments = rawAssignments?.length ? rawAssignments : MOCK_ASSIGNMENTS;
-  const { data: rawShifts } = useShifts({ status: "Active" });
+  const { data: rawShifts } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
   const { options: empOptions, byName } = useEmployeeOptions();
-  const create = useCreateAssignment();
-  const del = useDeleteAssignment();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ shiftId: "", employee: "", date: "" });
   const [weekOffset, setWeekOffset] = useState(0);
@@ -305,12 +296,12 @@ function RosterTab({ canManage }) {
 // ═══ Change Requests ═══
 function ChangeRequestsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawReqs, isLoading } = useChangeRequests();
+  const { data: rawReqs, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const reqs = rawReqs?.length ? rawReqs : MOCK_CHANGE_REQUESTS;
-  const { data: rawShifts } = useShifts({ status: "Active" });
+  const { data: rawShifts } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
-  const create = useCreateChangeRequest();
-  const review = useReviewChangeRequest();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const review = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ currentShift: "", requestedShift: "", reason: "", effectiveDate: "" });
 
@@ -365,10 +356,10 @@ function ChangeRequestsTab({ canManage }) {
 // ═══ Overtime ═══
 function OvertimeTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawRecords, isLoading } = useOvertime();
+  const { data: rawRecords, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const records = rawRecords?.length ? rawRecords : MOCK_OVERTIME;
-  const request = useRequestOvertime();
-  const review = useReviewOvertime();
+  const request = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const review = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ date: "", hours: 1, reason: "" });
 
@@ -421,13 +412,13 @@ function OvertimeTab({ canManage }) {
 // ═══ Swap Requests ═══
 function SwapRequestsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawSwaps, isLoading } = useSwapRequests();
+  const { data: rawSwaps, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const swaps = rawSwaps?.length ? rawSwaps : MOCK_SWAP_REQUESTS;
-  const { data: rawShifts } = useShifts({ status: "Active" });
+  const { data: rawShifts } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const shifts = rawShifts?.length ? rawShifts : MOCK_SHIFTS;
   const { options: empOptions } = useEmployeeOptions();
-  const createSwap = useCreateSwapRequest();
-  const updateStatus = useUpdateSwapStatus();
+  const createSwap = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateStatus = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ opened: false, id: null, status: null, label: "" });
   const [form, setForm] = useState({ requestedWith: "", requesterShift: "", requestedShift: "", date: "", reason: "" });

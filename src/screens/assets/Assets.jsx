@@ -31,7 +31,6 @@ import { SPACING, PADDING, GAP, LAYOUT }                                 from ".
 import { RADIUS, SHADOW, Z_INDEX, TRANSITION, ICON_SIZE, ICON_STROKE }  from "../../theme/sizes";
 import { getStatusBadge }                                                from "../../utils/helpers";
 import { usePermission }                                                  from "../../hooks/usePermission";
-import { useAssets, useCreateAsset }                                      from "../../queries/useHr";
 import { useToast }                                                       from "../../components/ui/Toast";
 import { AppPageHeader }                                                  from "../../components/ui/AppPageHeader";
 
@@ -94,8 +93,8 @@ export default function Assets({ darkMode = false }) {
   const can = usePermission();
   const navigate = useNavigate();
   const { show } = useToast();
-  const { data: assetsData = [], isLoading } = useAssets();
-  const createAsset = useCreateAsset();
+  const { data: assetsData = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createAsset = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const assets = assetsData.map(mapAsset);
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");

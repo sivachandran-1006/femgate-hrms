@@ -6,7 +6,6 @@ import {
   Group, Stack, Text, Badge, ActionIcon, Avatar, TextInput, Select, MultiSelect, SimpleGrid,
   Tooltip, Progress, Box, Paper, Table, Loader, Center,
 } from "@mantine/core";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { AppButton }     from "../../components/ui/AppButton";
@@ -17,10 +16,6 @@ import { getInitials }   from "../../utils/helpers";
 import { useAuth }       from "../../hooks/useAuth";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
-import {
-  fetchLeaves, applyLeave, updateLeaveStatus, fetchLeaveBalance,
-} from "../../api/leaveApi";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 const LEAVE_TYPE_COLORS = {
   "Sick Leave":   "red",
@@ -51,7 +46,7 @@ const MOCK_BALANCE = [
 const Leave = ({ embedded = false } = {}) => {
   const { user } = useAuth();
   const { show } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   const can = usePermission();
   const isEmployee = !can("leave.view_all");
@@ -65,53 +60,22 @@ const Leave = ({ embedded = false } = {}) => {
   const [showApply, setShowApply]   = useState(false);
   const [form, setForm] = useState({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "", employeeId: null, notify: [] });
 
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   // Tag options: @All + every employee (team leads, HR, managers, everyone)
   const TAG_OPTIONS = [...new Set(["@All", ...employees.map((e) => `@${e.name}`)])];
 
   // ── Queries ──────────────────────────────────────────────────────────────────
 
-  const { data: leavesRaw = [], isLoading } = useQuery({
-    queryKey: ["leaves", statusFilter, typeFilter, searchTerm],
-    queryFn: () => fetchLeaves({
-      status: statusFilter !== "All" ? statusFilter : undefined,
-      type:   typeFilter   !== "All" ? typeFilter   : undefined,
-      search: searchTerm   || undefined,
-    }),
-    select: (res) => res?.data ?? res ?? [],
-  });
+  const { data: leavesRaw = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const { data: balanceRaw = [] } = useQuery({
-    queryKey: ["leave-balance"],
-    queryFn: fetchLeaveBalance,
-    select: (res) => res?.data ?? res ?? [],
-  });
+  const { data: balanceRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   // ── Mutations ─────────────────────────────────────────────────────────────────
 
-  const applyMutation = useMutation({
-    mutationFn: applyLeave,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-      queryClient.invalidateQueries({ queryKey: ["leave-balance"] });
-      setForm({ leaveType: "Casual Leave", fromDate: "", toDate: "", reason: "", employeeId: null, notify: [] });
-      setShowApply(false);
-      show("Leave request submitted successfully", "success");
-    },
-    onError: () => show("Failed to submit leave request", "error"),
-  });
+  const applyMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => updateLeaveStatus(id, status),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["leaves"] });
-      queryClient.invalidateQueries({ queryKey: ["leave-balance"] });
-      show(vars.status === "Approved" ? "Leave approved" : "Leave rejected", vars.status === "Approved" ? "success" : "error");
-      setViewLeave(null);
-    },
-    onError: () => show("Failed to update leave status", "error"),
-  });
+  const statusMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Derived ───────────────────────────────────────────────────────────────────
 

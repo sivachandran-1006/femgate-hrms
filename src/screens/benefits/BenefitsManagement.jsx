@@ -11,13 +11,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
-import {
-  useBenefitsDashboard,
-  usePlans, useCreatePlan, useDeletePlan,
-  useEnrollments, useEnroll, useUpdateEnrollmentStatus,
-  useDependents, useAddDependent, useDeleteDependent,
-  useClaims, useSubmitClaim, useUpdateClaimStatus,
-} from "../../queries/useBenefits";
 
 const BENEFIT_CATEGORIES = ["Medical Insurance", "Dental Insurance", "Vision Insurance", "Life Insurance", "Accident Insurance", "Retirement Fund", "Gratuity", "PF", "ESI", "Meal Card", "Transport Allowance", "Internet Allowance", "Mobile Allowance", "Gym Membership", "Learning Allowance", "Custom Benefit"];
 const RELATIONSHIPS = ["Spouse", "Child", "Parent", "Guardian"];
@@ -90,7 +83,7 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: rawD, isLoading } = useBenefitsDashboard();
+  const { data: rawD, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
@@ -110,11 +103,11 @@ function DashboardTab() {
 // ═══ Plans ═══
 function PlansTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawPlans, isLoading } = usePlans();
+  const { data: rawPlans, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const plans = rawPlans?.length ? rawPlans : MOCK_PLANS;
-  const create = useCreatePlan();
-  const del = useDeletePlan();
-  const enroll = useEnroll();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const enroll = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const EMPTY = { name: "", category: BENEFIT_CATEGORIES[0], provider: "", coverageAmount: "", eligibility: "", employerContribution: "", employeeContribution: "", status: "Active" };
   const [form, setForm] = useState(EMPTY);
@@ -181,9 +174,9 @@ function PlansTab({ canManage }) {
 // ═══ Enrollments ═══
 function EnrollmentsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawEnrollments, isLoading } = useEnrollments();
+  const { data: rawEnrollments, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const enrollments = rawEnrollments?.length ? rawEnrollments : MOCK_ENROLLMENTS;
-  const updateStatus = useUpdateEnrollmentStatus();
+  const updateStatus = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   if (isLoading) return <Center h={200}><Loader /></Center>;
   return (
     <Table striped highlightOnHover>
@@ -212,10 +205,10 @@ function EnrollmentsTab({ canManage }) {
 // ═══ Dependents ═══
 function DependentsTab() {
   const { show } = useToast();
-  const { data: rawDeps, isLoading } = useDependents();
+  const { data: rawDeps, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const deps = rawDeps?.length ? rawDeps : MOCK_DEPENDENTS;
-  const add = useAddDependent();
-  const del = useDeleteDependent();
+  const add = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", relationship: RELATIONSHIPS[0], dob: "", gender: "", isNominee: false });
 
@@ -263,10 +256,10 @@ function DependentsTab() {
 // ═══ Claims ═══
 function ClaimsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawClaims, isLoading } = useClaims();
+  const { data: rawClaims, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const claims = rawClaims?.length ? rawClaims : MOCK_CLAIMS;
-  const submit = useSubmitClaim();
-  const review = useUpdateClaimStatus();
+  const submit = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const review = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ type: CLAIM_TYPES[0], amount: "", description: "" });
 

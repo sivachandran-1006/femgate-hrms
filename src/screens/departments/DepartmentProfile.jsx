@@ -15,9 +15,6 @@ import { AppStatCard }   from "../../components/ui/AppStatCard";
 import { AppSection }    from "../../components/ui/AppSection";
 import { AppButton }     from "../../components/ui/AppButton";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useDepartment, useDeptEmployees, useDeptDesignations, useDeptAnalytics, useDeptAudit,
-} from "../../queries/useDepartments";
 
 const PIE_COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
@@ -48,13 +45,13 @@ export default function DepartmentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: rawDept, isLoading, isError: rawIsError } = useDepartment(id);
+  const { data: rawDept, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dept = rawDept ?? MOCK_DEPARTMENTS.find((m) => String(m.id) === String(id)) ?? MOCK_DEPARTMENTS[0];
   const isError = rawIsError && !dept;
-  const { data: employees = [] }   = useDeptEmployees(id);
-  const { data: designations = [] } = useDeptDesignations(id);
-  const { data: analytics }        = useDeptAnalytics(id);
-  const { data: auditLogs = [] }   = useDeptAudit(id);
+  const { data: employees = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: designations = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: analytics }        = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: auditLogs = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (isLoading) return <Box ta="center" py="xl"><Loader /></Box>;
   if (isError || !dept) return (

@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
@@ -11,20 +10,18 @@ import { ToastProvider } from "./components/ui/Toast.jsx";
 import "./index.css";
 import "@mantine/core/styles.css";
 import { theme } from "./theme/mantineTheme.js";
-import { enableMockMode } from "./config/MockConfig.js";
-import { loadMockData } from "./mocks/mockLoader.js";
 
-// Only enable mock mode in local development when no API URL is set
-if (!import.meta.env.VITE_API_URL) {
-  enableMockMode(loadMockData);
-}
+// main_v1: Static mock-only branch.
+// No backend URL, no mock loader, no API calls.
+// All data comes from inline MOCK_* constants in each screen.
+// New backend will be wired on a separate branch when service is ready.
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 1000 * 60 * 5,
+      retry: false,
+      staleTime: Infinity,
     },
   },
 });
@@ -40,7 +37,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             </ToastProvider>
           </AuthProvider>
         </MantineProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </BrowserRouter>
   </React.StrictMode>

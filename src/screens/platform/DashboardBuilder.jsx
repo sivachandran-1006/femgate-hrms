@@ -1,7 +1,5 @@
 import { useState, useCallback } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -26,11 +24,6 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useDBBuilderDashboard, useDashboards, useSharedDashboards,
-  useCreateDashboard, useUpdateDashboard, useDeleteDashboard, usePublishDashboard,
-  useArchiveDashboard, useDuplicateDashboard, useUnshare, useUpdateDBSettings,
-} from "../../queries/useDashboardBuilder";
 
 // ── Mock data ────────────────────────────────────────────────────────────────
 
@@ -160,8 +153,8 @@ function KpiCard({ label, value, change, icon: Icon, color, sub }) {
 // ── 1. Dashboard Home ─────────────────────────────────────────────────────────
 function DashboardHomeTab({ onNav }) {
   const USAGE_TREND = [78,82,91,88,95,103,110,108,115,122,118,130];
-  const { data: rawDash = [] }   = useDashboards();
-  const { data: rawShared = [] } = useSharedDashboards();
+  const { data: rawDash = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: rawShared = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash   = rawDash.length   ? rawDash   : MOCK_DASHBOARDS;
   const shared = rawShared.length ? rawShared : MOCK_SHARED;
 
@@ -276,12 +269,12 @@ function DashboardLibraryTab({ onCreate }) {
   const [role, setRole]         = useState("");
   const [status, setStatus]     = useState("");
   const [viewDash, setViewDash] = useState(null);
-  const { data: rawDash = [] } = useDashboards({ role: role || undefined, status: status || undefined, search: search || undefined });
+  const { data: rawDash = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dashboards = rawDash.length ? rawDash : MOCK_DASHBOARDS;
-  const deleteMut    = useDeleteDashboard();
-  const publishMut   = usePublishDashboard();
-  const archiveMut   = useArchiveDashboard();
-  const duplicateMut = useDuplicateDashboard();
+  const deleteMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archiveMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const duplicateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const filtered = dashboards.filter(d => {
     const q = search.toLowerCase();
@@ -290,10 +283,7 @@ function DashboardLibraryTab({ onCreate }) {
       && (!status || d.status === status);
   });
 
-  const starMut = useMutation({
-    mutationFn: (id) => api.patch(`/dashboards/${id}/star`).then(r => r.data),
-    onError: () => show("Failed","error"),
-  });
+  const starMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const toggleStar = (id) => starMut.mutate(id);
 
   return (
@@ -404,7 +394,7 @@ function CreateDashboardTab() {
     return true;
   };
 
-  const createDBMut = useCreateDashboard();
+  const createDBMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const handlePublish = () => {
     const payload = { ...form, status: "published", widgets: selectedWidgets, layout: selectedLayout };
@@ -809,7 +799,7 @@ function WidgetLibraryTab() {
 // ── 5. My Dashboards ──────────────────────────────────────────────────────────
 function MyDashboardsTab() {
   const { show } = useToast();
-  const { data: rawDash = [] } = useDashboards();
+  const { data: rawDash = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const all     = rawDash.length ? rawDash : MOCK_DASHBOARDS;
   const starred = all.filter(d => d.starred);
   const recent  = [...all].sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||"")).slice(0,4);
@@ -871,9 +861,9 @@ function MyDashboardsTab() {
 function SharedDashboardsTab() {
   const { show } = useToast();
   const [viewShared, setViewShared] = useState(null);
-  const { data: rawShared = [] } = useSharedDashboards();
+  const { data: rawShared = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const shared   = rawShared.length ? rawShared : MOCK_SHARED;
-  const unshareMut = useUnshare();
+  const unshareMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   return (
     <Stack gap="md">
@@ -1011,8 +1001,8 @@ function AnalyticsWidgetsTab() {
 // ── 9. Dashboard Settings ─────────────────────────────────────────────────────
 function DashboardSettingsTab() {
   const { show } = useToast();
-  const saveSettingsMut = useUpdateDBSettings();
-  const { data: rawDash = [] } = useDashboards();
+  const saveSettingsMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const { data: rawDash = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dashNames = (rawDash.length ? rawDash : MOCK_DASHBOARDS).map(d => d.name);
   const [settings, setSettings] = useState({
     defaultDash: "HR Operations HQ",

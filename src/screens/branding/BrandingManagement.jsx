@@ -20,19 +20,11 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { ChartTooltip, SPARK_HEX } from "../dashboard/components/DashboardKit";
-import {
-  useBrandSettings, useSaveBrandSettings, usePublishBrand, useResetBrand,
-  useBrandDashboard, useEmailTemplates, useUpdateEmailTemplate,
-  useVerifyDomain,
-} from "../../queries/useBranding";
-import { getCompanies } from "../../api/multiCompanyApi";
 
 // ── API response unwrapper ────────────────────────────────────────────────────
 const r = res => res.data?.data ?? res.data ?? res;
@@ -206,7 +198,7 @@ function LivePreview({ form, viewport = "desktop" }) {
 
 // ═══ 1. Dashboard ═══
 function DashboardTab({ onNav }) {
-  const { data: dashRaw, isLoading } = useBrandDashboard();
+  const { data: dashRaw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = dashRaw ?? MOCK_BRAND_DASHBOARD;
   const brandedCount = MOCK_BRAND_PROFILES.filter(b => b.status === "Published").length;
   const domainCount  = MOCK_DOMAINS.filter(x => x.status === "Verified").length;
@@ -322,34 +314,19 @@ function DashboardTab({ onNav }) {
 // ═══ 2. Brand Profiles ═══
 function BrandProfilesTab({ toast }) {
   const { show } = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [viewBrand, setViewBrand] = useState(null);
   const [editProfile, setEditProfile] = useState(null);
 
-  const { data: companiesResult, isLoading } = useQuery({
-    queryKey: ["companies-branding"],
-    queryFn: () => getCompanies({}),
-  });
+  const { data: companiesResult, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const duplicateMutation = useMutation({
-    mutationFn: (id) => api.post(`/branding/profiles/${id}/duplicate`).then(r),
-    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile duplicated", "success"); },
-    onError: () => show("Failed to duplicate profile", "error"),
-  });
+  const duplicateMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const publishMutation = useMutation({
-    mutationFn: (id) => api.post(`/branding/profiles/${id}/publish`).then(r),
-    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile published", "success"); },
-    onError: () => show("Failed to publish profile", "error"),
-  });
+  const publishMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const archiveMutation = useMutation({
-    mutationFn: (id) => api.post(`/branding/profiles/${id}/archive`).then(r),
-    onSuccess: () => { queryClient.invalidateQueries(["companies-branding"]); show("Brand profile archived", "info"); },
-    onError: () => show("Failed to archive profile", "error"),
-  });
+  const archiveMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // API returns { data: [...] } or { companies: [...] } or bare array
   const rawCompanies = companiesResult?.data ?? companiesResult?.companies ?? (Array.isArray(companiesResult) ? companiesResult : []);
@@ -469,11 +446,11 @@ function BrandProfilesTab({ toast }) {
 // ═══ 3. Company Branding ═══
 function CompanyBrandingTab() {
   const { show } = useToast();
-  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
-  const save = useSaveBrandSettings();
-  const publish = usePublishBrand();
-  const reset = useResetBrand();
+  const save = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const publish = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const reset = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [form, setForm] = useState(null);
   const [viewport, setViewport] = useState("desktop");
 
@@ -632,9 +609,9 @@ function ThemesTab({ toast }) {
 // ═══ 5. Login Page ═══
 function LoginPageTab() {
   const { show } = useToast();
-  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
-  const save = useSaveBrandSettings();
+  const save = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [form, setForm] = useState(null);
   const [viewport, setViewport] = useState("desktop");
   useEffect(() => { if (settings && !form) setForm(settings); }, [settings]);
@@ -765,8 +742,8 @@ function PortalBrandingTab({ toast }) {
 // ═══ 7. Email Templates ═══
 function EmailTemplatesTab() {
   const { show } = useToast();
-  const { data: templates = [], isLoading } = useEmailTemplates();
-  const update = useUpdateEmailTemplate();
+  const { data: templates = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const update = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [edit, setEdit] = useState(null);
   const [preview, setPreview] = useState(null);
   const [search, setSearch] = useState("");
@@ -1003,10 +980,10 @@ function DocumentTemplatesTab({ toast }) {
 // ═══ 10. Custom Domains ═══
 function CustomDomainsTab() {
   const { show } = useToast();
-  const verify = useVerifyDomain();
+  const verify = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [newDomain, setNewDomain] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const { data: settings } = useBrandSettings();
+  const { data: settings } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const verified   = MOCK_DOMAINS.filter(d => d.status === "Verified").length;
   const pending    = MOCK_DOMAINS.filter(d => d.status === "Pending").length;
@@ -1163,9 +1140,9 @@ function BrandAssetsTab({ toast }) {
 // ═══ 12. Preview & Publish ═══
 function PreviewPublishTab() {
   const { show } = useToast();
-  const { data: settingsRaw, isLoading } = useBrandSettings();
+  const { data: settingsRaw, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const settings = settingsRaw ?? MOCK_BRAND_SETTINGS;
-  const publish = usePublishBrand();
+  const publish = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [viewport, setViewport] = useState("desktop");
   const [mode, setMode] = useState("light");
   const [form, setForm] = useState(null);

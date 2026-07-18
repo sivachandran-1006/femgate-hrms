@@ -13,7 +13,6 @@ import { AppSection }    from "../../components/ui/AppSection";
 import { AppButton }     from "../../components/ui/AppButton";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { useToast }      from "../../components/ui/Toast";
-import { useAllSettings, useSaveSettings, useSettingsAudit } from "../../queries/useSettings";
 
 // field schema per group — drives the forms
 const FIELD_DEFS = {
@@ -94,7 +93,7 @@ const GROUPS = [
 
 function GroupForm({ group, settings }) {
   const { show: toast } = useToast();
-  const saveMut = useSaveSettings();
+  const saveMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [form, setForm] = useState({});
   useEffect(() => { setForm(settings || {}); }, [settings, group]);
 
@@ -122,7 +121,7 @@ function GroupForm({ group, settings }) {
 }
 
 function AuditTab() {
-  const { data: logs = [] } = useSettingsAudit();
+  const { data: logs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const fmt = (d) => d ? new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
   return (
     <AppSection noPadding title="Settings Audit Logs" sub={`${logs.length} events`}>
@@ -148,7 +147,7 @@ function AuditTab() {
 }
 
 export default function SystemSettings({ darkMode }) {
-  const { data: settings, isLoading } = useAllSettings();
+  const { data: settings, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [active, setActive] = useState(null);   // null = dashboard view
   const [search, setSearch] = useState("");
 

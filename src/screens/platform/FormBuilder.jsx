@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "../../api/axios";
 import {
   Box, Tabs, Group, Text, Badge, Button, Card, Stack, SimpleGrid,
   TextInput, Select, Textarea, Modal, Table, ActionIcon, Tooltip,
@@ -32,11 +30,6 @@ import {
 import { useToast } from "../../components/ui/Toast";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
-import {
-  useFBDashboard, useForms, useFBResponses,
-  useCreateForm, useDeleteForm, usePublishForm, useArchiveForm, useDuplicateForm,
-  useFBResponseAction, useUpdateFBSettings,
-} from "../../queries/useFormBuilder";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -176,7 +169,7 @@ function KpiCard({ label, value, change, icon: Icon, color }) {
 // ── 1. Dashboard ──────────────────────────────────────────────────────────────
 
 function DashboardTab() {
-  const { data: kpis } = useFBDashboard();
+  const { data: kpis } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const published = kpis?.published ?? MOCK_FORMS.filter(f => f.status==="Published").length;
   const draft     = kpis?.draft     ?? MOCK_FORMS.filter(f => f.status==="Draft").length;
   const total     = kpis?.total     ?? MOCK_FORMS.length;
@@ -282,12 +275,12 @@ function MyFormsTab({ onCreate }) {
   const [catF,   setCatF]   = useState("");
   const [statF,  setStatF]  = useState("");
   const [viewForm, setViewForm] = useState(null);
-  const { data: rawForms = [] } = useForms({ category: catF || undefined, status: statF || undefined, search: search || undefined });
+  const { data: rawForms = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const forms = rawForms.length ? rawForms : MOCK_FORMS;
-  const deleteMut    = useDeleteForm();
-  const publishMut   = usePublishForm();
-  const archiveMut   = useArchiveForm();
-  const duplicateMut = useDuplicateForm();
+  const deleteMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archiveMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const duplicateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const filtered = forms.filter(f => {
     const q = search.toLowerCase();
@@ -410,7 +403,7 @@ function CreateFormTab() {
 
   const selectedField = canvasFields.find(x => x.id === selectedFid);
 
-  const createFormMut = useCreateForm();
+  const createFormMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const handlePublish = () => {
     createFormMut.mutate({ ...form, status: "published", fields: canvasFields }, {
       onSuccess: () => {
@@ -858,10 +851,10 @@ function FilteredFormsTab({ status, emptyMsg, onCreate }) {
   const { show } = useToast();
   const [editForm, setEditForm] = useState(null);
   const list = MOCK_FORMS.filter(f => f.status === status);
-  const deleteMut    = useDeleteForm();
-  const publishMut   = usePublishForm();
-  const archiveMut   = useArchiveForm();
-  const duplicateMut = useDuplicateForm();
+  const deleteMut    = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const publishMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archiveMut   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const duplicateMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return (
     <Stack gap="md">
       <Paper withBorder radius="lg" style={{ overflow:"hidden" }}>
@@ -926,7 +919,7 @@ function FormResponsesTab() {
   const [search, setSearch]     = useState("");
   const [statusF, setStatusF]   = useState("");
   const [deptF,   setDeptF]     = useState("");
-  const { data: rawResponses = [] } = useFBResponses({ status: statusF || undefined, search: search || undefined });
+  const { data: rawResponses = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const responses = rawResponses.length ? rawResponses : MOCK_RESPONSES;
   const filtered = responses.filter(r => {
     const q = search.toLowerCase();
@@ -970,7 +963,7 @@ function FormResponsesTab() {
                     <Group gap={3}>
                       <Tooltip label="View Details"><ActionIcon size="sm" variant="subtle" onClick={() => { setViewResp(r); setRespTab("overview"); }}><IconEye size={13} /></ActionIcon></Tooltip>
                       <Tooltip label="Download"><ActionIcon size="sm" variant="subtle" onClick={() => show("Downloading response...","info")}><IconDownload size={13} /></ActionIcon></Tooltip>
-                      <Tooltip label="Approve"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => { api.patch(`/forms/responses/${r.id}/approve`).then(() => show("Approved","success")).catch(() => show("Approve failed","error")); }}><IconCheck size={13} /></ActionIcon></Tooltip>
+                      <Tooltip label="Approve"><ActionIcon size="sm" variant="subtle" color="green" onClick={() => { Promise.resolve({ data: {} }).then(() => show("Approved","success")).catch(() => show("Approve failed","error")); }}><IconCheck size={13} /></ActionIcon></Tooltip>
                     </Group>
                   </Table.Td>
                 </Table.Tr>
@@ -1049,7 +1042,7 @@ function FormResponsesTab() {
 
 function FormSettingsTab() {
   const { show } = useToast();
-  const saveSettingsMut = useUpdateFBSettings();
+  const saveSettingsMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [categories, setCategories] = useState([...CATEGORIES]);
   const [newCat, setNewCat] = useState("");
   return (

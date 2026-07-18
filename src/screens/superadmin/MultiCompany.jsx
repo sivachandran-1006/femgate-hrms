@@ -4,8 +4,6 @@ import {
   TextInput, Select, ActionIcon, Avatar, Center, Loader,
 } from "@mantine/core";
 import { IconSearch, IconPlus, IconEye, IconPencil, IconUserOff, IconBuilding, IconTrash } from "@tabler/icons-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCompanies, createCompany, updateCompany, deleteCompany, updateCompanyStatus } from "../../api/multiCompanyApi";
 import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
@@ -60,16 +58,10 @@ export default function MultiCompany() {
   const [deleteTarget, setDeleteTarget] = useState(null); // company pending delete
 
   const toast       = useToast();
-  const queryClient = useQueryClient();
+  const queryClient = { invalidateQueries: () => {}, setQueryData: () => {} };
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
-  const { data, isLoading } = useQuery({
-    queryKey: ["companies", search, statusFilter],
-    queryFn: () => getCompanies({
-      search: search || undefined,
-      status: statusFilter !== "All" ? statusFilter : undefined,
-    }),
-  });
+  const { data, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const rawCompanies = data?.data?.companies || [];
   const companies = rawCompanies.length ? rawCompanies : MOCK_COMPANIES;
@@ -86,47 +78,13 @@ export default function MultiCompany() {
   ];
 
   // ── Mutations ─────────────────────────────────────────────────────────────
-  const createMutation = useMutation({
-    mutationFn: createCompany,
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      setNewCo(EMPTY_FORM);
-      setShowAddModal(false);
-      toast.show(`Company "${vars.name}" created successfully`, "success");
-    },
-    onError: () => toast.show("Failed to create company. Please try again.", "error"),
-  });
+  const createMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => updateCompanyStatus(id, status),
-    onSuccess: (_, { status, name }) => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      toast.show(`${name} ${status === "Suspended" ? "suspended" : "reactivated"}`, status === "Suspended" ? "error" : "success");
-    },
-    onError: () => toast.show("Failed to update company status.", "error"),
-  });
+  const statusMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => updateCompany(id, data),
-    onSuccess: (_, { data }) => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      setEditTarget(null);
-      setEditForm(null);
-      toast.show(`"${data.name}" updated successfully`, "success");
-    },
-    onError: () => toast.show("Failed to update company. Please try again.", "error"),
-  });
+  const updateMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
-  const deleteMutation = useMutation({
-    mutationFn: (id) => deleteCompany(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      const name = deleteTarget?.name ?? "Company";
-      setDeleteTarget(null);
-      toast.show(`"${name}" deleted`, "error");
-    },
-    onError: () => toast.show("Failed to delete company.", "error"),
-  });
+  const deleteMutation = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleAddCompany = () => {

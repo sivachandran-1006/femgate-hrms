@@ -4,13 +4,11 @@ import {
   AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import { useQuery } from "@tanstack/react-query";
 import {
   IconUsers, IconUserCheck, IconCalendarOff, IconWallet, IconFileText,
   IconUserPlus, IconClipboardCheck, IconSpeakerphone,
   IconChevronRight, IconCake,
 } from "@tabler/icons-react";
-import { getDashboardSummary, getAttendanceSummary, getAnnouncements } from "../../../api/dashboardApi";
 import { KpiCard, PanelCard, ChartTooltip, fmtMoney, initials } from "./DashboardKit";
 
 const ANNOUNCE_COLORS = { high: "red", medium: "yellow", low: "blue", info: "blue", hr: "green", finance: "violet" };
@@ -74,21 +72,16 @@ const QUICK_ACTIONS = [
 
 export const HRDashboard = ({ employees: empProp = [], leaves: leavesProp = [] }) => {
   const navigate = useNavigate();
-  const { data: summaryData, isLoading: loadSum } = useQuery({ queryKey: ["dashboard-summary"], queryFn: getDashboardSummary, select: (r) => r?.data ?? r });
-  const { data: attendData }   = useQuery({ queryKey: ["dashboard-attend"],  queryFn: getAttendanceSummary, select: (r) => r?.data ?? r });
-  const { data: announceData } = useQuery({ queryKey: ["dashboard-announce"], queryFn: getAnnouncements, select: (r) => r?.data ?? r });
-
-  if (loadSum) return <Center py="xl"><Loader /></Center>;
 
   const employees = empProp.length ? empProp : MOCK_EMPLOYEES;
   const leaves    = leavesProp.length ? leavesProp : MOCK_LEAVES;
-  const summary = summaryData ?? MOCK_SUMMARY;
+  const summary = MOCK_SUMMARY;
   const total = summary.totalEmployees || employees.length || 0;
   const pendingLeaves = summary.pendingLeaves || 0;
   const depts = summary.departments || [];
   const deptCount = depts.length || new Set(employees.map((e) => e.department).filter(Boolean)).size;
 
-  const rawAttend   = attendData ?? MOCK_ATTEND;
+  const rawAttend   = MOCK_ATTEND;
   const attendDays  = rawAttend?.days || [];
   const todayAttend = attendDays[attendDays.length - 1] || {};
   const present = todayAttend.present || 0;
@@ -96,7 +89,7 @@ export const HRDashboard = ({ employees: empProp = [], leaves: leavesProp = [] }
   const onLeave = leaves.filter((l) => l.status === "Approved").length;
   const totalPayroll = employees.reduce((s, e) => s + (Number(e.salary) || 0), 0);
 
-  const rawAnnounce   = announceData ?? MOCK_ANNOUNCE;
+  const rawAnnounce   = MOCK_ANNOUNCE;
   const announcements = rawAnnounce?.announcements || [];
 
   // Attendance line series (present/absent/onleave per day)

@@ -21,15 +21,10 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { fetchBranches } from "../../api/branchApi";
-import { exportAssets }  from "../../api/assetApi";
-import { useQuery } from "@tanstack/react-query";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import {
-  useAssets, useAssetDashboard, useAssetAnalytics, useLicenses,
-  useCreateAsset, useUpdateAsset, useDeleteAsset, useAssignAsset, useReturnAsset,
-  useCreateLicense, useUpdateLicense, useDeleteLicense,
-} from "../../queries/useAssets";
+
+// ── Mock stubs for removed service functions ──
+const exportAssets = async (...args) => { console.log("Mock: exportAssets"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const CATEGORIES = ["Laptop", "Desktop", "Monitor", "Mobile Phone", "Printer", "Scanner", "Access Card", "Software License", "Network Device", "Other Assets"];
 const STATUSES = ["Available", "Assigned", "InUse", "UnderRepair", "Maintenance", "Lost", "Damaged", "Disposed", "Retired"];
@@ -147,9 +142,9 @@ export default function AssetManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: rawDash } = useAssetDashboard();
+  const { data: rawDash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const dash = rawDash ?? MOCK_ASSET_DASHBOARD;
-  const { data: rawAn } = useAssetAnalytics();
+  const { data: rawAn } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const an = rawAn ?? MOCK_ASSET_ANALYTICS;
   const c = dash?.cards || {};
   return (
@@ -212,19 +207,19 @@ const EMPTY_ASSET = { name: "", assetId: "", category: "Laptop", brand: "", mode
 
 function InventoryTab({ toast }) {
   const navigate = useNavigate();
-  const { data: rawAssets, isLoading, isError: rawIsError } = useAssets();
+  const { data: rawAssets, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const assets = rawAssets?.length ? rawAssets : MOCK_ASSETS;
   const isError = rawIsError && !assets.length;
-  const { data: rawEmployees } = useFetchAllEmployees();
+  const { data: rawEmployees } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const employees = rawEmployees?.length ? rawEmployees : MOCK_EMPLOYEES;
-  const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
+  const { data: branchesRes } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branches = branchesRes?.length ? branchesRes : MOCK_BRANCHES;
 
-  const createMut = useCreateAsset();
-  const updateMut = useUpdateAsset();
-  const deleteMut = useDeleteAsset();
-  const assignMut = useAssignAsset();
-  const returnMut = useReturnAsset();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const assignMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const returnMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [search, setSearch] = useState("");
   const [searchBy, setSearchBy] = useState("name");
@@ -401,13 +396,13 @@ const EMPTY_LIC = { name: "", vendor: "", licenseKey: "", purchaseDate: "", expi
 const LIC_COLOR = { Active: "green", Expired: "red", ExpiringSoon: "orange", Suspended: "gray" };
 
 function LicensesTab({ toast }) {
-  const { data: rawLicenses, isError: rawIsError } = useLicenses();
+  const { data: rawLicenses, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const licenses = rawLicenses?.length ? rawLicenses : MOCK_LICENSES;
   const isError = rawIsError && !licenses.length;
   void isError;
-  const createMut = useCreateLicense();
-  const updateMut = useUpdateLicense();
-  const deleteMut = useDeleteLicense();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_LIC);

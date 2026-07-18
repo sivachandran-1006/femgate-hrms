@@ -20,13 +20,10 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { exportPerformance } from "../../api/performanceApi";
-import {
-  usePerformance, usePerfDashboard, usePerfAnalytics, useKpis, useReviews, usePips, useRecognitions,
-  useCreateGoal, useGoalProgress, useCreateKpi, useUpdateKpi, useCreateReview,
-  useCreateAppraisal, useAppraise, useCreatePip, useCreateRecognition,
-} from "../../queries/usePerformance";
+
+// ── Mock stubs for removed service functions ──
+const exportPerformance = async (...args) => { console.log("Mock: exportPerformance"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4"];
 const RATINGS = ["Outstanding", "Exceeds", "Meets", "NeedsImprovement", "Unsatisfactory"];
@@ -78,8 +75,8 @@ export default function PerformanceManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = usePerfDashboard();
-  const { data: an } = usePerfAnalytics();
+  const { data: dash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const c = dash?.cards || {};
   return (
     <>
@@ -115,13 +112,13 @@ function DashboardTab() {
 }
 
 function GoalsTab({ toast }) {
-  const { data } = usePerformance();
-  const { data: kpis = [] } = useKpis();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createGoal = useCreateGoal();
-  const goalProgress = useGoalProgress();
-  const createKpi = useCreateKpi();
-  const updateKpi = useUpdateKpi();
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: kpis = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createGoal = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const goalProgress = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createKpi = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateKpi = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const goals = data?.goals || [];
 
   const [goalOpen, setGoalOpen] = useState(false);
@@ -213,9 +210,9 @@ function GoalsTab({ toast }) {
 }
 
 function ReviewsTab({ toast }) {
-  const { data: reviews = [] } = useReviews();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createReview = useCreateReview();
+  const { data: reviews = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createReview = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee: "", cycle: "Annual", reviewType: "ManagerReview", rating: "Meets", feedback: "", promotionRecommended: false, trainingRecommended: false });
 
@@ -270,10 +267,10 @@ function ReviewsTab({ toast }) {
 }
 
 function AppraisalsTab({ toast }) {
-  const { data } = usePerformance();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createAppraisal = useCreateAppraisal();
-  const appraise = useAppraise();
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createAppraisal = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const appraise = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const appraisals = data?.appraisals || [];
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee: "", period: "", currentSalary: "", recommendedSalary: "", promotionRecommended: false });
@@ -332,9 +329,9 @@ function AppraisalsTab({ toast }) {
 }
 
 function PipTab({ toast }) {
-  const { data: pips = [] } = usePips();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createPip = useCreatePip();
+  const { data: pips = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createPip = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee: "", reason: "", improvementGoals: "", expectedOutcome: "", managerComments: "", reviewDate: "" });
   const save = async () => {
@@ -381,9 +378,9 @@ function PipTab({ toast }) {
 }
 
 function RecognitionTab({ toast }) {
-  const { data: recognitions = [] } = useRecognitions();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createRec = useCreateRecognition();
+  const { data: recognitions = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createRec = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employee: "", type: "Spot Award", title: "", description: "", period: "" });
   const save = async () => {

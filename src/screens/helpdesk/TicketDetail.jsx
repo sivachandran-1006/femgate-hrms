@@ -16,7 +16,6 @@ import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
 import { getInitials }   from "../../utils/helpers";
-import { useTicket, useTicketComments, useTicketAudit, useAddComment, useSetTicketStatus, useAssignTicket } from "../../queries/useTickets";
 
 const STATUS_COLOR = { Open: "blue", Assigned: "cyan", InProgress: "yellow", Pending: "orange", PendingUser: "orange", Resolved: "green", Closed: "gray", Cancelled: "red" };
 const PRIORITY_COLOR = { Low: "gray", Medium: "blue", High: "orange", Critical: "red" };
@@ -116,16 +115,16 @@ export default function TicketDetail() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: rawTicket, isLoading, isError: rawIsError } = useTicket(id);
+  const { data: rawTicket, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const ticket = rawTicket ?? MOCK_TICKETS.find((m) => String(m.id) === String(id)) ?? MOCK_TICKETS[0];
   const isError = rawIsError && !ticket;
-  const { data: rawComments } = useTicketComments(id);
+  const { data: rawComments } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const comments = rawComments?.length ? rawComments : (MOCK_COMMENTS_BY_TICKET[ticket?.id] || []);
-  const { data: rawAudit } = useTicketAudit(id);
+  const { data: rawAudit } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const audit = rawAudit?.length ? rawAudit : (MOCK_AUDIT_BY_TICKET[ticket?.id] || []);
-  const statusMut = useSetTicketStatus();
-  const assignMut = useAssignTicket();
-  const commentMut = useAddComment();
+  const statusMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const assignMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const commentMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [reply, setReply] = useState("");
   const [internal, setInternal] = useState(false);

@@ -14,7 +14,6 @@ import {
   Modal,
 } from "@mantine/core";
 import { useAuth }              from "../../hooks/useAuth";
-import { useMyPayslips, useMyProfile } from "../../queries/useSelfService";
 import { COLORS }               from "../../theme/colors";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 
@@ -36,8 +35,8 @@ const MyPayslips = ({ darkMode: dark = false }) => {
   const surface = dark ? COLORS.dark : COLORS.light;
   const [viewSlip, setViewSlip] = useState(null);
 
-  const { data: slipsRaw = [] } = useMyPayslips();
-  const { data: me }            = useMyProfile();
+  const { data: slipsRaw = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: me }            = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const MY_PAYSLIPS = slipsRaw.map((s) => ({
     _id:       s.id,

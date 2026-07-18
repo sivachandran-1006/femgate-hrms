@@ -15,7 +15,6 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { useAsset, useAssetAssignments, useAssetMaintenance, useAssetAudit, useAddMaintenance } from "../../queries/useAssets";
 
 const MOCK_ASSETS = [
   {
@@ -82,13 +81,13 @@ export default function AssetProfile() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: rawAsset, isLoading, isError: rawIsError } = useAsset(id);
+  const { data: rawAsset, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const asset = rawAsset ?? MOCK_ASSETS.find(m => String(m.id) === String(id)) ?? MOCK_ASSETS[0];
   const isError = rawIsError && !asset;
-  const { data: assignments = [] } = useAssetAssignments(id);
-  const { data: maintenance = [] } = useAssetMaintenance(id);
-  const { data: audit = [] } = useAssetAudit(id);
-  const addMaint = useAddMaintenance();
+  const { data: assignments = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: maintenance = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: audit = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const addMaint = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [maintOpen, setMaintOpen] = useState(false);
   const [mForm, setMForm] = useState({ type: "Repair", vendor: "", cost: "", description: "", setUnderRepair: false });

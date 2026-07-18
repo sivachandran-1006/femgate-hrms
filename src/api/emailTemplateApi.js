@@ -1,28 +1,7 @@
-import api from "./axios";
-const r = (res) => res.data?.data ?? res.data ?? res;
-
-export const getDashboard        = ()           => api.get("/email-templates/dashboard").then(r);
-export const getTemplates        = (params)     => api.get("/email-templates", { params }).then(r);
-export const getTemplate         = (id)         => api.get(`/email-templates/${id}`).then(r);
-export const createTemplate      = (d)          => api.post("/email-templates", d).then(r);
-export const updateTemplate      = (id, d)      => api.put(`/email-templates/${id}`, d).then(r);
-export const deleteTemplate      = (id)         => api.delete(`/email-templates/${id}`).then(r);
-export const duplicateTemplate   = (id)         => api.post(`/email-templates/${id}/duplicate`).then(r);
-export const publishTemplate     = (id)         => api.post(`/email-templates/${id}/publish`).then(r);
-export const archiveTemplate     = (id)         => api.post(`/email-templates/${id}/archive`).then(r);
-export const sendTestEmail       = (id, d)      => api.post(`/email-templates/${id}/test`, d).then(r);
-export const getCategories       = ()           => api.get("/email-templates/categories").then(r);
-export const createCategory      = (d)          => api.post("/email-templates/categories", d).then(r);
-export const updateCategory      = (id, d)      => api.put(`/email-templates/categories/${id}`, d).then(r);
-export const deleteCategory      = (id)         => api.delete(`/email-templates/categories/${id}`).then(r);
-export const getVariableLibrary  = ()           => api.get("/email-templates/variables").then(r);
-export const createVariable      = (d)          => api.post("/email-templates/variables", d).then(r);
-export const updateVariable      = (id, d)      => api.put(`/email-templates/variables/${id}`, d).then(r);
-export const deleteVariable      = (id)         => api.delete(`/email-templates/variables/${id}`).then(r);
-export const getLayoutLibrary    = ()           => api.get("/email-templates/layouts").then(r);
-export const getEmailHistory     = (params)     => api.get("/email-templates/history", { params }).then(r);
-export const resendEmail         = (id)         => api.post(`/email-templates/history/${id}/resend`).then(r);
-export const getVersionHistory   = (id)         => api.get(`/email-templates/${id}/versions`).then(r);
-export const restoreVersion      = (id, ver)    => api.post(`/email-templates/${id}/versions/${ver}/restore`).then(r);
-export const getSettings         = ()           => api.get("/email-templates/settings").then(r);
-export const updateSettings      = (d)          => api.put("/email-templates/settings", d).then(r);
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};

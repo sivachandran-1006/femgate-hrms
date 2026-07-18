@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Paper, Avatar, Text, Badge, Group, Loader, Center, Box } from "@mantine/core";
-import { useOrgTree } from "../../queries/useOrgChart";
 import { getAvatarColor, getInitials } from "../../utils/helpers";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 
@@ -232,7 +231,7 @@ function BoxLineChart({ tree, onNodeClick }) {
 }
 
 export default function BoxLineOrgChart() {
-  const { data: treeData, isLoading } = useOrgTree();
+  const { data: treeData, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [selectedNode, setSelectedNode] = useState(null);
 
   if (isLoading) return <Center py="xl"><Loader /></Center>;

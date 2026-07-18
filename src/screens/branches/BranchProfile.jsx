@@ -21,11 +21,6 @@ import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
-import {
-  useBranch, useBranchDepartments, useBranchEmployees, useBranchHolidays,
-  useBranchAnalytics, useBranchAudit,
-  useAddBranchHoliday, useUpdateBranchHoliday, useDeleteBranchHoliday,
-} from "../../queries/useBranches";
 
 const PIE_COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 const HOLIDAY_TYPES = ["Public", "Regional", "Company", "National"];
@@ -87,18 +82,18 @@ export default function BranchProfile() {
   const can = usePermission();
   const canEdit = can("branches.edit") || can("branches.create");
 
-  const { data: rawBranch, isLoading, isError: rawIsError } = useBranch(id);
+  const { data: rawBranch, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const branch = rawBranch ?? MOCK_BRANCHES.find((b) => String(b.id) === String(id)) ?? MOCK_BRANCHES[0];
   const isError = rawIsError && !branch;
-  const { data: departments = [] } = useBranchDepartments(id);
-  const { data: employees = [] }   = useBranchEmployees(id);
-  const { data: holidays = [] }    = useBranchHolidays(id);
-  const { data: analytics }        = useBranchAnalytics(id);
-  const { data: auditLogs = [] }   = useBranchAudit(id);
+  const { data: departments = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: holidays = [] }    = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: analytics }        = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: auditLogs = [] }   = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const addH = useAddBranchHoliday(id);
-  const updH = useUpdateBranchHoliday(id);
-  const delH = useDeleteBranchHoliday(id);
+  const addH = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updH = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const delH = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [hModal, setHModal]   = useState(false);
   const [hEdit, setHEdit]     = useState(null);

@@ -18,10 +18,10 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { exportRoles }   from "../../api/roleApi";
-import {
-  useRoles, useRole, useRoleMeta, useCreateRole, useCloneRole, useUpdateRole, useDeleteRole,
-} from "../../queries/useRoles";
+
+// ── Mock stubs for removed service functions ──
+const exportRoles = async (...args) => { console.log("Mock: exportRoles"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 const TYPE_COLOR   = { System: "blue", Custom: "violet" };
@@ -46,14 +46,14 @@ export default function RoleManagement() {
   const [typeF, setTypeF]     = useState("All");
   const [statusF, setStatusF] = useState("All");
 
-  const { data: rawRoles, isLoading, isError: rawIsError } = useRoles();
+  const { data: rawRoles, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const roles = rawRoles?.length ? rawRoles : MOCK_ROLES;
   const isError = rawIsError && !roles.length;
-  const { data: meta } = useRoleMeta();
+  const { data: meta } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
-  const createMut = useCreateRole();
-  const cloneMut  = useCloneRole();
-  const deleteMut = useDeleteRole();
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const cloneMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [createOpen, setCreateOpen] = useState(false);
   const [cloneFrom, setCloneFrom]   = useState(null);
@@ -241,8 +241,8 @@ export default function RoleManagement() {
 
 // ─── Role comparison modal ────────────────────────────────────────────────────
 function RoleCompareModal({ open, onClose, roles, meta, a, b, setA, setB }) {
-  const { data: roleA } = useRole(a);
-  const { data: roleB } = useRole(b);
+  const { data: roleA } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: roleB } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const modules = meta?.modules || [];
 
   const actionsOf = (role, mod) => {

@@ -15,7 +15,6 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { useDocument, useDocVersions, useDocAudit, useVerifyDocument, useAddDocVersion } from "../../queries/useDocuments";
 
 const MOCK_DOCUMENTS = [
   {
@@ -166,13 +165,13 @@ export default function DocumentProfile() {
   const navigate = useNavigate();
   const { show: toast } = useToast();
 
-  const { data: rawDoc, isLoading, isError: rawIsError } = useDocument(id);
+  const { data: rawDoc, isLoading, isError: rawIsError } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const doc = rawDoc ?? MOCK_DOCUMENTS.find((m) => String(m.id) === String(id)) ?? MOCK_DOCUMENTS[0];
   const isError = rawIsError && !doc;
-  const { data: versions = [] } = useDocVersions(id);
-  const { data: audit = [] } = useDocAudit(id);
-  const verifyMut = useVerifyDocument();
-  const versionMut = useAddDocVersion();
+  const { data: versions = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: audit = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const verifyMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const versionMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const [verifyComment, setVerifyComment] = useState("");
   const [verOpen, setVerOpen] = useState(false);

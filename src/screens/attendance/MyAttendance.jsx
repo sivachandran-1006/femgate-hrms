@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 
 import { useAuth }              from "../../hooks/useAuth";
-import { useMyAttendance, useSelfCheckIn, useSelfCheckOut } from "../../queries/useSelfService";
 import { useToast }             from "../../components/ui/Toast";
 import { AppPageHeader }        from "../../components/ui/AppPageHeader";
 import { AppStatCard }          from "../../components/ui/AppStatCard";
@@ -74,9 +73,9 @@ const MyAttendance = () => {
 
   const [confirmType, setConfirmType] = useState(null);
 
-  const { data: apiRecords = [] } = useMyAttendance();
-  const checkInMut  = useSelfCheckIn();
-  const checkOutMut = useSelfCheckOut();
+  const { data: apiRecords = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const checkInMut  = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const checkOutMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   useEffect(() => {
     if (apiRecords.length) {

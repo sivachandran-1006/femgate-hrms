@@ -17,17 +17,6 @@ import { useToast } from "../../components/ui/Toast";
 import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
 import { topSlices } from "../dashboard/components/DashboardKit";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import { useDesignations } from "../../queries/useDesignations";
-import {
-  useCompDashboard, useCompAnalytics,
-  useBands, useCreateBand, useDeleteBand,
-  useRevisions, useCreateRevision, useUpdateRevisionStatus,
-  useBonuses, useCreateBonus, useUpdateBonusStatus,
-  useVariablePay, useCreateVariablePay, useUpdateVariablePayStatus,
-  usePromotions, useCreatePromotion, useUpdatePromotionStatus,
-  useBenchmarking, useBudget, useCompHistory,
-} from "../../queries/useCompensation";
 
 const CHART_COLORS = ["#228be6", "#40c057", "#fab005", "#fa5252", "#7950f2", "#fd7014", "#15aabf"];
 
@@ -113,18 +102,18 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-dig
 
 // Pickers with fallback (memory rule)
 const useEmployeeOptions = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return (employees || []).map((e) => ({ value: e.name, label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name }));
 };
 const useDesignationOptions = () => {
-  const { data: desigs = [] } = useDesignations();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: desigs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const fromApi = (desigs || []).map((d) => d.name).filter(Boolean);
   if (fromApi.length) return fromApi;
   return [...new Set((employees || []).map((e) => e.designation).filter(Boolean))];
 };
 const useEmployeeMap = () => {
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   return Object.fromEntries((employees || []).map((e) => [e.name, e]));
 };
 
@@ -143,8 +132,8 @@ function Kpi({ label, value, icon: Icon, color, sub }) {
 
 // ═══ Dashboard ═══
 function DashboardTab() {
-  const { data: rawD, isLoading } = useCompDashboard();
-  const { data: an } = useCompAnalytics();
+  const { data: rawD, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const d = rawD ?? MOCK_DASHBOARD;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const dash = d || {};
@@ -213,7 +202,7 @@ function DashboardTab() {
 
 // ═══ Market Benchmarking ═══
 function BenchmarkingTab() {
-  const { data: rawRows, isLoading } = useBenchmarking();
+  const { data: rawRows, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const rows = rawRows?.length ? rawRows : MOCK_BENCHMARKING;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const posColor = { "At/Above Market": "green", "Near Market": "orange", "Below Market": "red" };
@@ -241,7 +230,7 @@ function BenchmarkingTab() {
 
 // ═══ Budget Planning ═══
 function BudgetTab() {
-  const { data: rawB, isLoading } = useBudget();
+  const { data: rawB, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const b = rawB ?? MOCK_BUDGET;
   if (isLoading) return <Center h={200}><Loader /></Center>;
   const data = b || {};
@@ -280,7 +269,7 @@ function BudgetTab() {
 function HistoryTab() {
   const empOptions = useEmployeeOptions();
   const [employee, setEmployee] = useState("");
-  const { data: rawH, isLoading } = useCompHistory(employee);
+  const { data: rawH, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const h = rawH ?? (employee ? MOCK_COMP_HISTORY : rawH);
   return (
     <Stack gap="md">
@@ -316,10 +305,10 @@ function HistoryTab() {
 // ═══ Salary Revisions ═══
 function RevisionsTab({ canManage }) {
   const { show } = useToast();
-  const { data: rawRevisions, isLoading } = useRevisions();
+  const { data: rawRevisions, isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const revisions = rawRevisions?.length ? rawRevisions : MOCK_REVISIONS;
-  const create = useCreateRevision();
-  const review = useUpdateRevisionStatus();
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const review = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const empOptions = useEmployeeOptions();
   const empMap = useEmployeeMap();
   const [open, setOpen] = useState(false);
@@ -451,9 +440,9 @@ function AwardTab({ canManage, kind }) {
 // ═══ Promotions ═══
 function PromotionsTab({ canManage }) {
   const { show } = useToast();
-  const { data: promotions = [], isLoading } = usePromotions();
-  const create = useCreatePromotion();
-  const review = useUpdatePromotionStatus();
+  const { data: promotions = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const review = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const empOptions = useEmployeeOptions();
   const empMap = useEmployeeMap();
   const desigOptions = useDesignationOptions();
@@ -515,9 +504,9 @@ function PromotionsTab({ canManage }) {
 // ═══ Salary Bands ═══
 function BandsTab({ canManage }) {
   const { show } = useToast();
-  const { data: bands = [], isLoading } = useBands();
-  const create = useCreateBand();
-  const del = useDeleteBand();
+  const { data: bands = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const create = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const del = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const desigOptions = useDesignationOptions();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", grade: GRADES[0], designation: "", minSalary: "", maxSalary: "" });

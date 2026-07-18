@@ -15,9 +15,6 @@ import { AppTable }       from "../../components/ui/AppTable";
 import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { AppModal }       from "../../components/ui/AppModal";
 import { AppButton }      from "../../components/ui/AppButton";
-import {
-  useTasks, useCreateTask, useDeleteTask, useUpdateTaskStatus,
-} from "../../queries/useTask";
 
 const PRIORITY_COLOR = { Low: "gray", Medium: "yellow", High: "orange", Urgent: "red" };
 const STATUSES = ["To Do", "In Progress", "Done"];
@@ -40,10 +37,10 @@ const MyTasks = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  const { data: apiTasks = [] } = useTasks({ own: true });
-  const createMut = useCreateTask();
-  const deleteMut = useDeleteTask();
-  const statusMut = useUpdateTaskStatus();
+  const { data: apiTasks = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const statusMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const tasks = apiTasks.length ? apiTasks : MOCK_MY_TASKS;
 

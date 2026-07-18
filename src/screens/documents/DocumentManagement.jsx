@@ -21,12 +21,10 @@ import { AppButton }     from "../../components/ui/AppButton";
 import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
-import { exportDocuments } from "../../api/documentApi";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
-import {
-  useDocuments, useDocDashboard, useDocAnalytics, useDocRequests,
-  useUploadDocument, useUpdateDocument, useArchiveDocument, useVerifyDocument, useCreateDocRequest, useFulfilDocRequest,
-} from "../../queries/useDocuments";
+
+// ── Mock stubs for removed service functions ──
+const exportDocuments = async (...args) => { console.log("Mock: exportDocuments"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const CATEGORIES = ["Employee Documents", "Company Documents", "Compliance Documents", "Payroll Documents", "Recruitment Documents", "Asset Documents", "Training Documents"];
 const DOC_TYPES = ["Resume", "PAN Card", "Aadhaar Card", "Passport", "Driving License", "Educational Certificate", "Experience Certificate", "Offer Letter", "Relieving Letter", "Bank Proof", "HR Policy", "Employee Handbook", "Compliance Document", "Audit Report", "Legal Agreement", "Other"];
@@ -78,8 +76,8 @@ export default function DocumentManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = useDocDashboard();
-  const { data: an } = useDocAnalytics();
+  const { data: dash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const c = dash?.cards || {};
   return (
     <>
@@ -122,8 +120,8 @@ function DashboardTab() {
 const EMPTY_DOC = { name: "", docType: "Resume", category: "Employee Documents", employeeId: "", description: "", expiryDate: "", tags: "", fileUrl: "", fileSize: "", mimeType: "application/pdf" };
 
 function UploadModal({ open, onClose, toast }) {
-  const { data: employees = [] } = useFetchAllEmployees();
-  const uploadMut = useUploadDocument();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const uploadMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   const [form, setForm] = useState(EMPTY_DOC);
 
   const save = async () => {
@@ -164,8 +162,8 @@ function UploadModal({ open, onClose, toast }) {
 }
 
 function EditModal({ open, onClose, doc, toast }) {
-  const { data: employees = [] } = useFetchAllEmployees();
-  const updateMut = useUpdateDocument();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
   // Initialised from doc — component is remounted via key={doc.id} so this is always fresh
   const [form, setForm] = useState({
     name:        doc?.name        || "",
@@ -217,8 +215,8 @@ function EditModal({ open, onClose, doc, toast }) {
 
 function RepositoryTab({ toast }) {
   const navigate = useNavigate();
-  const { data: docs = [], isLoading } = useDocuments();
-  const archiveMut = useArchiveDocument();
+  const { data: docs = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const archiveMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [search, setSearch] = useState("");
   const [searchBy, setSearchBy] = useState("name");
   const [catF, setCatF] = useState("All");
@@ -295,8 +293,8 @@ function RepositoryTab({ toast }) {
 }
 
 function VerificationTab({ toast }) {
-  const { data: docs = [] } = useDocuments({ status: "Pending" });
-  const verifyMut = useVerifyDocument();
+  const { data: docs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const verifyMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const pending = docs.filter((d) => d.verificationStatus === "Pending");
   const act = async (id, status) => {
     try { await verifyMut.mutateAsync({ id, status }); toast(`Document ${status === "Verified" ? "approved" : status === "Rejected" ? "rejected" : "sent for correction"}`, status === "Verified" ? "success" : "info"); }
@@ -332,10 +330,10 @@ function VerificationTab({ toast }) {
 }
 
 function RequestsTab({ toast }) {
-  const { data: requests = [] } = useDocRequests();
-  const { data: employees = [] } = useFetchAllEmployees();
-  const createMut = useCreateDocRequest();
-  const fulfilMut = useFulfilDocRequest();
+  const { data: requests = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const fulfilMut = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ employeeId: "", docType: "PAN Card", note: "" });
 

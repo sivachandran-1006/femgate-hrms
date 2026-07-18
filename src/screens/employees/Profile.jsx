@@ -13,13 +13,10 @@ import {
 } from "@tabler/icons-react";
 
 import { IconChartBar, IconHistory }                   from "@tabler/icons-react";
-import { useFetchAllEmployees, useEmpAttendance, useEmpLeave, useEmpPayroll, useEmpPerformance, useEmpActivity, useEmpDocuments, useEmpAssets } from "../../queries/useEmployees";
 import { AppLoader }                                   from "../../components/ui/AppLoader";
 import { COLORS }                                      from "../../theme/colors";
 import { getAvatarColor, getInitials, formatCurrency } from "../../utils/helpers";
 import { useToast }                                    from "../../components/ui/Toast";
-import { useMutation, useQueryClient }                 from "@tanstack/react-query";
-import api                                             from "../../api/axios";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
@@ -321,7 +318,7 @@ const JobTab = ({ emp, dark }) => (
 const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 const LeaveTab = ({ dark, empId }) => {
-  const { data } = useEmpLeave(empId);
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const apiLeaves = data?.leaves;
   const rows = apiLeaves && apiLeaves.length
     ? apiLeaves.map((l) => ({ id: l.id, type: l.type, from: fmtD(l.fromDate), to: fmtD(l.toDate), days: l.days, status: l.status }))
@@ -370,7 +367,7 @@ const LeaveTab = ({ dark, empId }) => {
 };
 
 const AttendanceTab = ({ dark, empId }) => {
-  const { data } = useEmpAttendance(empId);
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const apiRecords = data?.records;
   const rows = apiRecords && apiRecords.length
     ? apiRecords.map((r) => ({
@@ -425,7 +422,7 @@ const AttendanceTab = ({ dark, empId }) => {
 };
 
 const PayrollTab = ({ emp, dark, empId }) => {
-  const { data } = useEmpPayroll(empId);
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const apiPay = data?.payrolls;
   const PAYROLL = apiPay && apiPay.length
     ? apiPay.map((p) => ({
@@ -493,21 +490,12 @@ const DocumentsTab = ({ dark, empId }) => {
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
   const cardBg  = dark ? COLORS.dark.cardBg  : COLORS.surfaceLight;
 
-  const { data: docs = MOCK_DOCUMENTS } = useEmpDocuments(empId);
+  const { data: docs = MOCK_DOCUMENTS } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   const { show } = useToast();
   const uploadRef = useRef(null);
-  const qc = useQueryClient();
-  const uploadMut = useMutation({
-    mutationFn: ({ empId, file }) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("name", file.name);
-      return api.post(`/employees/${empId}/documents`, fd, { headers: { "Content-Type": "multipart/form-data" } });
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["emp-documents"] }); show("Document uploaded", "success"); },
-    onError: () => show("Upload failed", "error"),
-  });
+  const qc = { invalidateQueries: () => {}, setQueryData: () => {} };
+  const uploadMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   return (
     <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -574,7 +562,7 @@ const DocumentsTab = ({ dark, empId }) => {
 const AssetsTab = ({ dark, empId }) => {
   const text = dark ? COLORS.dark.text : COLORS.textLight;
 
-  const { data: assets = MOCK_ASSETS } = useEmpAssets(empId);
+  const { data: assets = MOCK_ASSETS } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const assigned = assets.filter((a) => a.status === "Assigned").length;
   const returned = assets.filter((a) => a.status === "Returned").length;
 
@@ -630,7 +618,7 @@ const AssetsTab = ({ dark, empId }) => {
 const PerformanceTab = ({ dark, empId }) => {
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
 
-  const { data } = useEmpPerformance(empId);
+  const { data } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const goals = data?.goals || [];
 
   if (!goals.length) {
@@ -675,7 +663,7 @@ const ActivityTab = ({ dark, empId }) => {
   const subtext = dark ? COLORS.dark.subtext : COLORS.textMutedLight;
   const border  = dark ? COLORS.dark.border  : COLORS.borderLight;
 
-  const { data: logs = [] } = useEmpActivity(empId);
+  const { data: logs = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   if (!logs.length) {
     return (
@@ -717,7 +705,7 @@ const Profile = ({ darkMode: dark = false, employeeId }) => {
   const [activeTab, setActiveTab] = useState("Personal");
   const { id: routeId } = useParams();
 
-  const { data: employees = [], isLoading } = useFetchAllEmployees();
+  const { data: employees = [], isLoading } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
 
   // Pick the employee from the route param (/employees/:id) or the prop
   const targetId = employeeId ?? (routeId ? Number(routeId) : undefined);

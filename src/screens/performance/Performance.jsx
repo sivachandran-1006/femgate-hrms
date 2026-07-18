@@ -27,13 +27,7 @@ import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 
 import { COLORS }               from "../../theme/colors";
 import { getAvatarColor }       from "../../utils/helpers";
-import { usePerformance }       from "../../queries/useHr";
-import {
-  useCreateGoal, useUpdateGoal, useDeleteGoal,
-  useCreateAppraisal, useUpdateAppraisal, useDeleteAppraisal,
-} from "../../queries/usePerformance";
 import { useToast } from "../../components/ui/Toast";
-import { useFetchAllEmployees } from "../../queries/useEmployees";
 
 const statusColor = (s) =>
   s === "Completed" || s === "Reviewed" ? "green" :
@@ -78,12 +72,12 @@ export default function Performance({ darkMode: dark }) {
   const [saved, setSaved] = useState(false);
 
   const { show } = useToast();
-  const { data: employees = [] } = useFetchAllEmployees();
+  const { data: employees = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const employeeOptions = (employees || []).map((e) => ({
     value: e.name,
     label: e.employeeId ? `${e.name} (${e.employeeId})` : e.name,
   }));
-  const { data: perfData } = usePerformance();
+  const { data: perfData } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const ratingDistribution    = perfData?.ratingDistribution    || [];
   const departmentPerformance = perfData?.departmentPerformance || [];
   const [goals, setGoals]         = useState(null);
@@ -93,12 +87,12 @@ export default function Performance({ darkMode: dark }) {
   const apprList  = appraisals ?? (perfData?.appraisals || []);
 
   // Mutations
-  const createGoalMutation  = useCreateGoal();
-  const updateGoalMutation  = useUpdateGoal();
-  const deleteGoalMutation  = useDeleteGoal();
-  const createApprMutation  = useCreateAppraisal();
-  const updateApprMutation  = useUpdateAppraisal();
-  const deleteApprMutation  = useDeleteAppraisal();
+  const createGoalMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateGoalMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteGoalMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const createApprMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateApprMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteApprMutation  = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 

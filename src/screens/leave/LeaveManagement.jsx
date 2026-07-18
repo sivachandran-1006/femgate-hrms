@@ -21,12 +21,11 @@ import { AppModal }      from "../../components/ui/AppModal";
 import { AppInput }      from "../../components/ui/AppInput";
 import { useToast }      from "../../components/ui/Toast";
 import { usePermission } from "../../hooks/usePermission";
-import { exportLeaves }  from "../../api/leaveApi";
 import Leave from "./Leave";
-import {
-  useLeaveDashboard, useLeaveAnalytics, useLeaveCalendar, useLeavePolicies,
-  useCreateLeavePolicy, useUpdateLeavePolicy, useDeleteLeavePolicy,
-} from "../../queries/useLeaves";
+
+// ── Mock stubs for removed service functions ──
+const exportLeaves = async (...args) => { console.log("Mock: exportLeaves"); return new Blob(["mock data"], { type: "text/csv" }); };
+
 
 const PIE = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#14b8a6", "#f97316", "#64748b"];
 const LEAVE_TYPES = ["Casual Leave", "Sick Leave", "Earned Leave", "Comp Off", "Maternity Leave", "Paternity Leave", "Marriage Leave", "Bereavement Leave", "Work From Home"];
@@ -83,8 +82,8 @@ export default function LeaveManagement({ darkMode }) {
 }
 
 function DashboardTab() {
-  const { data: dash } = useLeaveDashboard();
-  const { data: an } = useLeaveAnalytics();
+  const { data: dash } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const { data: an } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const c = dash?.cards || {};
   return (
     <>
@@ -141,7 +140,7 @@ function DashboardTab() {
 }
 
 function CalendarTab() {
-  const { data: leaves = [] } = useLeaveCalendar();
+  const { data: leaves = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
   const STATUS_COLOR = { Approved: "green", Pending: "yellow" };
   return (
     <AppSection noPadding title="Leave Calendar" sub={`${leaves.length} scheduled leaves`}>
@@ -170,10 +169,10 @@ function CalendarTab() {
 const EMPTY_POLICY = { name: "", leaveType: "Casual Leave", departments: "All", branches: "All", annualAllocation: 12, carryForward: false, carryForwardMax: 0, encashment: false, approvalWorkflow: "Manager → HR", status: "Active" };
 
 function PoliciesTab({ toast }) {
-  const { data: policies = [] } = useLeavePolicies();
-  const createMut = useCreateLeavePolicy();
-  const updateMut = useUpdateLeavePolicy();
-  const deleteMut = useDeleteLeavePolicy();
+  const { data: policies = [] } = { data: undefined, isLoading: false, isError: false, isPending: false, refetch: () => {} };
+  const createMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const updateMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
+  const deleteMut = { mutateAsync: async () => {}, isPending: false, mutate: () => {} };
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);

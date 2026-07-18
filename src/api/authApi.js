@@ -1,5 +1,7 @@
-import api from "./axios";
-
-export const loginApi    = (data) => api.post("/auth/login", data);
-export const logoutApi   = ()     => api.post("/auth/logout");
-export const getMeApi    = ()     => api.get("/auth/me");
+// ─────────────────────────────────────────────────────────────────
+// main_v1 — STUB FILE (static mock-only branch)
+// Old backend endpoint functions removed.
+// This file exists only so existing imports don’t break.
+// New backend service will be configured on a separate branch.
+// ─────────────────────────────────────────────────────────────────
+export default {};
