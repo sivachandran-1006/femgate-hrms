@@ -32,6 +32,50 @@ import { AppPageHeader } from "../../components/ui/AppPageHeader";
 // ── Palette ───────────────────────────────────────────────────────────────────
 const PALETTE = ["#6366f1","#8b5cf6","#22c55e","#f59e0b","#3b82f6","#f97316","#ef4444"];
 
+// ── Mock fallback data (main_v1 UI-only demo branch) ──────────────────────────
+const MOCK_EMPLOYEES = [
+  { name:"Aarav Sharma",      department:"Engineering", salary:95000, gender:"Male",   age:29, tenure:2.4, score:88, status:"Present", joiningDate:"2023-04-12" },
+  { name:"Diya Patel",        department:"Engineering", salary:102000,gender:"Female", age:33, tenure:3.8, score:91, status:"Present", joiningDate:"2021-11-02" },
+  { name:"Vihaan Reddy",      department:"Engineering", salary:87000, gender:"Male",   age:26, tenure:1.2, score:76, status:"Leave",   joiningDate:"2024-06-19" },
+  { name:"Ananya Iyer",       department:"Engineering", salary:110000,gender:"Female", age:37, tenure:5.1, score:94, status:"Present", joiningDate:"2020-02-27" },
+  { name:"Kabir Nair",        department:"Engineering", salary:79000, gender:"Male",   age:24, tenure:0.7, score:71, status:"Present", joiningDate:"2025-09-08" },
+  { name:"Saanvi Menon",      department:"Sales",       salary:68000, gender:"Female", age:31, tenure:2.9, score:82, status:"Present", joiningDate:"2022-12-15" },
+  { name:"Arjun Verma",       department:"Sales",       salary:72000, gender:"Male",   age:35, tenure:4.3, score:79, status:"Leave",   joiningDate:"2021-03-21" },
+  { name:"Ishita Kapoor",     department:"Sales",       salary:65000, gender:"Female", age:27, tenure:1.6, score:85, status:"Present", joiningDate:"2024-01-30" },
+  { name:"Reyansh Gupta",     department:"Sales",       salary:70000, gender:"Male",   age:40, tenure:6.2, score:80, status:"Present", joiningDate:"2019-05-04" },
+  { name:"Myra Joshi",        department:"Marketing",   salary:63000, gender:"Female", age:25, tenure:1.1, score:77, status:"Present", joiningDate:"2024-08-11" },
+  { name:"Aditya Rao",        department:"Marketing",   salary:74000, gender:"Male",   age:32, tenure:3.4, score:83, status:"Present", joiningDate:"2022-05-16" },
+  { name:"Kiara Desai",       department:"Marketing",   salary:69000, gender:"Female", age:29, tenure:2.0, score:90, status:"Leave",   joiningDate:"2023-07-22" },
+  { name:"Vivaan Chawla",     department:"Finance",     salary:98000, gender:"Male",   age:38, tenure:5.6, score:86, status:"Present", joiningDate:"2020-09-14" },
+  { name:"Anika Bhatt",       department:"Finance",     salary:93000, gender:"Female", age:34, tenure:4.0, score:88, status:"Present", joiningDate:"2021-10-05" },
+  { name:"Rohan Malhotra",    department:"Finance",     salary:85000, gender:"Male",   age:28, tenure:1.8, score:74, status:"Present", joiningDate:"2023-11-27" },
+  { name:"Navya Sinha",       department:"HR",          salary:71000, gender:"Female", age:41, tenure:7.3, score:92, status:"Present", joiningDate:"2018-06-03" },
+  { name:"Aryan Kulkarni",    department:"HR",          salary:66000, gender:"Male",   age:26, tenure:1.4, score:78, status:"Leave",   joiningDate:"2024-03-18" },
+  { name:"Pari Agarwal",      department:"HR",          salary:68000, gender:"Female", age:30, tenure:2.6, score:81, status:"Present", joiningDate:"2022-09-09" },
+  { name:"Dhruv Singh",       department:"Operations",  salary:76000, gender:"Male",   age:36, tenure:4.7, score:84, status:"Present", joiningDate:"2020-12-01" },
+  { name:"Riya Chatterjee",   department:"Operations",  salary:73000, gender:"Female", age:23, tenure:0.5, score:70, status:"Present", joiningDate:"2025-11-10" },
+  { name:"Yash Thakur",       department:"Operations",  salary:80000, gender:"Male",   age:33, tenure:3.1, score:87, status:"Leave",   joiningDate:"2022-02-19" },
+  { name:"Anaya Bose",        department:"Operations",  salary:77000, gender:"Female", age:39, tenure:5.9, score:89, status:"Present", joiningDate:"2019-08-25" },
+  { name:"Vedant Mehta",      department:"Support",     salary:58000, gender:"Male",   age:22, tenure:0.3, score:68, status:"Present", joiningDate:"2026-01-14" },
+  { name:"Ira Saxena",        department:"Support",     salary:60000, gender:"Female", age:27, tenure:1.9, score:75, status:"Present", joiningDate:"2023-06-30" },
+  { name:"Shaurya Pillai",    department:"Support",     salary:61000, gender:"Male",   age:31, tenure:2.7, score:73, status:"Leave",   joiningDate:"2022-08-06" },
+  { name:"Tara Krishnan",     department:"Design",      salary:82000, gender:"Female", age:28, tenure:1.5, score:90, status:"Present", joiningDate:"2023-09-17" },
+  { name:"Ayaan Bansal",      department:"Design",      salary:84000, gender:"Male",   age:35, tenure:4.5, score:86, status:"Present", joiningDate:"2020-10-23" },
+];
+
+const MOCK_LEAVES = [
+  { employee:"Aarav Sharma",   department:"Engineering", status:"Approved", days:2, type:"Casual",  startDate:"2026-05-04" },
+  { employee:"Diya Patel",     department:"Engineering", status:"Approved", days:3, type:"Sick",    startDate:"2026-04-11" },
+  { employee:"Vihaan Reddy",   department:"Engineering", status:"Pending",  days:1, type:"Casual",  startDate:"2026-07-02" },
+  { employee:"Saanvi Menon",   department:"Sales",       status:"Approved", days:4, type:"Annual",  startDate:"2026-03-20" },
+  { employee:"Arjun Verma",    department:"Sales",       status:"Approved", days:5, type:"Annual",  startDate:"2026-06-09" },
+  { employee:"Myra Joshi",     department:"Marketing",   status:"Rejected", days:2, type:"Casual",  startDate:"2026-02-14" },
+  { employee:"Kiara Desai",    department:"Marketing",   status:"Approved", days:3, type:"Sick",    startDate:"2026-05-28" },
+  { employee:"Vivaan Chawla",  department:"Finance",     status:"Approved", days:6, type:"Annual",  startDate:"2026-01-22" },
+  { employee:"Navya Sinha",    department:"HR",          status:"Approved", days:2, type:"Casual",  startDate:"2026-06-30" },
+  { employee:"Dhruv Singh",    department:"Operations",  status:"Approved", days:3, type:"Sick",    startDate:"2026-04-05" },
+];
+
 // ── Shared chart tooltip ──────────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label, prefix = "", suffix = "" }) => {
   if (!active || !payload?.length) return null;
@@ -93,8 +137,10 @@ const ProgressRow = ({ label, value, total, pct, color = "blue" }) => (
 const Analytics = ({ darkMode: dark = false }) => {
   const [tab, setTab] = useState("overview");
 
-  const { data: rawEmployees = [], isLoading: loadEmp  } = useFetchAllEmployees();
-  const { data: rawLeaves    = [], isLoading: loadLeave } = useFetchAllLeaves();
+  const { data: rawEmployeesQ, isLoading: loadEmp  } = useFetchAllEmployees();
+  const { data: rawLeavesQ,    isLoading: loadLeave } = useFetchAllLeaves();
+  const rawEmployees = rawEmployeesQ?.length ? rawEmployeesQ : MOCK_EMPLOYEES;
+  const rawLeaves    = rawLeavesQ?.length    ? rawLeavesQ    : MOCK_LEAVES;
   const { data: candidates   = [] } = useCandidates();
   const { data: exits        = [] } = useExits();
 
