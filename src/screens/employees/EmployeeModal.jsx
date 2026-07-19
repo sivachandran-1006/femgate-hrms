@@ -15,6 +15,21 @@ import { isValidEmail, isValidPhone, isPositiveNumber } from "../../utils/valida
 const ROLES = ["EMPLOYEE", "HR", "ADMIN", "FINANCE", "IT_ADMIN", "SUPER_ADMIN"];
 const EMP_TYPES = ["Full-time", "Part-time", "Contract", "Intern"];
 
+// ── Mock fallback data (main_v1: UI-only demo, no backend) ───────────────────
+const MOCK_DESIGNATIONS = [
+  { id: "g1", name: "Senior Manager", departmentId: "d1" },
+  { id: "g2", name: "Software Engineer", departmentId: "d1" },
+  { id: "g3", name: "HR Executive", departmentId: "d3" },
+  { id: "g4", name: "Finance Analyst", departmentId: "d4" },
+];
+
+const MOCK_BRANCHES = [
+  { id: "b1", name: "Chennai HQ" },
+  { id: "b2", name: "Bangalore Tech Park" },
+  { id: "b3", name: "Mumbai Sales Office" },
+  { id: "b4", name: "Dubai Remote Hub" },
+];
+
 const field = (darkMode) => ({
   input: {
     background: darkMode ? "#0f172a" : "#f8fafc",
@@ -63,15 +78,17 @@ const EmployeeModal = ({
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const { data: branches = [] } = useQuery({
+  const { data: rawBranches } = useQuery({
     queryKey: ["branches"],
     queryFn: () => fetchBranches().then(r => r.data?.data ?? r.data ?? []),
   });
+  const branches = rawBranches?.length ? rawBranches : MOCK_BRANCHES;
 
-  const { data: designations = [] } = useQuery({
+  const { data: rawDesignations } = useQuery({
     queryKey: ["designations"],
     queryFn: () => fetchDesignations().then(r => r.data?.data ?? r.data ?? []),
   });
+  const designations = rawDesignations?.length ? rawDesignations : MOCK_DESIGNATIONS;
 
   const depts = [...new Set(employees.map(e => e.department).filter(Boolean))];
   const managers = employees.filter(e => e.status === "Active");
