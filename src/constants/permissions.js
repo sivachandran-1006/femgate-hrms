@@ -281,6 +281,9 @@ export const PERMISSIONS = {
   "attendance.approve_correction":    ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
   "attendance.approve_wfh":           ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
   "attendance.regularize_own":        ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","IT_ADMIN","FINANCE"],
+  "attendance.export_own":            ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","IT_ADMIN","FINANCE"],
+  "attendance.export_team":           ["MANAGER","HR","ADMIN","SUPER_ADMIN"],
+  "attendance.export_all":            ["HR","ADMIN","SUPER_ADMIN"],
 
   // ── Leave ──
   "leave.apply":                      ["EMPLOYEE","MANAGER","HR","ADMIN","SUPER_ADMIN","IT_ADMIN","FINANCE"],

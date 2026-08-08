@@ -9,9 +9,10 @@ import {
 import {
   Group, SimpleGrid, TextInput, Select, Avatar,
   Text, Paper, ScrollArea, Table, ActionIcon,
-  Pagination, Badge, Modal, Button, Stack, ThemeIcon,
+  Pagination, Badge, Modal, Button, Stack, ThemeIcon, Checkbox,
 } from "@mantine/core";
 import EmployeeModal from "./EmployeeModal";
+import { ExportEmployeesModal } from "./ExportEmployeesModal";
 
 import {
   useFetchAllEmployees, useCreateEmployee,
@@ -67,6 +68,9 @@ const EmployeeList = () => {
   const [editTarget,   setEditTarget]   = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
+
+  const [selectedIds,  setSelectedIds]  = useState([]);
+  const [exportOpen,   setExportOpen]   = useState(false);
 
   const { data: employees = [], isLoading, isError } = useFetchAllEmployees();
   const { data: deptList = [] } = useDepartments();
@@ -155,6 +159,16 @@ const EmployeeList = () => {
 
   const totalPages   = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const paginated    = filtered.slice((currentPage - 1) * ROWS_PER_PAGE, currentPage * ROWS_PER_PAGE);
+  const selectedEmployees = employees.filter((e) => selectedIds.includes(e.id));
+
+  const toggleSelectAll = (checked) => {
+    setSelectedIds(checked ? paginated.map((e) => e.id) : []);
+  };
+  const toggleSelectRow = (id, checked) => {
+    setSelectedIds((cur) => checked ? [...cur, id] : cur.filter((x) => x !== id));
+  };
+  const allPageSelected = paginated.length > 0 && paginated.every((e) => selectedIds.includes(e.id));
+  const somePageSelected = paginated.some((e) => selectedIds.includes(e.id));
   const totalCount   = employees.length;
   const presentCount = employees.filter((e) => e.status === "Active").length;
   const leaveCount   = employees.filter((e) => e.status === "On Leave").length;
@@ -183,16 +197,9 @@ const EmployeeList = () => {
               variant="default"
               leftSection={<IconFileSpreadsheet size={15} />}
               size="sm"
-              onClick={() => {
-                const rows = employees.map(e => [e.name, e.email, e.designation, e.department, e.status, e.joinDate].join(","));
-                const csv = ["Name,Email,Designation,Department,Status,Join Date", ...rows].join("\n");
-                const a = document.createElement("a");
-                a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-                a.download = "employees.csv";
-                a.click();
-              }}
+              onClick={() => setExportOpen(true)}
             >
-              Export Excel
+              Export
             </AppButton>
             <AppButton
               leftSection={<IconPlus size={15} />}
@@ -256,6 +263,14 @@ const EmployeeList = () => {
           <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md" style={{ minWidth: 750 }}>
             <Table.Thead style={{ background: "var(--mantine-color-gray-0)" }}>
               <Table.Tr>
+                <Table.Th style={{ width: 36 }}>
+                  <Checkbox
+                    size="xs"
+                    checked={allPageSelected}
+                    indeterminate={!allPageSelected && somePageSelected}
+                    onChange={(e) => toggleSelectAll(e.currentTarget.checked)}
+                  />
+                </Table.Th>
                 {[
                   { key: "name",        label: "Employee"    },
                   { key: "department",  label: "Department"  },
@@ -288,7 +303,7 @@ const EmployeeList = () => {
             <Table.Tbody>
               {paginated.length === 0 ? (
                 <Table.Tr>
-                  <Table.Td colSpan={7}>
+                  <Table.Td colSpan={8}>
                     <AppEmptyState message="No employees match your filters" />
                   </Table.Td>
                 </Table.Tr>
@@ -296,6 +311,15 @@ const EmployeeList = () => {
                 const av = getAvatarColor(emp.name);
                 return (
                   <Table.Tr key={emp.id}>
+
+                    {/* Select */}
+                    <Table.Td>
+                      <Checkbox
+                        size="xs"
+                        checked={selectedIds.includes(emp.id)}
+                        onChange={(e) => toggleSelectRow(emp.id, e.currentTarget.checked)}
+                      />
+                    </Table.Td>
 
                     {/* Employee */}
                     <Table.Td>
@@ -407,6 +431,17 @@ const EmployeeList = () => {
         employees={employees}
         onSave={handleSave}
         onSaveAndInvite={handleSaveAndInvite}
+      />
+
+      {/* ── Export Modal ── */}
+      <ExportEmployeesModal
+        opened={exportOpen}
+        onClose={() => setExportOpen(false)}
+        employees={employees}
+        filteredEmployees={filtered}
+        selectedEmployees={selectedEmployees}
+        departments={deptList}
+        deptFilter={deptFilter}
       />
 
       {/* ── Delete Confirm Modal ── */}

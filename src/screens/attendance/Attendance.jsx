@@ -1,14 +1,14 @@
 import { useState, useMemo } from "react";
 import {
   Group, SimpleGrid, Text, Badge, ScrollArea, Table, TextInput, Select, SegmentedControl,
-  Stack, Loader, Box, Tabs, Menu, ActionIcon, Button,
+  Stack, Loader, Box, Tabs, ActionIcon, Checkbox,
 } from "@mantine/core";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import {
   IconUsers, IconUserCheck, IconUserX, IconCalendarOff, IconHome, IconClock,
-  IconPercentage, IconClockHour4, IconSearch, IconFileExport, IconDownload, IconChartBar,
+  IconPercentage, IconClockHour4, IconSearch, IconFileExport, IconChartBar,
   IconList, IconReport, IconCheck, IconX, IconHelp, IconCalendarStats,
 } from "@tabler/icons-react";
 
@@ -19,8 +19,8 @@ import { AppEmptyState } from "../../components/ui/AppEmptyState";
 import { AppButton }     from "../../components/ui/AppButton";
 import { useToast }      from "../../components/ui/Toast";
 import { fetchBranches } from "../../api/branchApi";
-import { exportAttendance } from "../../api/attendanceApi";
 import { useQuery } from "@tanstack/react-query";
+import { ExportAttendanceModal } from "./ExportAttendanceModal";
 import {
   useAttendanceRecords, useAttDashboard, useAttTrends, useAttBreakdown,
   useLateReport, useOvertime, useWFH, useRegularizations, useReviewRegularization,
@@ -106,19 +106,11 @@ const MOCK_REGULARIZATIONS = [
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const fmtTime = (d) => d ? new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—";
 
-async function doExport(fmt, toast) {
-  try {
-    const blob = await exportAttendance(fmt);
-    const url = URL.createObjectURL(blob);
-    if (fmt === "pdf") window.open(url, "_blank");
-    else { const a = document.createElement("a"); a.href = url; a.download = `attendance.${fmt === "excel" ? "csv" : fmt}`; a.click(); URL.revokeObjectURL(url); }
-    toast(`Exported as ${fmt.toUpperCase()}`, "success");
-  } catch { toast("Export failed", "error"); }
-}
-
 export default function Attendance() {
   const { show: toast } = useToast();
   const [range, setRange] = useState("weekly");
+  const [exportOpen, setExportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const { data: rawDash } = useAttDashboard();
   const { data: rawTrends } = useAttTrends(range);
@@ -138,14 +130,9 @@ export default function Attendance() {
     <>
       <AppPageHeader title="Attendance Management" sub="Track attendance, work hours, late arrivals & regularization"
         action={
-          <Menu position="bottom-end" withinPortal>
-            <Menu.Target><AppButton variant="default" leftSection={<IconFileExport size={16} />}>Export</AppButton></Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => doExport("excel", toast)}>Excel (CSV)</Menu.Item>
-              <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => doExport("csv", toast)}>CSV</Menu.Item>
-              <Menu.Item leftSection={<IconDownload size={14} />} onClick={() => doExport("pdf", toast)}>PDF</Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+          <AppButton variant="default" leftSection={<IconFileExport size={16} />} onClick={() => setExportOpen(true)}>
+            Export
+          </AppButton>
         }
       />
 
@@ -216,15 +203,28 @@ export default function Attendance() {
           </SimpleGrid>
         </Tabs.Panel>
 
-        <Tabs.Panel value="list"><AttendanceList records={records} isLoading={isLoading} branches={branches} /></Tabs.Panel>
+        <Tabs.Panel value="list">
+          <AttendanceList
+            records={records} isLoading={isLoading} branches={branches}
+            selectedIds={selectedIds} setSelectedIds={setSelectedIds}
+          />
+        </Tabs.Panel>
         <Tabs.Panel value="reports"><ReportsTab /></Tabs.Panel>
         <Tabs.Panel value="regular"><RegularizationTab toast={toast} /></Tabs.Panel>
       </Tabs>
+
+      <ExportAttendanceModal
+        opened={exportOpen}
+        onClose={() => setExportOpen(false)}
+        records={records}
+        filteredRecords={records}
+        selectedRecords={records.filter((r) => selectedIds.includes(r.id))}
+      />
     </>
   );
 }
 
-function AttendanceList({ records, isLoading }) {
+function AttendanceList({ records, isLoading, selectedIds, setSelectedIds }) {
   const [search, setSearch]   = useState("");
   const [searchBy, setSearchBy] = useState("name");
   const [statusF, setStatusF] = useState("All");
@@ -239,6 +239,12 @@ function AttendanceList({ records, isLoading }) {
       && (statusF === "All" || r.status === statusF)
       && (deptF === "All" || r.employee?.department === deptF);
   });
+
+  const toggleSelectAll = (checked) => setSelectedIds(checked ? filtered.map((r) => r.id) : []);
+  const toggleSelectRow = (id, checked) =>
+    setSelectedIds((cur) => checked ? [...cur, id] : cur.filter((x) => x !== id));
+  const allSelected = filtered.length > 0 && filtered.every((r) => selectedIds.includes(r.id));
+  const someSelected = filtered.some((r) => selectedIds.includes(r.id));
 
   if (isLoading) return <Box ta="center" py="xl"><Loader size="sm" /></Box>;
   const COLS = ["Employee ID", "Name", "Department", "Date", "Check In", "Check Out", "Hours", "Status"];
@@ -256,12 +262,31 @@ function AttendanceList({ records, isLoading }) {
       <AppSection noPadding title="Attendance Records" sub={`${filtered.length} records`}>
         <ScrollArea>
           <Table highlightOnHover verticalSpacing="sm" horizontalSpacing="md">
-            <Table.Thead><Table.Tr>{COLS.map((col) => <Table.Th key={col}><Text size="xs" fw={600} c="dimmed" tt="uppercase">{col}</Text></Table.Th>)}</Table.Tr></Table.Thead>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th style={{ width: 36 }}>
+                  <Checkbox
+                    size="xs"
+                    checked={allSelected}
+                    indeterminate={!allSelected && someSelected}
+                    onChange={(e) => toggleSelectAll(e.currentTarget.checked)}
+                  />
+                </Table.Th>
+                {COLS.map((col) => <Table.Th key={col}><Text size="xs" fw={600} c="dimmed" tt="uppercase">{col}</Text></Table.Th>)}
+              </Table.Tr>
+            </Table.Thead>
             <Table.Tbody>
               {filtered.length === 0 ? (
-                <Table.Tr><Table.Td colSpan={COLS.length}><AppEmptyState message="No attendance records available." /></Table.Td></Table.Tr>
+                <Table.Tr><Table.Td colSpan={COLS.length + 1}><AppEmptyState message="No attendance records available." /></Table.Td></Table.Tr>
               ) : filtered.map((r) => (
                 <Table.Tr key={r.id}>
+                  <Table.Td>
+                    <Checkbox
+                      size="xs"
+                      checked={selectedIds.includes(r.id)}
+                      onChange={(e) => toggleSelectRow(r.id, e.currentTarget.checked)}
+                    />
+                  </Table.Td>
                   <Table.Td><Text size="sm" fw={600}>{r.employee?.employeeId || "—"}</Text></Table.Td>
                   <Table.Td><Text size="sm">{r.employee?.name || "—"}</Text></Table.Td>
                   <Table.Td><Text size="sm" c="dimmed">{r.employee?.department || "—"}</Text></Table.Td>
