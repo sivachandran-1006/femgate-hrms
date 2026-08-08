@@ -77,7 +77,7 @@ const ramp = (v) => [v * 0.9, v * 0.93, v * 0.96, v].map(Math.round);
 
 const QUICK_ACTIONS = [
   { label: "Add Employee",        icon: IconUserPlus,     color: "blue",   route: "/employees" },
-  { label: "Manage Roles",        icon: IconShieldCheck,  color: "violet", route: "/roles" },
+  { label: "Manage Roles",        icon: IconShieldCheck,  color: "violet", route: "/roles-permissions" },
   { label: "Apply Leave",         icon: IconCalendarOff,  color: "green",  route: "/leave" },
   { label: "System Audit",        icon: IconFileText,     color: "orange", route: "/audit-logs" },
   { label: "Create Announcement", icon: IconSpeakerphone, color: "pink",   route: "/announcements" },

@@ -778,6 +778,7 @@ export default function App() {
               </RoleGuard>
             }
           />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AppShell.Main>
     </AppShell>
