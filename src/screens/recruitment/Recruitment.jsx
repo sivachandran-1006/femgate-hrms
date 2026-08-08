@@ -26,7 +26,7 @@ import { AppSection }     from "../../components/ui/AppSection";
 import { AppEmptyState }  from "../../components/ui/AppEmptyState";
 import { AppButton }      from "../../components/ui/AppButton";
 import { AppModal }       from "../../components/ui/AppModal";
-import { AppInput }       from "../../components/ui/AppInput";
+import { PostJobWizard }  from "./PostJobWizard";
 
 import { COLORS }         from "../../theme/colors";
 import { getAvatarColor } from "../../utils/helpers";
@@ -80,7 +80,6 @@ export default function Recruitment() {
   const [viewJob, setViewJob]             = useState(null);
   const [viewCandidate, setViewCandidate] = useState(null);
   const [showPostJob, setShowPostJob]     = useState(false);
-  const [jobForm, setJobForm]             = useState({ title: "", dept: "", loc: "", type: "Full-time" });
 
   const { show } = useToast();
   const { data: jobsRaw = [] }  = useJobs();
@@ -98,16 +97,10 @@ export default function Recruitment() {
     appliedDate: (c.appliedDate || "").split("T")[0],
   }));
 
-  const handlePostJob = async () => {
-    if (!jobForm.title.trim()) return show("Job title is required", "error");
+  const handlePostJob = async (payload) => {
     try {
-      await createJobMut.mutateAsync({
-        title: jobForm.title, department: jobForm.dept,
-        location: jobForm.loc, type: jobForm.type || "Full-time",
-      });
-      show("Job posted", "success");
-      setJobForm({ title: "", dept: "", loc: "", type: "Full-time" });
-      setShowPostJob(false);
+      await createJobMut.mutateAsync(payload);
+      show(payload.status === "Published" ? "Job published" : payload.status === "Draft" ? "Draft saved" : "Job submitted for approval", "success");
     } catch {
       show("Failed to post job", "error");
     }
@@ -549,35 +542,13 @@ export default function Recruitment() {
         })()}
       </AppModal>
 
-      {/* Post Job Modal */}
-      <AppModal
+      {/* Post Job Wizard */}
+      <PostJobWizard
         opened={showPostJob}
         onClose={() => setShowPostJob(false)}
-        title="Post New Job"
-        icon={<Plus size={16} color={COLORS.primary} />}
-        iconColor={COLORS.primary}
-      >
-        <Stack gap="md">
-          {[
-            { label: "Job Title *",  key: "title", ph: "e.g. Software Engineer"   },
-            { label: "Department",   key: "dept",  ph: "e.g. Engineering"         },
-            { label: "Location",     key: "loc",   ph: "e.g. Chennai / Remote"    },
-            { label: "Job Type",     key: "type",  ph: "Full-time / Contract"     },
-          ].map(({ label, key, ph }) => (
-            <AppInput
-              key={key}
-              label={label}
-              placeholder={ph}
-              value={jobForm[key]}
-              onChange={(e) => setJobForm((f) => ({ ...f, [key]: e.target.value }))}
-            />
-          ))}
-          <Group justify="flex-end" gap="sm" mt="xs">
-            <AppButton variant="default" onClick={() => setShowPostJob(false)}>Cancel</AppButton>
-            <AppButton onClick={handlePostJob} loading={createJobMut.isPending}>Post Job</AppButton>
-          </Group>
-        </Stack>
-      </AppModal>
+        onSubmit={handlePostJob}
+        saving={createJobMut.isPending}
+      />
     </>
   );
 }
