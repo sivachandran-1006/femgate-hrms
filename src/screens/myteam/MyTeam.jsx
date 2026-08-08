@@ -6,6 +6,7 @@ import {
 } from "@tabler/icons-react";
 import { fetchMyTeam, fetchApprovals, approveLeave } from "../../api/approvalsApi";
 import { AppPageHeader } from "../../components/ui/AppPageHeader";
+import { useToast } from "../../components/ui/Toast";
 import { getInitials, getAvatarColor } from "../../utils/helpers";
 
 const MOCK_TEAM = [
@@ -42,8 +43,10 @@ const statusColor = (s) => s === "Active" ? "green" : s === "On Leave" ? "yellow
 
 export default function MyTeam({ darkMode }) {
   const qc = useQueryClient();
+  const { show: showToast } = useToast();
   const [leaveModal, setLeaveModal] = useState(null);
   const [note, setNote] = useState("");
+  const [dismissedMockIds, setDismissedMockIds] = useState([]);
 
   const { data: teamRaw = [] } = useQuery({
     queryKey: ["my-team"],
@@ -57,12 +60,32 @@ export default function MyTeam({ darkMode }) {
   });
 
   const pendingLeavesRaw = approvals?.leaves || [];
-  const pendingLeaves = pendingLeavesRaw.length ? pendingLeavesRaw : MOCK_PENDING_LEAVES;
+  const usingMockLeaves = pendingLeavesRaw.length === 0;
+  const pendingLeaves = (usingMockLeaves ? MOCK_PENDING_LEAVES : pendingLeavesRaw)
+    .filter((lv) => !dismissedMockIds.includes(lv.id));
 
   const approveMut = useMutation({
     mutationFn: ({ id, action }) => approveLeave(id, { action, note }),
-    onSuccess: () => { qc.invalidateQueries(["approvals"]); setLeaveModal(null); setNote(""); },
+    onSuccess: (_, { action }) => {
+      qc.invalidateQueries(["approvals"]);
+      setLeaveModal(null); setNote("");
+      showToast(`Leave ${action.toLowerCase()}`, "success");
+    },
+    onError: (err) => {
+      showToast(err?.response?.data?.message || "Failed to update leave request", "error");
+    },
   });
+
+  const handleDecision = (lv, action) => {
+    if (usingMockLeaves) {
+      // Demo data has no backing record — resolve locally instead of hitting the real API with a fake id.
+      setDismissedMockIds((ids) => [...ids, lv.id]);
+      setLeaveModal(null); setNote("");
+      showToast(`Leave ${action.toLowerCase()}`, "success");
+      return;
+    }
+    approveMut.mutate({ id: lv.id, action });
+  };
 
   const card   = darkMode ? "#1e293b" : "#ffffff";
   const border = darkMode ? "#334155" : "#e2e8f0";
@@ -144,7 +167,8 @@ export default function MyTeam({ darkMode }) {
                     color="green"
                     size={32}
                     radius={8}
-                    onClick={() => approveMut.mutate({ id: lv.id, action: "Approved" })}
+                    loading={approveMut.isPending}
+                    onClick={() => handleDecision(lv, "Approved")}
                   >
                     <IconCheck size={14} stroke={2.5} />
                   </ActionIcon>
@@ -188,7 +212,7 @@ export default function MyTeam({ darkMode }) {
         />
         <Group justify="flex-end" mt={16} gap={8}>
           <Button variant="outline" color="gray" onClick={() => setLeaveModal(null)}>Cancel</Button>
-          <Button color="red" fw={600} onClick={() => approveMut.mutate({ id: leaveModal.id, action: "Rejected" })}>
+          <Button color="red" fw={600} loading={approveMut.isPending} onClick={() => handleDecision(leaveModal, "Rejected")}>
             Reject
           </Button>
         </Group>
