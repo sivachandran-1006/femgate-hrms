@@ -30,6 +30,7 @@ import {
   NumberInput,
   Loader,
 } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 
 import { COLORS }                        from "../../theme/colors";
@@ -228,7 +229,7 @@ function StatCard({ card, darkMode }) {
 }
 
 // ── Assign Shift Modal ────────────────────────────────────────────────────────
-function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates = [] }) {
+function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates = [], weekStart }) {
   const [employee, setEmployee] = useState(employees[0] || "");
   const [dayIndex, setDayIndex] = useState("0");
   const [shift, setShift] = useState("Morning");
@@ -238,8 +239,12 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
   }, [employees, employee]);
 
   const employeeOptions = employees.map((emp) => ({ value: emp, label: emp }));
-  const dayOptions = WEEK_DAYS.map((day, i) => ({ value: String(i), label: `${day}, ${weekDates[i] || ""}` }));
   const shiftOptions = Object.keys(SHIFT_TYPES).map((s) => ({ value: s, label: s }));
+
+  const weekStartDate = weekStart ? new Date(`${weekStart}T00:00:00`) : null;
+  const weekEndDate = weekStartDate ? new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), weekStartDate.getDate() + 6) : null;
+  const selectedDate = weekStartDate ? new Date(weekStartDate.getFullYear(), weekStartDate.getMonth(), weekStartDate.getDate() + Number(dayIndex)) : null;
+  const weekLabel = weekDates.length ? `Week of ${weekDates[0]} – ${weekDates[6]}` : "";
 
   return (
     <Modal
@@ -248,7 +253,7 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
       title={
         <Stack gap={2}>
           <Text fw={700} size="lg">Assign Shift</Text>
-          <Text size="xs" c="dimmed">Week of Jun 2 – 8, 2026</Text>
+          {weekLabel && <Text size="xs" c="dimmed">{weekLabel}</Text>}
         </Stack>
       }
       centered
@@ -261,11 +266,17 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
           value={employee}
           onChange={(v) => setEmployee(v || "")}
         />
-        <Select
+        <DateInput
           label="Date"
-          data={dayOptions}
-          value={dayIndex}
-          onChange={(v) => setDayIndex(v || "0")}
+          value={selectedDate}
+          minDate={weekStartDate}
+          maxDate={weekEndDate}
+          valueFormat="ddd, MMM D"
+          onChange={(d) => {
+            if (!d || !weekStartDate) return;
+            const diff = Math.round((d.setHours(0, 0, 0, 0) - weekStartDate.getTime()) / 86400000);
+            setDayIndex(String(Math.min(6, Math.max(0, diff))));
+          }}
         />
         <Select
           label="Shift"
@@ -288,7 +299,7 @@ function AssignShiftModal({ darkMode, onClose, onSave, employees = [], weekDates
 }
 
 // ── Shift Roster Tab ──────────────────────────────────────────────────────────
-function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates = [] }) {
+function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates = [], weekStart }) {
   const surface = darkMode ? COLORS.dark : COLORS.light;
   const [showModal, setShowModal] = useState(false);
 
@@ -392,6 +403,7 @@ function ShiftRosterTab({ darkMode, roster, onAssign, employees = [], weekDates 
           onSave={(emp, dayIndex, shift) => onAssign(emp, dayIndex, shift)}
           employees={employees}
           weekDates={weekDates}
+          weekStart={weekStart}
         />
       )}
     </Stack>
@@ -913,6 +925,7 @@ const ShiftManagement = ({ darkMode = false }) => {
           onAssign={handleAssignShift}
           employees={employees}
           weekDates={weekDates}
+          weekStart={shiftsData?.weekStart}
         />
       )}
       {activeTab === "definitions" && (
