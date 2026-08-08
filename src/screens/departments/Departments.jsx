@@ -47,6 +47,12 @@ const MOCK_DEPARTMENTS = [
   { id: "d8", name: "IT Support",   code: "ITS",  headName: "Arun Prakash",  branch: { name: "Chennai HQ" }, branchId: "b1", employeeCount: 3,  status: "Active",   createdAt: "2024-04-15T00:00:00Z" },
 ];
 
+const MOCK_BRANCHES = [
+  { id: "b1", name: "Chennai HQ" },
+  { id: "b2", name: "Bangalore" },
+  { id: "b3", name: "Mumbai" },
+];
+
 // ─── Add / Edit Drawer-style Modal ────────────────────────────────────────────
 const DeptModal = ({ open, onClose, onSave, editData, saving, branches, heads }) => {
   const [form, setForm] = useState(EMPTY_FORM);
@@ -69,7 +75,13 @@ const DeptModal = ({ open, onClose, onSave, editData, saving, branches, heads })
   }, [open, editData, heads]);
 
   if (!open) return null;
-  const set = (k) => (v) => setForm((p) => ({ ...p, [k]: v?.currentTarget ? v.currentTarget.value : v }));
+  const set = (k) => (v) => {
+    let value = v;
+    if (v && typeof v === "object") {
+      value = v.target?.value ?? v.currentTarget?.value ?? "";
+    }
+    setForm((p) => ({ ...p, [k]: value }));
+  };
 
   const validate = () => {
     const e = {};
@@ -169,7 +181,7 @@ const Departments = () => {
   const departments = rawDepartments?.length ? rawDepartments : MOCK_DEPARTMENTS;
   const { data: heads = [] } = useDeptHeads();
   const { data: branchesRes } = useQuery({ queryKey: ["branches"], queryFn: () => fetchBranches().then((r) => r.data?.data ?? r.data ?? []) });
-  const branches = branchesRes || [];
+  const branches = branchesRes?.length ? branchesRes : MOCK_BRANCHES;
 
   const createMut = useCreateDepartment();
   const updateMut = useUpdateDepartment();
