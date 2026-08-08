@@ -56,8 +56,8 @@ export const AppModal = ({
           paddingBottom: 16,
           marginBottom: 0,
         },
-        body: { paddingTop: 20 },
-        content: { overflow: "hidden" },
+        body: { paddingTop: 20, overflowY: "auto", maxHeight: "calc(90vh - 88px)" },
+        content: { display: "flex", flexDirection: "column", maxHeight: "90vh" },
       }}
       {...props}
     >

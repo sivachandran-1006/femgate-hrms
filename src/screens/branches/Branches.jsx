@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Country, State, City } from "country-state-city";
 import {
   Group, SimpleGrid, Text, Badge, ActionIcon, Avatar, ScrollArea, Table,
   TextInput, Select, Stack, Loader, Alert, Box, Button, Menu, Pagination,
@@ -32,9 +33,11 @@ const BRANCH_TYPES = ["Head Office", "Regional Office", "Sales Office", "Remote 
 const TIMEZONES = ["Asia/Kolkata", "Asia/Dubai", "America/New_York", "Europe/London", "Asia/Singapore"];
 const STATUS_COLOR = { Active: "green", Inactive: "gray" };
 
+const COUNTRIES = Country.getAllCountries();
+
 const EMPTY_FORM = {
   name: "", code: "", type: "Head Office", headId: "",
-  country: "", state: "", city: "", address1: "", address2: "",
+  countryCode: "", stateCode: "", city: "", address1: "", address2: "",
   postalCode: "", email: "", phone: "", timezone: "Asia/Kolkata", status: "Active",
 };
 
@@ -47,10 +50,12 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast
     if (open) {
       setErr({});
       setIsDirty(false);
+      const country = COUNTRIES.find((c) => c.name === editData?.country);
+      const state = country ? State.getStatesOfCountry(country.isoCode).find((s) => s.name === editData?.state) : null;
       setForm(editData ? {
         name: editData.name || "", code: editData.code || "", type: editData.type || "Head Office",
         headId: editData.headName ? String(heads.find((h) => h.name === editData.headName)?.id || "") : "",
-        country: editData.country || "", state: editData.state || "", city: editData.city || "",
+        countryCode: country?.isoCode || "", stateCode: state?.isoCode || "", city: editData.city || "",
         address1: editData.address1 || "", address2: editData.address2 || "",
         postalCode: editData.postalCode || "", email: editData.email || "", phone: editData.phone || "",
         timezone: editData.timezone || "Asia/Kolkata", status: editData.status || "Active",
@@ -61,14 +66,23 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast
   const guard = useUnsavedChangesGuard({ isDirty, onClose });
 
   if (!open) return null;
-  const set = (k) => (v) => { setIsDirty(true); setForm((p) => ({ ...p, [k]: v?.currentTarget ? v.currentTarget.value : v })); };
+  const set = (k) => (v) => {
+    const raw = v?.currentTarget ? v.currentTarget.value : v;
+    setIsDirty(true);
+    setForm((p) => ({ ...p, [k]: typeof raw === "string" ? raw : "" }));
+  };
+  const setCountry = (v) => { setIsDirty(true); setForm((p) => ({ ...p, countryCode: v, stateCode: "", city: "" })); };
+  const setState = (v) => { setIsDirty(true); setForm((p) => ({ ...p, stateCode: v, city: "" })); };
+
+  const stateOpts = form.countryCode ? State.getStatesOfCountry(form.countryCode) : [];
+  const cityOpts   = form.countryCode && form.stateCode ? City.getCitiesOfState(form.countryCode, form.stateCode) : [];
 
   const validate = () => {
     const e = {};
     if (!form.name.trim())     e.name = "Branch Name is required";
     if (!form.code.trim())     e.code = "Branch Code is required";
-    if (!form.country.trim())  e.country = "Country is required";
-    if (!form.state.trim())    e.state = "State is required";
+    if (!form.countryCode)     e.countryCode = "Country is required";
+    if (!form.stateCode)       e.stateCode = "State is required";
     if (!form.city.trim())     e.city = "City is required";
     if (!form.address1.trim()) e.address1 = "Address Line 1 is required";
     setErr(e);
@@ -79,8 +93,10 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast
   const submit = (keepOpen) => {
     if (!validate()) return;
     const head = heads.find((h) => String(h.id) === String(form.headId));
-    const { headId, ...rest } = form;
-    onSave({ ...rest, headName: head?.name || null, headEmail: head?.email || null }, keepOpen);
+    const { headId, countryCode, stateCode, ...rest } = form;
+    const country = COUNTRIES.find((c) => c.isoCode === countryCode);
+    const state = State.getStatesOfCountry(countryCode).find((s) => s.isoCode === stateCode);
+    onSave({ ...rest, country: country?.name || "", state: state?.name || "", headName: head?.name || null, headEmail: head?.email || null }, keepOpen);
     if (keepOpen) { setForm(EMPTY_FORM); setErr({}); setIsDirty(false); }
   };
 
@@ -91,8 +107,8 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast
         icon={<IconBuilding size={16} color="#3b82f6" />} iconColor="#3b82f6">
         <Stack gap="md">
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
-            <AppInput label="Branch Name *" placeholder="e.g. Chennai HQ" value={form.name} onChange={set("name")} error={err.name} />
-            <AppInput label="Branch Code *" placeholder="e.g. CHN" value={form.code} onChange={set("code")} error={err.code} />
+            <AppInput label="Branch Name *" placeholder="e.g. Chennai HQ" autoComplete="off" value={form.name} onChange={set("name")} error={err.name} />
+            <AppInput label="Branch Code *" placeholder="e.g. CHN" autoComplete="off" value={form.code} onChange={set("code")} error={err.code} />
           </SimpleGrid>
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <AppInput type="select" label="Branch Type" data={BRANCH_TYPES} value={form.type} onChange={set("type")} />
@@ -101,16 +117,24 @@ const BranchModal = ({ open, onClose, onSave, editData, saving, heads, showToast
               value={form.headId} onChange={set("headId")} />
           </SimpleGrid>
           <SimpleGrid cols={{ base: 1, sm: 3 }}>
-            <AppInput label="Country *" value={form.country} onChange={set("country")} error={err.country} />
-            <AppInput label="State *" value={form.state} onChange={set("state")} error={err.state} />
-            <AppInput label="City *" value={form.city} onChange={set("city")} error={err.city} />
+            <AppInput type="select" label="Country *" placeholder="Select country" searchable clearable
+              data={COUNTRIES.map((c) => ({ value: c.isoCode, label: c.name }))}
+              value={form.countryCode} onChange={setCountry} error={err.countryCode} />
+            <AppInput type="select" label="State *" placeholder="Select state" searchable clearable
+              disabled={!form.countryCode}
+              data={stateOpts.map((s) => ({ value: s.isoCode, label: s.name }))}
+              value={form.stateCode} onChange={setState} error={err.stateCode} />
+            <AppInput type="select" label="City *" placeholder="Select city" searchable clearable
+              disabled={!form.stateCode}
+              data={cityOpts.map((c) => ({ value: c.name, label: c.name }))}
+              value={form.city} onChange={set("city")} error={err.city} />
           </SimpleGrid>
-          <AppInput label="Address Line 1 *" value={form.address1} onChange={set("address1")} error={err.address1} />
-          <AppInput label="Address Line 2" value={form.address2} onChange={set("address2")} />
+          <AppInput label="Address Line 1 *" autoComplete="off" value={form.address1} onChange={set("address1")} error={err.address1} />
+          <AppInput label="Address Line 2" autoComplete="off" value={form.address2} onChange={set("address2")} />
           <SimpleGrid cols={{ base: 1, sm: 3 }}>
-            <AppInput label="Postal Code" value={form.postalCode} onChange={set("postalCode")} />
-            <AppInput label="Email" value={form.email} onChange={set("email")} />
-            <AppInput label="Phone" value={form.phone} onChange={set("phone")} />
+            <AppInput label="Postal Code" autoComplete="off" value={form.postalCode} onChange={set("postalCode")} />
+            <AppInput label="Email" autoComplete="off" value={form.email} onChange={set("email")} />
+            <AppInput label="Phone" autoComplete="off" value={form.phone} onChange={set("phone")} />
           </SimpleGrid>
           <SimpleGrid cols={{ base: 1, sm: 2 }}>
             <AppInput type="select" label="Timezone" searchable data={TIMEZONES} value={form.timezone} onChange={set("timezone")} />
